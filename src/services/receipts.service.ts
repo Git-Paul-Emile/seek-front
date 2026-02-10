@@ -1,0 +1,181 @@
+import { Receipt, ReceiptFilters, ReceiptGenerationRequest, ReceiptStats } from '../types/receipt';
+
+// Generate unique ID
+const generateId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
+// Simulated data store (replace with actual API calls)
+const receipts: Receipt[] = [];
+
+export const generateReceiptNumber = (): string => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `Q-${year}${month}-${random}`;
+};
+
+export const receiptsService = {
+  // Generate a single receipt
+  async generateReceipt(request: ReceiptGenerationRequest): Promise<Receipt> {
+    const receipt: Receipt = {
+      id: generateId(),
+      receiptNumber: generateReceiptNumber(),
+      tenantId: request.tenantId,
+      tenantName: '', // Will be populated from tenant data
+      tenantEmail: '',
+      tenantPhone: '',
+      propertyId: request.propertyId,
+      propertyName: '',
+      roomId: request.roomId,
+      roomName: '',
+      amount: request.amount,
+      paymentDate: new Date(),
+      paymentMethod: request.paymentMethod,
+      reference: request.reference,
+      periodStart: new Date(request.periodYear, request.periodMonth - 1, 1),
+      periodEnd: new Date(request.periodYear, request.periodMonth, 0),
+      status: 'paid',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    receipts.push(receipt);
+    return receipt;
+  },
+
+  // Generate receipts for multiple tenants
+  async generateBulkReceipts(
+    tenantIds: string[],
+    amount: number,
+    paymentMethod: Receipt['paymentMethod'],
+    periodMonth: number,
+    periodYear: number
+  ): Promise<Receipt[]> {
+    const generatedReceipts: Receipt[] = [];
+
+    for (const tenantId of tenantIds) {
+      const receipt = await this.generateReceipt({
+        tenantId,
+        propertyId: '',
+        amount,
+        paymentMethod,
+        periodMonth,
+        periodYear,
+      });
+      generatedReceipts.push(receipt);
+    }
+
+    return generatedReceipts;
+  },
+
+  // Get all receipts with optional filters
+  async getReceipts(filters?: ReceiptFilters): Promise<Receipt[]> {
+    let filteredReceipts = [...receipts];
+
+    if (filters) {
+      if (filters.propertyId) {
+        filteredReceipts = filteredReceipts.filter(r => r.propertyId === filters.propertyId);
+      }
+      if (filters.roomId) {
+        filteredReceipts = filteredReceipts.filter(r => r.roomId === filters.roomId);
+      }
+      if (filters.tenantId) {
+        filteredReceipts = filteredReceipts.filter(r => r.tenantId === filters.tenantId);
+      }
+      if (filters.startDate) {
+        filteredReceipts = filteredReceipts.filter(r => r.paymentDate >= filters.startDate!);
+      }
+      if (filters.endDate) {
+        filteredReceipts = filteredReceipts.filter(r => r.paymentDate <= filters.endDate!);
+      }
+      if (filters.status) {
+        filteredReceipts = filteredReceipts.filter(r => r.status === filters.status);
+      }
+    }
+
+    return filteredReceipts.sort((a, b) => 
+      new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime()
+    );
+  },
+
+  // Get receipt by ID
+  async getReceiptById(id: string): Promise<Receipt | undefined> {
+    return receipts.find(r => r.id === id);
+  },
+
+  // Get receipts by tenant
+  async getReceiptsByTenant(tenantId: string): Promise<Receipt[]> {
+    return receipts.filter(r => r.tenantId === tenantId);
+  },
+
+  // Get receipts by property
+  async getReceiptsByProperty(propertyId: string): Promise<Receipt[]> {
+    return receipts.filter(r => r.propertyId === propertyId);
+  },
+
+  // Get receipts by room
+  async getReceiptsByRoom(roomId: string): Promise<Receipt[]> {
+    return receipts.filter(r => r.roomId === roomId);
+  },
+
+  // Get receipt statistics
+  async getReceiptStats(filters?: ReceiptFilters): Promise<ReceiptStats> {
+    const filteredReceipts = await this.getReceipts(filters);
+
+    const totalCollected = filteredReceipts
+      .filter(r => r.status === 'paid')
+      .reduce((sum, r) => sum + r.amount, 0);
+
+    const pendingAmount = filteredReceipts
+      .filter(r => r.status === 'pending' || r.status === 'partial')
+      .reduce((sum, r) => sum + r.amount, 0);
+
+    const receiptsCount = filteredReceipts.length;
+    const averageRent = receiptsCount > 0 
+      ? filteredReceipts.reduce((sum, r) => sum + r.amount, 0) / receiptsCount 
+      : 0;
+
+    return {
+      totalCollected,
+      pendingAmount,
+      receiptsCount,
+      averageRent,
+    };
+  },
+
+  // Update receipt status
+  async updateReceiptStatus(
+    id: string, 
+    status: Receipt['status']
+  ): Promise<Receipt | undefined> {
+    const receipt = receipts.find(r => r.id === id);
+    if (receipt) {
+      receipt.status = status;
+      receipt.updatedAt = new Date();
+    }
+    return receipt;
+  },
+
+  // Delete receipt
+  async deleteReceipt(id: string): Promise<boolean> {
+    const index = receipts.findIndex(r => r.id === id);
+    if (index > -1) {
+      receipts.splice(index, 1);
+      return true;
+    }
+    return false;
+  },
+
+  // Search receipts
+  async searchReceipts(query: string): Promise<Receipt[]> {
+    const lowerQuery = query.toLowerCase();
+    return receipts.filter(r =>
+      r.receiptNumber.toLowerCase().includes(lowerQuery) ||
+      r.tenantName.toLowerCase().includes(lowerQuery) ||
+      r.propertyName.toLowerCase().includes(lowerQuery) ||
+      r.reference?.toLowerCase().includes(lowerQuery)
+    );
+  },
+};

@@ -1,18 +1,5 @@
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
@@ -21,18 +8,18 @@ import {
   Settings,
   LogOut,
   Bell,
-  Search,
   Home,
   FileText,
   DollarSign,
   Receipt,
   History,
   FileStack,
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+  Search,
+} from 'lucide-react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { ScrollArea } from '../ui/scroll-area';
+import { Separator } from '../ui/separator';
 
 const navItems = [
   {
@@ -100,92 +87,79 @@ const bottomItems = [
   },
 ];
 
-export function AdminSidebar() {
+const AdminSidebar: React.FC = () => {
   const location = useLocation();
 
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 py-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Home className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">SEEK</span>
-              <span className="text-xs text-muted-foreground">Admin Panel</span>
-            </div>
+    <div className="flex h-full w-64 flex-col border-r bg-card">
+      <div className="flex h-16 items-center border-b px-6">
+        <Link to="/admin" className="flex items-center gap-2">
+          <Home className="h-6 w-6 text-primary" />
+          <span className="text-xl font-bold">Seek</span>
+        </Link>
+        <span className="ml-2 text-xs text-muted-foreground">Propriétaire</span>
+      </div>
+
+      <ScrollArea className="flex-1 px-3 py-4">
+        <nav className="flex flex-col gap-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.url}
+              to={item.url}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive(item.url)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.title}
+            </Link>
+          ))}
+
+          <Separator className="my-4" />
+
+          {bottomItems.map((item) => (
+            <Link
+              key={item.url}
+              to={item.url}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive(item.url)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.title}
+            </Link>
+          ))}
+          
+          <Link
+            to="/"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-muted hover:text-destructive"
+          >
+            <LogOut className="h-4 w-4" />
+            Déconnexion
+          </Link>
+        </nav>
+      </ScrollArea>
+
+      <div className="border-t p-4">
+        <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
+            JD
           </div>
-        </SidebarHeader>
-        <SidebarSeparator />
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === item.url}
-                    >
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarSeparator className="my-2" />
-          <SidebarGroup>
-            <SidebarGroupLabel>Paramètres</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {bottomItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === item.url}
-                    >
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link to="/" className="text-destructive">
-                      <LogOut className="h-4 w-4" />
-                      <span>Déconnexion</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <div className="p-3">
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-                JD
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Jean Dupont</span>
-                <span className="text-xs text-muted-foreground">Admin</span>
-              </div>
-            </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">Jean Dupont</span>
+            <span className="text-xs text-muted-foreground">Propriétaire</span>
           </div>
-        </SidebarFooter>
-      </Sidebar>
-    </>
+        </div>
+      </div>
+    </div>
   );
-}
+};
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -193,42 +167,41 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full bg-background">
-        <AdminSidebar />
-        <div className="flex-1 w-full flex flex-col overflow-hidden">
-          <header className="flex h-16 items-center gap-4 border-b bg-background px-6 w-full shrink-0">
-            <SidebarTrigger />
-            <div className="flex flex-1 items-center gap-4">
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher..."
-                  className="pl-9 bg-muted/50"
-                />
-              </div>
+    <div className="flex h-screen overflow-hidden">
+      <AdminSidebar />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-16 items-center gap-4 border-b bg-background px-6 w-full shrink-0">
+          <div className="flex flex-1 items-center gap-4">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher..."
+                className="pl-9 bg-muted/50"
+              />
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-white">
-                  3
-                </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-white">
+                3
+              </span>
+            </Button>
+            <Link to="/">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Home className="h-4 w-4" />
+                Retour au site
               </Button>
-              <Link to="/">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Home className="h-4 w-4" />
-                  Retour au site
-                </Button>
-              </Link>
-            </div>
-          </header>
-          <main className="flex-1 w-full overflow-y-auto">
+            </Link>
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto bg-muted/30">
+          <div className="container py-6">
             {children}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
 

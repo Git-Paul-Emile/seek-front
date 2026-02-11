@@ -7,6 +7,7 @@ import { BarChart3, TrendingUp, DollarSign, Home, Users, Calendar, AlertCircle, 
 import { mockProperties } from "@/data/properties";
 import { mockTenants } from "@/data/tenants";
 import { cn } from "@/lib/utils";
+import PageHeader from "@/components/layout/PageHeader";
 
 // Types
 interface MonthlyRevenue {
@@ -258,18 +259,13 @@ Impôt estimé (${taxDeclaration.taxRate * 100}%): ${formatCurrency(taxDeclarati
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-primary mb-2">
-            <BarChart3 className="w-4 h-4" />
-            <span className="text-sm font-semibold uppercase tracking-wider font-body">Statistiques</span>
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold">Statistiques Financières</h1>
-          <p className="text-muted-foreground mt-1">Vue globale de votre comptabilité et déclarations fiscales</p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        title="Statistiques"
+        icon={BarChart3}
+        description="Vue globale de votre comptabilité et déclarations fiscales"
+        action={
           <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -282,8 +278,10 @@ Impôt estimé (${taxDeclaration.taxRate * 100}%): ${formatCurrency(taxDeclarati
               ))}
             </SelectContent>
           </Select>
-        </div>
-      </div>
+        }
+      >
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-2">Statistiques Financières</h1>
+      </PageHeader>
 
       {/* Cartes de Stats Financières */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

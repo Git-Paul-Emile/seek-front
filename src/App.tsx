@@ -3,10 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { AdminLayout } from "@/components/layout/AdminSidebar";
+import TenantLayout from "@/components/layout/TenantLayout";
 
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
@@ -28,6 +29,16 @@ import ChargesPage from "./pages/Charges";
 import { ReminderSettings } from "./pages/ReminderSettings";
 import { ReminderHistory } from "./pages/ReminderHistory";
 import { Documents } from "./pages/Documents";
+import TenantLogin from "./pages/TenantLogin";
+import TenantDashboard from "./pages/TenantDashboard";
+import TenantProfile from "./pages/TenantProfile";
+import TenantRoom from "./pages/TenantRoom";
+import TenantLease from "./pages/TenantLease";
+import TenantPayments from "./pages/TenantPayments";
+import TenantCharges from "./pages/TenantCharges";
+import TenantFlatmates from "./pages/TenantFlatmates";
+import TenantNotifications from "./pages/TenantNotifications";
+import TenantDocuments from "./pages/TenantDocuments";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +61,13 @@ const AdminLayoutWrapper = () => (
 // Layout pour l'espace propriétaire sans Navbar ni Footer
 const OwnerLayout = () => (
   <Outlet />
+);
+
+// Layout pour l'espace locataire (colocataire)
+const TenantLayoutWrapper = () => (
+  <TenantLayout>
+    <Outlet />
+  </TenantLayout>
 );
 
 const App = () => (
@@ -92,8 +110,22 @@ const App = () => (
             <Route path="/owner/properties/new" element={<OwnerDashboard />} />
           </Route>
           
+          {/* Routes espace locataire (colocataire) */}
+          <Route element={<TenantLayoutWrapper />}>
+            <Route path="/tenant/login" element={<TenantLogin />} />
+            <Route path="/tenant/dashboard" element={<TenantDashboard />} />
+            <Route path="/tenant/room" element={<TenantRoom />} />
+            <Route path="/tenant/lease" element={<TenantLease />} />
+            <Route path="/tenant/payments" element={<TenantPayments />} />
+            <Route path="/tenant/charges" element={<TenantCharges />} />
+            <Route path="/tenant/flatmates" element={<TenantFlatmates />} />
+            <Route path="/tenant/notifications" element={<TenantNotifications />} />
+            <Route path="/tenant/documents" element={<TenantDocuments />} />
+            <Route path="/tenant/profile" element={<TenantProfile />} />
+          </Route>
+          
           {/* Route legacy - redirect vers admin */}
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

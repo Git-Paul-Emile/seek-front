@@ -9,6 +9,7 @@ import RoomDialog, { RoomFormData } from "@/components/dashboard/RoomDialog";
 import RoomsList from "@/components/dashboard/RoomsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import PageHeader from "@/components/layout/PageHeader";
 
 const emptyForm: PropertyFormData = {
   title: "",
@@ -307,20 +308,20 @@ const AdminProperties = () => {
     : null;
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-primary mb-2">
-              <Building2 className="w-4 h-4" />
-              <span className="text-sm font-semibold uppercase tracking-wider font-body">Gestion des biens</span>
-            </div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold">Mes biens immobiliers</h1>
-            <p className="text-muted-foreground mt-1">Gérez et suivez toutes vos annonces</p>
-          </div>
-          <Button onClick={openNew} className="gap-2 self-start">
+    <div className="space-y-6">
+      {/* Header */}
+      <PageHeader
+        title="Gestion des biens"
+        icon={Building2}
+        description="Gérez et suivez toutes vos annonces"
+        action={
+          <Button onClick={openNew} className="gap-2">
             <Plus className="w-4 h-4" /> Ajouter un bien
           </Button>
-        </div>
+        }
+      >
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-2">Mes biens immobiliers</h1>
+      </PageHeader>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

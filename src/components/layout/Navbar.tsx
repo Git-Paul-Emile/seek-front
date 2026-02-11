@@ -8,6 +8,7 @@ const navLinks = [
   { to: "/", label: "Accueil" },
   { to: "/annonces", label: "Annonces" },
   { to: "/dashboard", label: "Espace Propriétaire" },
+  { to: "/tenant/login", label: "Espace Locataire" },
 ];
 
 const Navbar = () => {

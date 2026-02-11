@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatsCards from "@/components/dashboard/StatsCards";
 import PropertiesTable from "@/components/dashboard/PropertiesTable";
 import PropertyFormDialog, { PropertyFormData } from "@/components/dashboard/PropertyFormDialog";
+import PageHeader from "@/components/layout/PageHeader";
 
 const emptyForm: PropertyFormData = {
   title: "",
@@ -159,21 +160,20 @@ const Dashboard = () => {
       });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-primary mb-2">
-            <LayoutDashboard className="w-4 h-4" />
-            <span className="text-sm font-semibold uppercase tracking-wider font-body">Tableau de bord</span>
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold">Bienvenue, Jean</h1>
-          <p className="text-muted-foreground mt-1">Gérez vos biens immobiliers</p>
-        </div>
-        <Button onClick={openNew} className="gap-2 self-start">
-          <Plus className="w-4 h-4" /> Ajouter un bien
-        </Button>
-      </div>
+      <PageHeader
+        title="Tableau de bord"
+        icon={LayoutDashboard}
+        description="Gérez vos biens immobiliers"
+        action={
+          <Button onClick={openNew} className="gap-2">
+            <Plus className="w-4 h-4" /> Ajouter un bien
+          </Button>
+        }
+      >
+        <h1 className="font-display text-3xl md:text-4xl font-bold mt-2">Bienvenue, Jean</h1>
+      </PageHeader>
 
       {/* Stats */}
       <StatsCards properties={properties} />

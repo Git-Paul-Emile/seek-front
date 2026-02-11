@@ -39,6 +39,7 @@ const TenantSidebar: React.FC = () => {
 
   const settingsItems = [
     { icon: Settings, label: 'Mon profil', path: '/tenant/profile' },
+    { icon: Settings, label: 'Paramètres personnels', path: '/tenant/personal-settings' },
   ];
 
   const handleLogout = async () => {

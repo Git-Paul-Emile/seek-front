@@ -41,6 +41,7 @@ import TenantCharges from "./pages/TenantCharges";
 import TenantFlatmates from "./pages/TenantFlatmates";
 import TenantNotifications from "./pages/TenantNotifications";
 import TenantNotificationSettings from "./pages/TenantNotificationSettings";
+import TenantPersonalSettings from "./pages/TenantPersonalSettings";
 import TenantDocuments from "./pages/TenantDocuments";
 import TenantReceipts from "./pages/TenantReceipts";
 
@@ -130,6 +131,7 @@ const App = () => (
             <Route path="/tenant/documents" element={<TenantDocuments />} />
             <Route path="/tenant/receipts" element={<TenantReceipts />} />
             <Route path="/tenant/profile" element={<TenantProfile />} />
+            <Route path="/tenant/personal-settings" element={<TenantPersonalSettings />} />
           </Route>
           
           {/* Route legacy - redirect vers admin */}

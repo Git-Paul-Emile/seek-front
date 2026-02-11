@@ -3,7 +3,45 @@ import tenantAuthService from './tenant-auth.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+// Données simulées pour le développement
+const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: 'notif-1',
+    title: 'Paiement reçu',
+    message: 'Votre paiement de 150,000 XOF pour le mois de Février a été reçu avec succès.',
+    type: 'payment',
+    isRead: false,
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 'notif-2',
+    title: 'Quittance disponible',
+    message: 'Votre quittance de loyer pour Janvier 2026 est désormais disponible.',
+    type: 'document',
+    isRead: false,
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+  },
+  {
+    id: 'notif-3',
+    title: 'Rappel de paiement',
+    message: 'Votre loyer de Mars 2026 arrive à échéance dans 5 jours.',
+    type: 'reminder',
+    isRead: true,
+    createdAt: new Date(Date.now() - 259200000).toISOString(),
+  },
+  {
+    id: 'notif-4',
+    title: 'Nouvelle charge',
+    message: 'Une nouvelle charge de 5,000 XOF a été ajoutée pour le mois de Février.',
+    type: 'charge',
+    isRead: true,
+    createdAt: new Date(Date.now() - 432000000).toISOString(),
+  },
+];
+
 class TenantService {
+  private useMock = true; // À mettre à false quand le backend sera disponible
+
   private getAuthHeaders(): HeadersInit {
     const token = tenantAuthService.getToken();
     return {
@@ -47,6 +85,16 @@ class TenantService {
   }
 
   async getNotifications(): Promise<Notification[]> {
+    if (this.useMock) {
+      // Simuler un délai réseau
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const stored = localStorage.getItem('notifications');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      return MOCK_NOTIFICATIONS;
+    }
+
     const response = await fetch(`${API_URL}/tenants/notifications`, {
       headers: this.getAuthHeaders(),
     });
@@ -57,6 +105,19 @@ class TenantService {
   }
 
   async markNotificationAsRead(notificationId: string): Promise<void> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const stored = localStorage.getItem('notifications');
+      if (stored) {
+        const notifications: Notification[] = JSON.parse(stored);
+        const updated = notifications.map(n => 
+          n.id === notificationId ? { ...n, isRead: true } : n
+        );
+        localStorage.setItem('notifications', JSON.stringify(updated));
+      }
+      return;
+    }
+
     const response = await fetch(`${API_URL}/tenants/notifications/${notificationId}/read`, {
       method: 'POST',
       headers: this.getAuthHeaders(),

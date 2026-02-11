@@ -78,3 +78,62 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
 }
+
+export type NotificationChannel = 'email' | 'whatsapp' | 'sms';
+
+export interface NotificationPreference {
+  id: string;
+  tenantId: string;
+  // Rappels de paiement
+  paymentReminder: {
+    enabled: boolean;
+    daysBeforeDue: number;
+    channels: NotificationChannel[];
+  };
+  // Notification paiement reçu
+  paymentReceived: {
+    enabled: boolean;
+    channels: NotificationChannel[];
+  };
+  // Notification quittance disponible
+  receiptAvailable: {
+    enabled: boolean;
+    channels: NotificationChannel[];
+  };
+  // Notification échéance proche
+  dueDateSoon: {
+    enabled: boolean;
+    daysBeforeDue: number;
+    channels: NotificationChannel[];
+  };
+  // Email optionnel
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateNotificationPreferencesInput {
+  paymentReminder?: {
+    enabled?: boolean;
+    daysBeforeDue?: number;
+    channels?: NotificationChannel[];
+  };
+  paymentReceived?: {
+    enabled?: boolean;
+    channels?: NotificationChannel[];
+  };
+  receiptAvailable?: {
+    enabled?: boolean;
+    channels?: NotificationChannel[];
+  };
+  dueDateSoon?: {
+    enabled?: boolean;
+    daysBeforeDue?: number;
+    channels?: NotificationChannel[];
+  };
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
+}

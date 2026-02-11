@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Clock, CreditCard, FileText, AlertCircle, Check, CheckCheck, BellRing } from 'lucide-react';
+import { Bell, Clock, CreditCard, FileText, AlertCircle, Check, CheckCheck, BellRing, Settings } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -99,12 +99,20 @@ const TenantNotifications: React.FC = () => {
         icon={BellRing}
         description="Restez informé de l'actualité de votre colocation"
         action={
-          unreadCount > 0 && (
-            <Button variant="outline" onClick={markAllAsRead}>
-              <CheckCheck className="mr-2 h-4 w-4" />
-              Tout marquer comme lu
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Button variant="outline" onClick={markAllAsRead}>
+                <CheckCheck className="mr-2 h-4 w-4" />
+                Tout marquer comme lu
+              </Button>
+            )}
+            <Button variant="outline" asChild>
+              <a href="/tenant/notifications/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                Paramètres
+              </a>
             </Button>
-          )
+          </div>
         }
       >
         <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>

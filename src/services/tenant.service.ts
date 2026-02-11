@@ -1,4 +1,4 @@
-import { Tenant, RoomInfo, LeaseContractInfo, TenantDashboardStats, Notification, PropertyInfo, CommonSpace, ColocationRules, Colocataire } from '../types/tenant';
+import { Tenant, RoomInfo, LeaseContractInfo, TenantDashboardStats, Notification, PropertyInfo, CommonSpace, ColocationRules, Colocataire, DepartureRequest, SecurityDepositStatus } from '../types/tenant';
 import tenantAuthService from './tenant-auth.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -267,9 +267,11 @@ class TenantService {
         endDate: '2026-08-31',
         monthlyRent: 150000,
         securityDeposit: 300000,
+        securityDepositStatus: 'hold',
         status: 'active',
         propertyName: 'Appartement T3 - Centre Ville',
         roomNumber: 'Chambre 3',
+        isColocation: true,
       };
     }
 
@@ -279,6 +281,106 @@ class TenantService {
 
     if (response.status === 404) return null;
     if (!response.ok) throw new Error('Échec de la récupération du contrat de bail');
+
+    return response.json();
+  }
+
+  async submitDepartureRequest(
+    plannedDepartureDate: string,
+    reason: string,
+    noticePeriodDays: number = 30
+  ): Promise<DepartureRequest> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const request: DepartureRequest = {
+        id: `depart-${Date.now()}`,
+        tenantId: 'current-tenant',
+        leaseContractId: 'lease-1',
+        requestDate: new Date().toISOString(),
+        plannedDepartureDate,
+        reason,
+        status: 'pending',
+        isColocation: true,
+        noticePeriodDays,
+        depositStatus: 'hold',
+        depositAmount: 300000,
+      };
+      
+      // Store in localStorage for mock persistence
+      const existing = JSON.parse(localStorage.getItem('departureRequests') || '[]');
+      existing.push(request);
+      localStorage.setItem('departureRequests', JSON.stringify(existing));
+      
+      return request;
+    }
+
+    const response = await fetch(`${API_URL}/tenants/departure-request`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ plannedDepartureDate, reason, noticePeriodDays }),
+    });
+
+    if (!response.ok) throw new Error('Échec de la soumission de la demande de départ');
+
+    return response.json();
+  }
+
+  async getDepartureRequest(): Promise<DepartureRequest | null> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const stored = localStorage.getItem('departureRequests');
+      if (stored) {
+        const requests = JSON.parse(stored) as DepartureRequest[];
+        return requests.length > 0 ? requests[0] : null;
+      }
+      return null;
+    }
+
+    const response = await fetch(`${API_URL}/tenants/departure-request`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error('Échec de la récupération de la demande de départ');
+
+    return response.json();
+  }
+
+  async cancelDepartureRequest(requestId: string): Promise<void> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const stored = localStorage.getItem('departureRequests');
+      if (stored) {
+        const requests = JSON.parse(stored) as DepartureRequest[];
+        const filtered = requests.filter(r => r.id !== requestId);
+        localStorage.setItem('departureRequests', JSON.stringify(filtered));
+      }
+      return;
+    }
+
+    const response = await fetch(`${API_URL}/tenants/departure-request/${requestId}/cancel`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) throw new Error('Échec de l\'annulation de la demande de départ');
+  }
+
+  async getSecurityDepositStatus(): Promise<{ status: SecurityDepositStatus; amount: number; deductions?: { description: string; amount: number }[] } | null> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return {
+        status: 'hold',
+        amount: 300000,
+      };
+    }
+
+    const response = await fetch(`${API_URL}/tenants/security-deposit`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error('Échec de la récupération du statut de la caution');
 
     return response.json();
   }

@@ -51,15 +51,42 @@ export interface RoomInfo {
   currentOccupants: number;
 }
 
+export type SecurityDepositStatus = 'hold' | 'released' | 'refunded' | 'partially_refunded';
+
+export type DepartureStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+
+export interface DepartureRequest {
+  id: string;
+  tenantId: string;
+  leaseContractId: string;
+  requestDate: string;
+  plannedDepartureDate: string;
+  reason: string;
+  status: DepartureStatus;
+  isColocation: boolean;
+  noticePeriodDays: number;
+  moveOutDate?: string;
+  depositStatus?: SecurityDepositStatus;
+  depositAmount?: number;
+  deductions?: {
+    description: string;
+    amount: number;
+  }[];
+  notes?: string;
+}
+
 export interface LeaseContractInfo {
   id: string;
   startDate: string;
   endDate: string;
   monthlyRent: number;
   securityDeposit: number;
+  securityDepositStatus: SecurityDepositStatus;
   status: 'active' | 'pending' | 'expired' | 'terminated';
   propertyName: string;
   roomNumber: string;
+  isColocation: boolean;
+  departureRequest?: DepartureRequest;
 }
 
 export interface TenantDashboardStats {

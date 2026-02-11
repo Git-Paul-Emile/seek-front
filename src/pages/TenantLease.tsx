@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Calendar, Euro, Download, AlertCircle, Clock, CheckCircle, AlertTriangle, History, FileSignature } from 'lucide-react';
+import { FileText, Calendar, Euro, Download, AlertCircle, Clock, CheckCircle, AlertTriangle, History, FileSignature, Bell, LogOut, Building2, Users, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Progress } from '../components/ui/progress';
 import { useToast } from '../hooks/use-toast';
 import tenantService from '../services/tenant.service';
-import { LeaseContractInfo } from '../types/tenant';
+import { LeaseContractInfo, DepartureRequest } from '../types/tenant';
 import PageHeader from '../components/layout/PageHeader';
+import DepartureRequestDialog from '../components/dialogs/DepartureRequestDialog';
 
 interface PaymentInfo {
   id: string;
@@ -26,6 +28,7 @@ const TenantLease: React.FC = () => {
   const [lease, setLease] = useState<LeaseContractInfo | null>(null);
   const [payments, setPayments] = useState<PaymentInfo[]>([]);
   const [currentPayment, setCurrentPayment] = useState<PaymentInfo | null>(null);
+  const [departureRequest, setDepartureRequest] = useState<DepartureRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -38,6 +41,10 @@ const TenantLease: React.FC = () => {
     try {
       const data = await tenantService.getLeaseContract();
       setLease(data);
+      if (data) {
+        const request = await tenantService.getDepartureRequest();
+        setDepartureRequest(request);
+      }
     } catch (error) {
       console.error('Erreur:', error);
     } finally {
@@ -90,6 +97,36 @@ const TenantLease: React.FC = () => {
     }
   };
 
+  const getDepositStatusBadge = (status: string) => {
+    switch (status) {
+      case 'hold':
+        return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" /> Consignée</Badge>;
+      case 'released':
+        return <Badge className="bg-blue-500"><RefreshCw className="mr-1 h-3 w-3" />Libérée</Badge>;
+      case 'refunded':
+        return <Badge className="bg-green-500"><CheckCircle className="mr-1 h-3 w-3" />Remboursée</Badge>;
+      case 'partially_refunded':
+        return <Badge variant="warning"><AlertCircle className="mr-1 h-3 w-3" />Partiellement remboursée</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getDepartureStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />En attente</Badge>;
+      case 'approved':
+        return <Badge className="bg-blue-500"><CheckCircle className="mr-1 h-3 w-3" />Approuvée</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive"><AlertTriangle className="mr-1 h-3 w-3" />Refusée</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-500"><CheckCircle className="mr-1 h-3 w-3" />Terminée</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -111,6 +148,23 @@ const TenantLease: React.FC = () => {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const getDaysUntilLeaseEnd = () => {
+    if (!lease) return 0;
+    const end = new Date(lease.endDate);
+    const today = new Date();
+    const diffTime = end.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const getLeaseEndProgress = () => {
+    if (!lease) return 100;
+    const start = new Date(lease.startDate).getTime();
+    const end = new Date(lease.endDate).getTime();
+    const now = Date.now();
+    const progress = ((now - start) / (end - start)) * 100;
+    return Math.min(100, Math.max(0, progress));
   };
 
   const downloadContract = async () => {
@@ -329,10 +383,20 @@ const TenantLease: React.FC = () => {
                 <span className="text-sm text-muted-foreground">Chambre</span>
                 <span className="font-medium">N°{lease.roomNumber}</span>
               </div>
+
+              {lease.isColocation && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Type</span>
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    Colocation
+                  </Badge>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Dates */}
+          {/* Dates & End of Lease Reminder */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -357,10 +421,36 @@ const TenantLease: React.FC = () => {
 
               <Separator />
 
+              {/* End of Lease Reminder */}
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Durée restante</p>
-                <p className="text-2xl font-bold">
-                  {Math.ceil((new Date(lease.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30))} mois
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">Temps restant</p>
+                  <p className="font-bold">
+                    {getDaysUntilLeaseEnd() > 0 ? (
+                      <>
+                        {Math.ceil(getDaysUntilLeaseEnd() / 30)} mois{' '}
+                        ({getDaysUntilLeaseEnd()} jours)
+                      </>
+                    ) : (
+                      <span className="text-red-500">Terminé</span>
+                    )}
+                  </p>
+                </div>
+                
+                {getDaysUntilLeaseEnd() <= 90 && getDaysUntilLeaseEnd() > 0 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-amber-700">
+                      <Bell className="h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        Fin de bail dans {getDaysUntilLeaseEnd()} jours
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <Progress value={getLeaseEndProgress()} className="h-2" />
+                <p className="text-xs text-muted-foreground text-right">
+                  Progression du bail
                 </p>
               </div>
             </CardContent>
@@ -388,6 +478,20 @@ const TenantLease: React.FC = () => {
               <Separator />
 
               <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Statut de la caution</span>
+                  {getDepositStatusBadge(lease.securityDepositStatus)}
+                </div>
+                {lease.securityDepositStatus === 'partially_refunded' && (
+                  <p className="text-xs text-muted-foreground">
+                    Des retenues ont été appliquées pour réparation des dégradations
+                  </p>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Modalités de paiement</p>
                 <p className="text-sm">Paiement mensuel par virement ou prélèvement</p>
                 <p className="text-sm">Échéance le 1er de chaque mois</p>
@@ -395,28 +499,95 @@ const TenantLease: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Contract Info */}
+          {/* Departure Request Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Informations du contrat</CardTitle>
-              <CardDescription>
-                Référence et détails administratifs
-              </CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <LogOut className="h-5 w-5" />
+                Départ & Fin de contrat
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Numéro de contrat</p>
-                <p className="font-medium">BAIL-{lease.id.slice(0, 8).toUpperCase()}</p>
-              </div>
+              {departureRequest ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Votre demande</span>
+                    {getDepartureStatusBadge(departureRequest.status)}
+                  </div>
+                  
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-blue-700">Date de départ demandée</span>
+                        <span className="font-medium text-blue-900">
+                          {formatDate(departureRequest.plannedDepartureDate)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-blue-700">Préavis</span>
+                        <span className="font-medium text-blue-900">
+                          {departureRequest.noticePeriodDays} jours
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-blue-700">Motif</span>
+                        <span className="font-medium text-blue-900">
+                          {departureRequest.reason}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div>
-                <p className="text-sm text-muted-foreground">Type de bail</p>
-                <p className="font-medium">Bail meublé (habitation principale)</p>
-              </div>
+                  {lease.isColocation && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <Users className="h-4 w-4" />
+                        <span className="text-sm">
+                          Votre départ n'affectera pas les autres colocataires
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Vous souhaitez quitter votre logement ? Soumettez une demande de départ.
+                  </p>
+                  
+                  {lease.isColocation && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-blue-700">
+                        <Building2 className="h-4 w-4" />
+                        <span className="text-sm">
+                          En colocation, vous pouvez partir individuellement sans impacter les autres.
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
-              <div>
-                <p className="text-sm text-muted-foreground">Préavis</p>
-                <p className="font-medium">1 mois (selon la loi ALUR)</p>
+                  <DepartureRequestDialog
+                    leaseEndDate={lease.endDate}
+                    isColocation={lease.isColocation}
+                    onRequestSubmitted={(request) => setDepartureRequest(request)}
+                  >
+                    <Button className="w-full">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Faire une demande de départ
+                    </Button>
+                  </DepartureRequestDialog>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Après votre départ :</p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>État des lieux de sortie</li>
+                  <li>Remboursement de la caution sous 2 mois</li>
+                  {lease.isColocation && <li>Les autres colocataires conservent leur bail</li>}
+                </ul>
               </div>
             </CardContent>
           </Card>
@@ -436,6 +607,7 @@ const TenantLease: React.FC = () => {
                 <li>Pour toute réparation ou problème, utilisez la fonctionnalité "Signaler un problème"</li>
                 <li>Le dépôt de garantie vous sera restitué dans un délai maximum de 2 mois après la sortie</li>
                 <li>Toute modification du contrat doit être faite par écrit</li>
+                <li>Le préavis minimum est de 1 mois (30 jours)</li>
               </ul>
             </CardContent>
           </Card>

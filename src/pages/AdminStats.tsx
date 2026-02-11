@@ -280,7 +280,7 @@ Impôt estimé (${taxDeclaration.taxRate * 100}%): ${formatCurrency(taxDeclarati
           </Select>
         }
       >
-        <h1 className="font-display text-3xl md:text-4xl font-bold mt-2">Statistiques Financières</h1>
+        Statistiques Financières
       </PageHeader>
 
       {/* Cartes de Stats Financières */}

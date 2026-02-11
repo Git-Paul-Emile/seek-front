@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { DollarSign, Plus, AlertTriangle, CheckCircle, Clock, Filter, RefreshCw, Wallet, CreditCard, Smartphone, Building2, History, SplitSquareHorizontal } from 'lucide-react';
+import { DollarSign, Plus, AlertTriangle, CheckCircle, Clock, Filter, RefreshCw, Wallet, CreditCard, Smartphone, Building2, History, SplitSquareHorizontal, CreditCard as CreditCardIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { rentPaymentsService } from '@/services/rent-payments.service';
 import { leaseContractsService } from '@/services/lease-contracts.service';
 import { RentPayment, PaymentStatus, PaymentMethod, RefundStatus } from '@/types/rent-payment';
 import { LeaseContract } from '@/types/lease-contract';
+import PageHeader from '@/components/layout/PageHeader';
 
 export function RentPayments() {
   const [payments, setPayments] = useState<RentPayment[]>([]);
@@ -237,20 +238,25 @@ export function RentPayments() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestion des Paiements</h1>
-          <p className="text-muted-foreground">Suivez et gérez les paiements de loyers et les cautions</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleGeneratePayments}>
-            <RefreshCw className="mr-2 h-4 w-4" />Générer les échéances
-          </Button>
-          <Button onClick={handleCreatePayment}>
-            <Plus className="mr-2 h-4 w-4" />Nouveau Paiement
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Gestion des Loyers"
+        icon={CreditCardIcon}
+        description="Suivez et gérez les paiements de loyers et les cautions"
+        action={
+          <>
+            <Button variant="outline" onClick={handleGeneratePayments}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Générer les échéances
+            </Button>
+            <Button onClick={handleCreatePayment}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau Paiement
+            </Button>
+          </>
+        }
+      >
+        Gestion des paiements
+      </PageHeader>
 
       {/* Cartes de statistiques */}
       <div className="grid gap-4 md:grid-cols-5">

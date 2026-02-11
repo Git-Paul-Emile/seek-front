@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { User, Phone, Mail, Camera, Save, Lock, AlertCircle } from 'lucide-react';
+import { User, Phone, Mail, Camera, Save, Lock, AlertCircle, UserCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -18,6 +18,7 @@ import {
 import { useToast } from '../hooks/use-toast';
 import tenantAuthService from '../services/tenant-auth.service';
 import { Tenant, TenantUpdateProfile, TenantChangePassword } from '../types/tenant';
+import PageHeader from '../components/layout/PageHeader';
 
 const TenantProfile: React.FC = () => {
   const { toast } = useToast();
@@ -139,12 +140,13 @@ const TenantProfile: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Mon profil</h1>
-        <p className="text-muted-foreground">
-          Gérez vos informations personnelles
-        </p>
-      </div>
+      <PageHeader
+        title="MON PROFIL"
+        icon={UserCircle}
+        description="Gérez vos informations personnelles"
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Mon profil</h1>
+      </PageHeader>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Profile Card */}

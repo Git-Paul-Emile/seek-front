@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import PageHeader from '@/components/layout/PageHeader';
 import {
   Bell,
   Calendar,
@@ -122,24 +121,23 @@ export function ReminderSettings() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Bell className="h-8 w-8" /> Configuration des rappels
-          </h1>
-          <p className="text-muted-foreground">
-            Configurez les rappels automatiques avant échéance et les relances après retard
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleReset}>
-            <RotateCcw className="mr-2 h-4 w-4" /> Réinitialiser
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="mr-2 h-4 w-4" /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="RAPPELS & RELANCES"
+        description="Configurez les rappels automatiques avant échéance et les relances après retard"
+        icon={Bell}
+        action={
+          <>
+            <Button variant="outline" onClick={handleReset}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Réinitialiser
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="mr-2 h-4 w-4" /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+            </Button>
+          </>
+        }
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Configuration des rappels</h1>
+      </PageHeader>
 
       {/* Statistiques */}
       <Card>

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Receipt, AlertCircle, CheckCircle } from 'lucide-react';
+import { Receipt, AlertCircle, CheckCircle, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import tenantService from '../services/tenant.service';
+import PageHeader from '../components/layout/PageHeader';
 
 const TenantCharges: React.FC = () => {
   const [charges, setCharges] = useState<any[]>([]);
@@ -40,12 +41,13 @@ const TenantCharges: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Mes charges</h1>
-        <p className="text-muted-foreground">
-          Consultez et réglez vos charges
-        </p>
-      </div>
+      <PageHeader
+        title="CHARGES"
+        icon={FileText}
+        description="Consultez et réglez vos charges"
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Mes charges</h1>
+      </PageHeader>
 
       {/* Summary */}
       <div className="grid gap-4 md:grid-cols-3">

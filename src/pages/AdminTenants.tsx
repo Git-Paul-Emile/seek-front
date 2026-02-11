@@ -26,6 +26,7 @@ import {
   Building2,
   Bed,
 } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
 import { TenantDialog } from "@/components/dialogs/TenantDialog";
 import { ColocataireDialog } from "@/components/dialogs/ColocataireDialog";
 import {
@@ -199,22 +200,13 @@ const AdminTenants = () => {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-primary mb-2">
-            <User className="w-4 h-4" />
-            <span className="text-sm font-semibold uppercase tracking-wider font-body">
-              Gestion des occupants
-            </span>
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold">
-            Locataires & Colocataires
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gérez vos locataires et colocataires
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Gestion des occupants"
+        icon={User}
+        description="Gérez vos locataires et colocataires"
+      >
+        Locataires & Colocataires
+      </PageHeader>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">

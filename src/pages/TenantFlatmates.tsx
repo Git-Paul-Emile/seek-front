@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Users, MessageCircle, Mail, Phone, Calendar } from 'lucide-react';
+import { Users, MessageCircle, Mail, Phone, Calendar, UserPlus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import tenantService from '../services/tenant.service';
+import PageHeader from '../components/layout/PageHeader';
 
 interface Colocataire {
   id: string;
@@ -52,12 +53,13 @@ const TenantFlatmates: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Mes colocataires</h1>
-        <p className="text-muted-foreground">
-          Vos compagnons de colocation
-        </p>
-      </div>
+      <PageHeader
+        title="COLOCATAIRES"
+        icon={UserPlus}
+        description="Vos compagnons de colocation"
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Colocataires</h1>
+      </PageHeader>
 
       {/* Summary */}
       <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-lg">

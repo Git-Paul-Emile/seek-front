@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Calendar, Euro, Download, AlertCircle, Clock, CheckCircle, AlertTriangle, History } from 'lucide-react';
+import { FileText, Calendar, Euro, Download, AlertCircle, Clock, CheckCircle, AlertTriangle, History, FileSignature } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { useToast } from '../hooks/use-toast';
 import tenantService from '../services/tenant.service';
 import { LeaseContractInfo } from '../types/tenant';
+import PageHeader from '../components/layout/PageHeader';
 
 interface PaymentInfo {
   id: string;
@@ -277,24 +278,25 @@ const TenantLease: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Mon bail</h1>
-          <p className="text-muted-foreground">
-            Votre contrat de location
-          </p>
-        </div>
-        {lease && (
-          <Button onClick={downloadContract} disabled={isDownloading}>
-            {isDownloading ? (
-              <span className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            {isDownloading ? 'Téléchargement...' : 'Télécharger le bail'}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="MON BAIL"
+        icon={FileSignature}
+        description="Votre contrat de location"
+        action={
+          lease && (
+            <Button onClick={downloadContract} disabled={isDownloading}>
+              {isDownloading ? (
+                <span className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              {isDownloading ? 'Téléchargement...' : 'Télécharger le bail'}
+            </Button>
+          )
+        }
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Mon bail</h1>
+      </PageHeader>
 
       {lease ? (
         <div className="grid gap-6 lg:grid-cols-2">

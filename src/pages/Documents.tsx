@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Upload, FolderOpen } from 'lucide-react';
+import { Search, Upload, FolderOpen, Files } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import {
   Select,
@@ -14,6 +14,7 @@ import { DocumentUpload } from '../components/documents/DocumentUpload';
 import { DocumentList } from '../components/documents/DocumentList';
 import { documentService } from '../services/documents.service';
 import { Document, DocumentType } from '../types/document';
+import PageHeader from '../components/layout/PageHeader';
 
 export function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -116,15 +117,14 @@ export function Documents() {
   );
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Gestion des documents</h1>
-          <p className="text-gray-500 mt-1">
-            Gérez vos documents PDF et images
-          </p>
-        </div>
-      </div>
+    <div className="container mx-auto py-8 px-4 space-y-6">
+      <PageHeader
+        title="Documents"
+        icon={FolderOpen}
+        description="Gérez vos documents PDF et images"
+      >
+        Documents
+      </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Section */}

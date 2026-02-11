@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Home, MapPin, Users, Ruler, Calendar } from 'lucide-react';
+import { Home, MapPin, Users, Ruler, Calendar, BedDouble } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import tenantService from '../services/tenant.service';
 import { RoomInfo } from '../types/tenant';
+import PageHeader from '../components/layout/PageHeader';
 
 const TenantRoom: React.FC = () => {
   const [room, setRoom] = useState<RoomInfo | null>(null);
@@ -46,12 +47,13 @@ const TenantRoom: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Ma chambre</h1>
-        <p className="text-muted-foreground">
-          Informations sur votre espace de vie
-        </p>
-      </div>
+      <PageHeader
+        title="MA CHAMBRE"
+        icon={BedDouble}
+        description="Informations sur votre espace de vie"
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Ma chambre</h1>
+      </PageHeader>
 
       {room ? (
         <div className="grid gap-6 lg:grid-cols-2">

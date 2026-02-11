@@ -172,7 +172,7 @@ const Dashboard = () => {
           </Button>
         }
       >
-        <h1 className="font-display text-3xl md:text-4xl font-bold mt-2">Bienvenue, Jean</h1>
+        Bienvenue, Jean
       </PageHeader>
 
       {/* Stats */}

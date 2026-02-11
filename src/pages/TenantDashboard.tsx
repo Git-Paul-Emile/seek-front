@@ -91,7 +91,7 @@ const TenantDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <PageHeader
-        title="Tableau de bord"
+        title="TABLEAU DE BORD"
         icon={LayoutDashboard}
         description="Voici un aperçu de votre espace personnel"
         action={
@@ -103,9 +103,7 @@ const TenantDashboard: React.FC = () => {
           </Button>
         }
       >
-        <h1 className="text-3xl font-bold mt-2">
-          Bonjour, {tenant?.firstName} {tenant?.lastName}
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
       </PageHeader>
 
       {/* Stats Cards */}

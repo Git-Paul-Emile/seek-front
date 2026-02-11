@@ -20,6 +20,7 @@ import { LeaseContractsList } from '@/components/dashboard/LeaseContractsList';
 import { leaseContractsService } from '@/services/lease-contracts.service';
 import { leasePDFService } from '@/services/lease-pdf.service';
 import { CreateLeaseInput, RenewLeaseInput, TerminateLeaseInput, LeaseContract } from '@/types/lease-contract';
+import PageHeader from '@/components/layout/PageHeader';
 
 // Mock data for properties and tenants
 const mockProperties = [
@@ -111,24 +112,25 @@ export function LeaseContracts() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestion des Contrats de Bail</h1>
-          <p className="text-muted-foreground">
-            Gérez vos contrats de bail, colocation et renouvellements
-          </p>
-        </div>
-        <LeaseContractDialog
-          onSave={handleCreate}
-          properties={mockProperties}
-          tenants={mockTenants}
-        >
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau Contrat
-          </Button>
-        </LeaseContractDialog>
-      </div>
+      <PageHeader
+        title="Contrats de bail"
+        icon={FileText}
+        description="Gérez vos contrats de bail et renouvellements"
+        action={
+          <LeaseContractDialog
+            onSave={handleCreate}
+            properties={mockProperties}
+            tenants={mockTenants}
+          >
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau Contrat
+            </Button>
+          </LeaseContractDialog>
+        }
+      >
+        Contrats de bail
+      </PageHeader>
 
       <LeaseStatsCards
         cards={[

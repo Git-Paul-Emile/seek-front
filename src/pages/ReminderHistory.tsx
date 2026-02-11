@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
+import PageHeader from '@/components/layout/PageHeader';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   History,
-  Mail,
-  MessageSquare,
-  Smartphone,
   CheckCircle,
   XCircle,
   Clock,
@@ -14,6 +12,8 @@ import {
   Download,
   Trash2,
 } from 'lucide-react';
+
+
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -143,24 +143,23 @@ export function ReminderHistory() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <History className="h-8 w-8" /> Historique des relances
-          </h1>
-          <p className="text-muted-foreground">
-            Consultez l'historique de tous les rappels et relances envoyés
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportToCSV}>
-            <Download className="mr-2 h-4 w-4" /> Exporter CSV
-          </Button>
-          <Button variant="outline" onClick={handleClearHistory}>
-            <Trash2 className="mr-2 h-4 w-4" /> Effacer
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="HISTORIQUE"
+        description="Consultez l'historique de tous les rappels et relances envoyés"
+        icon={History}
+        action={
+          <>
+            <Button variant="outline" onClick={exportToCSV}>
+              <Download className="mr-2 h-4 w-4" /> Exporter CSV
+            </Button>
+            <Button variant="outline" onClick={handleClearHistory}>
+              <Trash2 className="mr-2 h-4 w-4" /> Effacer
+            </Button>
+          </>
+        }
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Historique des relances</h1>
+      </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

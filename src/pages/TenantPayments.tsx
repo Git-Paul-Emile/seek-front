@@ -9,7 +9,8 @@ import {
   Smartphone,
   Building2,
   Wallet,
-  DollarSign
+  DollarSign,
+  CreditCard as CreditCardIcon
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -22,6 +23,7 @@ import { Input } from '../components/ui/input';
 import { Separator } from '../components/ui/separator';
 import { useToast } from '../hooks/use-toast';
 import tenantService from '../services/tenant.service';
+import PageHeader from '../components/layout/PageHeader';
 
 interface PaymentInfo {
   id: string;
@@ -241,12 +243,19 @@ const TenantPayments: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Mes paiements</h1>
-        <p className="text-muted-foreground">
-          Gérez vos paiements de loyer
-        </p>
-      </div>
+      <PageHeader
+        title="PAIEMENTS"
+        icon={CreditCardIcon}
+        description="Gérez vos paiements de loyer"
+        action={
+          <Button variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Historique
+          </Button>
+        }
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Paiements</h1>
+      </PageHeader>
 
       {/* Upcoming Payment */}
       {upcoming && (

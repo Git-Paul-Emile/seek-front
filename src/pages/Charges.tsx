@@ -10,6 +10,8 @@ import { Charge, ChargeFilters, ChargeStats, TYPE_CHARGE_LABELS, MODE_REPARTITIO
 import ChargesService from '@/services/charges.service';
 import chargePdfService from '@/services/charge-pdf.service';
 import { useToast } from '@/hooks/use-toast';
+import PageHeader from '@/components/layout/PageHeader';
+import { Receipt, Download, Plus } from 'lucide-react';
 
 export default function ChargesPage() {
   const { toast } = useToast();
@@ -156,18 +158,26 @@ export default function ChargesPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Gestion des Charges</h1>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={handleBulkDownload}>
-            Tout télécharger PDF
-          </Button>
-          <Button onClick={handleCreateCharge}>
-            Ajouter une charge
-          </Button>
-        </div>
-      </div>
+    <div className="container mx-auto py-8 space-y-6">
+      <PageHeader
+        title="Gestion des charges"
+        icon={Receipt}
+        description="Gérez les charges locatives"
+        action={
+          <>
+            <Button variant="outline" onClick={handleBulkDownload}>
+              <Download className="mr-2 h-4 w-4" />
+              Tout télécharger
+            </Button>
+            <Button onClick={handleCreateCharge}>
+              <Plus className="mr-2 h-4 w-4" />
+              Ajouter une charge
+            </Button>
+          </>
+        }
+      >
+        Gestion des charges
+      </PageHeader>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

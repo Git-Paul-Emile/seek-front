@@ -310,8 +310,9 @@ const AdminProperties = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
+      
       <PageHeader
-        title="Gestion des biens"
+        title="Mes biens"
         icon={Building2}
         description="Gérez et suivez toutes vos annonces"
         action={
@@ -320,7 +321,7 @@ const AdminProperties = () => {
           </Button>
         }
       >
-        <h1 className="font-display text-3xl md:text-4xl font-bold mt-2">Mes biens immobiliers</h1>
+        Mes biens immobiliers
       </PageHeader>
 
         {/* Stats Cards */}

@@ -12,6 +12,8 @@ import { receiptsService } from '../services/receipts.service';
 import { receiptPdfService } from '../services/receipt-pdf.service';
 import { notificationsService } from '../services/notifications.service';
 import { useToast } from '../components/ui/use-toast';
+import PageHeader from '../components/layout/PageHeader';
+import { FileText as ReceiptIcon, Download, Plus } from 'lucide-react';
 
 export default function ReceiptsPage() {
   const { toast } = useToast();
@@ -131,18 +133,26 @@ export default function ReceiptsPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Gestion des Quittances</h1>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={handleBulkDownload}>
-            Tout télécharger PDF
-          </Button>
-          <Button onClick={() => setShowGenerateDialog(true)}>
-            Générer quittance
-          </Button>
-        </div>
-      </div>
+    <div className="container mx-auto py-8 space-y-6">
+      <PageHeader
+        title="Quittances"
+        icon={ReceiptIcon}
+        description="Gérez les quittances de loyer"
+        action={
+          <>
+            <Button variant="outline" onClick={handleBulkDownload}>
+              <Download className="mr-2 h-4 w-4" />
+              Tout télécharger
+            </Button>
+            <Button onClick={() => setShowGenerateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Générer quittance
+            </Button>
+          </>
+        }
+      >
+        Gestion des quittances
+      </PageHeader>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

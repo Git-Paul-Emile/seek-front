@@ -22,23 +22,20 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   className,
 }) => {
   return (
-    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4", className)}>
+    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6", className)}>
       <div>
-        {Icon && (
-          <div className="flex items-center gap-2 text-primary mb-2">
+        <div className="flex items-center gap-2 text-primary mb-1">
+          {Icon && (
             <Icon className={cn("w-4 h-4", iconClassName)} />
-            <span className="text-sm font-semibold uppercase tracking-wider font-body">{title}</span>
-          </div>
-        )}
-        {!Icon && (
-          <span className="text-sm font-semibold uppercase tracking-wider font-body text-primary mb-2 block">
-            {title}
-          </span>
+          )}
+          <span className="text-sm font-semibold uppercase tracking-wider font-body">{title}</span>
+        </div>
+        {children && (
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{children}</h1>
         )}
         {description && (
-          <p className="text-muted-foreground mt-1">{description}</p>
+          <p className="text-muted-foreground text-sm mt-1">{description}</p>
         )}
-        {children}
       </div>
       {action && <div className="self-start">{action}</div>}
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Clock, CreditCard, FileText, AlertCircle, Check, CheckCheck } from 'lucide-react';
+import { Bell, Clock, CreditCard, FileText, AlertCircle, Check, CheckCheck, BellRing } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -7,6 +7,7 @@ import { ScrollArea } from '../components/ui/scroll-area';
 import { useToast } from '../hooks/use-toast';
 import tenantService from '../services/tenant.service';
 import { Notification } from '../types/tenant';
+import PageHeader from '../components/layout/PageHeader';
 
 const TenantNotifications: React.FC = () => {
   const { toast } = useToast();
@@ -93,20 +94,21 @@ const TenantNotifications: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Notifications</h1>
-          <p className="text-muted-foreground">
-            Restez informé de l'actualité de votre colocation
-          </p>
-        </div>
-        {unreadCount > 0 && (
-          <Button variant="outline" onClick={markAllAsRead}>
-            <CheckCheck className="mr-2 h-4 w-4" />
-            Tout marquer comme lu
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="NOTIFICATIONS"
+        icon={BellRing}
+        description="Restez informé de l'actualité de votre colocation"
+        action={
+          unreadCount > 0 && (
+            <Button variant="outline" onClick={markAllAsRead}>
+              <CheckCheck className="mr-2 h-4 w-4" />
+              Tout marquer comme lu
+            </Button>
+          )
+        }
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+      </PageHeader>
 
       {/* Stats */}
       <div className="flex items-center gap-4">

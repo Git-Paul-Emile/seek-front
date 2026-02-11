@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Mail, Phone, Search, MoreHorizontal } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
 
 const clients = [
   {
@@ -45,17 +46,16 @@ const clients = [
 const AdminClients = () => {
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-primary mb-2">
-            <Users className="w-4 h-4" />
-            <span className="text-sm font-semibold uppercase tracking-wider font-body">Gestion clients</span>
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold">Mes clients</h1>
-          <p className="text-muted-foreground mt-1">Gérez vos contacts et prospects</p>
-        </div>
-        <Button>+ Ajouter un client</Button>
-      </div>
+      <PageHeader
+        title="Gestion clients"
+        icon={Users}
+        description="Gérez vos contacts et prospects"
+        action={
+          <Button>+ Ajouter un client</Button>
+        }
+      >
+        Mes clients
+      </PageHeader>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">

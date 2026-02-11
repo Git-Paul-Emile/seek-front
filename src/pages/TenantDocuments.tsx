@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Download, Eye, Upload, Trash2, File, FileSpreadsheet } from 'lucide-react';
+import { FileText, Download, Eye, Upload, Trash2, File, FileSpreadsheet, Files } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { useToast } from '../hooks/use-toast';
 import tenantService from '../services/tenant.service';
+import PageHeader from '../components/layout/PageHeader';
 
 interface Document {
   id: string;
@@ -99,21 +100,24 @@ const TenantDocuments: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Mes documents</h1>
-        <p className="text-muted-foreground">
-          Accédez à tous vos documents
-        </p>
-      </div>
+      <PageHeader
+        title="DOCUMENTS"
+        icon={Files}
+        description="Accédez à tous vos documents"
+        action={
+          <Input
+            placeholder="Rechercher un document..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-xs"
+          />
+        }
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Mes documents</h1>
+      </PageHeader>
 
       {/* Search */}
       <div className="flex items-center gap-4">
-        <Input
-          placeholder="Rechercher un document..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-md"
-        />
         <Badge variant="secondary">
           {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''}
         </Badge>

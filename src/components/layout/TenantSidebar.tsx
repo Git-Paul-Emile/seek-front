@@ -9,7 +9,8 @@ import {
   Bell, 
   Settings, 
   Home,
-  LogOut
+  LogOut,
+  FileStack
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
@@ -28,6 +29,7 @@ const TenantSidebar: React.FC = () => {
     { icon: Receipt, label: 'Charges', path: '/tenant/charges' },
     { icon: Users, label: 'Colocataires', path: '/tenant/flatmates' },
     { icon: Bell, label: 'Notifications', path: '/tenant/notifications' },
+    { icon: FileStack, label: 'Quittances', path: '/tenant/receipts' },
     { icon: FileText, label: 'Documents', path: '/tenant/documents' },
   ];
 

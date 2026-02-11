@@ -39,6 +39,7 @@ import TenantCharges from "./pages/TenantCharges";
 import TenantFlatmates from "./pages/TenantFlatmates";
 import TenantNotifications from "./pages/TenantNotifications";
 import TenantDocuments from "./pages/TenantDocuments";
+import TenantReceipts from "./pages/TenantReceipts";
 
 const queryClient = new QueryClient();
 
@@ -121,6 +122,7 @@ const App = () => (
             <Route path="/tenant/flatmates" element={<TenantFlatmates />} />
             <Route path="/tenant/notifications" element={<TenantNotifications />} />
             <Route path="/tenant/documents" element={<TenantDocuments />} />
+            <Route path="/tenant/receipts" element={<TenantReceipts />} />
             <Route path="/tenant/profile" element={<TenantProfile />} />
           </Route>
           

@@ -1,4 +1,4 @@
-import { Tenant, RoomInfo, LeaseContractInfo, TenantDashboardStats, Notification } from '../types/tenant';
+import { Tenant, RoomInfo, LeaseContractInfo, TenantDashboardStats, Notification, PropertyInfo, CommonSpace, ColocationRules, Colocataire } from '../types/tenant';
 import tenantAuthService from './tenant-auth.service';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -39,8 +39,120 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
 ];
 
+// Données simulées pour PropertyInfo
+const MOCK_PROPERTY: PropertyInfo = {
+  id: 'prop-1',
+  name: 'Appartement T3 - Centre Ville',
+  address: '123 Rue de la République, Apt 4B',
+  city: 'Dakar',
+  district: 'Plateau',
+  proximity: 'Transports, Commerces, Écoles',
+  type: 'Appartement T3',
+  surface: 85,
+  rooms: 3,
+  bathrooms: 2,
+  floor: '4ème étage',
+  ownerName: 'Jean Dupont',
+  ownerPhone: '+221 77 123 45 67',
+  ownerEmail: 'jean.dupont@example.com',
+  technicalPhone: '+221 76 987 65 43',
+  technicalEmail: 'technique@seek.com',
+  emergencyPhone: '+221 70 000 00 00',
+  includedEquipments: ['Meubles', 'Cuisine équipée', 'WiFi', 'Machine à laver'],
+  equipments: [
+    { id: 'eq-1', name: 'WiFi Fibre', type: 'wifi', description: 'Connexion internet haut débit', isFunctional: true },
+    { id: 'eq-2', name: 'Climatisation', type: 'climatisation', description: 'Climatisation réversible', isFunctional: true },
+    { id: 'eq-3', name: 'TV LED 55"', type: 'tv', description: 'Télévision grand écran', isFunctional: true },
+    { id: 'eq-4', name: 'Réfrigérateur', type: 'refrigerateur', description: 'Réfrigérateur américain', isFunctional: true },
+    { id: 'eq-5', name: 'Machine à laver', type: 'machine_a_laver', description: 'Lave-linge 8kg', isFunctional: true },
+    { id: 'eq-6', name: 'Cuisine équipée', type: 'cuisine_equipee', description: 'Four, plaques, hotte', isFunctional: true },
+  ]
+};
+
+// Données simulées pour CommonSpaces
+const MOCK_COMMON_SPACES: CommonSpace[] = [
+  {
+    id: 'cs-1',
+    name: 'Cuisine',
+    type: 'kitchen',
+    description: 'Espace commun pour la préparation des repas',
+    surface: 20,
+    sharedWith: 2,
+    rules: ['Nettoyage après utilisation', 'Pas d\'aliments périmés', 'Respect des affaires des autres'],
+  },
+  {
+    id: 'cs-2',
+    name: 'Salon',
+    type: 'living_room',
+    description: 'Espace commun de détente',
+    surface: 30,
+    sharedWith: 2,
+    rules: ['Chaussures interdites', 'Télévision partagée -尊重 des choix', 'Volume sonore modéré'],
+  },
+  {
+    id: 'cs-3',
+    name: 'Salle de bain commune',
+    type: 'bathroom',
+    description: 'Salle de bain partagée',
+    surface: 8,
+    sharedWith: 1,
+    rules: ['Nettoyage après utilisation', 'Produits personnels rangés', '30 min max sous la douche'],
+  },
+  {
+    id: 'cs-4',
+    name: 'Terrasse',
+    type: 'terrasse',
+    description: 'Espace extérieur commun',
+    surface: 15,
+    sharedWith: 2,
+    rules: ['Fumer interdit', 'Nettoyage après barbecue', 'Respect des horaires de calme'],
+  },
+];
+
+// Données simulées pour les colocataires
+const MOCK_COLOCATAIRES: Colocataire[] = [
+  {
+    id: 'coloc-1',
+    firstName: 'Marie',
+    lastName: 'Dubois',
+    email: 'marie.dubois@email.com',
+    phone: '+221 77 111 22 33',
+    roomNumber: 'Chambre 1',
+    moveInDate: '2025-09-01',
+    isActive: true,
+  },
+  {
+    id: 'coloc-2',
+    firstName: 'Pierre',
+    lastName: 'Martin',
+    email: 'pierre.martin@email.com',
+    phone: '+221 77 444 55 66',
+    roomNumber: 'Chambre 2',
+    moveInDate: '2025-10-15',
+    isActive: true,
+  },
+];
+
+// Règles de colocation simulées
+const MOCK_COLOCATION_RULES: ColocationRules = {
+  id: 'rules-1',
+  quietHoursStart: '22:00',
+  quietHoursEnd: '08:00',
+  guestPolicy: 'Invités autorisés jusqu\'à 23h en semaine, minuit le week-end. Prévenir les colocataires.',
+  cleaningSchedule: 'Nettoyage轮流 chaque semaine. Planning affiché dans la cuisine.',
+  sharedExpenses: 'Produits ménagers achetés en commun et partagés équitablement.',
+  noiseLevel: ' Niveau sonore modéré en journée, silence absolu la nuit.',
+  additionalRules: [
+    'Respect des affaires personnelles de chacun',
+    'Communication ouverte en cas de problème',
+    'Règles de propreté à respecter scrupuleusement',
+    'Pas de musique forte après 22h',
+    'Prévenir en cas de retard de paiement',
+  ],
+};
+
 class TenantService {
-  private useMock = true; // À mettre à false quand le backend sera disponible
+  private useMock = true;
 
   private getAuthHeaders(): HeadersInit {
     const token = tenantAuthService.getToken();
@@ -51,6 +163,18 @@ class TenantService {
   }
 
   async getDashboardStats(): Promise<TenantDashboardStats> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return {
+        upcomingPayments: 500,
+        pendingCharges: 150,
+        documentsCount: 5,
+        messagesCount: 2,
+        leaseEndDate: '2026-08-31',
+        daysUntilPayment: 5,
+      };
+    }
+
     const response = await fetch(`${API_URL}/tenants/dashboard/stats`, {
       headers: this.getAuthHeaders(),
     });
@@ -63,6 +187,20 @@ class TenantService {
   }
 
   async getRoomInfo(): Promise<RoomInfo | null> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return {
+        id: 'room-1',
+        number: 'Chambre 3',
+        propertyId: 'prop-1',
+        propertyName: 'Appartement T3 - Centre Ville',
+        address: '123 Rue de la République, Apt 4B',
+        monthlyRent: 150000,
+        capacity: 1,
+        currentOccupants: 1,
+      };
+    }
+
     const response = await fetch(`${API_URL}/tenants/room`, {
       headers: this.getAuthHeaders(),
     });
@@ -73,7 +211,68 @@ class TenantService {
     return response.json();
   }
 
+  async getPropertyInfo(): Promise<PropertyInfo | null> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return MOCK_PROPERTY;
+    }
+
+    const response = await fetch(`${API_URL}/tenants/property`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error('Échec de la récupération des informations du logement');
+
+    return response.json();
+  }
+
+  async getCommonSpaces(): Promise<CommonSpace[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return MOCK_COMMON_SPACES;
+    }
+
+    const response = await fetch(`${API_URL}/tenants/common-spaces`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) throw new Error('Échec de la récupération des espaces communs');
+
+    return response.json();
+  }
+
+  async getColocationRules(): Promise<ColocationRules | null> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return MOCK_COLOCATION_RULES;
+    }
+
+    const response = await fetch(`${API_URL}/tenants/colocation-rules`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error('Échec de la récupération des règles de colocation');
+
+    return response.json();
+  }
+
   async getLeaseContract(): Promise<LeaseContractInfo | null> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return {
+        id: 'lease-1',
+        startDate: '2025-09-01',
+        endDate: '2026-08-31',
+        monthlyRent: 150000,
+        securityDeposit: 300000,
+        status: 'active',
+        propertyName: 'Appartement T3 - Centre Ville',
+        roomNumber: 'Chambre 3',
+      };
+    }
+
     const response = await fetch(`${API_URL}/tenants/lease-contract`, {
       headers: this.getAuthHeaders(),
     });
@@ -86,7 +285,6 @@ class TenantService {
 
   async getNotifications(): Promise<Notification[]> {
     if (this.useMock) {
-      // Simuler un délai réseau
       await new Promise(resolve => setTimeout(resolve, 300));
       const stored = localStorage.getItem('notifications');
       if (stored) {
@@ -127,6 +325,13 @@ class TenantService {
   }
 
   async getUpcomingPayments(): Promise<any[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return [
+        { id: 'pay-1', month: 'Mars 2026', amount: 150000, dueDate: '2026-03-01', status: 'pending' },
+      ];
+    }
+
     const response = await fetch(`${API_URL}/tenants/payments/upcoming`, {
       headers: this.getAuthHeaders(),
     });
@@ -137,6 +342,15 @@ class TenantService {
   }
 
   async getPaymentHistory(): Promise<any[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return [
+        { id: 'pay-2', month: 'Février 2026', amount: 150000, dueDate: '2026-02-01', status: 'paid', paymentDate: '2026-02-01' },
+        { id: 'pay-3', month: 'Janvier 2026', amount: 150000, dueDate: '2026-01-01', status: 'paid', paymentDate: '2026-01-02' },
+        { id: 'pay-4', month: 'Décembre 2025', amount: 150000, dueDate: '2025-12-01', status: 'paid', paymentDate: '2025-12-01' },
+      ];
+    }
+
     const response = await fetch(`${API_URL}/tenants/payments/history`, {
       headers: this.getAuthHeaders(),
     });
@@ -147,6 +361,14 @@ class TenantService {
   }
 
   async getPendingCharges(): Promise<any[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return [
+        { id: 'charge-1', description: 'Charge commune Février', amount: 25000, dueDate: '2026-02-28', status: 'pending' },
+        { id: 'charge-2', description: 'Internet', amount: 10000, dueDate: '2026-02-28', status: 'pending' },
+      ];
+    }
+
     const response = await fetch(`${API_URL}/tenants/charges/pending`, {
       headers: this.getAuthHeaders(),
     });
@@ -157,6 +379,14 @@ class TenantService {
   }
 
   async getDocuments(): Promise<any[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return [
+        { id: 'doc-1', name: 'Contrat de bail', type: 'contract', createdAt: '2025-09-01' },
+        { id: 'doc-2', name: 'Quittance Janvier 2026', type: 'receipt', createdAt: '2026-02-01' },
+      ];
+    }
+
     const response = await fetch(`${API_URL}/tenants/documents`, {
       headers: this.getAuthHeaders(),
     });
@@ -176,7 +406,12 @@ class TenantService {
     return response.blob();
   }
 
-  async getColocataires(): Promise<any[]> {
+  async getColocataires(): Promise<Colocataire[]> {
+    if (this.useMock) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return MOCK_COLOCATAIRES;
+    }
+
     const response = await fetch(`${API_URL}/tenants/colocataires`, {
       headers: this.getAuthHeaders(),
     });

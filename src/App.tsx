@@ -33,6 +33,8 @@ import TenantLogin from "./pages/TenantLogin";
 import TenantDashboard from "./pages/TenantDashboard";
 import TenantProfile from "./pages/TenantProfile";
 import TenantRoom from "./pages/TenantRoom";
+import TenantProperty from "./pages/TenantProperty";
+import TenantCommonSpaces from "./pages/TenantCommonSpaces";
 import TenantLease from "./pages/TenantLease";
 import TenantPayments from "./pages/TenantPayments";
 import TenantCharges from "./pages/TenantCharges";
@@ -117,6 +119,8 @@ const App = () => (
             <Route path="/tenant/login" element={<TenantLogin />} />
             <Route path="/tenant/dashboard" element={<TenantDashboard />} />
             <Route path="/tenant/room" element={<TenantRoom />} />
+            <Route path="/tenant/property" element={<TenantProperty />} />
+            <Route path="/tenant/common-spaces" element={<TenantCommonSpaces />} />
             <Route path="/tenant/lease" element={<TenantLease />} />
             <Route path="/tenant/payments" element={<TenantPayments />} />
             <Route path="/tenant/charges" element={<TenantCharges />} />

@@ -10,7 +10,9 @@ import {
   Settings, 
   Home,
   LogOut,
-  FileStack
+  FileStack,
+  Building,
+  LayoutGrid
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
@@ -24,6 +26,8 @@ const TenantSidebar: React.FC = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/tenant/dashboard' },
     { icon: Home, label: 'Ma chambre', path: '/tenant/room' },
+    { icon: Building, label: 'Mon logement', path: '/tenant/property' },
+    { icon: LayoutGrid, label: 'Espaces communs', path: '/tenant/common-spaces' },
     { icon: FileText, label: 'Mon bail', path: '/tenant/lease' },
     { icon: CreditCard, label: 'Paiements', path: '/tenant/payments' },
     { icon: Receipt, label: 'Charges', path: '/tenant/charges' },

@@ -8,6 +8,8 @@ import TenantProfile from '../pages/TenantProfile';
 import TenantReceipts from '../pages/TenantReceipts';
 import TenantNotifications from '../pages/TenantNotifications';
 import TenantNotificationSettings from '../pages/TenantNotificationSettings';
+import TenantProperty from '../pages/TenantProperty';
+import TenantCommonSpaces from '../pages/TenantCommonSpaces';
 
 const TenantLayoutWrapper = () => (
   <TenantLayout>
@@ -19,6 +21,8 @@ export const TenantRoutes = () => (
   <Route element={<TenantLayoutWrapper />}>
     <Route path="/tenant/dashboard" element={<TenantDashboard />} />
     <Route path="/tenant/room" element={<TenantDashboard />} />
+    <Route path="/tenant/property" element={<TenantProperty />} />
+    <Route path="/tenant/common-spaces" element={<TenantCommonSpaces />} />
     <Route path="/tenant/lease" element={<TenantLease />} />
     <Route path="/tenant/payments" element={<TenantDashboard />} />
     <Route path="/tenant/charges" element={<TenantCharges />} />

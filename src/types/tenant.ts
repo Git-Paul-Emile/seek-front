@@ -12,6 +12,7 @@ export interface Tenant {
   monthlyRent?: number;
   securityDeposit?: number;
   isActive: boolean;
+  isColocation: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -136,4 +137,71 @@ export interface UpdateNotificationPreferencesInput {
   email?: string;
   phone?: string;
   whatsapp?: string;
+}
+
+// Types pour Property et Common Spaces
+export interface PropertyInfo {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  district: string;
+  proximity: string;
+  type: string;
+  surface: number;
+  rooms: number;
+  bathrooms: number;
+  floor?: string;
+  ownerName: string;
+  ownerPhone: string;
+  ownerEmail: string;
+  technicalPhone?: string;
+  technicalEmail?: string;
+  emergencyPhone?: string;
+  equipments?: Equipment[];
+  includedEquipments?: string[];
+}
+
+export interface Equipment {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  quantity?: number;
+  isFunctional: boolean;
+  lastMaintenance?: string;
+}
+
+export interface CommonSpace {
+  id: string;
+  name: string;
+  type: 'kitchen' | 'living_room' | 'bathroom' | 'garden' | 'terrasse' | 'parking' | 'buanderie' | 'autre';
+  description: string;
+  surface?: number;
+  equipments?: Equipment[];
+  sharedWith: number;
+  rules?: string[];
+}
+
+export interface ColocationRules {
+  id: string;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  guestPolicy: string;
+  cleaningSchedule: string;
+  sharedExpenses: string;
+  noiseLevel: string;
+  additionalRules: string[];
+}
+
+export interface Colocataire {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  profilePhoto?: string;
+  roomNumber: string;
+  moveInDate: string;
+  isActive: boolean;
 }

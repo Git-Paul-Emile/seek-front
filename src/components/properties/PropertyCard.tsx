@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { MapPin, Bed, Bath, Maximize, Star } from "lucide-react";
-import { Property, formatPrice, typeLabels } from "@/data/properties";
+import { MapPin, Bed, Bath, Maximize, Star, Users, Sofa, Calendar } from "lucide-react";
+import { Property, formatPrice, typeLabels, rentalModeLabels } from "@/data/properties";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 
@@ -10,6 +10,27 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property, index = 0 }: PropertyCardProps) => {
+  // Calculate available rooms count
+  const availableRooms = property.rooms?.filter((r) => r.status === "libre").length || 0;
+
+  // Check if furnished
+  const isFurnished = property.furnished === true;
+
+  // Format availability date
+  const formatAvailability = () => {
+    if (!property.availableFrom) return null;
+    const date = new Date(property.availableFrom);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (date <= today) {
+      return "Disponible immédiatement";
+    }
+    
+    const options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
+    return `Disponible à partir du ${date.toLocaleDateString("fr-FR", options)}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -26,7 +47,7 @@ const PropertyCard = ({ property, index = 0 }: PropertyCardProps) => {
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
-            <div className="absolute top-3 left-3 flex gap-2">
+            <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
               <Badge className="bg-secondary text-secondary-foreground text-xs">
                 {typeLabels[property.type]}
               </Badge>
@@ -35,10 +56,29 @@ const PropertyCard = ({ property, index = 0 }: PropertyCardProps) => {
                   <Star className="w-3 h-3" /> Vedette
                 </Badge>
               )}
+              {property.rentalMode === "colocation" && (
+                <Badge className="bg-primary text-primary-foreground text-xs gap-1">
+                  <Users className="w-3 h-3" /> Colocation
+                </Badge>
+              )}
+              {/* Badge meublé/non meublé */}
+              {property.type !== "terrain" && property.type !== "bureau" && (
+                <Badge className={`${isFurnished ? "bg-amber-500" : "bg-gray-500"} text-white text-xs gap-1`}>
+                  <Sofa className="w-3 h-3" />
+                  {isFurnished ? "Meublé" : "Non meublé"}
+                </Badge>
+              )}
+            </div>
+            <div className="absolute top-3 right-3 flex gap-2">
+              {availableRooms > 0 && (
+                <Badge className="bg-green-600 text-white text-xs gap-1">
+                  <Bed className="w-3 h-3" /> {availableRooms} dispo
+                </Badge>
+              )}
             </div>
             <div className="absolute bottom-3 right-3">
               <Badge variant="outline" className="bg-background/90 backdrop-blur-sm text-foreground font-semibold border-0">
-                {property.status}
+                {property.status === "libre" ? "Disponible" : property.status}
               </Badge>
             </div>
           </div>
@@ -47,7 +87,7 @@ const PropertyCard = ({ property, index = 0 }: PropertyCardProps) => {
           <div className="p-4 space-y-3">
             <div>
               <p className="text-primary font-bold text-lg">
-                {formatPrice(property.price, property.status)}
+                {formatPrice(property.price, property.status, property.rentalMode)}
               </p>
               <h3 className="font-display font-semibold text-card-foreground text-base mt-1 group-hover:text-primary transition-colors line-clamp-1">
                 {property.title}
@@ -56,7 +96,7 @@ const PropertyCard = ({ property, index = 0 }: PropertyCardProps) => {
 
             <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
               <MapPin className="w-3.5 h-3.5 shrink-0" />
-              <span className="line-clamp-1">{property.location.address}, {property.location.city}</span>
+              <span className="line-clamp-1">{property.location.neighborhood}, {property.location.city}</span>
             </div>
 
             {property.type !== "terrain" && (
@@ -77,6 +117,21 @@ const PropertyCard = ({ property, index = 0 }: PropertyCardProps) => {
                   <Maximize className="w-4 h-4" />
                   <span>{property.area} m²</span>
                 </div>
+              </div>
+            )}
+            
+            {/* Colocation info */}
+            {property.rentalMode === "colocation" && property.rooms && (
+              <div className="text-xs text-muted-foreground pt-1">
+                {property.rooms.length} chambres · {availableRooms} disponible{availableRooms > 1 ? "s" : ""}
+              </div>
+            )}
+
+            {/* Disponibilité */}
+            {property.availableFrom && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{formatAvailability()}</span>
               </div>
             )}
           </div>

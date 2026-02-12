@@ -33,6 +33,11 @@ const navItems = [
     icon: Building2,
   },
   {
+    title: "Gestion Biens",
+    url: "/admin/property-management",
+    icon: Building2,
+  },
+  {
     title: "Contrats de bail",
     url: "/admin/leases",
     icon: FileText,

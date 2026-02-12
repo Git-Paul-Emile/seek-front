@@ -6,22 +6,57 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Settings, User, Bell, Lock, Globe, CreditCard, MapPin, FileText, Users } from "lucide-react";
+import PageHeader from "@/components/layout/PageHeader";
+import {
+  Settings,
+  CreditCard,
+  MapPin,
+  FileText,
+  Users,
+  Bell,
+  Globe,
+  Save,
+  Loader2,
+} from "lucide-react";
 import { CURRENCY, GEOGRAPHIC_ZONES, LEASE_CONTRACT_TEMPLATES, COLOCATION_RULES } from "@/config/seek-config";
+import { useToast } from "@/components/ui/use-toast";
 
-const AdminSettings = () => {
+const AgencySettings: React.FC = () => {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
   const [currency, setCurrency] = useState('xof');
-  const [timezone, setTimezone] = useState('utc');
   const [selectedRegion, setSelectedRegion] = useState('');
 
+  const handleSave = async () => {
+    setSaving(true);
+    // Simuler une sauvegarde
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast({
+      title: 'Paramètres enregistrés',
+      description: 'Vos paramètres ont été sauvegardés avec succès.',
+    });
+    setSaving(false);
+  };
+
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center gap-2 text-primary mb-2">
-        <Settings className="w-4 h-4" />
-        <span className="text-sm font-semibold uppercase tracking-wider font-body">Paramètres</span>
-      </div>
-      <h1 className="font-display text-3xl md:text-4xl font-bold">Paramètres du compte</h1>
-      <p className="text-muted-foreground mt-1">Gérez vos informations et préférences</p>
+    <div className="space-y-6">
+      <PageHeader
+        title="PARAMÈTRES"
+        icon={Settings}
+        description="Configurez les paramètres de votre agence"
+        action={
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            Enregistrer
+          </Button>
+        }
+      >
+        <h1 className="text-3xl font-bold tracking-tight">Paramètres de l'agence</h1>
+      </PageHeader>
 
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
@@ -47,75 +82,40 @@ const AdminSettings = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                <CardTitle>Informations personnelles</CardTitle>
-              </div>
-              <CardDescription>Mettez à jour vos informations de profil</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Prénom</Label>
-                  <Input id="firstName" defaultValue="Jean" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Nom</Label>
-                  <Input id="lastName" defaultValue="Dupont" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="jean.dupont@email.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input id="phone" defaultValue="+221 77 123 45 67" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="company">Entreprise</Label>
-                <Input id="company" defaultValue="SEEK Immobilier" />
-              </div>
-              <Button className="w-full">Enregistrer les modifications</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
                 <CardTitle>Notifications</CardTitle>
               </div>
-              <CardDescription>Gérez vos préférences de notification</CardDescription>
+              <CardDescription>Configurez les notifications par défaut</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Email notifications</p>
-                  <p className="text-sm text-muted-foreground">Recevoir les mises à jour par email</p>
+                  <p className="text-sm text-muted-foreground">Envoyer les notifications par email</p>
                 </div>
                 <Switch defaultChecked />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Nouvelle demande</p>
-                  <p className="text-sm text-muted-foreground">Être alerté lors d'une nouvelle demande</p>
+                  <p className="font-medium">SMS notifications</p>
+                  <p className="text-sm text-muted-foreground">Envoyer les notifications urgentes par SMS</p>
                 </div>
                 <Switch defaultChecked />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Statistiques hebdomadaires</p>
-                  <p className="text-sm text-muted-foreground">Recevoir un résumé chaque semaine</p>
+                  <p className="font-medium">WhatsApp notifications</p>
+                  <p className="text-sm text-muted-foreground">Envoyer les notifications par WhatsApp</p>
                 </div>
-                <Switch />
+                <Switch defaultChecked />
               </div>
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Alertes SMS</p>
-                  <p className="text-sm text-muted-foreground">Recevoir des alertes SMS urgentes</p>
+                  <p className="font-medium">Rappels automatiques</p>
+                  <p className="text-sm text-muted-foreground">Envoyer les rappels de paiement automatiquement</p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -124,26 +124,28 @@ const AdminSettings = () => {
 
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                <CardTitle>Sécurité</CardTitle>
-              </div>
-              <CardDescription>Gérez vos paramètres de sécurité</CardDescription>
+              <CardTitle>Coordonnées de l'agence</CardTitle>
+              <CardDescription>Ces informations seront utilisées dans les communications</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-                <Input id="currentPassword" type="password" />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Email de contact</Label>
+                  <Input defaultValue="contact@seek.sn" placeholder="contact@agence.sn" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Téléphone</Label>
+                  <Input defaultValue="+221 77 123 45 67" placeholder="+221 XX XXX XX XX" />
+                </div>
+                <div className="space-y-2">
+                  <Label>WhatsApp</Label>
+                  <Input defaultValue="+221 77 123 45 67" placeholder="+221 XX XXX XX XX" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Site web</Label>
+                  <Input defaultValue="https://seek.sn" placeholder="https://agence.sn" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                <Input id="newPassword" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                <Input id="confirmPassword" type="password" />
-              </div>
-              <Button className="w-full">Changer le mot de passe</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -162,7 +164,7 @@ const AdminSettings = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Devise par défaut</Label>
-                  <select 
+                  <select
                     className="w-full p-2 border rounded-md bg-background"
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
@@ -177,26 +179,18 @@ const AdminSettings = () => {
                   <Input value={CURRENCY.symbol} disabled />
                 </div>
               </div>
-              
+
               <div className="p-4 bg-muted rounded-lg">
                 <h4 className="font-medium mb-2">Exemple de format</h4>
                 <p className="text-2xl font-bold">{CURRENCY.format(150000)}</p>
-                <p className="text-sm text-muted-foreground">Format standard: 150 000 {CURRENCY.symbol}</p>
               </div>
-
-              <div className="space-y-2">
-                <Label>Préfixe/Symbole personnalisé</Label>
-                <Input defaultValue={CURRENCY.symbol} placeholder="ex:FCFA" />
-              </div>
-              
-              <Button className="w-full">Enregistrer les préférences de devise</Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Frais de dossier</CardTitle>
-              <CardDescription>Configurez les frais appliqués aux transactions</CardDescription>
+              <CardTitle>Frais et commissions</CardTitle>
+              <CardDescription>Configurez les frais appliqués par votre agence</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -211,7 +205,7 @@ const AdminSettings = () => {
                   <p className="text-sm text-muted-foreground">En {CURRENCY.code}</p>
                 </div>
               </div>
-              
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Commission location (%)</Label>
@@ -222,8 +216,6 @@ const AdminSettings = () => {
                   <Input type="number" defaultValue="3" />
                 </div>
               </div>
-              
-              <Button className="w-full">Enregistrer les frais</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -236,12 +228,12 @@ const AdminSettings = () => {
                 <MapPin className="h-5 w-5" />
                 <CardTitle>Zones géographiques du Sénégal</CardTitle>
               </div>
-              <CardDescription>Gérez les régions et localités couvertes par votre agence</CardDescription>
+              <CardDescription>Sélectionnez les zones couvertes par votre agence</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Région principale</Label>
-                <select 
+                <select
                   className="w-full p-2 border rounded-md bg-background"
                   value={selectedRegion}
                   onChange={(e) => setSelectedRegion(e.target.value)}
@@ -271,6 +263,8 @@ const AdminSettings = () => {
                 </div>
               )}
 
+              <Separator />
+
               <div className="space-y-2">
                 <Label>Localités populaires (Dakar)</Label>
                 <div className="grid gap-2 md:grid-cols-4">
@@ -286,21 +280,13 @@ const AdminSettings = () => {
               <Separator />
 
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label>Code postal Dakar</Label>
-                  <Input defaultValue={GEOGRAPHIC_ZONES.postalCodes.dakar} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Code postal Thiès</Label>
-                  <Input defaultValue={GEOGRAPHIC_ZONES.postalCodes.thies} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Code postal Saint-Louis</Label>
-                  <Input defaultValue={GEOGRAPHIC_ZONES.postalCodes['saint-louis']} />
-                </div>
+                {Object.entries(GEOGRAPHIC_ZONES.postalCodes).slice(0, 6).map(([city, code]) => (
+                  <div key={city} className="space-y-2">
+                    <Label className="capitalize">Code postal {city}</Label>
+                    <Input defaultValue={code} />
+                  </div>
+                ))}
               </div>
-
-              <Button className="w-full">Enregistrer les zones géographiques</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -324,12 +310,10 @@ const AdminSettings = () => {
                         <h4 className="font-medium">{template.name}</h4>
                         <p className="text-sm text-muted-foreground">{template.description}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Switch defaultChecked />
-                      </div>
+                      <Switch defaultChecked />
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Clauses: {template.clauses.join(', ')}
+                      Clauses: {template.clauses.slice(0, 5).join(', ')}...
                     </div>
                   </div>
                 ))}
@@ -339,12 +323,10 @@ const AdminSettings = () => {
 
               <h4 className="font-medium">Mentions légales obligatoires</h4>
               <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                {LEASE_CONTRACT_TEMPLATES.mandatoryMentions.map((mention, index) => (
+                {LEASE_CONTRACT_TEMPLATES.mandatoryMentions.slice(0, 5).map((mention, index) => (
                   <li key={index}>{mention}</li>
                 ))}
               </ul>
-
-              <Button className="w-full">Enregistrer les modèles de contrats</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -390,7 +372,7 @@ const AdminSettings = () => {
                 <h4 className="font-medium">Clause de solidarité</h4>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm">Activer la clause de solidarité</p>
+                    <p className="text-sm">Activer la clause de solidarité par défaut</p>
                     <p className="text-sm text-muted-foreground">{COLOCATION_RULES.solidarityClause.description}</p>
                   </div>
                   <Switch defaultChecked={COLOCATION_RULES.solidarityClause.enabled} />
@@ -409,42 +391,12 @@ const AdminSettings = () => {
                   <Input type="number" defaultValue={COLOCATION_RULES.noticePeriodForRoommateDeparture.recommended} />
                 </div>
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Surface cuisine minimum (m²)</Label>
-                  <Input type="number" defaultValue={COLOCATION_RULES.commonSpaces.kitchenMinSurface} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Surface salon minimum (m²)</Label>
-                  <Input type="number" defaultValue={COLOCATION_RULES.commonSpaces.livingRoomMinSurface} />
-                </div>
-              </div>
-
-              <Button className="w-full">Enregistrer les règles de colocation</Button>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Danger Zone */}
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">Zone de danger</CardTitle>
-          <CardDescription>Actions irréversibles</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Supprimer le compte</p>
-              <p className="text-sm text-muted-foreground">Supprimer définitivement votre compte et toutes les données</p>
-            </div>
-            <Button variant="destructive">Supprimer</Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
 
-export default AdminSettings;
+export default AgencySettings;

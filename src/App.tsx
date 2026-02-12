@@ -15,6 +15,7 @@ import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import Dashboard from "./pages/Dashboard";
 import AdminProperties from "./pages/AdminProperties";
+import PropertyManagement from "./pages/PropertyManagement";
 import AdminStats from "./pages/AdminStats";
 import AdminClients from "./pages/AdminClients";
 import AdminSettings from "./pages/AdminSettings";
@@ -54,6 +55,17 @@ import AgencyTeam from "./pages/AgencyTeam";
 import AgencyOwners from "./pages/AgencyOwners";
 import AgencyProperties from "./pages/AgencyProperties";
 import AgencyProfile from "./pages/AgencyProfile";
+import AgencySettings from "./pages/AgencySettings";
+import AgencyTenants from "./pages/AgencyTenants";
+import { AgencyAlerts } from "./pages/AgencyAlerts";
+import { AgencyManagementMandates } from "./pages/AgencyManagementMandates";
+import AgencyRentManagement from "./pages/AgencyRentManagement";
+import AgencyPayments from "./pages/AgencyPayments";
+import AgencyChargesPage from "./pages/AgencyCharges";
+import AgencyAccounting from "./pages/AgencyAccounting";
+import AgencyDocuments from "./pages/AgencyDocuments";
+import AgencyMessages from "./pages/AgencyMessages";
+import AgencyReports from "./pages/AgencyReports";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +120,7 @@ const App = () => (
           <Route element={<AdminLayoutWrapper />}>
             <Route path="/admin" element={<Dashboard />} />
             <Route path="/admin/properties" element={<AdminProperties />} />
+            <Route path="/admin/property-management" element={<PropertyManagement />} />
             <Route path="/admin/stats" element={<AdminStats />} />
             <Route path="/admin/clients" element={<AdminClients />} />
             <Route path="/admin/tenants" element={<AdminTenants />} />
@@ -157,10 +170,24 @@ const App = () => (
             <Route path="/agency/dashboard" element={<AgencyDashboard />} />
             <Route path="/agency/team" element={<AgencyTeam />} />
             <Route path="/agency/owners" element={<AgencyOwners />} />
+            <Route path="/agency/tenants" element={<AgencyTenants />} />
             <Route path="/agency/properties" element={<AgencyProperties />} />
+            <Route path="/agency/property-management" element={<PropertyManagement />} />
+            <Route path="/agency/leases" element={<LeaseContracts />} />
+            <Route path="/agency/mandates" element={<AgencyManagementMandates />} />
+            <Route path="/agency/payments" element={<AgencyPayments />} />
+            <Route path="/agency/rent-management" element={<AgencyRentManagement />} />
+            <Route path="/agency/receipts" element={<ReceiptsPage />} />
+            <Route path="/agency/charges" element={<AgencyChargesPage />} />
+            <Route path="/agency/alerts" element={<AgencyAlerts />} />
+            <Route path="/agency/reminders/settings" element={<ReminderSettings />} />
+            <Route path="/agency/reminders/history" element={<ReminderHistory />} />
             <Route path="/agency/profile" element={<AgencyProfile />} />
-            <Route path="/agency/settings" element={<AgencyProfile />} />
-            <Route path="/agency/reports" element={<AgencyDashboard />} />
+            <Route path="/agency/settings" element={<AgencySettings />} />
+            <Route path="/agency/accounting" element={<AgencyAccounting />} />
+            <Route path="/agency/documents" element={<AgencyDocuments />} />
+            <Route path="/agency/messages" element={<AgencyMessages />} />
+            <Route path="/agency/reports" element={<AgencyReports />} />
             <Route path="/agency/billing" element={<AgencyDashboard />} />
             <Route path="/agency/notifications" element={<AgencyDashboard />} />
           </Route>

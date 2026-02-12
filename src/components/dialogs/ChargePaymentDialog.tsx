@@ -1,160 +1,244 @@
-import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { AlertCircle, CheckCircle, DollarSign, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Charge, DetailPaiement, STATUT_PAIEMENT_LABELS } from '@/types/charge';
+import ChargesService from '@/services/charges.service';
+import { useToast } from '@/hooks/use-toast';
+import { DollarSign, Calendar, Check, X } from 'lucide-react';
 
 interface ChargePaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  charge: {
-    id: string;
-    type: string;
-    description: string;
-    period: string;
-    amount: number;
-    quotePart: number;
-  } | null;
-  onPayment: (chargeId: string, amount: number) => Promise<void>;
+  charge?: Charge | null;
+  onSuccess: () => void;
 }
 
-const ChargePaymentDialog: React.FC<ChargePaymentDialogProps> = ({
-  open,
-  onOpenChange,
-  charge,
-  onPayment
-}) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer'>('card');
+export function ChargePaymentDialog({ open, onOpenChange, charge, onSuccess }: ChargePaymentDialogProps) {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [detailsPaiement, setDetailsPaiement] = useState<DetailPaiement[]>([]);
+  const [montantsPaiement, setMontantsPaiement] = useState<Record<string, number>>({});
 
-  const handlePayment = async () => {
+  useEffect(() => {
+    if (charge?.detailsPaiement) {
+      setDetailsPaiement(charge.detailsPaiement);
+      // Initialiser les montants de paiement avec les montants dus
+      const initialMontants: Record<string, number> = {};
+      charge.detailsPaiement.forEach(detail => {
+        initialMontants[detail.colocataireId] = detail.montant;
+      });
+      setMontantsPaiement(initialMontants);
+    } else {
+      setDetailsPaiement([]);
+      setMontantsPaiement({});
+    }
+  }, [charge]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
+  };
+
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString('fr-FR');
+  };
+
+  const handleMontantChange = (colocataireId: string, value: string) => {
+    const montant = parseFloat(value) || 0;
+    setMontantsPaiement(prev => ({
+      ...prev,
+      [colocataireId]: montant
+    }));
+  };
+
+  const handleMarquerPaye = async (detail: DetailPaiement) => {
     if (!charge) return;
     
-    setIsProcessing(true);
+    setIsSubmitting(true);
     try {
-      await onPayment(charge.id, parseFloat(paymentAmount) || charge.quotePart);
-      onOpenChange(false);
-      setPaymentAmount('');
-    } catch (error) {
-      console.error('Erreur lors du paiement:', error);
+      const montant = montantsPaiement[detail.colocataireId] || detail.montant;
+      await ChargesService.marquerPaiement(charge.id, detail.colocataireId, montant);
+      
+      toast({
+        title: 'Succès',
+        description: `Paiement enregistré pour ${detail.colocataireNom}`,
+      });
+      
+      onSuccess();
+      
+      // Recharger les détails du paiement
+      if (charge.detailsPaiement) {
+        const updatedDetails = charge.detailsPaiement.map(d => {
+          if (d.colocataireId === detail.colocataireId) {
+            return {
+              ...d,
+              statut: montant >= d.montant ? 'paye' as const : 'partiel' as const,
+              datePaiement: new Date().toISOString()
+            };
+          }
+          return d;
+        });
+        setDetailsPaiement(updatedDetails);
+      }
+    } catch {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'enregistrer le paiement',
+        variant: 'destructive',
+      });
     } finally {
-      setIsProcessing(false);
+      setIsSubmitting(false);
     }
+  };
+
+  const calculateProgress = () => {
+    if (!detailsPaiement.length) return 0;
+    const totalPaye = detailsPaiement
+      .filter(d => d.statut === 'paye')
+      .reduce((sum, d) => sum + d.montant, 0);
+    const total = detailsPaiement.reduce((sum, d) => sum + d.montant, 0);
+    return total > 0 ? (totalPaye / total) * 100 : 0;
+  };
+
+  const getStatutBadge = (statut: string) => {
+    const colors: Record<string, string> = {
+      'impaye': 'bg-red-100 text-red-800',
+      'partiel': 'bg-yellow-100 text-yellow-800',
+      'paye': 'bg-green-100 text-green-800',
+    };
+    return (
+      <Badge className={colors[statut] || ''} variant="secondary">
+        {STATUT_PAIEMENT_LABELS[statut as keyof typeof STATUT_PAIEMENT_LABELS] || statut}
+      </Badge>
+    );
   };
 
   if (!charge) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>Paiement de la charge</DialogTitle>
+          <DialogTitle>Suivi des paiements - {charge.description}</DialogTitle>
           <DialogDescription>
-            Réglez votre part de la charge "{charge.description}"
+            Gérez les paiements des colocataires pour cette charge
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Charge Details */}
-          <Card>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Type</p>
-                  <p className="font-medium capitalize">{charge.type}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Période</p>
-                  <p className="font-medium">{charge.period}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Montant total</p>
-                  <p className="font-medium">{charge.amount.toLocaleString()} €</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Votre quote-part</p>
-                  <p className="font-bold text-primary">{charge.quotePart.toLocaleString()} €</p>
-                </div>
+        {/* Résumé */}
+        <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
+          <div>
+            <p className="text-sm text-muted-foreground">Montant total</p>
+            <p className="text-xl font-bold">{formatCurrency(charge.montantTotal)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Progress</p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all"
+                  style={{ width: `${calculateProgress()}%` }}
+                />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Method */}
-          <div className="space-y-3">
-            <Label>Mode de paiement</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('card')}
-                className={`flex items-center justify-center gap-2 rounded-lg border-2 p-3 transition-colors ${
-                  paymentMethod === 'card' 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-muted hover:border-primary/50'
-                }`}
-              >
-                <CreditCard className="h-4 w-4" />
-                <span className="text-sm font-medium">Carte bancaire</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('transfer')}
-                className={`flex items-center justify-center gap-2 rounded-lg border-2 p-3 transition-colors ${
-                  paymentMethod === 'transfer' 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-muted hover:border-primary/50'
-                }`}
-              >
-                <DollarSign className="h-4 w-4" />
-                <span className="text-sm font-medium">Virement</span>
-              </button>
+              <span className="text-sm font-medium">{calculateProgress().toFixed(0)}%</span>
             </div>
           </div>
-
-          {/* Amount */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">Montant à payer</Label>
-            <div className="relative">
-              <Input
-                id="amount"
-                type="number"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                placeholder={charge.quotePart.toString()}
-                className="pl-8"
-              />
-              <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Laissez vide pour payer la totalité ({charge.quotePart.toLocaleString()} €)
+          <div>
+            <p className="text-sm text-muted-foreground">Mode de répartition</p>
+            <p className="text-lg font-medium">
+              {charge.modeRepartition === 'egal' && 'Égalitaire'}
+              {charge.modeRepartition === 'prorata' && 'Au prorata'}
+              {charge.modeRepartition === 'manuel' && 'Manuel'}
             </p>
           </div>
         </div>
 
-        <DialogFooter className="sm:justify-between">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button 
-            onClick={handlePayment} 
-            disabled={isProcessing}
+        {/* Tableau des paiements */}
+        <div className="space-y-4">
+          <Label>Paiements par colocataire</Label>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Colocataire</TableHead>
+                <TableHead>Montant</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Date paiement</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {detailsPaiement.map((detail) => (
+                <TableRow key={detail.colocataireId}>
+                  <TableCell className="font-medium">{detail.colocataireNom}</TableCell>
+                  <TableCell>{formatCurrency(detail.montant)}</TableCell>
+                  <TableCell>{getStatutBadge(detail.statut)}</TableCell>
+                  <TableCell>
+                    {detail.datePaiement ? formatDate(detail.datePaiement) : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {detail.statut !== 'paye' ? (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleMarquerPaye(detail)}
+                          disabled={isSubmitting}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Marquer payé
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-green-600 flex items-center">
+                        <Check className="h-4 w-4 mr-1" />
+                        Payé
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Informations sur la charge */}
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+          <div>
+            <p className="text-sm text-muted-foreground">Période</p>
+            <p className="font-medium">
+              {formatDate(charge.periodeDebut)} - {formatDate(charge.periodeFin)}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Échéance</p>
+            <p className="font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {formatDate(charge.dateEcheance)}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
           >
-            {isProcessing ? 'Traitement...' : 'Confirmer le paiement'}
+            Fermer
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default ChargePaymentDialog;

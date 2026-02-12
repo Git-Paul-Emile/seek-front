@@ -7,13 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { Receipt, ReceiptFilters, ReceiptStats } from '../types/receipt';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Checkbox } from '../components/ui/checkbox';
+import { Receipt, ReceiptFilters, ReceiptStats, ReceiptColocation, ReceiptOwner } from '../types/receipt';
 import { receiptsService } from '../services/receipts.service';
 import { receiptPdfService } from '../services/receipt-pdf.service';
+import { receiptTemplateService } from '../services/receipt-template.service';
 import { notificationsService } from '../services/notifications.service';
 import { useToast } from '../components/ui/use-toast';
 import PageHeader from '../components/layout/PageHeader';
-import { FileText as ReceiptIcon, Download, Plus } from 'lucide-react';
+import { ReceiptTemplateDialog } from '../components/documents/ReceiptTemplateDialog';
+import { FileText as ReceiptIcon, Download, Plus, Settings, Send, Users, Building, Calendar } from 'lucide-react';
 
 export default function ReceiptsPage() {
   const { toast } = useToast();
@@ -27,9 +31,11 @@ export default function ReceiptsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showSendDialog, setShowSendDialog] = useState(false);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [filters, setFilters] = useState<ReceiptFilters>({});
   const [sendChannels, setSendChannels] = useState<string[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
 
   type PaymentMethod = 'cash' | 'bank_transfer' | 'mobile_money' | 'check';
 
@@ -41,6 +47,9 @@ export default function ReceiptsPage() {
     paymentMethod: PaymentMethod;
     periodMonth: number;
     periodYear: number;
+    isColocation: boolean;
+    ownerId: string;
+    templateId: string;
   }>({
     propertyId: '',
     roomId: '',
@@ -49,7 +58,16 @@ export default function ReceiptsPage() {
     paymentMethod: 'bank_transfer',
     periodMonth: new Date().getMonth() + 1,
     periodYear: new Date().getFullYear(),
+    isColocation: false,
+    ownerId: '',
+    templateId: 'default',
   });
+
+  // Colocation form state
+  const [colocataires, setColocataires] = useState<ReceiptColocation[]>([
+    { receiptId: '', tenantId: '', tenantName: '', tenantEmail: '', tenantPhone: '', amount: 0, sharePercentage: 50, isPrimaryTenant: true },
+    { receiptId: '', tenantId: '', tenantName: '', tenantEmail: '', tenantPhone: '', amount: 0, sharePercentage: 50, isPrimaryTenant: false },
+  ]);
 
   const loadReceipts = useCallback(async () => {
     setIsLoading(true);
@@ -72,23 +90,57 @@ export default function ReceiptsPage() {
     }
   }, [filters]);
 
+  const loadTemplates = useCallback(async () => {
+    try {
+      const data = await receiptTemplateService.getTemplates();
+      setTemplates(data);
+    } catch {
+      console.error('Error loading templates');
+    }
+  }, []);
+
   useEffect(() => {
     loadReceipts();
     loadStats();
-  }, [loadReceipts, loadStats]);
+    loadTemplates();
+  }, [loadReceipts, loadStats, loadTemplates]);
 
   const handleGenerateReceipt = async () => {
     try {
-      await receiptsService.generateReceipt({
-        tenantId: generateForm.tenantId,
-        propertyId: generateForm.propertyId,
-        roomId: generateForm.roomId || undefined,
-        amount: parseFloat(generateForm.amount),
-        paymentMethod: generateForm.paymentMethod,
-        periodMonth: generateForm.periodMonth,
-        periodYear: generateForm.periodYear,
-      });
-      toast({ title: 'Succès', description: 'Quittance générée avec succès' });
+      const ownerInfo: ReceiptOwner = {
+        ownerId: generateForm.ownerId,
+        ownerName: '',
+        ownerEmail: '',
+        ownerPhone: '',
+      };
+
+      if (generateForm.isColocation) {
+        // Generate receipts for each colocataire
+        await receiptsService.generateColocationReceipts(
+          generateForm.propertyId,
+          generateForm.roomId,
+          colocataires,
+          generateForm.paymentMethod,
+          generateForm.periodMonth,
+          generateForm.periodYear,
+          ownerInfo,
+          generateForm.templateId
+        );
+      } else {
+        await receiptsService.generateReceipt({
+          tenantId: generateForm.tenantId,
+          propertyId: generateForm.propertyId,
+          roomId: generateForm.roomId || undefined,
+          amount: parseFloat(generateForm.amount),
+          paymentMethod: generateForm.paymentMethod,
+          periodMonth: generateForm.periodMonth,
+          periodYear: generateForm.periodYear,
+          ownerInfo,
+          templateId: generateForm.templateId,
+        });
+      }
+
+      toast({ title: 'Succès', description: generateForm.isColocation ? 'Quittances de colocation générées avec succès' : 'Quittance générée avec succès' });
       setShowGenerateDialog(false);
       loadReceipts();
       loadStats();
@@ -115,13 +167,23 @@ export default function ReceiptsPage() {
         selectedReceipt.tenantEmail,
         selectedReceipt.tenantPhone
       );
+      
+      // Mark as sent
+      await receiptsService.markAsSent(selectedReceipt.id, sendChannels as ('email' | 'whatsapp' | 'sms')[]);
+      
       toast({ title: 'Succès', description: 'Quittance envoyée avec succès' });
       setShowSendDialog(false);
       setSelectedReceipt(null);
       setSendChannels([]);
+      loadReceipts();
     } catch {
       toast({ title: 'Erreur', description: 'Impossible d\'envoyer la quittance', variant: 'destructive' });
     }
+  };
+
+  const handleAutoGenerate = async () => {
+    // Auto-generate receipts for all pending payments
+    toast({ title: 'Info', description: 'Fonctionnalité de génération automatique à implémenter selon la logique métier' });
   };
 
   const formatCurrency = (amount: number) => {
@@ -140,6 +202,10 @@ export default function ReceiptsPage() {
         description="Gérez les quittances de loyer"
         action={
           <>
+            <Button variant="outline" onClick={() => setShowTemplateDialog(true)}>
+              <Settings className="mr-2 h-4 w-4" />
+              Modèles
+            </Button>
             <Button variant="outline" onClick={handleBulkDownload}>
               <Download className="mr-2 h-4 w-4" />
               Tout télécharger
@@ -185,22 +251,37 @@ export default function ReceiptsPage() {
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <Label>Propriété</Label>
-              <Select onValueChange={(value) => setFilters({ ...filters, propertyId: value })}>
+              <Select onValueChange={(value) => setFilters({ ...filters, propertyId: value === 'all' ? undefined : value })}>
                 <SelectTrigger><SelectValue placeholder="Toutes les propriétés" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les propriétés</SelectItem>
+                  <SelectItem value="prop1">Villa Les Palmiers</SelectItem>
+                  <SelectItem value="prop2">Immeuble Central</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Chambre</Label>
-              <Select onValueChange={(value) => setFilters({ ...filters, roomId: value })}>
-                <SelectTrigger><SelectValue placeholder="Toutes les chambres" /></SelectTrigger>
+              <Label>Locataire</Label>
+              <Select onValueChange={(value) => setFilters({ ...filters, tenantId: value === 'all' ? undefined : value })}>
+                <SelectTrigger><SelectValue placeholder="Tous les locataires" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les chambres</SelectItem>
+                  <SelectItem value="all">Tous les locataires</SelectItem>
+                  <SelectItem value="tenant1">M. Diop</SelectItem>
+                  <SelectItem value="tenant2">Mme Sall</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Propriétaire</Label>
+              <Select onValueChange={(value) => setFilters({ ...filters, ownerId: value === 'all' ? undefined : value })}>
+                <SelectTrigger><SelectValue placeholder="Tous les propriétaires" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les propriétaires</SelectItem>
+                  <SelectItem value="owner1">M. Ndiaye</SelectItem>
+                  <SelectItem value="owner2">Mme Sy</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -218,7 +299,7 @@ export default function ReceiptsPage() {
             </div>
             <div>
               <Label>Recherche</Label>
-              <Input placeholder="Rechercher..." />
+              <Input placeholder="N° quittance, nom..." />
             </div>
           </div>
         </CardContent>
@@ -226,8 +307,12 @@ export default function ReceiptsPage() {
 
       {/* Receipts Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Historique des quittances</CardTitle>
+          <Button variant="outline" size="sm" onClick={handleAutoGenerate}>
+            <Calendar className="mr-2 h-4 w-4" />
+            Génération auto
+          </Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -244,32 +329,52 @@ export default function ReceiptsPage() {
                   <TableHead>Montant</TableHead>
                   <TableHead>Période</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Envoi</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {receipts.map((receipt) => (
                   <TableRow key={receipt.id}>
-                    <TableCell className="font-medium">{receipt.receiptNumber}</TableCell>
-                    <TableCell>{receipt.tenantName}</TableCell>
+                    <TableCell className="font-medium">
+                      {receipt.receiptNumber}
+                      {receipt.isColocation && <Badge variant="outline" className="ml-2">Colocation</Badge>}
+                    </TableCell>
+                    <TableCell>
+                      <div>{receipt.tenantName}</div>
+                      {receipt.isColocation && <div className="text-xs text-gray-500">{receipt.colocataires?.length || 0} locataires</div>}
+                    </TableCell>
                     <TableCell>{receipt.propertyName} {receipt.roomName && `/ ${receipt.roomName}`}</TableCell>
                     <TableCell>{formatCurrency(receipt.amount)}</TableCell>
-                    <TableCell>{formatDate(receipt.periodStart)} - {formatDate(receipt.periodEnd)}</TableCell>
+                    <TableCell>{formatDate(receipt.periodStart)}</TableCell>
                     <TableCell>
                       <Badge variant={receipt.status === 'paid' ? 'default' : receipt.status === 'pending' ? 'secondary' : 'outline'}>
                         {receipt.status === 'paid' ? 'Payé' : receipt.status === 'pending' ? 'En attente' : 'Partiel'}
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      {receipt.sentAt ? (
+                        <div className="flex gap-1">
+                          {receipt.sentChannels?.map(channel => (
+                            <Badge key={channel} variant="outline" className="text-xs">
+                              {channel === 'email' ? '📧' : channel === 'whatsapp' ? '📱' : '💬'}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">Non envoyé</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex space-x-2">
                         <Button variant="ghost" size="sm" onClick={() => handleDownloadPdf(receipt)}>
-                          PDF
+                          <Download className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => {
                           setSelectedReceipt(receipt);
                           setShowSendDialog(true);
                         }}>
-                          Envoyer
+                          <Send className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -283,91 +388,230 @@ export default function ReceiptsPage() {
 
       {/* Generate Receipt Dialog */}
       <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Générer une quittance</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          <Tabs defaultValue="single">
+            <TabsList>
+              <TabsTrigger value="single">Locataire unique</TabsTrigger>
+              <TabsTrigger value="colocation">Colocation</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="single" className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Locataire</Label>
+                  <Select onValueChange={(value) => setGenerateForm({ ...generateForm, tenantId: value })}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner un locataire" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tenant1">M. Diop</SelectItem>
+                      <SelectItem value="tenant2">Mme Sall</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Propriété</Label>
+                  <Select onValueChange={(value) => setGenerateForm({ ...generateForm, propertyId: value })}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner une propriété" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="prop1">Villa Les Palmiers</SelectItem>
+                      <SelectItem value="prop2">Immeuble Central</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Montant</Label>
+                  <Input 
+                    type="number" 
+                    value={generateForm.amount}
+                    onChange={(e) => setGenerateForm({ ...generateForm, amount: e.target.value })}
+                    placeholder="Montant du loyer"
+                  />
+                </div>
+                <div>
+                  <Label>Mode de paiement</Label>
+                  <Select 
+                    value={generateForm.paymentMethod}
+                    onValueChange={(value) => setGenerateForm({ ...generateForm, paymentMethod: value as PaymentMethod })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Espèces</SelectItem>
+                      <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
+                      <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                      <SelectItem value="check">Chèque</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Propriétaire</Label>
+                  <Select onValueChange={(value) => setGenerateForm({ ...generateForm, ownerId: value })}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner un propriétaire" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="owner1">M. Ndiaye</SelectItem>
+                      <SelectItem value="owner2">Mme Sy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Modèle</Label>
+                  <Select 
+                    value={generateForm.templateId}
+                    onValueChange={(value) => setGenerateForm({ ...generateForm, templateId: value })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {templates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="colocation" className="space-y-4 mt-4">
+              <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  <Label className="text-blue-800">Gestion de la colocation</Label>
+                </div>
+                <p className="text-sm text-blue-600">Définissez les parts de chaque colocataire pour générer plusieurs quittances.</p>
+              </div>
+
+              {colocataires.map((colocataire, index) => (
+                <div key={index} className="grid grid-cols-4 gap-4 p-4 border rounded-lg">
+                  <div className="col-span-4">
+                    <Label>{index === 0 ? 'Locataire principal' : `Colocataire ${index}`}</Label>
+                  </div>
+                  <div>
+                    <Label>Nom</Label>
+                    <Input 
+                      value={colocataire.tenantName}
+                      onChange={(e) => {
+                        const updated = [...colocataires];
+                        updated[index].tenantName = e.target.value;
+                        setColocataires(updated);
+                      }}
+                      placeholder="Nom complet"
+                    />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input 
+                      value={colocataire.tenantEmail}
+                      onChange={(e) => {
+                        const updated = [...colocataires];
+                        updated[index].tenantEmail = e.target.value;
+                        setColocataires(updated);
+                      }}
+                      placeholder="email@exemple.com"
+                    />
+                  </div>
+                  <div>
+                    <Label>Téléphone</Label>
+                    <Input 
+                      value={colocataire.tenantPhone}
+                      onChange={(e) => {
+                        const updated = [...colocataires];
+                        updated[index].tenantPhone = e.target.value;
+                        setColocataires(updated);
+                      }}
+                      placeholder="+221 XX XXX XX XX"
+                    />
+                  </div>
+                  <div>
+                    <Label>Part (%)</Label>
+                    <Input 
+                      type="number"
+                      value={colocataire.sharePercentage}
+                      onChange={(e) => {
+                        const updated = [...colocataires];
+                        updated[index].sharePercentage = parseInt(e.target.value);
+                        updated[index].amount = (parseInt(e.target.value) * parseFloat(generateForm.amount || '0')) / 100;
+                        setColocataires(updated);
+                      }}
+                      placeholder="50"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Loyer total</Label>
+                  <Input 
+                    type="number" 
+                    value={generateForm.amount}
+                    onChange={(e) => {
+                      setGenerateForm({ ...generateForm, amount: e.target.value });
+                      const updated = colocataires.map(c => ({
+                        ...c,
+                        amount: (c.sharePercentage * parseFloat(e.target.value || '0')) / 100
+                      }));
+                      setColocataires(updated);
+                    }}
+                    placeholder="Loyer total"
+                  />
+                </div>
+                <div>
+                  <Label>Propriété</Label>
+                  <Select onValueChange={(value) => setGenerateForm({ ...generateForm, propertyId: value })}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner une propriété" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="prop1">Villa Les Palmiers</SelectItem>
+                      <SelectItem value="prop2">Immeuble Central</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Button variant="outline" size="sm" onClick={() => setColocataires([...colocataires, { receiptId: '', tenantId: '', tenantName: '', tenantEmail: '', tenantPhone: '', amount: 0, sharePercentage: 0, isPrimaryTenant: false }])}>
+                <Plus className="mr-2 h-4 w-4" />
+                Ajouter un colocataire
+              </Button>
+            </TabsContent>
+          </Tabs>
+
+          <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
-              <Label>Locataire</Label>
-              <Select onValueChange={(value) => setGenerateForm({ ...generateForm, tenantId: value })}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner un locataire" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tenant1">Locataire 1</SelectItem>
-                  <SelectItem value="tenant2">Locataire 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Propriété</Label>
-              <Select onValueChange={(value) => setGenerateForm({ ...generateForm, propertyId: value })}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner une propriété" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="prop1">Propriété 1</SelectItem>
-                  <SelectItem value="prop2">Propriété 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Montant</Label>
-              <Input 
-                type="number" 
-                value={generateForm.amount}
-                onChange={(e) => setGenerateForm({ ...generateForm, amount: e.target.value })}
-                placeholder="Montant du loyer"
-              />
-            </div>
-            <div>
-              <Label>Mode de paiement</Label>
+              <Label>Mois</Label>
               <Select 
-                value={generateForm.paymentMethod}
-                onValueChange={(value) => 
-                  setGenerateForm({ ...generateForm, paymentMethod: value as PaymentMethod })
-                }
+                value={String(generateForm.periodMonth)}
+                onValueChange={(value) => setGenerateForm({ ...generateForm, periodMonth: parseInt(value) })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Espèces</SelectItem>
-                  <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
-                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                  <SelectItem value="check">Chèque</SelectItem>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <SelectItem key={i + 1} value={String(i + 1)}>{i + 1}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Mois</Label>
-                <Select 
-                  value={String(generateForm.periodMonth)}
-                  onValueChange={(value) => setGenerateForm({ ...generateForm, periodMonth: parseInt(value) })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>{i + 1}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Année</Label>
-                <Select 
-                  value={String(generateForm.periodYear)}
-                  onValueChange={(value) => setGenerateForm({ ...generateForm, periodYear: parseInt(value) })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {[2023, 2024, 2025, 2026].map((year) => (
-                      <SelectItem key={year} value={String(year)}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label>Année</Label>
+              <Select 
+                value={String(generateForm.periodYear)}
+                onValueChange={(value) => setGenerateForm({ ...generateForm, periodYear: parseInt(value) })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[2023, 2024, 2025, 2026].map((year) => (
+                    <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowGenerateDialog(false)}>Annuler</Button>
-            <Button onClick={handleGenerateReceipt}>Générer</Button>
+            <Button onClick={handleGenerateReceipt}>
+              <Plus className="mr-2 h-4 w-4" />
+              Générer
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -382,59 +626,72 @@ export default function ReceiptsPage() {
             <p className="text-sm text-gray-500">
               Envoyer la quittance {selectedReceipt?.receiptNumber} via :
             </p>
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2">
-                <input 
-                  type="checkbox" 
+            <div className="space-y-3">
+              <label className="flex items-center space-x-3">
+                <Checkbox 
                   checked={sendChannels.includes('email')}
-                  onChange={(e) => {
-                    if (e.target.checked) {
+                  onCheckedChange={(checked) => {
+                    if (checked) {
                       setSendChannels([...sendChannels, 'email']);
                     } else {
                       setSendChannels(sendChannels.filter(c => c !== 'email'));
                     }
                   }}
                 />
-                <span>Email</span>
+                <span className="flex items-center gap-2">
+                  📧 Email ({selectedReceipt?.tenantEmail})
+                </span>
               </label>
-              <label className="flex items-center space-x-2">
-                <input 
-                  type="checkbox" 
+              <label className="flex items-center space-x-3">
+                <Checkbox 
                   checked={sendChannels.includes('whatsapp')}
-                  onChange={(e) => {
-                    if (e.target.checked) {
+                  onCheckedChange={(checked) => {
+                    if (checked) {
                       setSendChannels([...sendChannels, 'whatsapp']);
                     } else {
                       setSendChannels(sendChannels.filter(c => c !== 'whatsapp'));
                     }
                   }}
                 />
-                <span>WhatsApp</span>
+                <span className="flex items-center gap-2">
+                  📱 WhatsApp ({selectedReceipt?.tenantPhone})
+                </span>
               </label>
-              <label className="flex items-center space-x-2">
-                <input 
-                  type="checkbox" 
+              <label className="flex items-center space-x-3">
+                <Checkbox 
                   checked={sendChannels.includes('sms')}
-                  onChange={(e) => {
-                    if (e.target.checked) {
+                  onCheckedChange={(checked) => {
+                    if (checked) {
                       setSendChannels([...sendChannels, 'sms']);
                     } else {
                       setSendChannels(sendChannels.filter(c => c !== 'sms'));
                     }
                   }}
                 />
-                <span>SMS</span>
+                <span className="flex items-center gap-2">
+                  💬 SMS ({selectedReceipt?.tenantPhone})
+                </span>
               </label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSendDialog(false)}>Annuler</Button>
             <Button onClick={handleSendReceipt} disabled={sendChannels.length === 0}>
+              <Send className="mr-2 h-4 w-4" />
               Envoyer
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Template Dialog */}
+      <ReceiptTemplateDialog
+        open={showTemplateDialog}
+        onOpenChange={setShowTemplateDialog}
+        onSave={(template) => {
+          loadTemplates();
+        }}
+      />
     </div>
   );
 }

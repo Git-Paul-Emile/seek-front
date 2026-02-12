@@ -25,7 +25,13 @@ import {
   AlertCircle,
   Building2,
   Bed,
+  History,
+  GraduationCap,
+  Briefcase,
+  Clock,
+  UserCog,
 } from "lucide-react";
+import { TenantHistoryDialog } from "@/components/dialogs/TenantHistoryDialog";
 import PageHeader from "@/components/layout/PageHeader";
 import { TenantDialog } from "@/components/dialogs/TenantDialog";
 import { ColocataireDialog } from "@/components/dialogs/ColocataireDialog";
@@ -33,12 +39,18 @@ import {
   Tenant,
   Colocataire,
   Caution,
+  TenantHistory,
+  ColocataireHistory,
   mockTenants,
   mockColocataires,
   mockCautions,
+  mockTenantHistory,
+  mockColocataireHistory,
   tenantStatusLabels,
   colocataireStatusLabels,
   cautionStatusLabels,
+  tenantSegmentLabels,
+  TenantSegment,
 } from "@/data/tenants";
 import { mockProperties, mockRooms, Property, Room } from "@/data/properties";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,6 +66,8 @@ const AdminTenants = () => {
   const [tenants, setTenants] = useState<Tenant[]>(mockTenants);
   const [colocataires, setColocataires] = useState<Colocataire[]>(mockColocataires);
   const [cautions, setCautions] = useState<Caution[]>(mockCautions);
+  const [tenantHistory, setTenantHistory] = useState<TenantHistory[]>(mockTenantHistory);
+  const [colocataireHistory, setColocataireHistory] = useState<ColocataireHistory[]>(mockColocataireHistory);
   const [properties] = useState<Property[]>(mockProperties);
   const [rooms, setRooms] = useState<Room[]>(mockRooms);
 
@@ -61,9 +75,12 @@ const AdminTenants = () => {
   const [colocataireDialogOpen, setColocataireDialogOpen] = useState(false);
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [cautionDialogOpen, setCautionsDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [selectedColocataire, setSelectedColocataire] = useState<Colocataire | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [segmentFilter, setSegmentFilter] = useState<string>("all");
 
   // Stats
   const activeTenants = tenants.filter((t) => t.status === "actif");
@@ -253,8 +270,8 @@ const AdminTenants = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Select>
-              <SelectTrigger className="w-[180px]">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
@@ -262,6 +279,19 @@ const AdminTenants = () => {
                 <SelectItem value="actif">Actif</SelectItem>
                 <SelectItem value="inactif">Inactif</SelectItem>
                 <SelectItem value="sorti">Sorti</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={segmentFilter} onValueChange={setSegmentFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Segment" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les segments</SelectItem>
+                <SelectItem value="etudiant">Étudiant</SelectItem>
+                <SelectItem value="salarie">Salarié</SelectItem>
+                <SelectItem value="court_terme">Court terme</SelectItem>
+                <SelectItem value="stagiaire">Stagiaire</SelectItem>
+                <SelectItem value="autre">Autre</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -860,6 +890,16 @@ const AdminTenants = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* History Dialog */}
+      <TenantHistoryDialog
+        open={historyDialogOpen}
+        onOpenChange={setHistoryDialogOpen}
+        tenant={selectedTenant}
+        colocataire={selectedColocataire}
+        tenantHistory={tenantHistory}
+        colocataireHistory={colocataireHistory}
+      />
     </div>
   );
 };

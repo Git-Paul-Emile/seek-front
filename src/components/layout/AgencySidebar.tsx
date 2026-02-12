@@ -4,12 +4,22 @@ import {
   LayoutDashboard, 
   Building2, 
   Users, 
-  FileText, 
+  User,
+  FileSignature,
+  FileText,
+  Wallet,
+  DollarSign,
   BarChart3, 
   Settings,
-  Bell,
   Home,
   LogOut,
+  AlertCircle,
+  Receipt,
+  BellRing,
+  Calculator,
+  FolderOpen,
+  MessageSquare,
+  FileBarChart,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
@@ -20,17 +30,35 @@ const AgencySidebar: React.FC = () => {
   const location = useLocation();
   const user = agencyAuth.currentUser;
 
-  const menuItems = [
+  interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+  permission?: string;
+}
+
+const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/agency/dashboard' },
+    { icon: FolderOpen, label: 'Documents', path: '/agency/documents' },
+    { icon: Calculator, label: 'Comptabilité', path: '/agency/accounting' },
     { icon: Building2, label: 'Propriétés', path: '/agency/properties', permission: 'properties:read' },
+    { icon: Building2, label: 'Gestion Biens', path: '/agency/property-management', permission: 'properties:read' },
     { icon: Users, label: 'Propriétaires', path: '/agency/owners', permission: 'owners:read' },
+    { icon: User, label: 'Locataires', path: '/agency/tenants', permission: 'tenants:read' },
+    { icon: FileSignature, label: 'Contrats de bail', path: '/agency/leases' },
+    { icon: FileText, label: 'Mandats de gestion', path: '/agency/mandates' },
+    { icon: Wallet, label: 'Paiements', path: '/agency/payments', permission: 'payments:read' },
+    { icon: DollarSign, label: 'Gestion des Loyers', path: '/agency/rent-management', permission: 'payments:read' },
+    { icon: Receipt, label: 'Quittances', path: '/agency/receipts', permission: 'payments:read' },
+    { icon: Receipt, label: 'Gestion des Charges', path: '/agency/charges', permission: 'payments:read' },
+    { icon: BellRing, label: 'Relances & Rappels', path: '/agency/reminders/settings' },
+    { icon: AlertCircle, label: 'Alertes', path: '/agency/alerts' },
     { icon: BarChart3, label: 'Équipe', path: '/agency/team', permission: 'team:read' },
-    { icon: FileText, label: 'Rapports', path: '/agency/reports', permission: 'reports:read' },
+    { icon: MessageSquare, label: 'Messagerie', path: '/agency/messages' },
+    { icon: FileBarChart, label: 'Rapports', path: '/agency/reports' },
   ];
 
-  const settingsItems = [
-    { icon: Settings, label: 'Mon profil', path: '/agency/profile' },
-  ];
+  
 
   const filteredMenuItems = menuItems.filter(
     (item) => !item.permission || agencyAuth.hasPermission(item.permission)
@@ -72,20 +100,29 @@ const AgencySidebar: React.FC = () => {
 
           <Separator className="my-4" />
 
-          {settingsItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive(item.path)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
+          <Link
+            to="/agency/profile"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              isActive('/agency/profile')
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            <Settings className="h-4 w-4" />
+            Mon profil
+          </Link>
+          
+          <Link
+            to="/agency/settings"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              isActive('/agency/settings')
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            <Settings className="h-4 w-4" />
+            Paramètres
+          </Link>
         </nav>
       </ScrollArea>
 

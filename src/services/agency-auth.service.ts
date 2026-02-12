@@ -13,6 +13,10 @@ import type {
   AgencyTeamMember,
   AgencyTeamMemberUpdate,
   AgencyUpdateProfile,
+  CreateMandateData,
+  CreateOwnerData,
+  ManagementMandate,
+  OwnerInvitationData,
 } from '@/types/agency';
 
 // Clé de stockage pour le token
@@ -440,6 +444,88 @@ class AgencyService {
       headers: this.headers,
     });
     if (!response.ok) throw new Error('Erreur lors de la suppression du propriétaire');
+  }
+
+  async inviteOwner(data: OwnerInvitationData): Promise<{ message: string }> {
+    const response = await fetch(`${this.baseUrl}/owners/invite`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Erreur lors de l'envoi de l'invitation");
+    return response.json();
+  }
+
+  async createOwnerAccount(data: CreateOwnerData): Promise<AgencyOwner> {
+    const response = await fetch(`${this.baseUrl}/owners/create`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Erreur lors de la création du compte propriétaire');
+    return response.json();
+  }
+
+  async archiveOwner(id: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/owners/${id}/archive`, {
+      method: 'POST',
+      headers: this.headers,
+    });
+    if (!response.ok) throw new Error('Erreur lors de l\'archivage du propriétaire');
+  }
+
+  async activateOwner(id: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/owners/${id}/activate`, {
+      method: 'POST',
+      headers: this.headers,
+    });
+    if (!response.ok) throw new Error('Erreur lors de la réactivation du propriétaire');
+  }
+
+  // ============ Mandats de gestion ============
+
+  async getMandates(): Promise<ManagementMandate[]> {
+    const response = await fetch(`${this.baseUrl}/mandates`, {
+      headers: this.headers,
+    });
+    if (!response.ok) throw new Error('Erreur lors de la récupération des mandats');
+    return response.json();
+  }
+
+  async getMandate(id: string): Promise<ManagementMandate> {
+    const response = await fetch(`${this.baseUrl}/mandates/${id}`, {
+      headers: this.headers,
+    });
+    if (!response.ok) throw new Error('Erreur lors de la récupération du mandat');
+    return response.json();
+  }
+
+  async createMandate(data: CreateMandateData): Promise<ManagementMandate> {
+    const response = await fetch(`${this.baseUrl}/mandates`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Erreur lors de la création du mandat');
+    return response.json();
+  }
+
+  async updateMandate(id: string, data: Partial<CreateMandateData>): Promise<ManagementMandate> {
+    const response = await fetch(`${this.baseUrl}/mandates/${id}`, {
+      method: 'PUT',
+      headers: this.headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Erreur lors de la mise à jour du mandat');
+    return response.json();
+  }
+
+  async deleteMandate(id: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/mandates/${id}`, {
+      method: 'DELETE',
+      headers: this.headers,
+    });
+    if (!response.ok) throw new Error('Erreur lors de la suppression du mandat');
   }
 
   // ============ Biens ============

@@ -5,6 +5,17 @@ export type ColocataireStatus = "actif" | "inactif" | "sorti" | "remplace";
 export type PaymentStatus = "paye" | "en_retard" | "non_paye" | "partiel";
 export type CautionStatus = "versee" | "restituee" | "partiellement_restituee" | "en_cours";
 
+// Segmentation des locataires
+export type TenantSegment = "etudiant" | "salarie" | "court_terme" | "stagiaire" | "autre";
+
+export const tenantSegmentLabels: Record<TenantSegment, string> = {
+  etudiant: "Étudiant",
+  salarie: "Salarié",
+  court_terme: "Court terme",
+  stagiaire: "Stagiaire",
+  autre: "Autre",
+};
+
 export interface Caution {
   id: string;
   tenantId?: string;
@@ -58,6 +69,7 @@ export interface Tenant {
   depositAmount: number;
   depositPaid: boolean;
   status: TenantStatus;
+  segment: TenantSegment; // Segmentation du locataire
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -88,6 +100,7 @@ export interface Colocataire {
   depositAmount: number;
   depositPaid: boolean;
   status: ColocataireStatus;
+  segment: TenantSegment; // Segmentation du colocataire
   replacedById?: string;
   replacementDate?: string;
   notes?: string;
@@ -201,6 +214,7 @@ export const mockTenants: Tenant[] = [
     depositAmount: 75000,
     depositPaid: true,
     status: "actif",
+    segment: "salarie",
     notes: "Bonne locataire, paie toujours à temps",
     createdAt: "2025-08-15",
     updatedAt: "2025-09-01",
@@ -228,6 +242,7 @@ export const mockTenants: Tenant[] = [
     depositAmount: 55000,
     depositPaid: true,
     status: "actif",
+    segment: "etudiant",
     createdAt: "2025-10-20",
     updatedAt: "2025-11-01",
   },
@@ -252,6 +267,7 @@ export const mockColocataires: Colocataire[] = [
     depositAmount: 55000,
     depositPaid: true,
     status: "actif",
+    segment: "etudiant",
     createdAt: "2025-01-10",
     updatedAt: "2025-01-15",
   },
@@ -275,6 +291,7 @@ export const mockColocataires: Colocataire[] = [
     depositAmount: 70000,
     depositPaid: true,
     status: "sorti",
+    segment: "salarie",
     createdAt: "2023-12-20",
     updatedAt: "2025-08-31",
   },
@@ -309,3 +326,78 @@ export const mockCautions: Caution[] = [
     updatedAt: "2025-01-10",
   },
 ];
+
+// Historique des relations locataire-chambre
+export const mockTenantHistory: TenantHistory[] = [
+  {
+    id: "history-1",
+    tenantId: "tenant-1",
+    action: "entree",
+    description: "Entrée dans Chambre 1 - Master",
+    date: "2025-09-01",
+    performedBy: "Admin",
+    notes: "Première entrée",
+  },
+  {
+    id: "history-2",
+    tenantId: "tenant-1",
+    action: "paiement",
+    description: "Paiement loyer septembre 2025",
+    date: "2025-09-05",
+    performedBy: "System",
+  },
+  {
+    id: "history-3",
+    tenantId: "tenant-2",
+    action: "entree",
+    description: "Entrée dans Chambre 3",
+    date: "2025-11-01",
+    performedBy: "Admin",
+  },
+];
+
+export const mockColocataireHistory: ColocataireHistory[] = [
+  {
+    id: "chistory-1",
+    colocataireId: "coloc-1",
+    action: "entree",
+    description: "Entrée dans Chambre 2",
+    date: "2025-01-15",
+    performedBy: "Admin",
+  },
+  {
+    id: "chistory-2",
+    colocataireId: "coloc-2",
+    action: "entree",
+    description: "Entrée dans Chambre 1 - Master",
+    date: "2024-01-01",
+    performedBy: "Admin",
+  },
+  {
+    id: "chistory-3",
+    colocataireId: "coloc-2",
+    action: "sortie",
+    description: "Sortie de Chambre 1 - Master",
+    date: "2025-08-31",
+    performedBy: "Admin",
+    notes: "Fin de bail",
+  },
+  {
+    id: "chistory-4",
+    colocataireId: "coloc-2",
+    action: "remplacement",
+    description: "Remplacé par un nouveau colocataire",
+    date: "2025-09-01",
+    performedBy: "Admin",
+  },
+];
+
+// Labels pour l'historique
+export const historyActionLabels: Record<string, string> = {
+  entree: "Entrée",
+  sortie: "Sortie",
+  modification: "Modification",
+  paiement: "Paiement",
+  transfert: "Transfert",
+  remplacement: "Remplacement",
+};

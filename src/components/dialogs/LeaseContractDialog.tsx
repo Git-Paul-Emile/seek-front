@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarIcon, FileText, Plus, Trash2 } from 'lucide-react';
+import { CalendarIcon, FileText, Plus, Trash2, PenTool, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,8 @@ import {
   CreateLeaseInput,
   DEFAULT_CLAUSES,
   COLOCATION_SPECIFIC_CLAUSES,
+  COLOCATION_INDIVIDUELLE_CLAUSES,
+  COLOCATION_COLLECTIVE_CLAUSES,
   LeaseContract,
 } from '@/types/lease-contract';
 
@@ -92,6 +94,17 @@ export function LeaseContractDialog({
   );
   const [clauses, setClauses] = useState<LeaseClause[]>(
     editContract?.clauses || [...DEFAULT_CLAUSES]
+  );
+
+  // New options
+  const [signatureEnabled, setSignatureEnabled] = useState(
+    editContract?.signatureEnabled || false
+  );
+  const [autoRenewal, setAutoRenewal] = useState(
+    editContract?.autoRenewal || false
+  );
+  const [autoRenewalNoticeDays, setAutoRenewalNoticeDays] = useState(
+    editContract?.autoRenewalNoticeDays?.toString() || '30'
   );
 
   // New clause form
@@ -151,6 +164,9 @@ export function LeaseContractDialog({
       depositAmount: parseFloat(depositAmount),
       paymentDueDay: parseInt(paymentDueDay),
       clauses,
+      signatureEnabled,
+      autoRenewal,
+      autoRenewalNoticeDays: parseInt(autoRenewalNoticeDays),
     };
 
     onSave(input);
@@ -175,6 +191,9 @@ export function LeaseContractDialog({
     setDepositAmount('');
     setPaymentDueDay('1');
     setClauses(DEFAULT_CLAUSES);
+    setSignatureEnabled(false);
+    setAutoRenewal(false);
+    setAutoRenewalNoticeDays('30');
   };
 
   const handleTenantToggle = (tenantId: string) => {
@@ -187,9 +206,15 @@ export function LeaseContractDialog({
 
   const getClausesForType = () => {
     let currentClauses = [...DEFAULT_CLAUSES];
+    
     if (type === 'colocation') {
       currentClauses = [...currentClauses, ...COLOCATION_SPECIFIC_CLAUSES];
+    } else if (type === 'colocation_individuelle') {
+      currentClauses = [...currentClauses, ...COLOCATION_INDIVIDUELLE_CLAUSES];
+    } else if (type === 'colocation_collective') {
+      currentClauses = [...currentClauses, ...COLOCATION_COLLECTIVE_CLAUSES];
     }
+    
     // Preserve custom clauses
     const customClauses = clauses.filter(c => c.id.startsWith('custom-'));
     return [...currentClauses, ...customClauses];
@@ -213,7 +238,7 @@ export function LeaseContractDialog({
 
         {/* Progress Steps */}
         <div className="flex items-center justify-center gap-4 py-4">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center">
               <div
                 className={cn(
@@ -225,7 +250,7 @@ export function LeaseContractDialog({
               >
                 {s}
               </div>
-              {s < 3 && (
+              {s < 4 && (
                 <div
                   className={cn(
                     'h-0.5 w-12',
@@ -253,6 +278,8 @@ export function LeaseContractDialog({
                   <SelectContent>
                     <SelectItem value="classique">Bail Classique</SelectItem>
                     <SelectItem value="colocation">Colocation</SelectItem>
+                    <SelectItem value="colocation_individuelle">Colocation (Chambre individuelle)</SelectItem>
+                    <SelectItem value="colocation_collective">Colocation (Espace collectif)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -277,7 +304,9 @@ export function LeaseContractDialog({
             {/* Tenant Selection */}
             <div className="space-y-2">
               <Label>
-                {type === 'colocation' ? 'Colocataires' : 'Locataire'}
+                {type === 'classique' ? 'Locataire' : 
+                 type === 'colocation_individuelle' ? 'Locataires' : 
+                 type === 'colocation_collective' ? 'Locataires' : 'Locataire(s)'}
               </Label>
               <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-3">
                 {tenants.map((tenant) => (
@@ -292,7 +321,7 @@ export function LeaseContractDialog({
                     />
                     <Label
                       htmlFor={`tenant-${tenant.id}`}
-                      className="text-sm font-normal"
+                      className="text-sm font-normal cursor-pointer"
                     >
                       {tenant.fullName}
                     </Label>
@@ -546,6 +575,111 @@ export function LeaseContractDialog({
           </div>
         )}
 
+        {/* Step 4: Options (Signature & Auto-renewal) */}
+        {step === 4 && (
+          <div className="space-y-6">
+            {/* Signature Options */}
+            <div className="border rounded-md p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <PenTool className="h-5 w-5 text-primary" />
+                <h4 className="font-medium">Signature électronique</h4>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="signatureEnabled"
+                  checked={signatureEnabled}
+                  onCheckedChange={(checked) => setSignatureEnabled(checked as boolean)}
+                />
+                <Label htmlFor="signatureEnabled">
+                  Activer la signature électronique pour ce contrat
+                </Label>
+              </div>
+              {signatureEnabled && (
+                <p className="text-sm text-muted-foreground">
+                  Les parties pourront signer numériquement le contrat. La signature
+                  aura la même valeur juridique qu'une signature manuscrite.
+                </p>
+              )}
+            </div>
+
+            {/* Auto-renewal Options */}
+            <div className="border rounded-md p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-primary" />
+                <h4 className="font-medium">Renouvellement automatique</h4>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="autoRenewal"
+                  checked={autoRenewal}
+                  onCheckedChange={(checked) => setAutoRenewal(checked as boolean)}
+                />
+                <Label htmlFor="autoRenewal">
+                  Activer le renouvellement automatique
+                </Label>
+              </div>
+              {autoRenewal && (
+                <div className="space-y-2">
+                  <Label htmlFor="noticeDays">
+                    Nombre de jours de préavis pour le renouvellement
+                  </Label>
+                  <Select
+                    value={autoRenewalNoticeDays}
+                    onValueChange={setAutoRenewalNoticeDays}
+                  >
+                    <SelectTrigger id="noticeDays" className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7">7 jours</SelectItem>
+                      <SelectItem value="14">14 jours</SelectItem>
+                      <SelectItem value="30">30 jours</SelectItem>
+                      <SelectItem value="60">60 jours</SelectItem>
+                      <SelectItem value="90">90 jours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Une alerte sera envoyée {autoRenewalNoticeDays} jours avant la fin du bail
+                    pour informer les parties du renouvellement.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Summary */}
+            <div className="rounded-md bg-muted p-4">
+              <h4 className="font-medium mb-2">Récapitulatif du contrat</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Type:</span>
+                  <span className="ml-2 font-medium">
+                    {type === 'classique' && 'Bail Classique'}
+                    {type === 'colocation' && 'Colocation'}
+                    {type === 'colocation_individuelle' && 'Colocation (Chambre individuelle)'}
+                    {type === 'colocation_collective' && 'Colocation (Espace collectif)'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Signature:</span>
+                  <span className="ml-2 font-medium">
+                    {signatureEnabled ? 'Oui' : 'Non'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Renouvellement auto:</span>
+                  <span className="ml-2 font-medium">
+                    {autoRenewal ? `Oui (${autoRenewalNoticeDays}j)` : 'Non'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Locataire(s):</span>
+                  <span className="ml-2 font-medium">{selectedTenantIds.length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <DialogFooter className="flex justify-between">
           <div>
             {step > 1 && (
@@ -555,7 +689,7 @@ export function LeaseContractDialog({
             )}
           </div>
           <div className="flex gap-2">
-            {step < 3 ? (
+            {step < 4 ? (
               <Button onClick={() => setStep(step + 1)}>Suivant</Button>
             ) : (
               <Button onClick={handleSubmit}>

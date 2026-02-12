@@ -304,6 +304,49 @@ export interface AgencyBillingClient {
   createdAt: string;
 }
 
+// Mandat de gestion
+export interface ManagementMandate {
+  id: string;
+  agencyId: string;
+  ownerId: string;
+  ownerName: string;
+  propertyId: string;
+  propertyName: string;
+  type: 'GESTION_COMPLETE' | 'GESTION_LOCATIVE' | 'TRANSACTION';
+  startDate: string;
+  endDate: string;
+  managementFeePercent: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// Type pour la création d'un mandat
+export interface CreateMandateData {
+  ownerId: string;
+  propertyId: string;
+  type: 'GESTION_COMPLETE' | 'GESTION_LOCATIVE' | 'TRANSACTION';
+  startDate: string;
+  endDate: string;
+  managementFeePercent: number;
+}
+
+// Type pour l'invitation d'un propriétaire
+export interface OwnerInvitationData {
+  email: string;
+  message?: string;
+}
+
+// Type pour la création d'un compte propriétaire
+export interface CreateOwnerData {
+  fullName: string;
+  email: string;
+  phone: string;
+  ownerType: 'PARTICULAR' | 'COMPANY';
+  companyName?: string;
+  address?: string;
+  city?: string;
+}
+
 // Facture
 export interface AgencyInvoice {
   id: string;

@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowRight, Search, Shield, Star, TrendingUp, Home, Building2 } from "lucide-react";
+import { ArrowRight, Search, Shield, Star, TrendingUp, Home, Building2, Briefcase } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { mockProperties, typeLabels } from "@/data/properties";
 import PropertyCard from "@/components/properties/PropertyCard";
@@ -135,7 +135,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA Propriétaires */}
       <section className="py-20 bg-secondary">
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-secondary-foreground mb-4">
@@ -159,6 +159,37 @@ const Index = () => {
                 className="gap-2 px-8 border-secondary-foreground/30 text-secondary-foreground bg-transparent min-w-[200px]"
               >
                 Déjà propriétaire ?
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Agences */}
+      <section className="py-20 bg-primary">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+            Vous êtes une agence immobilière ?
+          </h2>
+          <p className="text-primary-foreground/60 max-w-xl mx-auto mb-8">
+            Gérez vos propriétés, propriétaires et locataires en toute simplicité. 
+            Notre plateforme vous offre tous les outils nécessaires pour optimiser votre activité.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/agency/register">
+              <Button size="lg" className="gap-2 px-8 min-w-[250px] bg-white text-primary hover:bg-white/90">
+                <Briefcase className="w-4 h-4" />
+                Créer mon espace agence
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link to="/agency/login">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="gap-2 px-8 border-primary-foreground/30 text-primary-foreground bg-transparent min-w-[200px]"
+              >
+                Déjà agence ?
               </Button>
             </Link>
           </div>

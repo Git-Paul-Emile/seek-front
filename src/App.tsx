@@ -8,6 +8,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { AdminLayout } from "@/components/layout/AdminSidebar";
 import TenantLayout from "@/components/layout/TenantLayout";
+import AgencyLayout from "@/components/layout/AgencyLayout";
 
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
@@ -45,6 +46,15 @@ import TenantPersonalSettings from "./pages/TenantPersonalSettings";
 import TenantDocuments from "./pages/TenantDocuments";
 import TenantReceipts from "./pages/TenantReceipts";
 
+// Pages Agence
+import AgencyLogin from "./pages/AgencyLogin";
+import AgencyRegister from "./pages/AgencyRegister";
+import AgencyDashboard from "./pages/AgencyDashboard";
+import AgencyTeam from "./pages/AgencyTeam";
+import AgencyOwners from "./pages/AgencyOwners";
+import AgencyProperties from "./pages/AgencyProperties";
+import AgencyProfile from "./pages/AgencyProfile";
+
 const queryClient = new QueryClient();
 
 // Layout pour les pages publiques avec Footer
@@ -73,6 +83,11 @@ const TenantLayoutWrapper = () => (
   <TenantLayout>
     <Outlet />
   </TenantLayout>
+);
+
+// Layout pour l'espace agence
+const AgencyLayoutWrapper = () => (
+  <AgencyLayout />
 );
 
 const App = () => (
@@ -132,6 +147,22 @@ const App = () => (
             <Route path="/tenant/receipts" element={<TenantReceipts />} />
             <Route path="/tenant/profile" element={<TenantProfile />} />
             <Route path="/tenant/personal-settings" element={<TenantPersonalSettings />} />
+          </Route>
+          
+          {/* Routes espace agence */}
+          <Route path="/agency/login" element={<AgencyLogin />} />
+          <Route path="/agency/register" element={<AgencyRegister />} />
+          
+          <Route element={<AgencyLayoutWrapper />}>
+            <Route path="/agency/dashboard" element={<AgencyDashboard />} />
+            <Route path="/agency/team" element={<AgencyTeam />} />
+            <Route path="/agency/owners" element={<AgencyOwners />} />
+            <Route path="/agency/properties" element={<AgencyProperties />} />
+            <Route path="/agency/profile" element={<AgencyProfile />} />
+            <Route path="/agency/settings" element={<AgencyProfile />} />
+            <Route path="/agency/reports" element={<AgencyDashboard />} />
+            <Route path="/agency/billing" element={<AgencyDashboard />} />
+            <Route path="/agency/notifications" element={<AgencyDashboard />} />
           </Route>
           
           {/* Route legacy - redirect vers admin */}

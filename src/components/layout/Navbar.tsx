@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Search} from "lucide-react";
+import { Menu, X, Search, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -9,6 +9,7 @@ const navLinks = [
   { to: "/annonces", label: "Annonces" },
   { to: "/dashboard", label: "Espace Propriétaire" },
   { to: "/tenant/login", label: "Espace Locataire" },
+  { to: "/agency/login", label: "Espace Agence" },
 ];
 
 const Navbar = () => {
@@ -25,7 +26,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.to}

@@ -11,6 +11,7 @@ import TenantLayout from "@/components/layout/TenantLayout";
 import AgencyLayout from "@/components/layout/AgencyLayout";
 
 import Index from "./pages/Index";
+import Guide from "./pages/Guide";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import Dashboard from "./pages/Dashboard";
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/annonces" element={<Properties />} />
             <Route path="/annonce/:id" element={<PropertyDetail />} />
+            <Route path="/guide" element={<Guide />} />
           </Route>
           
           {/* Routes admin */}

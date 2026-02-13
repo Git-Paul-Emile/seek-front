@@ -8,7 +8,7 @@ const navLinks = [
   { to: "/", label: "Accueil" },
   { to: "/annonces", label: "Annonces" },
   { to: "/guide", label: "Guide" },
-  { to: "/dashboard", label: "Espace Propriétaire" },
+  { to: "/owner", label: "Espace Propriétaire" },
   { to: "/tenant/login", label: "Espace Locataire" },
   { to: "/agency/login", label: "Espace Agence" },
 ];

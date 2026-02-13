@@ -9,22 +9,38 @@ export const ownerRegistrationSchema = z.object({
     .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le nom contient des caractères invalides"),
   phone: z
     .string()
-    .regex(/^0[1-9]\d{8}$/, "Veuillez entrer un numéro de téléphone français valide à 10 chiffres"),
+    .regex(/^7[0-9]{8}$/, "Veuillez entrer un numéro de téléphone sénégalais valide (9 chiffres commençant par 7)"),
+  address: z
+    .string()
+    .min(5, "L'adresse doit contenir au moins 5 caractères")
+    .max(200, "L'adresse ne doit pas dépasser 200 caractères"),
   password: z
     .string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères")
     .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
     .regex(/[a-z]/, "Le mot de passe doit contenir au moins une minuscule")
     .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
-  acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: "Vous devez accepter les conditions d'utilisation" }),
+  acceptTerms: z.boolean().refine(val => val === true, {
+    message: "Vous devez accepter les conditions d'utilisation",
   }),
-  acceptPrivacy: z.literal(true, {
-    errorMap: () => ({ message: "Vous devez prendre connaissance de la politique de confidentialité" }),
+  acceptPrivacy: z.boolean().refine(val => val === true, {
+    message: "Vous devez prendre connaissance de la politique de confidentialité",
   }),
 });
 
 export type OwnerRegistrationData = z.infer<typeof ownerRegistrationSchema>;
+
+// Schéma de connexion propriétaire
+export const ownerLoginSchema = z.object({
+  phone: z
+    .string()
+    .regex(/^7[0-9]{8}$/, "Veuillez entrer un numéro de téléphone sénégalais valide (9 chiffres commençant par 7)"),
+  password: z
+    .string()
+    .min(1, "Le mot de passe est requis"),
+});
+
+export type OwnerLoginData = z.infer<typeof ownerLoginSchema>;
 
 // Schéma de complétion du profil - Champs optionnels avec recommandations
 export const ownerProfileSchema = z.object({
@@ -59,6 +75,7 @@ export interface Owner {
   id: string;
   fullName: string;
   phone: string;
+  address?: string;
   email?: string;
   whatsapp?: string;
   city?: string;

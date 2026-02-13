@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, ArrowRight, MapPin, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { registerOwner, setCurrentOwner } from "@/lib/owner-api";
+import { ownerRegistrationSchema, type OwnerRegistrationData } from "@/lib/owner-validation";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function OwnerRegister() {
@@ -16,17 +18,19 @@ export default function OwnerRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const [passwordValue, setPasswordValue] = useState("");
 
   const {
     register,
     handleSubmit,
     watch,
-  } = useForm({
-    mode: "onSubmit",
+    control,
+    formState: { errors },
+  } = useForm<OwnerRegistrationData>({
+    resolver: zodResolver(ownerRegistrationSchema),
+    mode: "onChange",
   });
 
-  const formValues = watch();
+  const passwordValue = watch("password", "");
 
   const getStrengthColor = (strength: number) => {
     if (strength <= 25) return "bg-red-500";
@@ -52,21 +56,20 @@ export default function OwnerRegister() {
     return "Excellent";
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: OwnerRegistrationData) => {
     setIsLoading(true);
     
     try {
-      // Appel API vers db.json
       const result = await registerOwner({
         fullName: data.fullName,
         phone: data.phone,
         address: data.address,
-        ownerType: "PARTICULAR",
         password: data.password,
+        acceptTerms: data.acceptTerms,
+        acceptPrivacy: data.acceptPrivacy,
       });
 
       if (result.success && result.owner) {
-        // Stocker le propriétaire connecté
         setCurrentOwner(result.owner);
         
         toast({
@@ -75,7 +78,6 @@ export default function OwnerRegister() {
           duration: 5000,
         });
 
-        // Redirection immédiate vers l'espace admin
         navigate("/admin");
       } else {
         toast({
@@ -120,9 +122,12 @@ export default function OwnerRegister() {
                 <Input
                   id="fullName"
                   placeholder="Votre nom et prénom"
-                  className="h-11"
+                  className={`h-11 ${errors.fullName ? "border-red-500" : ""}`}
                   {...register("fullName")}
                 />
+                {errors.fullName && (
+                  <p className="text-sm text-red-500">{errors.fullName.message}</p>
+                )}
               </div>
 
               {/* Numéro de téléphone */}
@@ -134,9 +139,12 @@ export default function OwnerRegister() {
                 <Input
                   id="phone"
                   placeholder="77 12 34 56 78"
-                  className="h-11"
+                  className={`h-11 ${errors.phone ? "border-red-500" : ""}`}
                   {...register("phone")}
                 />
+                {errors.phone && (
+                  <p className="text-sm text-red-500">{errors.phone.message}</p>
+                )}
               </div>
 
               {/* Adresse personnelle */}
@@ -149,10 +157,13 @@ export default function OwnerRegister() {
                   <Input
                     id="address"
                     placeholder="Votre adresse au Sénégal"
-                    className="h-11 pl-10"
+                    className={`h-11 pl-10 ${errors.address ? "border-red-500" : ""}`}
                     {...register("address")}
                   />
                 </div>
+                {errors.address && (
+                  <p className="text-sm text-red-500">{errors.address.message}</p>
+                )}
               </div>
 
               {/* Mot de passe */}
@@ -165,11 +176,10 @@ export default function OwnerRegister() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Votre mot de passe"
-                    className="h-11 pr-10"
+                    className={`h-11 pr-10 ${errors.password ? "border-red-500" : ""}`}
                     {...register("password")}
                     onChange={(e) => {
                       const value = e.target.value;
-                      setPasswordValue(value);
                       setPasswordStrength(calculatePasswordStrength(value));
                     }}
                   />
@@ -190,43 +200,78 @@ export default function OwnerRegister() {
                     )}
                   </Button>
                 </div>
+                {/* Barre de progression du mot de passe */}
+                {passwordValue && (
+                  <div className="space-y-1">
+                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${getStrengthColor(passwordStrength)}`}
+                        style={{ width: `${passwordStrength}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">{getStrengthLabel(passwordStrength)}</p>
+                  </div>
+                )}
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password.message}</p>
+                )}
               </div>
 
               {/* Cases à cocher légales */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="acceptTerms"
-                    className="mt-0.5"
-                    {...register("acceptTerms")}
-                  />
-                  <label
-                    htmlFor="acceptTerms"
-                    className="text-sm text-gray-600 leading-tight cursor-pointer"
-                  >
-                    J'accepte les{" "}
-                    <a href="/terms" className="text-primary hover:underline">
-                      conditions d'utilisation
-                    </a>
-                  </label>
-                </div>
+                <Controller
+                  name="acceptTerms"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex items-start space-x-2">
+                      <Checkbox
+                        id="acceptTerms"
+                        className={`mt-0.5 ${errors.acceptTerms ? "border-red-500" : ""}`}
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <label
+                        htmlFor="acceptTerms"
+                        className="text-sm text-gray-600 leading-tight cursor-pointer"
+                      >
+                        J'accepte les{" "}
+                        <a href="/terms" className="text-primary hover:underline">
+                          conditions d'utilisation
+                        </a>
+                      </label>
+                    </div>
+                  )}
+                />
+                {errors.acceptTerms && (
+                  <p className="text-sm text-red-500">{errors.acceptTerms.message}</p>
+                )}
 
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="acceptPrivacy"
-                    className="mt-0.5"
-                    {...register("acceptPrivacy")}
-                  />
-                  <label
-                    htmlFor="acceptPrivacy"
-                    className="text-sm text-gray-600 leading-tight cursor-pointer"
-                  >
-                    Je prends connaissance de la{" "}
-                    <a href="/privacy" className="text-primary hover:underline">
-                      politique de confidentialité
-                    </a>
-                  </label>
-                </div>
+                <Controller
+                  name="acceptPrivacy"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex items-start space-x-2">
+                      <Checkbox
+                        id="acceptPrivacy"
+                        className={`mt-0.5 ${errors.acceptPrivacy ? "border-red-500" : ""}`}
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <label
+                        htmlFor="acceptPrivacy"
+                        className="text-sm text-gray-600 leading-tight cursor-pointer"
+                      >
+                        Je prends connaissance de la{" "}
+                        <a href="/privacy" className="text-primary hover:underline">
+                          politique de confidentialité
+                        </a>
+                      </label>
+                    </div>
+                  )}
+                />
+                {errors.acceptPrivacy && (
+                  <p className="text-sm text-red-500">{errors.acceptPrivacy.message}</p>
+                )}
               </div>
 
               {/* Bouton de soumission */}

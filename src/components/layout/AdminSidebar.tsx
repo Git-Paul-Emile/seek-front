@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -20,6 +20,17 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
+import { getCurrentOwner, type Proprietaire } from '@/lib/owner-api';
+
+// Helper to get initials from name
+const getInitials = (name: string) => {
+  if (!name) return '?';
+  const parts = name.split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
 
 const navItems = [
   {
@@ -94,8 +105,17 @@ const bottomItems = [
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
+  const [currentOwner, setCurrentOwner] = useState<Proprietaire | null>(null);
+
+  useEffect(() => {
+    const owner = getCurrentOwner();
+    setCurrentOwner(owner);
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
+
+  const ownerName = currentOwner?.nom_complet || 'Propriétaire';
+  const ownerInitials = getInitials(ownerName);
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card">
@@ -154,10 +174,10 @@ const AdminSidebar: React.FC = () => {
       <div className="border-t p-4">
         <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-            JD
+            {ownerInitials}
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium">Jean Dupont</span>
+            <span className="text-sm font-medium">{ownerName}</span>
             <span className="text-xs text-muted-foreground">Propriétaire</span>
           </div>
         </div>

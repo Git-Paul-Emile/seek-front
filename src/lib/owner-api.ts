@@ -1,153 +1,88 @@
-import { Owner } from "@/lib/owner-validation";
-export type { Owner };
-import { preparePasswordForHashing, generateSecureToken } from "@/lib/security";
+import axios, { type AxiosError } from '@/api/axiosConfig.js';
+import type { OwnerRegistrationData } from '@/lib/owner-validation';
 
-const DB_PATH = "/data/db.json";
-
-// Simuler un délai réseau
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Type interne avec mot de passe
-interface OwnerWithPassword extends Owner {
-  password: string;
-}
-
-// Lire le fichier db.json
-async function readDb(): Promise<{ owners: OwnerWithPassword[] }> {
-  try {
-    const response = await fetch(DB_PATH);
-    if (!response.ok) {
-      return { owners: [] };
-    }
-    return await response.json();
-  } catch {
-    return { owners: [] };
-  }
-}
-
-// Écrire dans le fichier db.json
-async function writeDb(data: { owners: OwnerWithPassword[] }): Promise<void> {
-  await fetch(DB_PATH, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data, null, 2),
-  });
-}
-
-// Générer un ID unique
-function generateId(): string {
-  return generateSecureToken(16);
-}
-
-// Hachage simple du mot de passe (pour simulation)
-async function hashPassword(password: string): Promise<string> {
-  return preparePasswordForHashing(password);
+// Type Proprietaire
+export interface Proprietaire {
+  id: string;
+  nom_complet: string;
+  telephone: string;
+  adresse?: string;
+  email?: string;
+  whatsapp?: string;
+  ville?: string;
+  type_proprietaire: "PARTICULIER" | "ENTREPRISE";
+  raison_sociale?: string;
+  profil_complet: boolean;
+  taux_completude_profil: number;
+  statut: "ACTIF" | "INACTIF" | "SUSPENDU";
+  role: "PROPRIETAIRE";
+  date_creation: string;
+  date_modification: string;
 }
 
 // Inscription d'un propriétaire
 export async function registerOwner(
-  data: Omit<Owner, "id" | "createdAt" | "updatedAt" | "profileComplete" | "profileCompleteness" | "status" | "role"> & { password: string }
-): Promise<{ success: boolean; owner?: Owner; error?: string }> {
-  await delay(1000); // Simuler le délai réseau
-
+  data: OwnerRegistrationData
+): Promise<{ success: boolean; owner?: Proprietaire; message?: string; error?: string }> {
   try {
-    const db = await readDb();
+    // Préparer les données avec les noms français
+    const { acceptTerms, acceptPrivacy, ...registrationData } = data;
     
-    // Vérifier si le téléphone existe déjà
-    const existingOwner = db.owners.find((owner) => owner.phone === data.phone);
-    if (existingOwner) {
-      return { success: false, error: "Un compte existe déjà avec ce numéro de téléphone" };
+    const response = await axios.post(`/proprietaires/inscription`, {
+      nom_complet: registrationData.fullName,
+      telephone: registrationData.phone,
+      adresse: registrationData.address,
+      mot_de_passe: registrationData.password,
+      accepter_cgus: acceptTerms,
+      accepter_confidentialite: acceptPrivacy,
+    });
+    
+    if (response.status === 201) {
+      return { 
+        success: true, 
+        owner: response.data.data,
+        message: response.data.message 
+      };
     }
-
-    // Hacher le mot de passe
-    const hashedPassword = await hashPassword(data.password);
-
-    // Créer le nouveau propriétaire
-    const now = new Date().toISOString();
-    const newOwner: OwnerWithPassword = {
-      id: generateId(),
-      fullName: data.fullName,
-      phone: data.phone,
-      address: data.address,
-      email: data.email,
-      whatsapp: data.whatsapp,
-      city: data.city,
-      ownerType: data.ownerType,
-      companyName: data.companyName,
-      profileComplete: false,
-      profileCompleteness: 25,
-      status: "ACTIVE",
-      role: "PROPRIETAIRE",
-      password: hashedPassword,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    // Sauvegarder dans la base de données
-    db.owners.push(newOwner);
-    await writeDb(db);
-
-    // Retourner sans le mot de passe
-    const { password: _, ...ownerWithoutPassword } = newOwner;
-    return { success: true, owner: ownerWithoutPassword as Owner };
-  } catch (error) {
-    console.error("Erreur lors de l'inscription:", error);
+    
     return { success: false, error: "Une erreur est survenue lors de l'inscription" };
+  } catch (err) {
+    const error = err as AxiosError<{ message?: string }>;
+    const errorMessage = error.response?.data?.message || error.message || "Une erreur est survenue";
+    console.error("Erreur lors de l'inscription:", errorMessage);
+    return { success: false, error: errorMessage };
   }
 }
 
 // Connexion d'un propriétaire
 export async function loginOwner(
-  phone: string,
-  password: string
-): Promise<{ success: boolean; owner?: Owner; error?: string }> {
-  await delay(500);
-
+  telephone: string,
+  mot_de_passe: string
+): Promise<{ success: boolean; owner?: Proprietaire; message?: string; error?: string }> {
   try {
-    const db = await readDb();
-    const owner = db.owners.find((o) => o.phone === phone);
-
-    if (!owner) {
-      return { success: false, error: "Numéro de téléphone ou mot de passe incorrect" };
+    const response = await axios.post(`/proprietaires/connexion`, { telephone, mot_de_passe });
+    
+    if (response.status === 200) {
+      return { 
+        success: true, 
+        owner: response.data.data,
+        message: response.data.message 
+      };
     }
-
-    const hashedPassword = await hashPassword(password);
-    if (owner.password !== hashedPassword) {
-      return { success: false, error: "Numéro de téléphone ou mot de passe incorrect" };
-    }
-
-    if (owner.status !== "ACTIVE") {
-      return { success: false, error: "Votre compte est désactivé. Veuillez contacter le support." };
-    }
-
-    // Retourner sans le mot de passe
-    const { password: _, ...ownerWithoutPassword } = owner;
-    return { success: true, owner: ownerWithoutPassword as Owner };
-  } catch (error) {
-    console.error("Erreur lors de la connexion:", error);
+    
     return { success: false, error: "Une erreur est survenue lors de la connexion" };
-  }
-}
-
-// Récupérer un propriétaire par ID
-export async function getOwnerById(id: string): Promise<Owner | null> {
-  try {
-    const db = await readDb();
-    const owner = db.owners.find((o) => o.id === id);
-    if (owner) {
-      const { password: _, ...ownerWithoutPassword } = owner;
-      return ownerWithoutPassword as Owner;
-    }
-    return null;
-  } catch {
-    return null;
+  } catch (err) {
+    const error = err as AxiosError<{ message?: string }>;
+    const errorMessage = error.response?.data?.message || error.message || "Une erreur est survenue";
+    console.error("Erreur lors de la connexion:", errorMessage);
+    return { success: false, error: errorMessage };
   }
 }
 
 // Récupérer le propriétaire actuel (depuis localStorage)
-export function getCurrentOwner(): Owner | null {
+export function getCurrentOwner(): Proprietaire | null {
   try {
-    const ownerData = localStorage.getItem("seek_owner");
+    const ownerData = localStorage.getItem("seek_proprietaire");
     if (ownerData) {
       return JSON.parse(ownerData);
     }
@@ -158,11 +93,11 @@ export function getCurrentOwner(): Owner | null {
 }
 
 // Définir le propriétaire actuel
-export function setCurrentOwner(owner: Owner): void {
-  localStorage.setItem("seek_owner", JSON.stringify(owner));
+export function setCurrentOwner(owner: Proprietaire): void {
+  localStorage.setItem("seek_proprietaire", JSON.stringify(owner));
 }
 
 // Déconnexion
 export function logoutOwner(): void {
-  localStorage.removeItem("seek_owner");
+  localStorage.removeItem("seek_proprietaire");
 }

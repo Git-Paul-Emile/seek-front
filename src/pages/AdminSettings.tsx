@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,55 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Settings, User, Bell, Lock, Globe, CreditCard, MapPin, FileText, Users } from "lucide-react";
 import { CURRENCY, GEOGRAPHIC_ZONES, LEASE_CONTRACT_TEMPLATES, COLOCATION_RULES } from "@/config/seek-config";
+import { getCurrentOwner, type Proprietaire } from "@/lib/owner-api";
 
 const AdminSettings = () => {
   const [currency, setCurrency] = useState('xof');
   const [timezone, setTimezone] = useState('utc');
   const [selectedRegion, setSelectedRegion] = useState('');
+  const [currentOwner, setCurrentOwner] = useState<Proprietaire | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    company: '',
+  });
+
+  useEffect(() => {
+    const owner = getCurrentOwner();
+    setCurrentOwner(owner);
+    
+    if (owner) {
+      const nameParts = owner.nom_complet ? owner.nom_complet.split(' ') : [''];
+      setFormData({
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: owner.email || '',
+        phone: owner.telephone || '',
+        company: owner.raison_sociale || '',
+      });
+    }
+    setLoading(false);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
 
   return (
     <div className="container mx-auto py-8 space-y-6">
@@ -56,24 +100,50 @@ const AdminSettings = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">Prénom</Label>
-                  <Input id="firstName" defaultValue="Jean" />
+                  <Input 
+                    id="firstName" 
+                    value={formData.firstName} 
+                    onChange={handleInputChange}
+                    placeholder="Prénom"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Nom</Label>
-                  <Input id="lastName" defaultValue="Dupont" />
+                  <Input 
+                    id="lastName" 
+                    value={formData.lastName} 
+                    onChange={handleInputChange}
+                    placeholder="Nom"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="jean.dupont@email.com" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={formData.email} 
+                  onChange={handleInputChange}
+                  placeholder="email@exemple.com"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Téléphone</Label>
-                <Input id="phone" defaultValue="+221 77 123 45 67" />
+                <Input 
+                  id="phone" 
+                  value={formData.phone} 
+                  onChange={handleInputChange}
+                  placeholder="+221 XX XXX XXXX"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="company">Entreprise</Label>
-                <Input id="company" defaultValue="SEEK Immobilier" />
+                <Input 
+                  id="company" 
+                  value={formData.company} 
+                  onChange={handleInputChange}
+                  placeholder="Nom de l'entreprise"
+                />
               </div>
               <Button className="w-full">Enregistrer les modifications</Button>
             </CardContent>

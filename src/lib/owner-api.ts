@@ -287,3 +287,25 @@ export async function changeOwnerPassword(
   }
 }
 
+// Supprimer son compte
+export async function deleteOwnerAccount(): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const response = await axiosInstance.delete(`/proprietaires/auth/compte`);
+    
+    if (response.status === 200) {
+      // Nettoyer le localStorage
+      localStorage.removeItem('seek_proprietaire');
+      return { 
+        success: true, 
+        message: response.data.message 
+      };
+    }
+    
+    return { success: false, error: "Une erreur est survenue" };
+  } catch (err) {
+    const error = err as AxiosError<{ message?: string }>;
+    const errorMessage = error.response?.data?.message || error.message || "Une erreur est survenue";
+    return { success: false, error: errorMessage };
+  }
+}
+

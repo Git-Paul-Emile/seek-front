@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +10,14 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, User, Lock, Globe, CreditCard, MapPin, FileText, Users } from "lucide-react";
 import { CURRENCY, GEOGRAPHIC_ZONES, LEASE_CONTRACT_TEMPLATES, COLOCATION_RULES } from "@/config/seek-config";
-import { getCurrentOwner, updateOwnerProfile, changeOwnerPassword, setCurrentOwner, type Proprietaire } from "@/lib/owner-api";
+import { getCurrentOwner, updateOwnerProfile, changeOwnerPassword, deleteOwnerAccount, type Proprietaire } from "@/lib/owner-api";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 
 
 
 const AdminSettings = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [currency, setCurrency] = useState('xof');
   const [timezone, setTimezone] = useState('utc');
   const [selectedRegion, setSelectedRegion] = useState('');
@@ -23,6 +26,10 @@ const AdminSettings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Delete account modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
@@ -144,6 +151,36 @@ const handlePasswordChange = async () => {
     });
   } finally {
     setIsSaving(false);
+  }
+};
+
+const handleDeleteAccount = async () => {
+  setIsDeleting(true);
+  try {
+    const result = await deleteOwnerAccount();
+    if (result.success) {
+      toast({
+        title: "Succès",
+        description: "Compte supprimé avec succès",
+      });
+      // Redirect to /owner
+      navigate('/owner');
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Échec de la suppression du compte",
+        variant: "destructive",
+      });
+    }
+  } catch (error) {
+    toast({
+      title: "Erreur",
+      description: "Une erreur est survenue",
+      variant: "destructive",
+    });
+  } finally {
+    setIsDeleting(false);
+    setShowDeleteModal(false);
   }
 };
 
@@ -659,10 +696,24 @@ const handlePasswordChange = async () => {
               <p className="font-medium">Supprimer le compte</p>
               <p className="text-sm text-muted-foreground">Supprimer définitivement votre compte et toutes les données</p>
             </div>
-            <Button variant="destructive">Supprimer</Button>
+            <Button variant="destructive" onClick={() => setShowDeleteModal(true)}>
+              Supprimer
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de confirmation de suppression */}
+      <ConfirmDeleteModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        onConfirm={handleDeleteAccount}
+        title="Êtes-vous sûr de vouloir supprimer votre compte ?"
+        description="Cette action est irréversible. Toutes vos données, incluant vos propriétés, locataires et contrats, seront définitivement supprimées. Cette action ne peut pas être annulée."
+        confirmText="Oui, supprimer mon compte"
+        cancelText="Non, annuler"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

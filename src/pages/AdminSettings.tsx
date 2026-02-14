@@ -6,42 +6,148 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { Settings, User, Lock, Globe, CreditCard, MapPin, FileText, Users } from "lucide-react";
 import { CURRENCY, GEOGRAPHIC_ZONES, LEASE_CONTRACT_TEMPLATES, COLOCATION_RULES } from "@/config/seek-config";
-import { getCurrentOwner, type Proprietaire } from "@/lib/owner-api";
+import { getCurrentOwner, updateOwnerProfile, changeOwnerPassword, setCurrentOwner, type Proprietaire } from "@/lib/owner-api";
+
+
 
 const AdminSettings = () => {
+  const { toast } = useToast();
   const [currency, setCurrency] = useState('xof');
   const [timezone, setTimezone] = useState('utc');
   const [selectedRegion, setSelectedRegion] = useState('');
   const [currentOwner, setCurrentOwner] = useState<Proprietaire | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    ancienMotDePasse: '',
+    nouveauMotDePasse: '',
+    confirmMotDePasse: '',
+  });
+
 
   // Form state
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    fullName: '',
     phone: '',
-    company: '',
+    email: '',
+    whatsapp: '',
+    ville: '',
+    adresse: '',
   });
 
+
   useEffect(() => {
-    const owner = getCurrentOwner();
-    setCurrentOwner(owner);
+  const owner = getCurrentOwner();
+  setCurrentOwner(owner);
+  
+  if (owner) {
+    setFormData({
+      fullName: owner.nom_complet || '',
+      phone: owner.telephone || '',
+      email: owner.email || '',
+      whatsapp: owner.whatsapp || '',
+      ville: owner.ville || '',
+      adresse: owner.adresse || '',
+    });
+  }
+  setLoading(false);
+}, []);
+
+const handleSaveProfile = async () => {
+  setIsSaving(true);
+  try {
+    const result = await updateOwnerProfile({
+      nom_complet: formData.fullName,
+      email: formData.email || undefined,
+      adresse: formData.adresse || undefined,
+      whatsapp: formData.whatsapp || undefined,
+      ville: formData.ville || undefined,
+    });
     
-    if (owner) {
-      const nameParts = owner.nom_complet ? owner.nom_complet.split(' ') : [''];
-      setFormData({
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || '',
-        email: owner.email || '',
-        phone: owner.telephone || '',
-        company: owner.raison_sociale || '',
+    if (result.success && result.owner) {
+      setCurrentOwner(result.owner);
+      toast({
+        title: "Succès",
+        description: "Profil mis à jour avec succès",
+      });
+      setIsEditing(false);
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Échec de la mise à jour",
+        variant: "destructive",
       });
     }
-    setLoading(false);
-  }, []);
+  } catch (error) {
+    toast({
+      title: "Erreur",
+      description: "Une erreur est survenue",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+const handlePasswordChange = async () => {
+  if (passwordData.nouveauMotDePasse !== passwordData.confirmMotDePasse) {
+    toast({
+      title: "Erreur",
+      description: "Les mots de passe ne correspondent pas",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (passwordData.nouveauMotDePasse.length < 6) {
+    toast({
+      title: "Erreur",
+      description: "Le mot de passe doit contenir au moins 6 caractères",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsSaving(true);
+  try {
+    const result = await changeOwnerPassword(
+      passwordData.ancienMotDePasse,
+      passwordData.nouveauMotDePasse
+    );
+    
+    if (result.success) {
+      toast({
+        title: "Succès",
+        description: "Mot de passe modifié avec succès",
+      });
+      setPasswordData({ ancienMotDePasse: '', nouveauMotDePasse: '', confirmMotDePasse: '' });
+      setIsChangingPassword(false);
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Échec du changement de mot de passe",
+        variant: "destructive",
+      });
+    }
+  } catch (error) {
+    toast({
+      title: "Erreur",
+      description: "Une erreur est survenue",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+
 
   if (loading) {
     return (
@@ -68,11 +174,7 @@ const AdminSettings = () => {
       <p className="text-muted-foreground mt-1">Gérez vos informations et préférences</p>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-1">
-          <TabsTrigger value="general" className="gap-2">
-            <Globe className="h-4 w-4" /> Général
-          </TabsTrigger>
-        </TabsList>
+       
 
         {/* Paramètres généraux */}
         <TabsContent value="general" className="space-y-6">
@@ -86,24 +188,16 @@ const AdminSettings = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Nom complet</Label>
+                <Label htmlFor="fullName">Nom et Prénom</Label>
                 <Input 
                   id="fullName" 
-                  value={formData.firstName && formData.lastName ? `${formData.firstName} ${formData.lastName}`.trim() : formData.firstName || formData.lastName || ''} 
+                  value={formData.fullName || ''} 
                   onChange={handleInputChange}
                   placeholder="Votre nom complet"
+                  disabled={!isEditing}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={formData.email} 
-                  onChange={handleInputChange}
-                  placeholder="email@exemple.com"
-                />
-              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="phone">Téléphone</Label>
                 <Input 
@@ -111,9 +205,91 @@ const AdminSettings = () => {
                   value={formData.phone} 
                   onChange={handleInputChange}
                   placeholder="+221 XX XXX XXXX"
+                  disabled
+                />
+                <p className="text-xs text-muted-foreground">Le téléphone ne peut pas être modifié</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email"
+                  value={formData.email || ''} 
+                  onChange={handleInputChange}
+                  placeholder="email@exemple.com"
+                  disabled={!isEditing}
                 />
               </div>
-              <Button className="w-full">Enregistrer les modifications</Button>
+
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp">WhatsApp</Label>
+                <Input 
+                  id="whatsapp" 
+                  value={formData.whatsapp || ''} 
+                  onChange={handleInputChange}
+                  placeholder="+221 XX XXX XXXX"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ville">Ville</Label>
+                <Input 
+                  id="ville" 
+                  value={formData.ville || ''} 
+                  onChange={handleInputChange}
+                  placeholder="Dakar"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="adresse">Adresse Personnelle</Label>
+                <Input 
+                  id="adresse" 
+                  value={formData.adresse || ''} 
+                  onChange={handleInputChange}
+                  placeholder="Adresse personnelle"
+                  disabled={!isEditing}
+                />
+              </div>
+              
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsEditing(false);
+                      // Reset form data
+                      if (currentOwner) {
+                        setFormData({
+                          fullName: currentOwner.nom_complet || '',
+                          phone: currentOwner.telephone || '',
+                          email: currentOwner.email || '',
+                          whatsapp: currentOwner.whatsapp || '',
+                          ville: currentOwner.ville || '',
+                          adresse: currentOwner.adresse || '',
+                        });
+                      }
+                    }}
+                    className="flex-1"
+                  >
+                    Annuler
+                  </Button>
+                  <Button 
+                    onClick={handleSaveProfile} 
+                    disabled={isSaving}
+                    className="flex-1"
+                  >
+                    {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={() => setIsEditing(true)} className="w-full">
+                  Modifier le profil
+                </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -126,19 +302,68 @@ const AdminSettings = () => {
               <CardDescription>Gérez vos paramètres de sécurité</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-                <Input id="currentPassword" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                <Input id="newPassword" type="password" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                <Input id="confirmPassword" type="password" />
-              </div>
-              <Button className="w-full">Changer le mot de passe</Button>
+              {isChangingPassword ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="ancienMotDePasse">Mot de passe actuel</Label>
+                    <Input 
+                      id="ancienMotDePasse" 
+                      type="password" 
+                      value={passwordData.ancienMotDePasse}
+                      onChange={(e) => setPasswordData({...passwordData, ancienMotDePasse: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nouveauMotDePasse">Nouveau mot de passe</Label>
+                    <Input 
+                      id="nouveauMotDePasse" 
+                      type="password"
+                      value={passwordData.nouveauMotDePasse}
+                      onChange={(e) => setPasswordData({...passwordData, nouveauMotDePasse: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmMotDePasse">Confirmer le mot de passe</Label>
+                    <Input 
+                      id="confirmMotDePasse" 
+                      type="password"
+                      value={passwordData.confirmMotDePasse}
+                      onChange={(e) => setPasswordData({...passwordData, confirmMotDePasse: e.target.value})}
+                    />
+                    {passwordData.nouveauMotDePasse && passwordData.confirmMotDePasse && 
+                     passwordData.nouveauMotDePasse !== passwordData.confirmMotDePasse && (
+                      <p className="text-xs text-destructive">Les mots de passe ne correspondent pas</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsChangingPassword(false);
+                        setPasswordData({ ancienMotDePasse: '', nouveauMotDePasse: '', confirmMotDePasse: '' });
+                      }}
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                    <Button 
+                      onClick={handlePasswordChange} 
+                      disabled={isSaving || !passwordData.ancienMotDePasse || !passwordData.nouveauMotDePasse}
+                      className="flex-1"
+                    >
+                      {isSaving ? 'Modification...' : 'Confirmer'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground mb-4">Cliquez sur le bouton ci-dessous pour changer votre mot de passe</p>
+                  <Button onClick={() => setIsChangingPassword(true)}>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Changer le mot de passe
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

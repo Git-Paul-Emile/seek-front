@@ -229,3 +229,61 @@ export async function resetPasswordBySms(
     return { success: false, error: errorMessage };
   }
 }
+
+// Mettre à jour le profil du propriétaire
+export async function updateOwnerProfile(
+  data: {
+    nom_complet?: string;
+    email?: string;
+    adresse?: string;
+    whatsapp?: string;
+    ville?: string;
+  }
+): Promise<{ success: boolean; owner?: Proprietaire; message?: string; error?: string }> {
+  try {
+    const response = await axiosInstance.put(`/proprietaires/auth/profil`, data);
+    
+    if (response.status === 200 && response.data.data) {
+      // Mettre à jour localStorage
+      localStorage.setItem('seek_proprietaire', JSON.stringify(response.data.data));
+      return { 
+        success: true, 
+        owner: response.data.data,
+        message: response.data.message 
+      };
+    }
+    
+    return { success: false, error: "Une erreur est survenue" };
+  } catch (err) {
+    const error = err as AxiosError<{ message?: string }>;
+    const errorMessage = error.response?.data?.message || error.message || "Une erreur est survenue";
+    return { success: false, error: errorMessage };
+  }
+}
+
+// Changer le mot de passe (avec l'ancien mot de passe)
+export async function changeOwnerPassword(
+  ancienMotDePasse: string,
+  nouveauMotDePasse: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const response = await axiosInstance.put(`/proprietaires/auth/mot-de-passe`, {
+      ancien_mot_de_passe: ancienMotDePasse,
+      nouveau_mot_de_passe: nouveauMotDePasse
+    });
+    
+    if (response.status === 200) {
+      return { 
+        success: true, 
+        message: response.data.message 
+      };
+    }
+    
+    return { success: false, error: "Une erreur est survenue" };
+  } catch (err) {
+    const error = err as AxiosError<{ message?: string }>;
+    const errorMessage = error.response?.data?.message || error.message || "Une erreur est survenue";
+    return { success: false, error: errorMessage };
+  }
+}
+

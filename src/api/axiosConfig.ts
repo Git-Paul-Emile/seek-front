@@ -27,13 +27,46 @@ const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue = [];
 };
 
+// Routes d'authentification qui ne doivent pas déclencher le refresh automatique
+// Ces routes renvoient normalement des erreurs 401 pour "identifiants incorrects"
+const AUTH_ROUTES = [
+  '/proprietaires/connexion',
+  '/proprietaires/inscription',
+  '/proprietaires/auth/mot-de-passe-oublie',
+  '/proprietaires/auth/reset-mot-de-passe',
+  '/proprietaires/auth/reset-mot-de-passe/email',
+  '/proprietaires/auth/reset-mot-de-passe/sms',
+];
+
+// Fonction pour vérifier si l'URL correspond à une route d'authentification
+const isAuthenticationRoute = (url: string | undefined): boolean => {
+  if (!url) return false;
+  
+  // L'URL peut être relative (/proprietaires/connexion) ou absolue (http://...)
+  // On extrait juste le chemin
+  try {
+    const urlObj = new URL(url, 'http://localhost');
+    const pathname = urlObj.pathname;
+    
+    // Vérifier si le pathname correspond à une route d'authentification
+    return AUTH_ROUTES.some(route => pathname.includes(route));
+  } catch {
+    // Si l'URL n'est pas valide, on fait une vérification simple
+    return AUTH_ROUTES.some(route => url.includes(route));
+  }
+};
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
-    // Si erreur 401 et pas déjà en train de refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Vérifier si c'est une route d'authentification
+    const requestUrl = originalRequest?.url || '';
+    const isAuthRoute = isAuthenticationRoute(requestUrl);
+    
+    // Si erreur 401, pas déjà en train de refresh, et ce n'est pas une route d'authentification
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       originalRequest._retry = true;
       
       if (!isRefreshing) {

@@ -1,12 +1,13 @@
-import { Property, propertyTypes, propertyStatuses, rentalModes, typeLabels, statusLabels, rentalModeLabels, cities } from "@/data/properties";
+import { Property, propertyTypes, propertyStatuses, rentalModes, typeLabels, statusLabels, rentalModeLabels } from "@/data/properties";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Upload, X, Plus, FileText } from "lucide-react";
-import { useState } from "react";
+import { Upload, X, Plus, FileText, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getVillesSenegal, Ville } from "@/lib/ville-api";
 
 export interface PropertyFormData {
   title: string;
@@ -46,6 +47,26 @@ const PropertyFormDialog = ({ open, onOpenChange, form, onFieldChange, onSave, i
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newDocName, setNewDocName] = useState("");
   const [newDocUrl, setNewDocUrl] = useState("");
+  const [villes, setVilles] = useState<Ville[]>([]);
+  const [loadingVilles, setLoadingVilles] = useState(false);
+
+  // Charger les villes du Sénégal depuis l'API
+  useEffect(() => {
+    const fetchVilles = async () => {
+      if (open) {
+        setLoadingVilles(true);
+        try {
+          const data = await getVillesSenegal();
+          setVilles(data);
+        } catch (error) {
+          console.error('Erreur lors du chargement des villes:', error);
+        } finally {
+          setLoadingVilles(false);
+        }
+      }
+    };
+    fetchVilles();
+  }, [open]);
 
   const handleAddImage = () => {
     if (newImageUrl) {
@@ -209,11 +230,20 @@ const PropertyFormDialog = ({ open, onOpenChange, form, onFieldChange, onSave, i
           {/* Ville */}
           <div>
             <Label>Ville</Label>
-            <Select value={form.city} onValueChange={(v) => onFieldChange("city", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={form.city} onValueChange={(v) => onFieldChange("city", v)} disabled={loadingVilles}>
+              <SelectTrigger>
+                {loadingVilles ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Chargement...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Sélectionner une ville" />
+                )}
+              </SelectTrigger>
               <SelectContent>
-                {cities.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                {villes.map((ville) => (
+                  <SelectItem key={ville.id} value={ville.nom}>{ville.nom}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

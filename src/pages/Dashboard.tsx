@@ -8,6 +8,7 @@ import StatsCards from "@/components/dashboard/StatsCards";
 import PropertiesTable from "@/components/dashboard/PropertiesTable";
 import PropertyFormDialog, { PropertyFormData } from "@/components/dashboard/PropertyFormDialog";
 import PageHeader from "@/components/layout/PageHeader";
+import { getCurrentOwner } from "@/lib/owner-api";
 
 const emptyForm: PropertyFormData = {
   title: "",
@@ -22,6 +23,7 @@ const emptyForm: PropertyFormData = {
   area: "",
   city: "Douala",
   address: "",
+  neighborhood: "",
   lat: "",
   lng: "",
   hospital: "",
@@ -40,6 +42,8 @@ const Dashboard = () => {
   const [form, setForm] = useState<PropertyFormData>(emptyForm);
   const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
+  const currentOwner = getCurrentOwner();
+  const ownerName = currentOwner?.nom_complet || 'Propriétaire';
 
   const openNew = () => {
     setEditingId(null);
@@ -62,6 +66,7 @@ const Dashboard = () => {
       area: String(p.area),
       city: p.location.city,
       address: p.location.address,
+      neighborhood: p.location.neighborhood,
       lat: String(p.location.lat),
       lng: String(p.location.lng),
       hospital: String(p.proximity.hospital),
@@ -111,6 +116,7 @@ const Dashboard = () => {
       location: {
         city: form.city,
         address: form.address,
+        neighborhood: form.neighborhood,
         lat: Number(form.lat) || 4.05,
         lng: Number(form.lng) || 9.7,
       },
@@ -172,7 +178,7 @@ const Dashboard = () => {
           </Button>
         }
       >
-        Bienvenue, Jean
+        Bienvenue, {ownerName}
       </PageHeader>
 
       {/* Stats */}

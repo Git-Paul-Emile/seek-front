@@ -82,7 +82,7 @@ export default function OwnerLogin() {
           duration: 5000,
         });
         
-        navigate("/owner/dashboard");
+        navigate("/admin");
       } else {
         toast({
           title: "Erreur de connexion",

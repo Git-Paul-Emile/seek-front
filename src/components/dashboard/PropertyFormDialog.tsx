@@ -22,6 +22,7 @@ export interface PropertyFormData {
   area: string;
   city: string;
   address: string;
+  neighborhood: string;
   lat: string;
   lng: string;
   hospital: string;

@@ -8,6 +8,8 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { AdminLayout } from "@/components/layout/AdminSidebar";
 import TenantLayout from "@/components/layout/TenantLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { GuestRoute } from "@/components/GuestRoute";
 
 import Index from "./pages/Index";
 import Guide from "./pages/Guide";
@@ -93,8 +95,14 @@ const App = () => (
             <Route path="/guide" element={<Guide />} />
           </Route>
           
-          {/* Routes admin */}
-          <Route element={<AdminLayoutWrapper />}>
+          {/* Routes admin - PROTÉGÉES */}
+          <Route 
+            element={
+              <ProtectedRoute>
+                <AdminLayoutWrapper />
+              </ProtectedRoute>
+            }
+          >
             <Route path="/admin" element={<Dashboard />} />
             <Route path="/admin/properties" element={<AdminProperties />} />
             <Route path="/admin/property-management" element={<PropertyManagement />} />
@@ -114,9 +122,21 @@ const App = () => (
           {/* Routes espace propriétaire */}
           <Route element={<OwnerLayout />}>
             <Route path="/owner" element={<OwnerHome />} />
-            <Route path="/owner/register" element={<OwnerRegister />} />
-            <Route path="/owner/login" element={<OwnerLogin />} />
-            <Route path="/owner/forgot-password" element={<OwnerForgotPassword />} />
+            <Route path="/owner/register" element={
+              <GuestRoute>
+                <OwnerRegister />
+              </GuestRoute>
+            } />
+            <Route path="/owner/login" element={
+              <GuestRoute>
+                <OwnerLogin />
+              </GuestRoute>
+            } />
+            <Route path="/owner/forgot-password" element={
+              <GuestRoute>
+                <OwnerForgotPassword />
+              </GuestRoute>
+            } />
           </Route>
           
           {/* Routes espace locataire (colocataire) */}

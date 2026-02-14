@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
@@ -20,7 +20,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
-import { getCurrentOwner, type Proprietaire } from '@/lib/owner-api';
+import { getCurrentOwner, logoutOwner, type Proprietaire } from '@/lib/owner-api';
 
 // Helper to get initials from name
 const getInitials = (name: string) => {
@@ -105,6 +105,7 @@ const bottomItems = [
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [currentOwner, setCurrentOwner] = useState<Proprietaire | null>(null);
 
   useEffect(() => {
@@ -113,6 +114,11 @@ const AdminSidebar: React.FC = () => {
   }, []);
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    await logoutOwner();
+    navigate("/owner");
+  };
 
   const ownerName = currentOwner?.nom_complet || 'Propriétaire';
   const ownerInitials = getInitials(ownerName);
@@ -161,21 +167,18 @@ const AdminSidebar: React.FC = () => {
             </Link>
           ))}
           
-          <Link
-            to="/"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-muted hover:text-destructive"
+          <Button
+            onClick={handleLogout}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-muted hover:text-destructive w-full"
           >
             <LogOut className="h-4 w-4" />
             Déconnexion
-          </Link>
+          </Button>
         </nav>
       </ScrollArea>
 
       <div className="border-t p-4">
-        <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-medium">
-            {ownerInitials}
-          </div>
+        <div className="rounded-lg bg-muted/50 p-3">
           <div className="flex flex-col">
             <span className="text-sm font-medium">{ownerName}</span>
             <span className="text-xs text-muted-foreground">Propriétaire</span>

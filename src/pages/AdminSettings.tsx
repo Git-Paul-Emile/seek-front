@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Settings, User, Bell, Lock, Globe, CreditCard, MapPin, FileText, Users } from "lucide-react";
+import { Settings, User, Lock, Globe, CreditCard, MapPin, FileText, Users } from "lucide-react";
 import { CURRENCY, GEOGRAPHIC_ZONES, LEASE_CONTRACT_TEMPLATES, COLOCATION_RULES } from "@/config/seek-config";
 import { getCurrentOwner, type Proprietaire } from "@/lib/owner-api";
 
@@ -68,21 +68,9 @@ const AdminSettings = () => {
       <p className="text-muted-foreground mt-1">Gérez vos informations et préférences</p>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="general" className="gap-2">
             <Globe className="h-4 w-4" /> Général
-          </TabsTrigger>
-          <TabsTrigger value="currency" className="gap-2">
-            <CreditCard className="h-4 w-4" /> Devise
-          </TabsTrigger>
-          <TabsTrigger value="regions" className="gap-2">
-            <MapPin className="h-4 w-4" /> Zones
-          </TabsTrigger>
-          <TabsTrigger value="contracts" className="gap-2">
-            <FileText className="h-4 w-4" /> Contrats
-          </TabsTrigger>
-          <TabsTrigger value="colocation" className="gap-2">
-            <Users className="h-4 w-4" /> Colocation
           </TabsTrigger>
         </TabsList>
 
@@ -97,25 +85,14 @@ const AdminSettings = () => {
               <CardDescription>Mettez à jour vos informations de profil</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Prénom</Label>
-                  <Input 
-                    id="firstName" 
-                    value={formData.firstName} 
-                    onChange={handleInputChange}
-                    placeholder="Prénom"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Nom</Label>
-                  <Input 
-                    id="lastName" 
-                    value={formData.lastName} 
-                    onChange={handleInputChange}
-                    placeholder="Nom"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nom complet</Label>
+                <Input 
+                  id="fullName" 
+                  value={formData.firstName && formData.lastName ? `${formData.firstName} ${formData.lastName}`.trim() : formData.firstName || formData.lastName || ''} 
+                  onChange={handleInputChange}
+                  placeholder="Votre nom complet"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -136,59 +113,7 @@ const AdminSettings = () => {
                   placeholder="+221 XX XXX XXXX"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="company">Entreprise</Label>
-                <Input 
-                  id="company" 
-                  value={formData.company} 
-                  onChange={handleInputChange}
-                  placeholder="Nom de l'entreprise"
-                />
-              </div>
               <Button className="w-full">Enregistrer les modifications</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                <CardTitle>Notifications</CardTitle>
-              </div>
-              <CardDescription>Gérez vos préférences de notification</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Email notifications</p>
-                  <p className="text-sm text-muted-foreground">Recevoir les mises à jour par email</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Nouvelle demande</p>
-                  <p className="text-sm text-muted-foreground">Être alerté lors d'une nouvelle demande</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Statistiques hebdomadaires</p>
-                  <p className="text-sm text-muted-foreground">Recevoir un résumé chaque semaine</p>
-                </div>
-                <Switch />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Alertes SMS</p>
-                  <p className="text-sm text-muted-foreground">Recevoir des alertes SMS urgentes</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
             </CardContent>
           </Card>
 

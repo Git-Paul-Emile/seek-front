@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Building2, 
@@ -7,9 +6,7 @@ import {
   Bell, 
   BarChart3, 
   CheckCircle2, 
-  ArrowRight, 
-  Menu,
-  X,
+  ArrowRight,
   Shield,
   Zap,
   Heart,
@@ -19,13 +16,8 @@ import {
   FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-
-const navLinks = [
-  { to: "#why-us", label: "Pourquoi-nous ?" },
-  { to: "#how-it-works", label: "Comment ça marche ?" },
-  { to: "#pricing", label: "Tarifs" },
-];
+import { motion } from "framer-motion";
+import NavbarOwner from "@/components/layout/NavbarOwner";
 
 const steps = [
   {
@@ -195,95 +187,9 @@ const testimonials = [
 ];
 
 const OwnerHome = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div className="min-h-screen bg-white">
-      {/* 1️⃣ HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2">
-              <span className="font-display text-2xl font-bold text-primary tracking-wide">
-                SEEK
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <a
-                  key={link.to}
-                  href={link.to}
-                  className="text-sm font-medium text-gray-600 hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-
-            {/* Desktop CTA */}
-            <div className="hidden md:flex items-center gap-3">
-              <Link to="/owner/login">
-                <Button variant="ghost" size="sm">
-                  Connexion
-                </Button>
-              </Link>
-              <Link to="/owner/register">
-                <Button size="sm">
-                  Inscription
-                </Button>
-              </Link>
-            </div>
-
-            {/* Mobile Menu Toggle */}
-            <button
-              className="md:hidden text-gray-600"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {mobileMenuOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="md:hidden overflow-hidden bg-white border-t border-gray-100"
-              >
-                <div className="px-4 py-4 flex flex-col gap-3">
-                  {navLinks.map((link) => (
-                    <a
-                      key={link.to}
-                      href={link.to}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-sm font-medium py-2 text-gray-600"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                  <div className="flex flex-col gap-2 pt-3 border-t border-gray-100">
-                    <Link to="/owner/login" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start">
-                        Connexion
-                      </Button>
-                    </Link>
-                    <Link to="/owner/register" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full justify-start">
-                        Inscription
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </header>
+      <NavbarOwner />
 
       {/* 2️⃣ SECTION HERO */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-28 bg-gradient-to-b from-primary/5 to-white">

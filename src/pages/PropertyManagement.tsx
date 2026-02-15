@@ -77,7 +77,6 @@ interface PropertyFormData {
   description: string;
   coverImage: string;
   images: UploadedFile[];
-  documents: UploadedDocument[];
   bedrooms: string;
   bathrooms: string;
   area: string;
@@ -90,7 +89,6 @@ interface PropertyFormData {
   police: string;
   supermarket: string;
   school: string;
-  virtualTourUrl: string;
   ownerId: string;
   ownerName: string;
   ownerPhone: string;
@@ -137,7 +135,6 @@ const emptyFormData: PropertyFormData = {
   description: '',
   coverImage: '',
   images: [],
-  documents: [],
   bedrooms: '',
   bathrooms: '',
   area: '',
@@ -150,7 +147,6 @@ const emptyFormData: PropertyFormData = {
   police: '',
   supermarket: '',
   school: '',
-  virtualTourUrl: '',
   ownerId: '',
   ownerName: '',
   ownerPhone: '',
@@ -183,14 +179,9 @@ const PropertyManagement: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   
   // Champs temporaires
-  const [newDocName, setNewDocName] = useState('');
-  const [newDocType, setNewDocType] = useState<PropertyDocument['type']>('autre');
   const [isUploading, setIsUploading] = useState(false);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const docInputRef = useRef<HTMLInputElement>(null);
-
-  // Charger les biens
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -323,50 +314,6 @@ const PropertyManagement: React.FC = () => {
     }
   };
 
-  // Gérer l'upload de documents
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    setIsUploading(true);
-    try {
-      const newDocs = await Promise.all(
-        files.map(async (file) => {
-          const docUrl = await simulateFileUpload(file, 'document');
-          return {
-            id: generateId(),
-            name: newDocName || file.name,
-            url: docUrl,
-            type: newDocType,
-            uploadedAt: new Date().toISOString(),
-          };
-        })
-      );
-
-      setFormData(prev => ({
-        ...prev,
-        documents: [...prev.documents, ...newDocs],
-      }));
-
-      toast({
-        title: 'Documents uploadés',
-        description: `${newDocs.length} document(s) téléchargé(s) avec succès.`,
-      });
-
-      setNewDocName('');
-      setNewDocType('autre');
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Échec du téléchargement des documents.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-      if (docInputRef.current) docInputRef.current.value = '';
-    }
-  };
-
   // Simuler l'upload de fichier (en production, cela enverrait au serveur)
   const simulateFileUpload = (file: File, type: 'cover' | 'image' | 'document'): Promise<string> => {
     return new Promise((resolve) => {
@@ -383,14 +330,6 @@ const PropertyManagement: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Supprimer un document
-  const handleRemoveDocument = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      documents: prev.documents.filter((_, i) => i !== index),
     }));
   };
 
@@ -417,10 +356,6 @@ const PropertyManagement: React.FC = () => {
         url: img,
         type: 'image' as const,
       })),
-      documents: property.documents.map(doc => ({
-        ...doc,
-        id: generateId(),
-      })),
       bedrooms: property.bedrooms.toString(),
       bathrooms: property.bathrooms.toString(),
       area: property.area.toString(),
@@ -433,7 +368,6 @@ const PropertyManagement: React.FC = () => {
       police: property.proximity.police.toString(),
       supermarket: property.proximity.supermarket.toString(),
       school: property.proximity.school.toString(),
-      virtualTourUrl: property.virtualTourUrl || '',
       ownerId: property.ownerId,
       ownerName: property.ownerName,
       ownerPhone: property.ownerPhone,
@@ -482,6 +416,7 @@ const PropertyManagement: React.FC = () => {
       location: {
         city: formData.city,
         address: formData.neighborhood ? `${formData.neighborhood}, ${formData.address}` : formData.address,
+        neighborhood: formData.neighborhood,
         lat: parseFloat(formData.lat) || 0,
         lng: parseFloat(formData.lng) || 0,
       },
@@ -499,8 +434,7 @@ const PropertyManagement: React.FC = () => {
       ownerEmail: formData.ownerEmail,
       createdAt: isEditing && selectedProperty ? selectedProperty.createdAt : new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
-      virtualTourUrl: formData.virtualTourUrl || undefined,
-      documents: formData.documents,
+      documents: [],
     };
 
     if (isEditing) {
@@ -573,11 +507,10 @@ const PropertyManagement: React.FC = () => {
       </div>
 
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="basic">Informations</TabsTrigger>
           <TabsTrigger value="location">Localisation</TabsTrigger>
           <TabsTrigger value="photos">Photos & Plans</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
         {/* Onglet Informations de base */}
@@ -833,16 +766,6 @@ const PropertyManagement: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div>
-            <Label htmlFor="virtualTourUrl">URL visite virtuelle</Label>
-            <Input
-              id="virtualTourUrl"
-              value={formData.virtualTourUrl}
-              onChange={(e) => handleFieldChange('virtualTourUrl', e.target.value)}
-              placeholder="https://..."
-            />
-          </div>
         </TabsContent>
 
         {/* Onglet Photos & Plans */}
@@ -957,91 +880,6 @@ const PropertyManagement: React.FC = () => {
               </div>
             )}
           </div>
-        </TabsContent>
-
-        {/* Onglet Documents */}
-        <TabsContent value="documents" className="space-y-4 mt-4">
-          {/* Upload de documents */}
-          <div>
-            <Label>Documents liés au bien</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-              <Input
-                value={newDocName}
-                onChange={(e) => setNewDocName(e.target.value)}
-                placeholder="Nom du document..."
-                className="flex-1"
-              />
-              <Select value={newDocType} onValueChange={(v) => setNewDocType(v as PropertyDocument['type'])}>
-                <SelectTrigger className="w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="contrat">Contrat</SelectItem>
-                  <SelectItem value="acte">Acte</SelectItem>
-                  <SelectItem value="diagnostic">Diagnostic</SelectItem>
-                  <SelectItem value="autre">Autre</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => docInputRef.current?.click()}
-                  disabled={isUploading}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {isUploading ? 'Upload...' : 'Parcourir'}
-                </Button>
-                <input
-                  ref={docInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  multiple
-                  onChange={handleDocumentUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, JPG, PNG (max 10MB par fichier)</p>
-          </div>
-
-          {/* Liste des documents */}
-          {formData.documents.length > 0 && (
-            <div className="space-y-2 mt-4">
-              {formData.documents.map((doc, index) => (
-                <div key={doc.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <FileText className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{doc.name}</p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Badge variant="secondary" className="text-xs">{doc.type}</Badge>
-                        <span>{new Date(doc.uploadedAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 ml-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => window.open(doc.url, '_blank')}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-500 hover:text-red-700"
-                      onClick={() => handleRemoveDocument(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </TabsContent>
       </Tabs>
 

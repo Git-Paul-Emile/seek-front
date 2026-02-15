@@ -23,16 +23,15 @@ const emptyForm: PropertyFormData = {
   bedrooms: "",
   bathrooms: "",
   area: "",
-  city: "Douala",
+  city: "Dakar",
   address: "",
+  neighborhood: "",
   lat: "",
   lng: "",
   hospital: "",
   police: "",
   supermarket: "",
   school: "",
-  virtualTourUrl: "",
-  documents: [],
 };
 
 const AdminProperties = () => {
@@ -80,14 +79,13 @@ const AdminProperties = () => {
       area: String(p.area),
       city: p.location.city,
       address: p.location.address,
+      neighborhood: p.location.neighborhood,
       lat: String(p.location.lat),
       lng: String(p.location.lng),
       hospital: String(p.proximity.hospital),
       police: String(p.proximity.police),
       supermarket: String(p.proximity.supermarket),
       school: String(p.proximity.school),
-      virtualTourUrl: p.virtualTourUrl || "",
-      documents: p.documents.map(d => ({ name: d.name, url: d.url, type: d.type })),
     });
     setDialogOpen(true);
   };
@@ -103,15 +101,6 @@ const AdminProperties = () => {
     }
 
     const imagesArray = Array.isArray(form.images) ? form.images : JSON.parse(form.images || "[]");
-    const documentsArray = Array.isArray(form.documents) 
-      ? form.documents.map((d, i) => ({
-          id: `doc-${Date.now()}-${i}`,
-          name: d.name,
-          url: d.url,
-          type: d.type as "contrat" | "acte" | "diagnostic" | "photo" | "autre",
-          uploadedAt: new Date().toISOString()
-        }))
-      : [];
 
     const propertyData: Property = {
       id: editingId || `prop-${Date.now()}`,
@@ -131,6 +120,7 @@ const AdminProperties = () => {
       location: {
         city: form.city,
         address: form.address,
+        neighborhood: form.neighborhood,
         lat: Number(form.lat) || 4.05,
         lng: Number(form.lng) || 9.7,
       },
@@ -150,8 +140,7 @@ const AdminProperties = () => {
         ? properties.find(p => p.id === editingId)?.createdAt || new Date().toISOString().split("T")[0]
         : new Date().toISOString().split("T")[0],
       updatedAt: new Date().toISOString().split("T")[0],
-      virtualTourUrl: form.virtualTourUrl || undefined,
-      documents: documentsArray,
+      documents: [],
       rooms: editingId ? properties.find(p => p.id === editingId)?.rooms || [] : [],
     };
 

@@ -956,21 +956,6 @@ const PropertyAnnounceDetail = ({ property, ownerPhone, ownerWhatsapp, ownerEmai
               </div>
             </div>
 
-            {/* Virtual Tour */}
-            {property.virtualTourUrl && (
-              <div>
-                <h2 className="font-display text-xl font-semibold mb-3">Visite Virtuelle</h2>
-                <div className="bg-muted rounded-lg p-8 text-center border border-border">
-                  <Eye className="w-10 h-10 mx-auto mb-3 text-primary" />
-                  <p className="text-muted-foreground mb-4">Explorez ce bien en 360° depuis chez vous</p>
-                  <a href={property.virtualTourUrl} target="_blank" rel="noopener noreferrer">
-                    <Button className="gap-2">
-                      <Eye className="w-4 h-4" /> Lancer la visite virtuelle
-                    </Button>
-                  </a>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Right: Contact Card - SECURE */}

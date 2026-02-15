@@ -137,7 +137,6 @@ export interface Property {
   createdAt: string;
   updatedAt: string;
   availableFrom?: string;
-  virtualTourUrl?: string;
   documents: PropertyDocument[];
   rooms?: Room[];
   // Champs pour la fiche annonce visiteur
@@ -431,7 +430,6 @@ export const mockProperties: Property[] = [
     createdAt: "2025-12-15",
     updatedAt: "2025-12-15",
     availableFrom: "2025-01-01",
-    virtualTourUrl: "https://example.com/tour/1",
     documents: [],
     rooms: [],
     securityDeposit: 3500000,

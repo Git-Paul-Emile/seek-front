@@ -9,6 +9,7 @@ import PropertiesTable from "@/components/dashboard/PropertiesTable";
 import PropertyFormDialog, { PropertyFormData } from "@/components/dashboard/PropertyFormDialog";
 import PageHeader from "@/components/layout/PageHeader";
 import { getCurrentOwner } from "@/lib/owner-api";
+import axiosInstance from "@/api/axiosConfig";
 
 const emptyForm: PropertyFormData = {
   title: "",
@@ -30,8 +31,6 @@ const emptyForm: PropertyFormData = {
   police: "",
   supermarket: "",
   school: "",
-  virtualTourUrl: "",
-  documents: [],
   rentalMode: undefined,
 };
 
@@ -73,14 +72,12 @@ const Dashboard = () => {
       police: String(p.proximity.police),
       supermarket: String(p.proximity.supermarket),
       school: String(p.proximity.school),
-      virtualTourUrl: p.virtualTourUrl || "",
-      documents: p.documents.map(d => ({ name: d.name, url: d.url, type: d.type })),
       rentalMode: p.rentalMode,
     });
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title || !form.price || !form.address) {
       toast({ title: "Erreur", description: "Veuillez remplir les champs obligatoires.", variant: "destructive" });
       return;
@@ -89,64 +86,84 @@ const Dashboard = () => {
     // Ensure images is always an array
     const imagesArray = Array.isArray(form.images) ? form.images : (typeof form.images === "string" ? JSON.parse(form.images || "[]") : []);
 
-    // Ensure documents is properly formatted
-    const docsArray = Array.isArray(form.documents) 
-      ? form.documents.map((d, i) => ({
-          id: `doc-${Date.now()}-${i}`,
-          name: d.name,
-          url: d.url,
-          type: d.type as "contrat" | "acte" | "diagnostic" | "photo" | "autre",
-          uploadedAt: new Date().toISOString()
-        }))
-      : [];
-
-    const propertyData: Property = {
-      id: editingId || `prop-${Date.now()}`,
-      title: form.title,
+    // Mapper les champs pour le backend
+    const backendData = {
+      titre: form.title,
       type: form.type,
-      price: Number(form.price),
-      status: form.status,
-      rentalMode: form.rentalMode,
-      description: form.description,
-      coverImage: form.coverImage || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
-      images: imagesArray.length > 0 ? imagesArray : [form.coverImage || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"],
-      bedrooms: Number(form.bedrooms) || 0,
-      bathrooms: Number(form.bathrooms) || 0,
-      area: Number(form.area) || 0,
-      location: {
-        city: form.city,
-        address: form.address,
-        neighborhood: form.neighborhood,
-        lat: Number(form.lat) || 4.05,
-        lng: Number(form.lng) || 9.7,
-      },
-      proximity: {
-        hospital: Number(form.hospital) || 0,
-        police: Number(form.police) || 0,
-        supermarket: Number(form.supermarket) || 0,
-        school: Number(form.school) || 0,
-      },
-      featured: false,
-      archived: false,
-      ownerId: "owner1",
-      ownerName: "Jean Dupont",
-      ownerPhone: "+237 6 90 12 34 56",
-      ownerEmail: "jean.dupont@email.com",
-      createdAt: editingId ? properties.find(p => p.id === editingId)?.createdAt || new Date().toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-      updatedAt: new Date().toISOString().split("T")[0],
-      virtualTourUrl: form.virtualTourUrl || undefined,
-      documents: docsArray,
-      rooms: editingId ? properties.find(p => p.id === editingId)?.rooms || [] : [],
+      prix: String(form.price),
+      statut: form.status,
+      modeLocation: form.rentalMode || null,
+      description: form.description || null,
+      surface: form.area || null,
+      chambres: form.bedrooms || null,
+      sallesDeBain: form.bathrooms || null,
+      adresse: form.address,
+      quartier: form.neighborhood || null,
+      villeId: null, // TODO: Récupérer l'ID de la ville depuis le nom
+      imageCouverture: form.coverImage || null,
+      images: imagesArray.length > 0 ? imagesArray : [],
     };
 
-    if (editingId) {
-      setProperties((prev) => prev.map((p) => (p.id === editingId ? propertyData : p)));
-      toast({ title: "Modifié", description: "L'annonce a été mise à jour." });
-    } else {
-      setProperties((prev) => [propertyData, ...prev]);
-      toast({ title: "Ajouté", description: "Votre annonce a été publiée." });
+    try {
+      if (editingId) {
+        // Modifier le bien existant
+        await axiosInstance.put(`/biens/${editingId}`, backendData);
+        setProperties((prev) => prev.map((p) => (p.id === editingId ? { ...p, title: form.title, price: Number(form.price), status: form.status } : p)));
+        toast({ title: "Modifié", description: "L'annonce a été mise à jour." });
+      } else {
+        // Créer un nouveau bien
+        const response = await axiosInstance.post("/biens", backendData);
+        
+        // Ajouter le nouveau bien à la liste locale
+        const newProperty: Property = {
+          id: response.data.data.bien.id,
+          title: form.title,
+          type: form.type,
+          price: Number(form.price),
+          status: form.status,
+          rentalMode: form.rentalMode,
+          description: form.description,
+          coverImage: form.coverImage || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80",
+          images: imagesArray.length > 0 ? imagesArray : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"],
+          bedrooms: Number(form.bedrooms) || 0,
+          bathrooms: Number(form.bathrooms) || 0,
+          area: Number(form.area) || 0,
+          location: {
+            city: form.city,
+            address: form.address,
+            neighborhood: form.neighborhood,
+            lat: Number(form.lat) || 4.05,
+            lng: Number(form.lng) || 9.7,
+          },
+          proximity: {
+            hospital: Number(form.hospital) || 0,
+            police: Number(form.police) || 0,
+            supermarket: Number(form.supermarket) || 0,
+            school: Number(form.school) || 0,
+          },
+          featured: false,
+          archived: false,
+          ownerId: "owner1",
+          ownerName: "Jean Dupont",
+          ownerPhone: "+237 6 90 12 34 56",
+          ownerEmail: "jean.dupont@email.com",
+          createdAt: new Date().toISOString().split("T")[0],
+          updatedAt: new Date().toISOString().split("T")[0],
+          documents: [],
+          rooms: [],
+        };
+        setProperties((prev) => [newProperty, ...prev]);
+        toast({ title: "Ajouté", description: "Votre annonce a été publiée." });
+      }
+      setDialogOpen(false);
+    } catch (error: any) {
+      console.error("Erreur lors de la sauvegarde:", error);
+      toast({ 
+        title: "Erreur", 
+        description: error.response?.data?.message || "Impossible de sauvegarder le bien.", 
+        variant: "destructive" 
+      });
     }
-    setDialogOpen(false);
   };
 
   const handleDelete = (id: string) => {

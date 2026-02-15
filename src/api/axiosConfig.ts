@@ -12,6 +12,15 @@ const axiosInstance = axios.create({
   withCredentials: true, // Cookies cross-origin
 });
 
+// Intercepteur pour supprimer le Content-Type pour les requêtes FormData
+// Cela permet au navigateur de mettre automatiquement multipart/form-data avec le bon boundary
+axiosInstance.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+  return config;
+});
+
 // Intercepteur pour le refresh token automatique
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: Error) => void }> = [];

@@ -5,9 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Upload, X, Plus, FileText, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getVillesSenegal, Ville } from "@/lib/ville-api";
+import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
+import type { FormattedAddress } from "@/hooks/useAddressAutocomplete";
+import { ImageUploader, ImageFile } from "@/components/ui/ImageUploader";
+import axiosInstance from "@/api/axiosConfig";
 
 export interface PropertyFormData {
   title: string;
@@ -30,8 +34,6 @@ export interface PropertyFormData {
   police: string;
   supermarket: string;
   school: string;
-  virtualTourUrl: string;
-  documents: string | { name: string; url: string; type: string }[];
 }
 
 interface PropertyFormDialogProps {
@@ -44,11 +46,10 @@ interface PropertyFormDialogProps {
 }
 
 const PropertyFormDialog = ({ open, onOpenChange, form, onFieldChange, onSave, isEditing }: PropertyFormDialogProps) => {
-  const [newImageUrl, setNewImageUrl] = useState("");
-  const [newDocName, setNewDocName] = useState("");
-  const [newDocUrl, setNewDocUrl] = useState("");
   const [villes, setVilles] = useState<Ville[]>([]);
   const [loadingVilles, setLoadingVilles] = useState(false);
+  const [images, setImages] = useState<ImageFile[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
 
   // Charger les villes du Sénégal depuis l'API
   useEffect(() => {
@@ -68,58 +69,81 @@ const PropertyFormDialog = ({ open, onOpenChange, form, onFieldChange, onSave, i
     fetchVilles();
   }, [open]);
 
-  const handleAddImage = () => {
-    if (newImageUrl) {
-      const currentImages = typeof form.images === "string" ? JSON.parse(form.images || "[]") : (form.images || []);
-      const newImages = [...currentImages, newImageUrl];
-      onFieldChange("images", JSON.stringify(newImages));
-      setNewImageUrl("");
+  // Gérer l'upload des images
+  const handleImagesChange = (newImages: ImageFile[]) => {
+    setImages(newImages);
+  };
+
+  // Fonction pour uploader les images et retourner les URLs
+  const uploadImagesToServer = async (): Promise<{ cover: string | null; images: string[] }> => {
+    if (images.length === 0) {
+      return { cover: null, images: [] };
     }
-  };
 
-  const handleRemoveImage = (index: number) => {
-    const currentImages = typeof form.images === "string" ? JSON.parse(form.images || "[]") : (form.images || []);
-    const newImages = currentImages.filter((_: string, i: number) => i !== index);
-    onFieldChange("images", JSON.stringify(newImages));
-  };
+    setIsUploadingImages(true);
 
-  const handleAddDocument = () => {
-    if (newDocName && newDocUrl) {
-      const currentDocs = typeof form.documents === "string" ? JSON.parse(form.documents || "[]") : (form.documents || []);
-      const newDoc = { name: newDocName, url: newDocUrl, type: "autre" };
-      const newDocs = [...currentDocs, newDoc];
-      onFieldChange("documents", JSON.stringify(newDocs));
-      setNewDocName("");
-      setNewDocUrl("");
-    }
-  };
-
-  const handleRemoveDocument = (index: number) => {
-    const currentDocs = typeof form.documents === "string" ? JSON.parse(form.documents || "[]") : (form.documents || []);
-    const newDocs = currentDocs.filter((_: { name: string; url: string; type: string }, i: number) => i !== index);
-    onFieldChange("documents", JSON.stringify(newDocs));
-  };
-
-  const getDisplayImages = (): string[] => {
-    if (Array.isArray(form.images)) return form.images;
     try {
-      return JSON.parse(form.images || "[]");
-    } catch {
-      return [];
+      const formData = new FormData();
+      
+      // Debug: Show what we're sending
+      console.log('[Debug] Images to upload:', images);
+      
+      // Trouver la cover
+      const coverImage = images.find(img => img.isCover);
+      const additionalImages = images.filter(img => !img.isCover);
+      
+      console.log('[Debug] Cover image:', coverImage);
+      console.log('[Debug] Additional images:', additionalImages);
+      
+      if (coverImage) {
+        formData.append('cover', coverImage.file, coverImage.file.name);
+      }
+      
+      additionalImages.forEach((img) => {
+        formData.append('images', img.file, img.file.name);
+      });
+
+      // Debug: Show FormData entries
+      for (const [key, value] of formData.entries()) {
+        console.log('[Debug] FormData entry:', key, value instanceof File ? value.name : value);
+      }
+
+      // Let the browser set the Content-Type (with boundary)
+      const response = await axiosInstance.post('/biens/upload-images', formData);
+
+      setIsUploadingImages(false);
+
+      return {
+        cover: response.data.data.cover?.url || null,
+        images: response.data.data.images?.map((img: { url: string }) => img.url) || []
+      };
+    } catch (error) {
+      console.error('Erreur upload images:', error);
+      setIsUploadingImages(false);
+      throw error;
     }
   };
 
-  const getDisplayDocuments = (): { name: string; url: string; type: string }[] => {
-    if (Array.isArray(form.documents)) return form.documents;
+  // Gérer la sauvegarde avec upload d'images
+  const handleSave = async () => {
     try {
-      return JSON.parse(form.documents || "[]");
-    } catch {
-      return [];
+      // Uploader les images d'abord
+      const uploadResult = await uploadImagesToServer();
+      
+      // Mettre à jour les champs coverImage et images
+      if (uploadResult.cover) {
+        onFieldChange("coverImage", uploadResult.cover);
+      }
+      if (uploadResult.images.length > 0) {
+        onFieldChange("images", JSON.stringify(uploadResult.images));
+      }
+      
+      // Appeler la fonction onSave originale
+      onSave();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
     }
   };
-
-  const displayImages = getDisplayImages();
-  const displayDocuments = getDisplayDocuments();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -249,82 +273,46 @@ const PropertyFormDialog = ({ open, onOpenChange, form, onFieldChange, onSave, i
             </Select>
           </div>
 
-          {/* Adresse */}
-          <div>
-            <Label>Adresse *</Label>
-            <Input 
-              value={form.address} 
-              onChange={(e) => onFieldChange("address", e.target.value)} 
-              placeholder="Quartier, rue, numéro..." 
-            />
-          </div>
-
-          {/* Coordonnées GPS */}
-          <div>
-            <Label>Latitude</Label>
-            <Input 
-              type="number" 
-              step="0.0001" 
-              value={form.lat} 
-              onChange={(e) => onFieldChange("lat", e.target.value)} 
-              placeholder="Ex: 4.0511"
-            />
-          </div>
-          <div>
-            <Label>Longitude</Label>
-            <Input 
-              type="number" 
-              step="0.0001" 
-              value={form.lng} 
-              onChange={(e) => onFieldChange("lng", e.target.value)} 
-              placeholder="Ex: 9.7679"
-            />
-          </div>
-
-          {/* URL image de couverture */}
+          {/* Adresse avec autocomplétion */}
           <div className="sm:col-span-2">
-            <Label>URL image de couverture</Label>
-            <Input 
-              value={form.coverImage} 
-              onChange={(e) => onFieldChange("coverImage", e.target.value)} 
-              placeholder="https://images.unsplash.com/..."
+            <AddressAutocomplete
+              value={form.address}
+              onAddressChange={(value) => onFieldChange("address", value)}
+              onAddressSelect={(data: FormattedAddress) => {
+                // Remplir automatiquement les champs associés lors de la sélection
+                onFieldChange("address", data.address);
+                if (data.city) {
+                  onFieldChange("city", data.city);
+                }
+                // Les coordonnées GPS sont calculées automatiquement par le backend via géocodage
+              }}
+              label="Adresse"
+              placeholder="Commencez à taper une adresse pour voir les suggestions..."
+              required={true}
+              countryCode="sn"
+              minChars={2}
+              debounceMs={300}
+              maxSuggestions={5}
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Les coordonnées GPS et les établissements proches seront calculés automatiquement
+            </p>
           </div>
 
-          {/* Galerie photos */}
+          {/* Upload de photos */}
           <div className="sm:col-span-2">
-            <Label>Photos supplémentaires</Label>
-            <div className="flex gap-2 mb-2">
-              <Input 
-                value={newImageUrl} 
-                onChange={(e) => setNewImageUrl(e.target.value)} 
-                placeholder="URL de la photo..." 
-                className="flex-1"
-              />
-              <Button type="button" onClick={handleAddImage} variant="outline" size="icon">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {displayImages.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {displayImages.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <img 
-                      src={url} 
-                      alt={`Photo ${index + 1}`} 
-                      className="w-20 h-20 object-cover rounded-md"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <Label>Photos du bien *</Label>
+            <ImageUploader
+              value={images}
+              onChange={handleImagesChange}
+              maxImages={10}
+              minImages={3}
+              maxFileSize={5 * 1024 * 1024}
+              disabled={isUploadingImages}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Uploadez vos photos directement. La première photo sera utilisée comme image principale.
+            </p>
           </div>
 
           {/* Description */}
@@ -337,110 +325,21 @@ const PropertyFormDialog = ({ open, onOpenChange, form, onFieldChange, onSave, i
               placeholder="Décrivez votre bien en détail..."
             />
           </div>
-
-          {/* Proximité */}
-          <div className="sm:col-span-2">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider mb-2 block">
-              Proximité (distance en km)
-            </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <Label className="text-xs">Hôpital</Label>
-                <Input 
-                  type="number" 
-                  step="0.1" 
-                  value={form.hospital} 
-                  onChange={(e) => onFieldChange("hospital", e.target.value)} 
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Police</Label>
-                <Input 
-                  type="number" 
-                  step="0.1" 
-                  value={form.police} 
-                  onChange={(e) => onFieldChange("police", e.target.value)} 
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Supermarché</Label>
-                <Input 
-                  type="number" 
-                  step="0.1" 
-                  value={form.supermarket} 
-                  onChange={(e) => onFieldChange("supermarket", e.target.value)} 
-                />
-              </div>
-              <div>
-                <Label className="text-xs">École</Label>
-                <Input 
-                  type="number" 
-                  step="0.1" 
-                  value={form.school} 
-                  onChange={(e) => onFieldChange("school", e.target.value)} 
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* URL visite virtuelle */}
-          <div className="sm:col-span-2">
-            <Label>URL visite virtuelle (optionnel)</Label>
-            <Input 
-              value={form.virtualTourUrl} 
-              onChange={(e) => onFieldChange("virtualTourUrl", e.target.value)} 
-              placeholder="https://..."
-            />
-          </div>
-
-          {/* Documents */}
-          <div className="sm:col-span-2">
-            <Label>Documents (contrats, actes, diagnostics...)</Label>
-            <div className="flex gap-2 mb-2">
-              <Input 
-                value={newDocName} 
-                onChange={(e) => setNewDocName(e.target.value)} 
-                placeholder="Nom du document..." 
-                className="flex-1"
-              />
-              <Input 
-                value={newDocUrl} 
-                onChange={(e) => setNewDocUrl(e.target.value)} 
-                placeholder="URL du document..." 
-                className="flex-1"
-              />
-              <Button type="button" onClick={handleAddDocument} variant="outline" size="icon">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {displayDocuments.length > 0 && (
-              <div className="space-y-2">
-                {displayDocuments.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between bg-muted p-2 rounded-md">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm">{doc.name}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveDocument(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUploadingImages}>
             Annuler
           </Button>
-          <Button onClick={onSave}>
-            {isEditing ? "Enregistrer les modifications" : "Ajouter le bien"}
+          <Button onClick={handleSave} disabled={isUploadingImages}>
+            {isUploadingImages ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Upload en cours...
+              </>
+            ) : (
+              isEditing ? "Enregistrer les modifications" : "Ajouter le bien"
+            )}
           </Button>
         </div>
       </DialogContent>

@@ -73,6 +73,18 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+          <Link
+            to="/proprietaires"
+            className={`text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
+              location.pathname === "/proprietaires"
+                ? "border-[#D4A843] text-[#D4A843] bg-[#D4A843]/10"
+                : transparent
+                ? "border-white/30 text-white/80 hover:border-[#D4A843] hover:text-[#D4A843]"
+                : "border-[#0C1A35]/20 text-[#0C1A35] hover:border-[#D4A843] hover:text-[#D4A843]"
+            }`}
+          >
+            Espace propriétaire
+          </Link>
         </div>
 
         {/* Mobile toggle */}
@@ -112,6 +124,17 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                to="/proprietaires"
+                onClick={() => setOpen(false)}
+                className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
+                  location.pathname === "/proprietaires"
+                    ? "text-[#D4A843] bg-white/5"
+                    : "text-[#D4A843]/70 hover:text-[#D4A843] hover:bg-white/5"
+                }`}
+              >
+                Espace propriétaire
+              </Link>
             </div>
           </motion.div>
         )}

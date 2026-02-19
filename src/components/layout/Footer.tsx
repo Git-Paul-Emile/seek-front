@@ -28,7 +28,7 @@ const Footer = () => (
             {[
               { to: "/", label: "Accueil" },
               { to: "/annonces", label: "Annonces" },
-              { to: "/dashboard", label: "Espace Propriétaire" },
+              { to: "/proprietaires", label: "Espace Propriétaire" },
             ].map((link) => (
               <Link
                 key={link.to}

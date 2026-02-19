@@ -8,11 +8,19 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import { OwnerAuthProvider } from "@/context/OwnerAuthContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import GuestRoute from "@/components/admin/GuestRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
+import OwnerGuestRoute from "@/components/owner/OwnerGuestRoute";
+import OwnerProtectedRoute from "@/components/owner/OwnerProtectedRoute";
+import OwnerLayout from "@/components/owner/OwnerLayout";
 
 import Index from "./pages/Index";
+import Proprietaires from "./pages/Proprietaires";
+import OwnerRegister from "./pages/owner/Register";
+import OwnerLogin from "./pages/owner/Login";
+import OwnerDashboard from "./pages/owner/Dashboard";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import TypesLogement from "./pages/admin/categories/TypesLogement";
@@ -37,25 +45,43 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            {/* Routes publiques */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Index />} />
-            </Route>
-
-            {/* Auth admin — inaccessible si déjà connecté */}
-            <Route element={<GuestRoute />}>
-              <Route path="/admin/login" element={<AdminLogin />} />
-            </Route>
-
-            {/* Routes admin protégées — ProtectedRoute vérifie l'auth, AdminLayout fournit le shell */}
-            <Route path="/admin" element={<ProtectedRoute />}>
-              <Route element={<AdminLayout />}>
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="biens/categories" element={<TypesLogement />} />
+          <OwnerAuthProvider>
+            <Routes>
+              {/* Routes publiques */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Index />} />
               </Route>
-            </Route>
-          </Routes>
+
+              {/* Espace propriétaires — layout dédié */}
+              <Route path="/proprietaires" element={<Proprietaires />} />
+
+              {/* Owner — inaccessible si déjà connecté */}
+              <Route element={<OwnerGuestRoute />}>
+                <Route path="/owner/register" element={<OwnerRegister />} />
+                <Route path="/owner/login" element={<OwnerLogin />} />
+              </Route>
+
+              {/* Owner — protégées */}
+              <Route element={<OwnerProtectedRoute />}>
+                <Route element={<OwnerLayout />}>
+                  <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                </Route>
+              </Route>
+
+              {/* Auth admin — inaccessible si déjà connecté */}
+              <Route element={<GuestRoute />}>
+                <Route path="/admin/login" element={<AdminLogin />} />
+              </Route>
+
+              {/* Routes admin protégées */}
+              <Route path="/admin" element={<ProtectedRoute />}>
+                <Route element={<AdminLayout />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="biens/categories" element={<TypesLogement />} />
+                </Route>
+              </Route>
+            </Routes>
+          </OwnerAuthProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

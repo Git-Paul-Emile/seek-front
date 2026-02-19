@@ -12,12 +12,12 @@ import {
 } from "@/hooks/useTypeLogements";
 import type { TypeLogement } from "@/api/typeLogement";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import ImageUpload from "@/components/ui/ImageUpload";
 
-// ─── Schéma ───────────────────────────────────────────────────────────────────
+// ─── Schéma (sans image : gérée séparément via ImageUpload) ──────────────────
 
 const formSchema = z.object({
   nom:   z.string().min(2, "Minimum 2 caractères").max(50),
-  image: z.string().url("URL invalide").or(z.literal("")).optional(),
   ordre: z.coerce.number().int().min(0).optional(),
 });
 
@@ -27,16 +27,21 @@ type FormData = z.infer<typeof formSchema>;
 
 function TypeForm({
   initial,
+  maxOrdre,
   onClose,
   onSuccess,
 }: {
   initial?: TypeLogement;
+  maxOrdre: number;
   onClose: () => void;
   onSuccess: (isEdit: boolean) => void;
 }) {
   const create = useCreateTypeLogement();
   const update = useUpdateTypeLogement();
   const isEdit = Boolean(initial);
+
+  // Fichier image sélectionné (null = pas de nouveau fichier)
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const {
     register,
@@ -46,17 +51,27 @@ function TypeForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nom:   initial?.nom   ?? "",
-      image: initial?.image ?? "",
-      ordre: initial?.ordre ?? 0,
+      // Création : ordre suivant le max ; Édition : ordre actuel
+      ordre: initial?.ordre ?? maxOrdre + 1,
     },
   });
 
   const onSubmit = async (data: FormData) => {
-    const payload = { nom: data.nom, image: data.image || undefined, ordre: data.ordre };
     if (isEdit && initial) {
-      await update.mutateAsync({ id: initial.id, payload });
+      await update.mutateAsync({
+        id: initial.id,
+        payload: {
+          nom:       data.nom,
+          ordre:     data.ordre,
+          imageFile: imageFile ?? undefined,
+        },
+      });
     } else {
-      await create.mutateAsync(payload);
+      await create.mutateAsync({
+        nom:       data.nom,
+        ordre:     data.ordre,
+        imageFile: imageFile ?? undefined,
+      });
     }
     onClose();
     onSuccess(isEdit);
@@ -100,23 +115,12 @@ function TypeForm({
             )}
           </div>
 
-          {/* Image */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-500">URL de l'image</label>
-            <input
-              type="text"
-              placeholder="https://..."
-              {...register("image")}
-              className={`w-full h-10 rounded-xl border px-3 text-sm outline-none transition
-                focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30
-                ${errors.image ? "border-red-400 bg-red-50" : "border-slate-200 bg-slate-50"}`}
-            />
-            {errors.image && (
-              <p className="text-xs text-red-500 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />{errors.image.message}
-              </p>
-            )}
-          </div>
+          {/* Image — upload fichier */}
+          <ImageUpload
+            label="Image"
+            currentImage={initial?.image}
+            onChange={setImageFile}
+          />
 
           {/* Ordre */}
           <div className="space-y-1">
@@ -124,10 +128,16 @@ function TypeForm({
             <input
               type="number"
               min={0}
+              max={isEdit ? maxOrdre : undefined}
               {...register("ordre")}
               className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm
                 outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition"
             />
+            {isEdit && (
+              <p className="text-xs text-slate-400">
+                Entre 0 et {maxOrdre} — si la position est déjà prise, les deux types échangent leurs ordres
+              </p>
+            )}
           </div>
 
           {/* Erreur serveur */}
@@ -170,6 +180,8 @@ export default function TypesLogement() {
   const { data: types = [], isLoading } = useTypeLogementsAdmin();
   const deleteType  = useDeleteTypeLogement();
   const toggleActif = useUpdateTypeLogement();
+
+  const maxOrdre = types.length > 0 ? Math.max(...types.map((t) => t.ordre)) : -1;
 
   const [modalOpen, setModalOpen]         = useState(false);
   const [editing, setEditing]             = useState<TypeLogement | undefined>(undefined);
@@ -368,6 +380,7 @@ export default function TypesLogement() {
       {modalOpen && (
         <TypeForm
           initial={editing}
+          maxOrdre={maxOrdre}
           onClose={closeModal}
           onSuccess={handleFormSuccess}
         />

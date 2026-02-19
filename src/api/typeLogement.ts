@@ -23,16 +23,28 @@ export interface TypeLogement {
 
 export interface CreateTypeLogementPayload {
   nom: string;
-  image?: string;
+  imageFile?: File;   // Fichier uploadé depuis le device
   ordre?: number;
 }
 
 export interface UpdateTypeLogementPayload {
   nom?: string;
-  image?: string;
+  imageFile?: File;   // Nouveau fichier image (optionnel)
   actif?: boolean;
   ordre?: number;
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Construit un FormData à partir du payload (pour les requêtes avec fichier) */
+const toFormData = (payload: CreateTypeLogementPayload | UpdateTypeLogementPayload): FormData => {
+  const fd = new FormData();
+  if ("nom"   in payload && payload.nom   !== undefined) fd.append("nom",   payload.nom);
+  if ("ordre" in payload && payload.ordre !== undefined) fd.append("ordre", String(payload.ordre));
+  if ("actif" in payload && payload.actif !== undefined) fd.append("actif", String(payload.actif));
+  if (payload.imageFile) fd.append("image", payload.imageFile);
+  return fd;
+};
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
 
@@ -44,10 +56,38 @@ export const fetchTypesLogement = () =>
 export const fetchTypesLogementAdmin = () =>
   api.get<{ data: TypeLogement[] }>("/admin").then((r) => r.data.data);
 
+/**
+ * Créer un type de logement.
+ * Envoie toujours en multipart/form-data pour supporter le fichier image.
+ */
 export const createTypeLogement = (payload: CreateTypeLogementPayload) =>
-  api.post<{ data: TypeLogement }>("/", payload).then((r) => r.data.data);
+  api
+    .post<{ data: TypeLogement }>("/", toFormData(payload), {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data.data);
 
-export const updateTypeLogement = (id: string, payload: UpdateTypeLogementPayload) =>
-  api.put<{ data: TypeLogement }>(`/${id}`, payload).then((r) => r.data.data);
+/**
+ * Modifier un type de logement.
+ * - Avec fichier image ou champs nom/ordre → multipart/form-data
+ * - Sans fichier (ex: toggle actif) → JSON
+ */
+export const updateTypeLogement = (id: string, payload: UpdateTypeLogementPayload) => {
+  const hasFormFields =
+    payload.imageFile !== undefined ||
+    payload.nom !== undefined ||
+    payload.ordre !== undefined;
+
+  if (hasFormFields) {
+    return api
+      .put<{ data: TypeLogement }>(`/${id}`, toFormData(payload), {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((r) => r.data.data);
+  }
+
+  // Toggle actif ou mise à jour JSON simple
+  return api.put<{ data: TypeLogement }>(`/${id}`, payload).then((r) => r.data.data);
+};
 
 export const deleteTypeLogement = (id: string) => api.delete(`/${id}`);

@@ -118,13 +118,6 @@ export const OWNER_STEPS: OwnerStep[] = [
   { number: 5, title: "Tableau de bord", desc: "Suivi complet de votre patrimoine en temps réel", icon: LayoutDashboard },
 ];
 
-export const STATS = [
-  { value: "4 500+", label: "Annonces actives" },
-  { value: "2 800+", label: "Propriétaires" },
-  { value: "50 000+", label: "Utilisateurs/mois" },
-  { value: "6", label: "Régions couvertes" },
-];
-
 export const SORT_OPTIONS = [
   { value: "recent", label: "Plus récent" },
   { value: "oldest", label: "Moins récent" },

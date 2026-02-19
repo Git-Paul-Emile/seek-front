@@ -10,9 +10,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import heroBg from "@/assets/hero-bg.jpg";
-import { PROPERTY_TYPES, STATS, TRAVEL_TIMES } from "@/data/home";
+import { TRAVEL_TIMES } from "@/data/home";
+import { useTypeLogements } from "@/hooks/useTypeLogements";
+import { useStats } from "@/hooks/useStats";
 
 const HeroSection = () => {
+  const { data: typesLogement = [] } = useTypeLogements();
+  const { data: statsData } = useStats();
   const [searchLocation, setSearchLocation] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [budget, setBudget] = useState("");
@@ -70,8 +74,8 @@ const HeroSection = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PROPERTY_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  {typesLogement.map((t) => (
+                    <SelectItem key={t.slug} value={t.slug}>{t.nom}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -164,14 +168,28 @@ const HeroSection = () => {
         </div>
 
         {/* Stats */}
-        <div className="mt-14 pt-8 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl">
-          {STATS.map((stat) => (
-            <div key={stat.label}>
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="text-white/40 text-sm mt-0.5">{stat.label}</div>
+        {statsData && (
+          <div className="mt-14 pt-8 border-t border-white/10 grid grid-cols-2 md:grid-cols-3 gap-6 max-w-xl">
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {statsData.annoncesActives > 0 ? `${statsData.annoncesActives.toLocaleString("fr-FR")}+` : "—"}
+              </div>
+              <div className="text-white/40 text-sm mt-0.5">Annonces actives</div>
             </div>
-          ))}
-        </div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {statsData.proprietaires > 0 ? `${statsData.proprietaires.toLocaleString("fr-FR")}+` : "—"}
+              </div>
+              <div className="text-white/40 text-sm mt-0.5">Propriétaires</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {statsData.villesCouvertes.toLocaleString("fr-FR")}
+              </div>
+              <div className="text-white/40 text-sm mt-0.5">Villes couvertes</div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

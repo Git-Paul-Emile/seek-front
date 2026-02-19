@@ -2,18 +2,19 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 
-const NAV_LINKS = [
+const STATIC_NAV_LINKS = [
   { to: "/", label: "Accueil" },
   // { to: "/annonces", label: "Annonces" },
   // { to: "/dashboard", label: "Espace propriétaire" },
-  { to: "/admin", label: "Admin" },
 ];
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -24,6 +25,14 @@ const Navbar = () => {
   // Transparent uniquement sur la home quand on est en haut
   const isHome = location.pathname === "/";
   const transparent = isHome && !scrolled;
+
+  // Lien Admin : dashboard si connecté, sinon login
+  const adminLink = {
+    to: isAuthenticated ? "/admin/dashboard" : "/admin/login",
+    label: "Admin",
+  };
+
+  const navLinks = [...STATIC_NAV_LINKS, adminLink];
 
   return (
     <nav
@@ -47,7 +56,7 @@ const Navbar = () => {
 
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-7">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -65,7 +74,6 @@ const Navbar = () => {
             </Link>
           ))}
         </div>
-
 
         {/* Mobile toggle */}
         <button
@@ -90,7 +98,7 @@ const Navbar = () => {
             className="md:hidden bg-[#0C1A35] overflow-hidden"
           >
             <div className="px-4 py-5 flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
@@ -104,7 +112,6 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
-
             </div>
           </motion.div>
         )}

@@ -3,52 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { AdminLayout } from "@/components/layout/AdminSidebar";
-import TenantLayout from "@/components/layout/TenantLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { GuestRoute } from "@/components/GuestRoute";
 
 import Index from "./pages/Index";
-import Guide from "./pages/Guide";
-import Properties from "./pages/Properties";
-import PropertyDetail from "./pages/PropertyDetail";
-import Dashboard from "./pages/Dashboard";
-import AdminProperties from "./pages/AdminProperties";
-import PropertyManagement from "./pages/PropertyManagement";
-import AdminStats from "./pages/AdminStats";
-import AdminClients from "./pages/AdminClients";
-import AdminSettings from "./pages/AdminSettings";
-import AdminTenants from "./pages/AdminTenants";
-import NotFound from "./pages/NotFound";
-import OwnerRegister from "./pages/OwnerRegister";
-import OwnerLogin from "./pages/OwnerLogin";
-import OwnerForgotPassword from "./pages/OwnerForgotPassword";
-import OwnerHome from "./pages/OwnerHome";
-import { LeaseContracts } from "./pages/LeaseContracts";
-import { RentPayments } from "./pages/RentPayments";
-import ReceiptsPage from "./pages/Receipts";
-import ChargesPage from "./pages/Charges";
-import { ReminderSettings } from "./pages/ReminderSettings";
-import { ReminderHistory } from "./pages/ReminderHistory";
-import { Documents } from "./pages/Documents";
-import TenantLogin from "./pages/TenantLogin";
-import TenantDashboard from "./pages/TenantDashboard";
-import TenantProfile from "./pages/TenantProfile";
-import TenantRoom from "./pages/TenantRoom";
-import TenantProperty from "./pages/TenantProperty";
-import TenantCommonSpaces from "./pages/TenantCommonSpaces";
-import TenantLease from "./pages/TenantLease";
-import TenantPayments from "./pages/TenantPayments";
-import TenantCharges from "./pages/TenantCharges";
-import TenantFlatmates from "./pages/TenantFlatmates";
-import TenantNotifications from "./pages/TenantNotifications";
-import TenantNotificationSettings from "./pages/TenantNotificationSettings";
-import TenantPersonalSettings from "./pages/TenantPersonalSettings";
-import TenantDocuments from "./pages/TenantDocuments";
-import TenantReceipts from "./pages/TenantReceipts";
 
 const queryClient = new QueryClient();
 
@@ -56,29 +15,15 @@ const queryClient = new QueryClient();
 const PublicLayout = () => (
   <>
     <Navbar />
-    <Outlet />
+    <main className="min-h-screen">
+      <Outlet />
+    </main>
     <Footer />
   </>
 );
 
-// Wrapper pour AdminLayout avec Outlet
-const AdminLayoutWrapper = () => (
-  <AdminLayout>
-    <Outlet />
-  </AdminLayout>
-);
-
-// Layout pour l'espace propriétaire sans Navbar ni Footer
-const OwnerLayout = () => (
-  <Outlet />
-);
-
-// Layout pour l'espace locataire (colocataire)
-const TenantLayoutWrapper = () => (
-  <TenantLayout>
-    <Outlet />
-  </TenantLayout>
-);
+// Import Outlet
+import { Outlet } from "react-router-dom";
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -90,78 +35,7 @@ const App = () => (
           {/* Routes publiques */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Index />} />
-            <Route path="/annonces" element={<Properties />} />
-            <Route path="/annonce/:id" element={<PropertyDetail />} />
-            <Route path="/guide" element={<Guide />} />
           </Route>
-          
-          {/* Routes admin - PROTÉGÉES */}
-          <Route 
-            element={
-              <ProtectedRoute>
-                <AdminLayoutWrapper />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/admin" element={<Dashboard />} />
-            <Route path="/admin/properties" element={<AdminProperties />} />
-            <Route path="/admin/property-management" element={<PropertyManagement />} />
-            <Route path="/admin/stats" element={<AdminStats />} />
-            <Route path="/admin/clients" element={<AdminClients />} />
-            <Route path="/admin/tenants" element={<AdminTenants />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
-            <Route path="/admin/leases" element={<LeaseContracts />} />
-            <Route path="/admin/rent-payments" element={<RentPayments />} />
-            <Route path="/admin/receipts" element={<ReceiptsPage />} />
-            <Route path="/admin/charges" element={<ChargesPage />} />
-            <Route path="/admin/reminders/settings" element={<ReminderSettings />} />
-            <Route path="/admin/reminders/history" element={<ReminderHistory />} />
-            <Route path="/admin/documents" element={<Documents />} />
-          </Route>
-          
-          {/* Routes espace propriétaire */}
-          <Route element={<OwnerLayout />}>
-            <Route path="/owner" element={<OwnerHome />} />
-            <Route path="/owner/register" element={
-              <GuestRoute>
-                <OwnerRegister />
-              </GuestRoute>
-            } />
-            <Route path="/owner/login" element={
-              <GuestRoute>
-                <OwnerLogin />
-              </GuestRoute>
-            } />
-            <Route path="/owner/forgot-password" element={
-              <GuestRoute>
-                <OwnerForgotPassword />
-              </GuestRoute>
-            } />
-          </Route>
-          
-          {/* Routes espace locataire (colocataire) */}
-          <Route element={<TenantLayoutWrapper />}>
-            <Route path="/tenant/login" element={<TenantLogin />} />
-            <Route path="/tenant/dashboard" element={<TenantDashboard />} />
-            <Route path="/tenant/room" element={<TenantRoom />} />
-            <Route path="/tenant/property" element={<TenantProperty />} />
-            <Route path="/tenant/common-spaces" element={<TenantCommonSpaces />} />
-            <Route path="/tenant/lease" element={<TenantLease />} />
-            <Route path="/tenant/payments" element={<TenantPayments />} />
-            <Route path="/tenant/charges" element={<TenantCharges />} />
-            <Route path="/tenant/flatmates" element={<TenantFlatmates />} />
-            <Route path="/tenant/notifications" element={<TenantNotifications />} />
-            <Route path="/tenant/notifications/settings" element={<TenantNotificationSettings />} />
-            <Route path="/tenant/documents" element={<TenantDocuments />} />
-            <Route path="/tenant/receipts" element={<TenantReceipts />} />
-            <Route path="/tenant/profile" element={<TenantProfile />} />
-            <Route path="/tenant/personal-settings" element={<TenantPersonalSettings />} />
-          </Route>
-          
-          {/* Route legacy - redirect vers admin */}
-          <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
-          
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

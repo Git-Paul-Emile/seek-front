@@ -1,119 +1,79 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Search, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getCurrentOwner, logoutOwner } from "@/lib/owner-api";
+
+const NAV_LINKS = [
+  { to: "/", label: "Accueil" },
+  // { to: "/annonces", label: "Annonces" },
+  // { to: "/dashboard", label: "Espace propriétaire" },
+  { to: "/admin", label: "Admin" },
+];
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const currentOwner = getCurrentOwner();
 
-  const handleLogout = async () => {
-    await logoutOwner();
-    navigate("/owner");
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  // Liens de base (toujours visibles)
-  const baseNavLinks = [
-    { to: "/", label: "Accueil" },
-    { to: "/annonces", label: "Annonces" },
-    { to: "/guide", label: "Guide" },
-  ];
-
-  // Lien Espace Propriétaire - change selon l'état de connexion
-  const ownerSpaceLink = currentOwner 
-    ? { to: "/admin", label: "Espace Propriétaire" }
-    : { to: "/owner", label: "Espace Propriétaire" };
-
-  // Liens supplémentaires pour les non-connectés
-  const publicSpaceLinks = currentOwner ? [] : [
-    { to: "/tenant/login", label: "Espace Locataire" },
-  ];
+  // Transparent uniquement sur la home quand on est en haut
+  const isHome = location.pathname === "/";
+  const transparent = isHome && !scrolled;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-secondary backdrop-blur-md border-b border-secondary">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        transparent
+          ? "bg-transparent border-b border-white/10"
+          : "bg-white shadow-sm border-b border-slate-100"
+      }`}
+    >
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <span className="font-display text-xl font-bold text-secondary-foreground tracking-wide">
+          <span
+            className={`font-display text-xl font-bold tracking-widest transition-colors duration-300 ${
+              transparent ? "text-[#D4A843]" : "text-[#0C1A35]"
+            }`}
+          >
             SEEK
           </span>
         </Link>
 
-        {/* Desktop */}
-        <div className="hidden md:flex items-center gap-6">
-          {/* Liens de base */}
-          {baseNavLinks.map((link) => (
+        {/* Desktop nav links */}
+        <div className="hidden md:flex items-center gap-7">
+          {NAV_LINKS.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
+              className={`text-sm font-medium transition-colors duration-200 ${
                 location.pathname === link.to
-                  ? "text-primary"
-                  : "text-secondary-foreground/70"
+                  ? transparent
+                    ? "text-[#D4A843]"
+                    : "text-[#0C1A35] font-semibold"
+                  : transparent
+                  ? "text-white/65 hover:text-white"
+                  : "text-slate-500 hover:text-[#0C1A35]"
               }`}
             >
               {link.label}
             </Link>
           ))}
-          
-          {/* Lien Espace Propriétaire */}
-          <Link
-            to={ownerSpaceLink.to}
-            className={`text-sm font-medium transition-colors hover:text-primary ${
-              location.pathname.startsWith('/owner') || location.pathname.startsWith('/admin')
-                ? "text-primary"
-                : "text-secondary-foreground/70"
-            }`}
-          >
-            {ownerSpaceLink.label}
-          </Link>
-
-          {/* Liens Espaces Locataire et Agence (si non connecté) */}
-          {publicSpaceLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname.startsWith(link.to)
-                  ? "text-primary"
-                  : "text-secondary-foreground/70"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-          
-          {currentOwner ? (
-            // Afficher le dashboard et déconnexion pour les propriétaires connectés
-            <div className="flex items-center gap-3">
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="gap-2 text-secondary-foreground/70 hover:text-secondary-foreground"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                Déconnexion
-              </Button>
-            </div>
-          ) : (
-            // Afficher le bouton Rechercher pour les non-connectés
-            <Link to="/annonces">
-              <Button size="sm" className="gap-2">
-                <Search className="w-3.5 h-3.5" />
-                Rechercher
-              </Button>
-            </Link>
-          )}
         </div>
+
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden text-secondary-foreground"
+          className={`md:hidden p-1 rounded-md transition-colors ${
+            transparent ? "text-white" : "text-[#0C1A35]"
+          }`}
           onClick={() => setOpen(!open)}
+          aria-label="Menu"
         >
           {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -126,74 +86,25 @@ const Navbar = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden bg-secondary border-b border-secondary overflow-hidden"
+            transition={{ duration: 0.2 }}
+            className="md:hidden bg-[#0C1A35] overflow-hidden"
           >
-            <div className="px-4 py-4 flex flex-col gap-3">
-              {/* Liens de base */}
-              {baseNavLinks.map((link) => (
+            <div className="px-4 py-5 flex flex-col gap-1">
+              {NAV_LINKS.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
                   onClick={() => setOpen(false)}
-                  className={`text-sm font-medium py-2 ${
+                  className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
                     location.pathname === link.to
-                      ? "text-primary"
-                      : "text-secondary-foreground/70"
+                      ? "text-[#D4A843] bg-white/5"
+                      : "text-white/65 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
-              
-              {/* Lien Espace Propriétaire */}
-              <Link
-                to={ownerSpaceLink.to}
-                onClick={() => setOpen(false)}
-                className={`text-sm font-medium py-2 ${
-                  location.pathname.startsWith('/owner') || location.pathname.startsWith('/admin')
-                    ? "text-primary"
-                    : "text-secondary-foreground/70"
-                }`}
-              >
-                {ownerSpaceLink.label}
-              </Link>
 
-              {/* Liens Espaces Locataire (si non connecté) */}
-              {publicSpaceLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setOpen(false)}
-                  className={`text-sm font-medium py-2 ${
-                    location.pathname.startsWith(link.to)
-                      ? "text-primary"
-                      : "text-secondary-foreground/70"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              
-              {currentOwner ? (
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start gap-2 mt-2"
-                  onClick={() => {
-                    handleLogout();
-                    setOpen(false);
-                  }}
-                >
-                  <LogOut className="w-4 h-4" />
-                  Déconnexion
-                </Button>
-              ) : (
-                <Link to="/annonces" onClick={() => setOpen(false)}>
-                  <Button className="w-full gap-2 mt-2">
-                    <Search className="w-4 h-4" />
-                    Rechercher
-                  </Button>
-                </Link>
-              )}
             </div>
           </motion.div>
         )}

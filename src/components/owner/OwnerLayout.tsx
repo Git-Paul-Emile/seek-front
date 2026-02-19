@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Search,
@@ -7,6 +7,7 @@ import {
   LogOut,
   Building2,
   ChevronDown,
+  Plus,
 } from "lucide-react";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
@@ -21,6 +22,10 @@ const NAV_ITEMS = [
 function Sidebar() {
   const { owner, logout } = useOwnerAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [biensOpen, setBiensOpen] = useState(
+    location.pathname.startsWith("/owner/biens")
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -29,6 +34,8 @@ function Sidebar() {
 
   const initiales =
     `${owner?.prenom?.[0] ?? ""}${owner?.nom?.[0] ?? ""}`.toUpperCase() || "P";
+
+  const isBiensActive = location.pathname.startsWith("/owner/biens");
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-60 bg-white border-r border-slate-100 flex flex-col z-40">
@@ -53,6 +60,7 @@ function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-0.5">
+          {/* Items plats */}
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
@@ -71,6 +79,52 @@ function Sidebar() {
               </NavLink>
             </li>
           ))}
+
+          {/* Gestion de biens — groupe collapsible */}
+          <li>
+            <button
+              type="button"
+              onClick={() => setBiensOpen((v) => !v)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  isBiensActive
+                    ? "text-[#0C1A35] bg-slate-50"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`}
+            >
+              <Building2 className="w-4 h-4 flex-shrink-0" />
+              <span className="flex-1 text-left">Gestion de biens</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  biensOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Sous-items */}
+            <ul
+              className={`overflow-hidden transition-all duration-200 ml-3 pl-3 border-l border-slate-100 space-y-0.5 ${
+                biensOpen ? "max-h-40 opacity-100 mt-0.5" : "max-h-0 opacity-0"
+              }`}
+            >
+              <li>
+                <NavLink
+                  to="/owner/biens/ajouter"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
+                    transition-colors duration-150 ${
+                      isActive
+                        ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                        : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                    }`
+                  }
+                >
+                  <Plus className="w-3.5 h-3.5 flex-shrink-0" />
+                  Ajouter un bien
+                </NavLink>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
 

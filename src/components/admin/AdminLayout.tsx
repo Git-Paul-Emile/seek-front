@@ -8,6 +8,8 @@ import {
   House,
   Building2,
   Tag,
+  ArrowLeftRight,
+  CircleDot,
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -24,7 +26,9 @@ const NAV_GROUPS = [
     icon: Building2,
     basePath: "/admin/biens",
     children: [
-      { to: "/admin/biens/categories", label: "Catégories", icon: Tag },
+      { to: "/admin/biens/categories",    label: "Catégories",   icon: Tag },
+      { to: "/admin/biens/transactions",  label: "Transactions", icon: ArrowLeftRight },
+      { to: "/admin/biens/statuts",       label: "Statuts",      icon: CircleDot },
     ],
   },
 ];

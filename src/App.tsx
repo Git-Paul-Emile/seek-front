@@ -21,9 +21,12 @@ import Proprietaires from "./pages/Proprietaires";
 import OwnerRegister from "./pages/owner/Register";
 import OwnerLogin from "./pages/owner/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
+import AddBien from "./pages/owner/biens/AddBien";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import TypesLogement from "./pages/admin/categories/TypesLogement";
+import TypesTransaction from "./pages/admin/categories/TypesTransaction";
+import StatutsBien from "./pages/admin/categories/StatutsBien";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +68,7 @@ const App = () => (
               <Route element={<OwnerProtectedRoute />}>
                 <Route element={<OwnerLayout />}>
                   <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                  <Route path="/owner/biens/ajouter" element={<AddBien />} />
                 </Route>
               </Route>
 
@@ -77,7 +81,9 @@ const App = () => (
               <Route path="/admin" element={<ProtectedRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route path="dashboard" element={<AdminDashboard />} />
-                  <Route path="biens/categories" element={<TypesLogement />} />
+                  <Route path="biens/categories"   element={<TypesLogement />} />
+                  <Route path="biens/transactions" element={<TypesTransaction />} />
+                  <Route path="biens/statuts"      element={<StatutsBien />} />
                 </Route>
               </Route>
             </Routes>

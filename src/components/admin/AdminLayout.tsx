@@ -10,6 +10,7 @@ import {
   Tag,
   ArrowLeftRight,
   CircleDot,
+  Sofa,
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -28,7 +29,8 @@ const NAV_GROUPS = [
     children: [
       { to: "/admin/biens/categories",    label: "Catégories",   icon: Tag },
       { to: "/admin/biens/transactions",  label: "Transactions", icon: ArrowLeftRight },
-      { to: "/admin/biens/statuts",       label: "Statuts",      icon: CircleDot },
+      { to: "/admin/biens/statuts",           label: "Statuts",            icon: CircleDot },
+      { to: "/admin/biens/meuble-equipement", label: "Meublé / Équipement", icon: Sofa },
     ],
   },
 ];

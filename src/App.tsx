@@ -27,6 +27,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import TypesLogement from "./pages/admin/categories/TypesLogement";
 import TypesTransaction from "./pages/admin/categories/TypesTransaction";
 import StatutsBien from "./pages/admin/categories/StatutsBien";
+import MeubleEquipement from "./pages/admin/categories/MeubleEquipement";
 
 const queryClient = new QueryClient();
 
@@ -83,7 +84,8 @@ const App = () => (
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="biens/categories"   element={<TypesLogement />} />
                   <Route path="biens/transactions" element={<TypesTransaction />} />
-                  <Route path="biens/statuts"      element={<StatutsBien />} />
+                  <Route path="biens/statuts"           element={<StatutsBien />} />
+                  <Route path="biens/meuble-equipement" element={<MeubleEquipement />} />
                 </Route>
               </Route>
             </Routes>

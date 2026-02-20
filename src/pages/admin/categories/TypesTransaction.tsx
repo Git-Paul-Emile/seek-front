@@ -12,6 +12,8 @@ import {
 } from "@/hooks/useTypeTransactions";
 import type { TypeTransaction } from "@/api/typeTransaction";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import Pagination from "@/components/ui/Pagination";
+import { usePagination } from "@/hooks/usePagination";
 
 // ─── Schéma ───────────────────────────────────────────────────────────────────
 
@@ -163,6 +165,8 @@ export default function TypesTransaction() {
 
   const maxOrdre = types.length > 0 ? Math.max(...types.map((t) => t.ordre)) : -1;
 
+  const pg = usePagination(types);
+
   const [modalOpen, setModalOpen]       = useState(false);
   const [editing, setEditing]           = useState<TypeTransaction | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<TypeTransaction | null>(null);
@@ -264,7 +268,7 @@ export default function TypesTransaction() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {types.map((type) => {
+              {pg.pageItems.map((type) => {
                 const isToggling = togglingId === type.id;
                 return (
                   <tr key={type.id} className="hover:bg-slate-50/50 transition-colors">
@@ -336,6 +340,7 @@ export default function TypesTransaction() {
             </tbody>
           </table>
         )}
+        <Pagination {...pg} total={types.length} pageSize={10} />
       </div>
 
       {/* Modal formulaire */}

@@ -13,6 +13,8 @@ import {
 import type { TypeLogement } from "@/api/typeLogement";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 import ImageUpload from "@/components/ui/ImageUpload";
+import Pagination from "@/components/ui/Pagination";
+import { usePagination } from "@/hooks/usePagination";
 
 // ─── Schéma (sans image : gérée séparément via ImageUpload) ──────────────────
 
@@ -183,6 +185,8 @@ export default function TypesLogement() {
 
   const maxOrdre = types.length > 0 ? Math.max(...types.map((t) => t.ordre)) : -1;
 
+  const pg = usePagination(types);
+
   const [modalOpen, setModalOpen]         = useState(false);
   const [editing, setEditing]             = useState<TypeLogement | undefined>(undefined);
   const [deleteTarget, setDeleteTarget]   = useState<TypeLogement | null>(null);
@@ -287,7 +291,7 @@ export default function TypesLogement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {types.map((type) => {
+              {pg.pageItems.map((type) => {
                 const isToggling = togglingId === type.id;
                 return (
                   <tr key={type.id} className="hover:bg-slate-50/50 transition-colors">
@@ -374,6 +378,7 @@ export default function TypesLogement() {
             </tbody>
           </table>
         )}
+        <Pagination {...pg} total={types.length} pageSize={10} />
       </div>
 
       {/* Modal formulaire */}

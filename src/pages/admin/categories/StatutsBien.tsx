@@ -12,6 +12,8 @@ import {
 } from "@/hooks/useStatutsBien";
 import type { StatutBien } from "@/api/statutBien";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import Pagination from "@/components/ui/Pagination";
+import { usePagination } from "@/hooks/usePagination";
 
 // ─── Schéma ───────────────────────────────────────────────────────────────────
 
@@ -163,6 +165,8 @@ export default function StatutsBien() {
 
   const maxOrdre = statuts.length > 0 ? Math.max(...statuts.map((s) => s.ordre)) : -1;
 
+  const pg = usePagination(statuts);
+
   const [modalOpen, setModalOpen]       = useState(false);
   const [editing, setEditing]           = useState<StatutBien | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<StatutBien | null>(null);
@@ -264,7 +268,7 @@ export default function StatutsBien() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {statuts.map((statut) => {
+              {pg.pageItems.map((statut) => {
                 const isToggling = togglingId === statut.id;
                 return (
                   <tr key={statut.id} className="hover:bg-slate-50/50 transition-colors">
@@ -336,6 +340,7 @@ export default function StatutsBien() {
             </tbody>
           </table>
         )}
+        <Pagination {...pg} total={statuts.length} pageSize={10} />
       </div>
 
       {/* Modal formulaire */}

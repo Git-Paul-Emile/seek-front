@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,8 @@ import type { Equipement } from "@/api/equipement";
 import type { CategorieMeuble } from "@/api/categorieMeuble";
 import type { CategorieEquipement } from "@/api/categorieEquipement";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import Pagination from "@/components/ui/Pagination";
+import { usePagination } from "@/hooks/usePagination";
 
 // ─── Types internes ───────────────────────────────────────────────────────────
 
@@ -332,10 +334,11 @@ function CatFormModal({ initial, type: forcedType, maxOrdre, onClose, onSuccess 
 
 // ─── Tableau générique éléments ───────────────────────────────────────────────
 
-function ItemTable({ title, icon: Icon, color, items, isLoading, emptyMessage,
+function ItemTable({ title, icon: Icon, color, items, total, pg, isLoading, emptyMessage,
   togglingId, onToggle, onEdit, onDelete, showCategorie }: {
   title: string; icon: React.ElementType; color: string;
-  items: Item[]; isLoading: boolean; emptyMessage: string;
+  items: Item[]; total: number; pg: ReturnType<typeof usePagination>;
+  isLoading: boolean; emptyMessage: string;
   togglingId: string | null;
   onToggle: (item: Item) => void; onEdit: (item: Item) => void; onDelete: (item: Item) => void;
   showCategorie: boolean;
@@ -345,11 +348,11 @@ function ItemTable({ title, icon: Icon, color, items, isLoading, emptyMessage,
       <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
         <div className={`w-6 h-6 rounded-md flex items-center justify-center ${color}`}><Icon className="w-3.5 h-3.5" /></div>
         <span className="text-xs font-bold uppercase tracking-widest text-slate-500">{title}</span>
-        <span className="ml-auto text-xs text-slate-400 font-medium">{items.length}</span>
+        <span className="ml-auto text-xs text-slate-400 font-medium">{total}</span>
       </div>
       {isLoading ? (
         <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-[#D4A843]" /></div>
-      ) : items.length === 0 ? (
+      ) : total === 0 ? (
         <p className="p-8 text-center text-slate-400 text-sm">{emptyMessage}</p>
       ) : (
         <table className="w-full text-sm">
@@ -388,15 +391,17 @@ function ItemTable({ title, icon: Icon, color, items, isLoading, emptyMessage,
           </tbody>
         </table>
       )}
+      <Pagination {...pg} total={total} pageSize={10} />
     </div>
   );
 }
 
 // ─── Tableau catégories ───────────────────────────────────────────────────────
 
-function CatTable({ title, icon: Icon, color, items, isLoading, togglingId, onToggle, onEdit, onDelete }: {
+function CatTable({ title, icon: Icon, color, items, total, pg, isLoading, togglingId, onToggle, onEdit, onDelete }: {
   title: string; icon: React.ElementType; color: string;
-  items: CatItem[]; isLoading: boolean; togglingId: string | null;
+  items: CatItem[]; total: number; pg: ReturnType<typeof usePagination>;
+  isLoading: boolean; togglingId: string | null;
   onToggle: (item: CatItem) => void; onEdit: (item: CatItem) => void; onDelete: (item: CatItem) => void;
 }) {
   return (
@@ -404,11 +409,11 @@ function CatTable({ title, icon: Icon, color, items, isLoading, togglingId, onTo
       <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
         <div className={`w-6 h-6 rounded-md flex items-center justify-center ${color}`}><Icon className="w-3.5 h-3.5" /></div>
         <span className="text-xs font-bold uppercase tracking-widest text-slate-500">{title}</span>
-        <span className="ml-auto text-xs text-slate-400 font-medium">{items.length}</span>
+        <span className="ml-auto text-xs text-slate-400 font-medium">{total}</span>
       </div>
       {isLoading ? (
         <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-[#D4A843]" /></div>
-      ) : items.length === 0 ? (
+      ) : total === 0 ? (
         <p className="p-8 text-center text-slate-400 text-sm">Aucune catégorie. Cliquez sur "Nouvelle catégorie" pour commencer.</p>
       ) : (
         <table className="w-full text-sm">
@@ -449,6 +454,7 @@ function CatTable({ title, icon: Icon, color, items, isLoading, togglingId, onTo
           </tbody>
         </table>
       )}
+      <Pagination {...pg} total={total} pageSize={10} />
     </div>
   );
 }
@@ -500,6 +506,16 @@ export default function MeubleEquipement() {
   ).sort();
   const filteredMeubles     = activeTab === "Tous" ? meubles     : meubles.filter((m) => m.categorie.nom === activeTab);
   const filteredEquipements = activeTab === "Tous" ? equipements : equipements.filter((e) => e.categorie.nom === activeTab);
+
+  // Pagination — 4 tables indépendantes
+  const pgMeubles  = usePagination(filteredMeubles);
+  const pgEquips   = usePagination(filteredEquipements);
+  const pgCatM     = usePagination(catMeubles);
+  const pgCatE     = usePagination(catEquipements);
+
+  // Reset page 1 quand l'onglet ou la vue change
+  useEffect(() => { pgMeubles.reset(); pgEquips.reset(); }, [activeTab]);
+  useEffect(() => { pgCatM.reset(); pgCatE.reset(); }, [view]);
   const showCategorie = activeTab === "Tous";
   const tabs = [
     { label: "Tous", count: meubles.length + equipements.length },
@@ -650,16 +666,16 @@ export default function MeubleEquipement() {
           </div>
           <div className="grid grid-cols-2 gap-6">
             <ItemTable title="Meubles" icon={Sofa} color="bg-amber-50 text-amber-500"
-              items={filteredMeubles as Item[]} isLoading={mLoading}
-              emptyMessage="Aucun meuble dans cette catégorie."
+              items={pgMeubles.pageItems as Item[]} total={filteredMeubles.length} pg={pgMeubles}
+              isLoading={mLoading} emptyMessage="Aucun meuble dans cette catégorie."
               togglingId={togglingMeubleId} onToggle={handleToggleMeuble}
               onEdit={(item) => setEditingMeuble(item as Meuble)}
               onDelete={(item) => setDeleteMeubleTarget(item as Meuble)}
               showCategorie={showCategorie}
             />
             <ItemTable title="Équipements" icon={Plug} color="bg-blue-50 text-blue-500"
-              items={filteredEquipements as Item[]} isLoading={eLoading}
-              emptyMessage="Aucun équipement dans cette catégorie."
+              items={pgEquips.pageItems as Item[]} total={filteredEquipements.length} pg={pgEquips}
+              isLoading={eLoading} emptyMessage="Aucun équipement dans cette catégorie."
               togglingId={togglingEquipId} onToggle={handleToggleEquip}
               onEdit={(item) => setEditingEquip(item as Equipement)}
               onDelete={(item) => setDeleteEquipTarget(item as Equipement)}
@@ -673,13 +689,15 @@ export default function MeubleEquipement() {
       {view === "categories" && (
         <div className="grid grid-cols-2 gap-6">
           <CatTable title="Catégories Meubles" icon={Sofa} color="bg-amber-50 text-amber-500"
-            items={catMeubles} isLoading={cmLoading} togglingId={togglingCatMId}
+            items={pgCatM.pageItems as CatItem[]} total={catMeubles.length} pg={pgCatM}
+            isLoading={cmLoading} togglingId={togglingCatMId}
             onToggle={handleToggleCatM}
             onEdit={(item) => setEditingCatM(item as CategorieMeuble)}
             onDelete={(item) => setDeleteCatMTarget(item as CategorieMeuble)}
           />
           <CatTable title="Catégories Équipements" icon={Plug} color="bg-blue-50 text-blue-500"
-            items={catEquipements} isLoading={ceLoading} togglingId={togglingCatEId}
+            items={pgCatE.pageItems as CatItem[]} total={catEquipements.length} pg={pgCatE}
+            isLoading={ceLoading} togglingId={togglingCatEId}
             onToggle={handleToggleCatE}
             onEdit={(item) => setEditingCatE(item as CategorieEquipement)}
             onDelete={(item) => setDeleteCatETarget(item as CategorieEquipement)}

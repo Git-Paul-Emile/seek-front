@@ -11,7 +11,8 @@ const api = axios.create({
 export interface Equipement {
   id: string;
   nom: string;
-  categorie: string;
+  categorieId: string;
+  categorie: { id: string; nom: string; slug: string };
   actif: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,10 +21,10 @@ export interface Equipement {
 export const fetchEquipements      = () => api.get<{ data: Equipement[] }>("/").then((r) => r.data.data);
 export const fetchEquipementsAdmin = () => api.get<{ data: Equipement[] }>("/admin").then((r) => r.data.data);
 
-export const createEquipements = (payload: { items: { nom: string; categorie: string }[] }) =>
+export const createEquipements = (payload: { items: { nom: string; categorieId: string }[] }) =>
   api.post<{ data: Equipement[] }>("/", payload).then((r) => r.data.data);
 
-export const updateEquipement = (id: string, payload: { nom?: string; categorie?: string; actif?: boolean }) =>
+export const updateEquipement = (id: string, payload: { nom?: string; categorieId?: string; actif?: boolean }) =>
   api.put<{ data: Equipement }>(`/${id}`, payload).then((r) => r.data.data);
 
 export const deleteEquipement = (id: string) => api.delete(`/${id}`);

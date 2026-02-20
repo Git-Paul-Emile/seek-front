@@ -30,7 +30,7 @@ const NAV_GROUPS = [
       { to: "/admin/biens/categories",    label: "Catégories",   icon: Tag },
       { to: "/admin/biens/transactions",  label: "Transactions", icon: ArrowLeftRight },
       { to: "/admin/biens/statuts",           label: "Statuts",            icon: CircleDot },
-      { to: "/admin/biens/meuble-equipement", label: "Meublé / Équipement", icon: Sofa },
+      { to: "/admin/biens/meuble-equipement", label: "Meuble & Equipement", icon: Sofa },
     ],
   },
 ];

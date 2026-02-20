@@ -11,7 +11,8 @@ const api = axios.create({
 export interface Meuble {
   id: string;
   nom: string;
-  categorie: string;
+  categorieId: string;
+  categorie: { id: string; nom: string; slug: string };
   actif: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,10 +21,10 @@ export interface Meuble {
 export const fetchMeubles      = () => api.get<{ data: Meuble[] }>("/").then((r) => r.data.data);
 export const fetchMeublesAdmin = () => api.get<{ data: Meuble[] }>("/admin").then((r) => r.data.data);
 
-export const createMeubles = (payload: { items: { nom: string; categorie: string }[] }) =>
+export const createMeubles = (payload: { items: { nom: string; categorieId: string }[] }) =>
   api.post<{ data: Meuble[] }>("/", payload).then((r) => r.data.data);
 
-export const updateMeuble = (id: string, payload: { nom?: string; categorie?: string; actif?: boolean }) =>
+export const updateMeuble = (id: string, payload: { nom?: string; categorieId?: string; actif?: boolean }) =>
   api.put<{ data: Meuble }>(`/${id}`, payload).then((r) => r.data.data);
 
 export const deleteMeuble = (id: string) => api.delete(`/${id}`);

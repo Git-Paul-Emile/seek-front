@@ -3,13 +3,13 @@ import { fetchMeubles, fetchMeublesAdmin, createMeubles, updateMeuble, deleteMeu
 
 const QK = "meubles";
 
-export const useMeubles      = () => useQuery({ queryKey: [QK],           queryFn: fetchMeubles,      staleTime: 5 * 60 * 1000 });
-export const useMeublesAdmin = () => useQuery({ queryKey: [QK, "admin"],  queryFn: fetchMeublesAdmin });
+export const useMeubles      = () => useQuery({ queryKey: [QK],          queryFn: fetchMeubles,      staleTime: 5 * 60 * 1000 });
+export const useMeublesAdmin = () => useQuery({ queryKey: [QK, "admin"], queryFn: fetchMeublesAdmin });
 
 export const useCreateMeubles = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { items: { nom: string; categorie: string }[] }) => createMeubles(payload),
+    mutationFn: (payload: { items: { nom: string; categorieId: string }[] }) => createMeubles(payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });
 };
@@ -17,7 +17,7 @@ export const useCreateMeubles = () => {
 export const useUpdateMeuble = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { nom?: string; categorie?: string; actif?: boolean } }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: { nom?: string; categorieId?: string; actif?: boolean } }) =>
       updateMeuble(id, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });

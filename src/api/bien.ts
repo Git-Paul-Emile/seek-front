@@ -217,3 +217,14 @@ export const validerAnnonce = (
 
 export const deleteAnnonceAdmin = (id: string): Promise<void> =>
   annonceApi.delete(`/${id}`).then(() => undefined);
+
+// ─── Public API calls (pour page d'accueil) ─────────────────────────────────────
+
+export interface BienAvecIsNew extends Bien {
+  isNew: boolean;
+}
+
+export const fetchDernieresAnnonces = (limit: number = 8): Promise<BienAvecIsNew[]> =>
+  api
+    .get<{ data: BienAvecIsNew[] }>("/public/dernieres", { params: { limit } })
+    .then((r) => r.data.data);

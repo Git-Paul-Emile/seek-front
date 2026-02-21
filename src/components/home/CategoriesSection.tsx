@@ -31,7 +31,7 @@ const CategoriesSection = () => {
             <CarouselContent className="-ml-4">
               {types.map((type) => (
                 <CarouselItem key={type.id} className="pl-4 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-[14.285%]">
-                  <CategoryCard category={{ id: type.slug, name: type.nom, image: type.image ?? "", count: 0 }} />
+                  <CategoryCard category={{ id: type.slug, name: type.nom, image: type.image ?? "", count: type.count || 0 }} />
                 </CarouselItem>
               ))}
             </CarouselContent>

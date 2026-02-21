@@ -19,6 +19,7 @@ export interface TypeLogement {
   ordre: number;
   createdAt: string;
   updatedAt: string;
+  count?: number; // Nombre d'annonces publiées pour ce type
 }
 
 export interface CreateTypeLogementPayload {

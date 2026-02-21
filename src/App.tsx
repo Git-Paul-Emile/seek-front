@@ -21,13 +21,17 @@ import Proprietaires from "./pages/Proprietaires";
 import OwnerRegister from "./pages/owner/Register";
 import OwnerLogin from "./pages/owner/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
+import BiensList from "./pages/owner/biens/BiensList";
 import AddBien from "./pages/owner/biens/AddBien";
+import BienDetail from "./pages/owner/biens/BienDetail";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import TypesLogement from "./pages/admin/categories/TypesLogement";
 import TypesTransaction from "./pages/admin/categories/TypesTransaction";
 import StatutsBien from "./pages/admin/categories/StatutsBien";
 import MeubleEquipement from "./pages/admin/categories/MeubleEquipement";
+import Annonces from "./pages/admin/Annonces";
+import AnnonceDetail from "./pages/admin/AnnonceDetail";
 
 const queryClient = new QueryClient();
 
@@ -69,7 +73,9 @@ const App = () => (
               <Route element={<OwnerProtectedRoute />}>
                 <Route element={<OwnerLayout />}>
                   <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                  <Route path="/owner/biens" element={<BiensList />} />
                   <Route path="/owner/biens/ajouter" element={<AddBien />} />
+                  <Route path="/owner/biens/:id" element={<BienDetail />} />
                 </Route>
               </Route>
 
@@ -86,6 +92,8 @@ const App = () => (
                   <Route path="biens/transactions" element={<TypesTransaction />} />
                   <Route path="biens/statuts"           element={<StatutsBien />} />
                   <Route path="biens/meuble-equipement" element={<MeubleEquipement />} />
+                  <Route path="annonces" element={<Annonces />} />
+                  <Route path="annonces/:id" element={<AnnonceDetail />} />
                 </Route>
               </Route>
             </Routes>

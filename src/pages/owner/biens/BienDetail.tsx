@@ -1,0 +1,393 @@
+import { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  Building2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  FileText,
+  Loader2,
+  MapPin,
+  Ruler,
+  BedDouble,
+  Bath,
+  Sofa,
+  UtensilsCrossed,
+  Toilet,
+  Layers,
+  BadgeCheck,
+  Cigarette,
+  PawPrint,
+  ParkingSquare,
+  ArrowUpDown,
+  Banknote,
+  Calendar,
+  Edit,
+  Send,
+  Trash2,
+  Info,
+  Image,
+  RotateCcw,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useBienById } from "@/hooks/useBien";
+import { useSoumettreBien, useDeleteBien, useRetourBrouillon } from "@/hooks/useBien";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import type { StatutAnnonce } from "@/api/bien";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const STATUT_STYLE: Record<
+  StatutAnnonce,
+  { bg: string; text: string; icon: React.ElementType; label: string }
+> = {
+  BROUILLON:  { bg: "bg-slate-100",  text: "text-slate-700",  icon: FileText,     label: "Brouillon" },
+  EN_ATTENTE: { bg: "bg-yellow-100", text: "text-yellow-700", icon: Clock,        label: "En attente" },
+  PUBLIE:     { bg: "bg-green-100",  text: "text-green-700",  icon: CheckCircle,  label: "Publié" },
+  REJETE:     { bg: "bg-red-100",    text: "text-red-700",    icon: XCircle,      label: "Rejeté" },
+};
+
+function StatutBadge({ statut }: { statut: StatutAnnonce }) {
+  const { bg, text, icon: Icon, label } = STATUT_STYLE[statut];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${bg} ${text}`}>
+      <Icon className="w-4 h-4" />
+      {label}
+    </span>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 p-5">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
+  if (!value && value !== 0) return null;
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-slate-50 last:border-0">
+      <span className="text-xs font-medium text-slate-400 w-36 shrink-0 mt-0.5">{label}</span>
+      <span className="text-sm text-[#0C1A35]">{value}</span>
+    </div>
+  );
+}
+
+// ─── Page principale ──────────────────────────────────────────────────────────
+
+export default function BienDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const { data: bien, isLoading, isError } = useBienById(id ?? "");
+  const soumettre = useSoumettreBien();
+  const deleteMutation = useDeleteBien();
+  const retour = useRetourBrouillon();
+
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [retourOpen, setRetourOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
+      </div>
+    );
+  }
+
+  if (isError || !bien) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-slate-400">Bien introuvable.</p>
+        <Link to="/owner/biens" className="text-[#D4A843] text-sm font-medium mt-2 inline-block">
+          Retour à mes biens
+        </Link>
+      </div>
+    );
+  }
+
+  const photos = bien.photos ?? [];
+  const statut = bien.statutAnnonce;
+
+  const options = [
+    { label: "Meublé",    value: bien.meuble,    icon: Sofa },
+    { label: "Fumeurs",   value: bien.fumeurs,   icon: Cigarette },
+    { label: "Animaux",   value: bien.animaux,   icon: PawPrint },
+    { label: "Parking",   value: bien.parking,   icon: ParkingSquare },
+    { label: "Ascenseur", value: bien.ascenseur, icon: ArrowUpDown },
+  ].filter((o) => o.value);
+
+  const canEdit   = statut === "BROUILLON" || statut === "PUBLIE" || statut === "REJETE";
+  const canSubmit = statut === "BROUILLON" || statut === "REJETE";
+  const canDelete = statut === "BROUILLON" || statut === "REJETE";
+  const canRetour = statut === "EN_ATTENTE" || statut === "PUBLIE";
+  const retourLabel = statut === "EN_ATTENTE" ? "Annuler la soumission" : "Dépublier";
+  const retourMessage =
+    statut === "EN_ATTENTE"
+      ? "L'annonce sera remise en brouillon et retirée de la file d'attente."
+      : "L'annonce sera dépubliée et remise en brouillon. Elle ne sera plus visible.";
+
+  return (
+    <div className="space-y-5">
+      {/* En-tête */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            to="/owner/biens"
+            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-100
+              text-slate-500 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-1">
+              <Building2 className="w-3.5 h-3.5" />
+              Mes biens
+            </div>
+            <h1 className="font-display text-xl font-bold text-[#0C1A35] truncate">
+              {bien.titre || "Annonce sans titre"}
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+          <StatutBadge statut={statut} />
+          {canRetour && (
+            <button
+              onClick={() => setRetourOpen(true)}
+              disabled={retour.isPending}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
+                bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-50"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              {retourLabel}
+            </button>
+          )}
+          
+          
+          {canDelete && (
+            <button
+              onClick={() => setDeleteOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
+                text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Supprimer
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Note de rejet */}
+      {statut === "REJETE" && bien.noteAdmin && (
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
+          <Info className="w-4 h-4 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-0.5">Motif de rejet :</p>
+            <p>{bien.noteAdmin}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Colonne principale */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Galerie */}
+          <Section title="Photos">
+            {photos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 bg-slate-50 rounded-xl text-slate-300">
+                <Image className="w-10 h-10 mb-2" />
+                <p className="text-sm">Aucune photo</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="relative rounded-xl overflow-hidden bg-slate-100 aspect-video">
+                  <img src={photos[photoIndex]} alt={`Photo ${photoIndex + 1}`} className="w-full h-full object-cover" />
+                  <span className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
+                    {photoIndex + 1} / {photos.length}
+                  </span>
+                </div>
+                {photos.length > 1 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {photos.map((url, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPhotoIndex(i)}
+                        className={`w-16 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                          i === photoIndex ? "border-[#D4A843]" : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </Section>
+
+          {/* Description */}
+          {bien.description && (
+            <Section title="Description">
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{bien.description}</p>
+            </Section>
+          )}
+
+          {/* Caractéristiques */}
+          <Section title="Caractéristiques">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { icon: Ruler,           label: "Surface",    value: bien.surface ? `${bien.surface} m²` : null },
+                { icon: BedDouble,       label: "Chambres",   value: bien.nbChambres },
+                { icon: Bath,            label: "Salles de bain", value: bien.nbSdb },
+                { icon: Sofa,            label: "Salons",     value: bien.nbSalons },
+                { icon: UtensilsCrossed, label: "Cuisines",   value: bien.nbCuisines },
+                { icon: Toilet,          label: "WC",         value: bien.nbWc },
+                { icon: Layers,          label: "Étage",      value: bien.etage },
+                { icon: Layers,          label: "Nb étages",  value: bien.nbEtages },
+              ]
+                .filter((c) => c.value !== null && c.value !== undefined)
+                .map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="flex items-center gap-2 p-3 rounded-xl bg-slate-50">
+                    <Icon className="w-4 h-4 text-[#D4A843] shrink-0" />
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase">{label}</p>
+                      <p className="text-sm font-semibold text-[#0C1A35]">{String(value)}</p>
+                    </div>
+                  </div>
+                ))}
+            </div>
+            {options.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {options.map(({ label, icon: Icon }) => (
+                  <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#D4A843]/10 text-[#D4A843]">
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
+          </Section>
+
+          {/* Équipements */}
+          {bien.equipements && bien.equipements.length > 0 && (
+            <Section title="Équipements">
+              <div className="flex flex-wrap gap-2">
+                {bien.equipements.map((e) => (
+                  <span key={e.equipementId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
+                    <BadgeCheck className="w-3 h-3 text-slate-400" />
+                    {e.equipement.nom}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Meubles */}
+          {bien.meubles && bien.meubles.length > 0 && (
+            <Section title="Mobilier">
+              <div className="flex flex-wrap gap-2">
+                {bien.meubles.map((m) => (
+                  <span key={m.meubleId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
+                    <Sofa className="w-3 h-3 text-slate-400" />
+                    {m.meuble.nom} × {m.quantite}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+        </div>
+
+        {/* Colonne latérale */}
+        <div className="space-y-5">
+          {/* Localisation */}
+          <Section title="Localisation">
+            <div className="flex items-start gap-2">
+              <MapPin className="w-4 h-4 text-[#D4A843] mt-0.5 shrink-0" />
+              <p className="text-sm text-slate-600">
+                {[bien.adresse, bien.quartier, bien.ville, bien.region, bien.pays].filter(Boolean).join(", ") || "Non spécifiée"}
+              </p>
+            </div>
+          </Section>
+
+          {/* Classification */}
+          <Section title="Classification">
+            <InfoRow label="Type de logement"    value={bien.typeLogement?.nom} />
+            <InfoRow label="Type de transaction" value={bien.typeTransaction?.nom} />
+            <InfoRow label="Statut du bien"      value={bien.statutBien?.nom} />
+          </Section>
+
+          {/* Tarifs */}
+          <Section title="Tarifs">
+            {bien.prix && (
+              <div className="flex items-center gap-2 mb-3">
+                <Banknote className="w-4 h-4 text-[#D4A843]" />
+                <div>
+                  <p className="text-lg font-bold text-[#0C1A35]">{bien.prix.toLocaleString("fr-FR")} F</p>
+                  {bien.frequencePaiement && <p className="text-xs text-slate-400">{bien.frequencePaiement}</p>}
+                </div>
+              </div>
+            )}
+            <InfoRow label="Caution"          value={bien.caution ? `${bien.caution.toLocaleString("fr-FR")} F` : null} />
+            <InfoRow label="Charges incluses" value={bien.chargesIncluses ? "Oui" : "Non"} />
+            {bien.disponibleLe && (
+              <div className="flex items-center gap-2 pt-2">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-500">
+                  Disponible le {new Date(bien.disponibleLe).toLocaleDateString("fr-FR")}
+                </span>
+              </div>
+            )}
+          </Section>
+
+          {/* Dates */}
+          <Section title="Dates">
+            <InfoRow label="Créé le"   value={new Date(bien.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
+            <InfoRow label="Mis à jour" value={new Date(bien.updatedAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
+          </Section>
+        </div>
+      </div>
+
+      {/* Modal retour brouillon */}
+      <ConfirmModal
+        open={retourOpen}
+        title={retourLabel}
+        message={retourMessage}
+        confirmLabel={retourLabel}
+        cancelLabel="Annuler"
+        variant="warning"
+        isPending={retour.isPending}
+        onConfirm={() =>
+          retour.mutate(bien.id, {
+            onSuccess: () => { toast.success("Annonce remise en brouillon"); setRetourOpen(false); },
+            onError: () => { toast.error("Erreur"); setRetourOpen(false); },
+          })
+        }
+        onCancel={() => setRetourOpen(false)}
+      />
+
+      {/* Modal suppression */}
+      <ConfirmModal
+        open={deleteOpen}
+        title="Supprimer l'annonce"
+        message="Cette action est irréversible. L'annonce sera définitivement supprimée."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        variant="danger"
+        isPending={deleteMutation.isPending}
+        onConfirm={() =>
+          deleteMutation.mutate(bien.id, {
+            onSuccess: () => { toast.success("Annonce supprimée"); navigate("/owner/biens"); },
+            onError: () => { toast.error("Erreur lors de la suppression"); setDeleteOpen(false); },
+          })
+        }
+        onCancel={() => setDeleteOpen(false)}
+      />
+    </div>
+  );
+}

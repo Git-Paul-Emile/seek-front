@@ -12,8 +12,10 @@ import {
   CircleDot,
   Sofa,
   ChevronDown,
+  FileSearch,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
 
 // ─── Structure de navigation ──────────────────────────────────────────────────
 
@@ -98,6 +100,8 @@ function NavGroup({
 function Sidebar() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
+  const { data: pendingData } = useAnnoncesPendingCount();
+  const pendingCount = pendingData?.count ?? 0;
 
   const handleLogout = async () => {
     await logout();
@@ -147,6 +151,39 @@ function Sidebar() {
               </NavLink>
             </li>
           ))}
+
+          {/* Annonces avec puce de notification */}
+          <li>
+            <NavLink
+              to="/admin/annonces"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  isActive
+                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <FileSearch className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1">Annonces</span>
+                  {pendingCount > 0 && (
+                    <span
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                        isActive
+                          ? "bg-white/25 text-white"
+                          : "bg-red-500 text-white"
+                      }`}
+                    >
+                      {pendingCount > 99 ? "99+" : pendingCount}
+                    </span>
+                  )}
+                </>
+              )}
+            </NavLink>
+          </li>
 
           {/* Séparateur */}
           <li className="pt-3 pb-1">

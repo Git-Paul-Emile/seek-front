@@ -7,7 +7,7 @@ import {
   LogOut,
   Building2,
   ChevronDown,
-  Plus,
+  List,
 } from "lucide-react";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
@@ -109,7 +109,7 @@ function Sidebar() {
             >
               <li>
                 <NavLink
-                  to="/owner/biens/ajouter"
+                  to="/owner/biens"
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
                     transition-colors duration-150 ${
@@ -119,8 +119,8 @@ function Sidebar() {
                     }`
                   }
                 >
-                  <Plus className="w-3.5 h-3.5 flex-shrink-0" />
-                  Ajouter un bien
+                  <List className="w-3.5 h-3.5 flex-shrink-0" />
+                  Liste des biens
                 </NavLink>
               </li>
             </ul>

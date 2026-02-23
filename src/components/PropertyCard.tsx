@@ -1,5 +1,6 @@
 import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -113,13 +114,23 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         </div>
 
         <div className="flex justify-end pt-3 border-t border-slate-50">
-          <Button
-            size="sm"
-            className="bg-[#0C1A35] hover:bg-[#1A2942] text-white text-xs h-8 px-4 rounded-lg transition-colors"
-          >
-            Voir détails
-            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-          </Button>
+          {isApiData ? (
+            <Link
+              to={`/annonce/${(property as BienAvecIsNew).id}`}
+              className="bg-[#0C1A35] hover:bg-[#1A2942] text-white text-xs h-8 px-4 rounded-lg transition-colors inline-flex items-center"
+            >
+              Voir détails
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Link>
+          ) : (
+            <Button
+              size="sm"
+              className="bg-[#0C1A35] hover:bg-[#1A2942] text-white text-xs h-8 px-4 rounded-lg transition-colors"
+            >
+              Voir détails
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

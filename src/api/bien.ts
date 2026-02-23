@@ -228,3 +228,23 @@ export const fetchDernieresAnnonces = (limit: number = 8): Promise<BienAvecIsNew
   api
     .get<{ data: BienAvecIsNew[] }>("/public/dernieres", { params: { limit } })
     .then((r) => r.data.data);
+
+// ─── Public API: fetch single published announcement ───────────────────────────
+
+export const fetchAnnoncePublique = (id: string): Promise<Bien> =>
+  api.get<{ data: Bien }>(`/public/${id}`).then((r) => r.data.data);
+
+// ─── Public API: report an announcement ──────────────────────────────────────
+
+export interface SignalerAnnoncePayload {
+  motif: string;
+  description?: string;
+}
+
+export const signalerAnnonce = (
+  id: string,
+  payload: SignalerAnnoncePayload
+): Promise<{ success: boolean; message: string }> =>
+  api
+    .post<{ data: { success: boolean; message: string } }>(`/public/${id}/signaler`, payload)
+    .then((r) => r.data.data);

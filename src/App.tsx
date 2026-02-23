@@ -18,6 +18,7 @@ import OwnerLayout from "@/components/owner/OwnerLayout";
 
 import Index from "./pages/Index";
 import Proprietaires from "./pages/Proprietaires";
+import PublicAnnonceDetail from "./pages/public/AnnonceDetail";
 import OwnerRegister from "./pages/owner/Register";
 import OwnerLogin from "./pages/owner/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
@@ -31,7 +32,7 @@ import TypesTransaction from "./pages/admin/categories/TypesTransaction";
 import StatutsBien from "./pages/admin/categories/StatutsBien";
 import MeubleEquipement from "./pages/admin/categories/MeubleEquipement";
 import Annonces from "./pages/admin/Annonces";
-import AnnonceDetail from "./pages/admin/AnnonceDetail";
+import AdminAnnonceDetail from "./pages/admin/AnnonceDetail";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
               {/* Routes publiques */}
               <Route element={<PublicLayout />}>
                 <Route path="/" element={<Index />} />
+                <Route path="/annonce/:id" element={<PublicAnnonceDetail />} />
               </Route>
 
               {/* Espace propriétaires — layout dédié */}
@@ -93,7 +95,7 @@ const App = () => (
                   <Route path="biens/statuts"           element={<StatutsBien />} />
                   <Route path="biens/meuble-equipement" element={<MeubleEquipement />} />
                   <Route path="annonces" element={<Annonces />} />
-                  <Route path="annonces/:id" element={<AnnonceDetail />} />
+                  <Route path="annonces/:id" element={<AdminAnnonceDetail />} />
                 </Route>
               </Route>
             </Routes>

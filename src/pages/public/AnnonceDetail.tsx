@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, signalerAnnonce, type SignalerAnnoncePayload } from "@/api/bien";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -282,7 +283,7 @@ export default function AnnonceDetail() {
   const options = [
     { label: "Meublé", value: bien.meuble, icon: Sofa },
     { label: "Fumeurs", value: bien.fumeurs, icon: Cigarette },
-    { label: "Animaux", value: bien.animaux, icon: PawPrint },
+    { label: "Animaux", value: bien.animations, icon: PawPrint },
     { label: "Parking", value: bien.parking, icon: ParkingSquare },
     { label: "Ascenseur", value: bien.ascenseur, icon: ArrowUpDown },
   ].filter((o) => o.value);
@@ -487,69 +488,107 @@ export default function AnnonceDetail() {
               )}
             </Section>
 
-            {/* Equipment */}
-            {bien.equipements && bien.equipements.length > 0 && (
-              <Section title="Équipements">
-                <div className="flex flex-wrap gap-2">
-                  {bien.equipements.map((e) => (
-                    <span
-                      key={e.equipementId}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700"
-                    >
-                      <BadgeCheck className="w-4 h-4 text-slate-400" />
-                      {e.equipement.nom}
-                    </span>
-                  ))}
-                </div>
-              </Section>
-            )}
+            {/* Equipment, Furniture & Nearby - Tabs */}
+            <Section title="Informations supplémentaires">
+              <Tabs defaultValue="equipements" className="w-full">
+                <TabsList className="w-full justify-start bg-slate-50 p-1 rounded-xl h-auto flex-wrap">
+                  <TabsTrigger
+                    value="equipements"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <BadgeCheck className="w-4 h-4" />
+                    Équipements
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="objets"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <Sofa className="w-4 h-4" />
+                    Mobilier
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="proximite"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    À proximité
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Furniture */}
-            {bien.meubles && bien.meubles.length > 0 && (
-              <Section title="Mobilier">
-                <div className="flex flex-wrap gap-2">
-                  {bien.meubles.map((m) => (
-                    <span
-                      key={m.meubleId}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700"
-                    >
-                      <Sofa className="w-4 h-4 text-slate-400" />
-                      {m.meuble.nom} × {m.quantite}
-                    </span>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {/* Nearby */}
-            {bien.etablissements && bien.etablissements.length > 0 && (
-              <Section title="À proximité">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {bien.etablissements.map((e) => (
-                    <div
-                      key={e.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-slate-50"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-[#D4A843]/10 flex items-center justify-center shrink-0">
-                        <EtablissementIcon type={e.type} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-[#0C1A35] truncate">
-                          {e.nom || e.type}
-                        </p>
-                        {e.distance && (
-                          <p className="text-xs text-slate-400">
-                            {e.distance < 1000
-                              ? `${e.distance} m`
-                              : `${(e.distance / 1000).toFixed(1)} km`}
-                          </p>
-                        )}
-                      </div>
+                <TabsContent value="equipements" className="mt-4">
+                  {bien.equipements && bien.equipements.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {bien.equipements.map((e) => (
+                        <span
+                          key={e.equipementId}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700"
+                        >
+                          <BadgeCheck className="w-4 h-4 text-slate-400" />
+                          {e.equipement.nom}
+                        </span>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </Section>
-            )}
+                  ) : (
+                    <p className="text-sm text-slate-400 text-center py-4">
+                      Aucun équipement disponible pour ce bien
+                    </p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="objets" className="mt-4">
+                  {bien.meubles && bien.meubles.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {bien.meubles.map((m) => (
+                        <span
+                          key={m.meubleId}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700"
+                        >
+                          <Sofa className="w-4 h-4 text-slate-400" />
+                          {m.meuble.nom} × {m.quantite}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 text-center py-4">
+                      Aucun mobilier disponible pour ce bien
+                    </p>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="proximite" className="mt-4">
+                  {bien.etablissements && bien.etablissements.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {bien.etablissements.map((e) => (
+                        <div
+                          key={e.id}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-slate-50"
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-[#D4A843]/10 flex items-center justify-center shrink-0">
+                            <EtablissementIcon type={e.type} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-[#0C1A35] truncate">
+                              {e.nom || e.type}
+                            </p>
+                            {e.distance && (
+                              <p className="text-xs text-slate-400">
+                                {e.distance < 1000
+                                  ? `${e.distance} m`
+                                  : `${(e.distance / 1000).toFixed(1)} km`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 text-center py-4">
+                      Aucun établissement à proximité n'a été ajouté pour ce bien
+                    </p>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </Section>
           </div>
 
           {/* Right Column - Sticky Sidebar */}

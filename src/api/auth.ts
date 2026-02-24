@@ -34,3 +34,14 @@ export const logoutApi = () =>
 
 export const meApi = () =>
   authApi.get<{ status: string; message: string; data: AdminInfo }>("/me");
+
+export interface UpdateProfilePayload {
+  email?: string;
+  password?: string;
+}
+
+export const updateProfileApi = (payload: UpdateProfilePayload) =>
+  authApi.put<{ status: string; message: string; data: AdminInfo }>(
+    "/profile",
+    payload
+  );

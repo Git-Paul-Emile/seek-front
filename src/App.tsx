@@ -22,11 +22,13 @@ import PublicAnnonceDetail from "./pages/public/AnnonceDetail";
 import OwnerRegister from "./pages/owner/Register";
 import OwnerLogin from "./pages/owner/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
+import Profile from "./pages/owner/Profile";
 import BiensList from "./pages/owner/biens/BiensList";
 import AddBien from "./pages/owner/biens/AddBien";
 import BienDetail from "./pages/owner/biens/BienDetail";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminProfile from "./pages/admin/Profile";
 import TypesLogement from "./pages/admin/categories/TypesLogement";
 import TypesTransaction from "./pages/admin/categories/TypesTransaction";
 import StatutsBien from "./pages/admin/categories/StatutsBien";
@@ -75,6 +77,7 @@ const App = () => (
               <Route element={<OwnerProtectedRoute />}>
                 <Route element={<OwnerLayout />}>
                   <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                  <Route path="/owner/profile" element={<Profile />} />
                   <Route path="/owner/biens" element={<BiensList />} />
                   <Route path="/owner/biens/ajouter" element={<AddBien />} />
                   <Route path="/owner/biens/:id" element={<BienDetail />} />
@@ -90,6 +93,7 @@ const App = () => (
               <Route path="/admin" element={<ProtectedRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="profile" element={<AdminProfile />} />
                   <Route path="biens/categories"   element={<TypesLogement />} />
                   <Route path="biens/transactions" element={<TypesTransaction />} />
                   <Route path="biens/statuts"           element={<StatutsBien />} />

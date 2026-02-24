@@ -30,6 +30,7 @@ export interface OwnerInfo {
   nom: string;
   telephone: string;
   email?: string;
+  sexe?: string;
 }
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
@@ -54,3 +55,21 @@ export const logoutOwnerApi = () =>
 
 export const meOwnerApi = () =>
   ownerAuthApi.get<{ status: string; message: string; data: OwnerInfo }>("/me");
+
+export interface UpdateProfilePayload {
+  prenom?: string;
+  nom?: string;
+  sexe?: string;
+  telephone?: string;
+  email?: string;
+  password?: string;
+}
+
+export const updateProfileApi = (payload: UpdateProfilePayload) =>
+  ownerAuthApi.put<{ status: string; message: string; data: OwnerInfo }>(
+    "/profile",
+    payload
+  );
+
+export const deleteProfileApi = () =>
+  ownerAuthApi.delete<{ status: string; message: string }>("/profile");

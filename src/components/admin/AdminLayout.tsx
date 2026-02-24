@@ -13,6 +13,7 @@ import {
   Sofa,
   ChevronDown,
   FileSearch,
+  User,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -21,6 +22,7 @@ import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
 
 const NAV_ITEMS = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/profile", label: "Mon Profil", icon: User },
 ];
 
 const NAV_GROUPS = [

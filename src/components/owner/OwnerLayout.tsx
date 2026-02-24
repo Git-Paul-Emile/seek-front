@@ -8,6 +8,7 @@ import {
   Building2,
   ChevronDown,
   List,
+  User,
 } from "lucide-react";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
@@ -15,6 +16,7 @@ import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
 const NAV_ITEMS = [
   { to: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/owner/profile", label: "Mon Profil", icon: User },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────

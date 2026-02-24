@@ -23,6 +23,7 @@ const FILTERS: { label: string; value: StatutAnnonce | "TOUS" }[] = [
   { label: "En attente", value: "EN_ATTENTE" },
   { label: "Publiés", value: "PUBLIE" },
   { label: "Rejetés", value: "REJETE" },
+  { label: "Brouillons", value: "BROUILLON" },
   { label: "Tous", value: "TOUS" },
 ];
 

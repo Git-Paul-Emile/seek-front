@@ -14,7 +14,7 @@ const annonceApi = axios.create({
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type StatutAnnonce = "BROUILLON" | "EN_ATTENTE" | "PUBLIE" | "REJETE";
+export type StatutAnnonce = "BROUILLON" | "EN_ATTENTE" | "PUBLIE" | "REJETE" | "ANNULE";
 
 export interface BienEquipement {
   equipementId: string;
@@ -182,6 +182,9 @@ export const deleteBien = (id: string): Promise<void> =>
 export const retourBrouillon = (id: string): Promise<Bien> =>
   api.patch<{ data: Bien }>(`/${id}/retour-brouillon`).then((r) => r.data.data);
 
+export const annulerAnnonce = (id: string): Promise<Bien> =>
+  api.patch<{ data: Bien }>(`/${id}/annuler`).then((r) => r.data.data);
+
 // ─── Admin API calls ──────────────────────────────────────────────────────────
 
 export const fetchAnnoncesPendingCount = (): Promise<{ count: number }> =>
@@ -201,6 +204,7 @@ export interface AnnoncesCounts {
   EN_ATTENTE: number;
   PUBLIE: number;
   REJETE: number;
+  ANNULE: number;
 }
 
 export const fetchAnnoncesStatusCounts = (): Promise<AnnoncesCounts> =>

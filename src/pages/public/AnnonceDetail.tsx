@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -44,6 +44,7 @@ import {
   Baby,
   ChefHat,
   Search,
+  Home,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
@@ -69,6 +70,27 @@ function formatPrice(price: number) {
     currency: "XOF",
     maximumFractionDigits: 0,
   }).format(price);
+}
+
+function formatDate(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return "à l'instant";
+  if (diffInSeconds < 3600) return `il y a ${Math.floor(diffInSeconds / 60)} min`;
+  if (diffInSeconds < 86400) return `il y a ${Math.floor(diffInSeconds / 3600)} h`;
+  if (diffInSeconds < 604800) return `il y a ${Math.floor(diffInSeconds / 86400)} j`;
+  return formatDate(dateString);
 }
 
 function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
@@ -250,6 +272,11 @@ export default function AnnonceDetail() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  // Smooth scroll vers le haut au montage
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [id]);
+
   const { data: bien, isLoading, isError } = useQuery({
     queryKey: ["annonce-publie", id],
     queryFn: () => fetchAnnoncePublique(id!),
@@ -309,6 +336,43 @@ export default function AnnonceDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b border-slate-100">
+        <div className="container mx-auto px-4">
+          <nav className="flex items-center gap-1.5 py-3 text-sm">
+            <Link
+              to="/"
+              className="flex items-center gap-1 text-slate-500 hover:text-[#0C1A35] transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              <span>Accueil</span>
+            </Link>
+            <ChevronRight className="w-4 h-4 text-slate-300" />
+            <Link
+              to="/#properties"
+              className="text-slate-500 hover:text-[#0C1A35] transition-colors"
+            >
+              Annonces
+            </Link>
+            <ChevronRight className="w-4 h-4 text-slate-300" />
+            {bien.typeLogement && (
+              <>
+                <Link
+                  to={`/biens?type=${bien.typeLogement.slug}`}
+                  className="text-slate-500 hover:text-[#0C1A35] transition-colors"
+                >
+                  {bien.typeLogement.nom}
+                </Link>
+                <ChevronRight className="w-4 h-4 text-slate-300" />
+              </>
+            )}
+            <span className="text-[#0C1A35] font-medium truncate max-w-[200px]">
+              {bien.titre || "Annonce"}
+            </span>
+          </nav>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-40">
         <div className="container mx-auto px-4">
@@ -321,19 +385,7 @@ export default function AnnonceDetail() {
               <span className="text-sm font-medium">Retour</span>
             </Link>
             <div className="flex items-center gap-2">
-              <button className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
-                <Share2 className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
-                <Heart className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setShowReportModal(true)}
-                className="p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors"
-              >
-                <Flag className="w-4 h-4" />
-              </button>
-            </div>
+              </div>
           </div>
         </div>
       </div>
@@ -426,6 +478,15 @@ export default function AnnonceDetail() {
                     .join(", ")}
                 </span>
               </div>
+              {/* Date de publication */}
+              {bien.createdAt && (
+                <div className="flex items-center gap-2 text-slate-400 text-xs mt-2">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>
+                    Publiée {getTimeAgo(bien.createdAt)}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Description */}

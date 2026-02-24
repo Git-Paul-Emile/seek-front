@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createBien, fetchBiens, fetchBienById, soumettreAnnonce, deleteBien, retourBrouillon, type CreateBienPayload } from "@/api/bien";
+import { createBien, fetchBiens, fetchBienById, soumettreAnnonce, deleteBien, retourBrouillon, annulerAnnonce, type CreateBienPayload } from "@/api/bien";
 
 const QK = "biens";
 
@@ -48,6 +48,14 @@ export const useRetourBrouillon = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => retourBrouillon(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
+  });
+};
+
+export const useAnnulerAnnonce = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => annulerAnnonce(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });
 };

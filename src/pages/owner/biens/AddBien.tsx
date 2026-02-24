@@ -1326,7 +1326,7 @@ export default function AddBien() {
           <div className="flex items-center gap-3">
             {isLast ? (
               <>
-                {editId && bienToEdit?.statutAnnonce === "BROUILLON" ? (
+                {editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") ? (
                   <button
                     type="button"
                     onClick={() => navigate("/owner/biens")}
@@ -1352,7 +1352,7 @@ export default function AddBien() {
                   className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60"
                 >
                   {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Soumettre l'annonce
+                  {editId ? "Mettre à jour l'annonce" : "Soumettre l'annonce"}
                 </button>
               </>
             ) : (

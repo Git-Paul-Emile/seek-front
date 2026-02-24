@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
-import { useSoumettreBien, useDeleteBien, useRetourBrouillon } from "@/hooks/useBien";
+import { useSoumettreBien, useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/useBien";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { StatutAnnonce } from "@/api/bien";
 
@@ -46,6 +46,7 @@ const STATUT_STYLE: Record<
   EN_ATTENTE: { bg: "bg-yellow-100", text: "text-yellow-700", icon: Clock,        label: "En attente" },
   PUBLIE:     { bg: "bg-green-100",  text: "text-green-700",  icon: CheckCircle,  label: "Publié" },
   REJETE:     { bg: "bg-red-100",    text: "text-red-700",    icon: XCircle,      label: "Rejeté" },
+  ANNULE:     { bg: "bg-gray-200",   text: "text-gray-600",   icon: XCircle,      label: "Annulé" },
 };
 
 function StatutBadge({ statut }: { statut: StatutAnnonce }) {
@@ -87,10 +88,12 @@ export default function BienDetail() {
   const soumettre = useSoumettreBien();
   const deleteMutation = useDeleteBien();
   const retour = useRetourBrouillon();
+  const annuler = useAnnulerAnnonce();
 
   const [photoIndex, setPhotoIndex] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [retourOpen, setRetourOpen] = useState(false);
+  const [annulerOpen, setAnnulerOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -126,6 +129,7 @@ export default function BienDetail() {
   const canSubmit = statut === "BROUILLON" || statut === "REJETE";
   const canDelete = statut === "BROUILLON" || statut === "REJETE";
   const canRetour = statut === "EN_ATTENTE" || statut === "PUBLIE";
+  const canAnnuler = statut === "BROUILLON" || statut === "EN_ATTENTE" || statut === "PUBLIE" || statut === "REJETE";
   const retourLabel = statut === "EN_ATTENTE" ? "Annuler la soumission" : "Dépublier";
   const retourMessage =
     statut === "EN_ATTENTE"
@@ -157,6 +161,30 @@ export default function BienDetail() {
 
         <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
           <StatutBadge statut={statut} />
+          {canEdit && (
+            <Link
+              to={`/owner/biens/ajouter?edit=${bien.id}`}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
+                bg-[#0C1A35] text-white hover:bg-[#162540] transition-colors"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              Modifier
+            </Link>
+          )}
+          {canSubmit && (
+            <button
+              onClick={() => soumettre.mutate(bien.id, {
+                onSuccess: () => toast.success("Annonce soumise pour validation"),
+                onError: (e: unknown) => toast.error((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur"),
+              })}
+              disabled={soumettre.isPending}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
+                bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              {soumettre.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              Soumettre
+            </button>
+          )}
           {canRetour && (
             <button
               onClick={() => setRetourOpen(true)}
@@ -169,6 +197,17 @@ export default function BienDetail() {
             </button>
           )}
           
+          {canAnnuler && (
+            <button
+              onClick={() => setAnnulerOpen(true)}
+              disabled={annuler.isPending}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
+                bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              Annuler l'annonce
+            </button>
+          )}
           
           {canDelete && (
             <button
@@ -369,6 +408,24 @@ export default function BienDetail() {
           })
         }
         onCancel={() => setRetourOpen(false)}
+      />
+
+      {/* Modal annulation */}
+      <ConfirmModal
+        open={annulerOpen}
+        title="Annuler l'annonce"
+        message="Cette action annulera définitivement l'annonce. Elle ne sera plus visible ni comptabilisée côté administration."
+        confirmLabel="Confirmer l'annulation"
+        cancelLabel="Retour"
+        variant="danger"
+        isPending={annuler.isPending}
+        onConfirm={() =>
+          annuler.mutate(bien.id, {
+            onSuccess: () => { toast.success("Annonce annulée"); navigate("/owner/biens"); },
+            onError: () => { toast.error("Erreur lors de l'annulation"); setAnnulerOpen(false); },
+          })
+        }
+        onCancel={() => setAnnulerOpen(false)}
       />
 
       {/* Modal suppression */}

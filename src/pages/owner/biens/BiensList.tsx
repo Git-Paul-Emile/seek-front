@@ -120,28 +120,27 @@ export default function BiensList() {
           </span>
         </button>
 
-        {(["BROUILLON", "EN_ATTENTE", "PUBLIE", "REJETE"] as const)
-          .filter((s) => (counts[s] ?? 0) > 0)
-          .map((statut) => {
-            const { color, textColor, icon: Icon, label } = STATUT_CONFIG[statut];
-            const count = counts[statut] ?? 0;
-            const active = filter === statut;
-            return (
-              <button
-                key={statut}
-                onClick={() => setFilter(statut)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  active ? "bg-[#0C1A35] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${active ? "text-white" : textColor}`} />
-                {label}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : `${color} ${textColor}`}`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        {/* Filtres de statut - toujours affichés pour permettre l'accès aux brouillons */}
+        {(["BROUILLON", "EN_ATTENTE", "PUBLIE", "REJETE"] as const).map((statut) => {
+          const { color, textColor, icon: Icon, label } = STATUT_CONFIG[statut];
+          const count = counts[statut] ?? 0;
+          const active = filter === statut;
+          return (
+            <button
+              key={statut}
+              onClick={() => setFilter(statut)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                active ? "bg-[#0C1A35] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${active ? "text-white" : textColor}`} />
+              {label}
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : `${color} ${textColor}`}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Alerte biens rejetés */}
@@ -318,6 +317,19 @@ export default function BiensList() {
                                 <Edit className="w-3.5 h-3.5" />
                                 Corriger
                               </Link>
+                              <button
+                                onClick={() => soumettre.mutate(bien.id, {
+                                  onSuccess: () => toast.success("Annonce soumise pour validation"),
+                                  onError: (e: unknown) => toast.error((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur"),
+                                })}
+                                disabled={soumettre.isPending && soumettre.variables === bien.id}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
+                              >
+                                {soumettre.isPending && soumettre.variables === bien.id
+                                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  : <Send className="w-3.5 h-3.5" />}
+                                Soumettre
+                              </button>
                               <button
                                 onClick={() => setDeleteTargetId(bien.id)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"

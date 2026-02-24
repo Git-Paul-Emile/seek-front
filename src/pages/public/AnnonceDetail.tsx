@@ -43,6 +43,7 @@ import {
   Shield,
   Baby,
   ChefHat,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
@@ -766,6 +767,23 @@ export default function AnnonceDetail() {
                 <PropertyCard key={item.id} property={item} isApiData={true} />
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* No Similar Announcements Message */}
+      {(!similaires || similaires.length === 0) && (
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-50 flex items-center justify-center">
+              <Building2 className="w-8 h-8 text-slate-300" />
+            </div>
+            <h3 className="font-display text-lg font-semibold text-[#0C1A35] mb-2">
+              Aucune annonce similaire trouvée
+            </h3>
+            <p className="text-sm text-slate-500">
+              Nous n'avons pas trouvé d'annonces similaires dans cette zone pour le moment.
+            </p>
           </div>
         </div>
       )}

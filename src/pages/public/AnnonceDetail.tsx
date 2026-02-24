@@ -45,8 +45,9 @@ import {
   ChefHat,
 } from "lucide-react";
 import { toast } from "sonner";
-import { fetchAnnoncePublique, signalerAnnonce, type SignalerAnnoncePayload } from "@/api/bien";
+import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PropertyCard from "@/components/PropertyCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -255,6 +256,14 @@ export default function AnnonceDetail() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // Fetch similar announcements
+  const { data: similaires } = useQuery({
+    queryKey: ["annonces-similaires", id],
+    queryFn: () => fetchAnnoncesSimilaires(id!, 4),
+    enabled: !!id && !!bien,
+    staleTime: 5 * 60 * 1000,
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -292,7 +301,7 @@ export default function AnnonceDetail() {
   const options = [
     { label: "Meublé", value: bien.meuble, icon: Sofa },
     { label: "Fumeurs", value: bien.fumeurs, icon: Cigarette },
-    { label: "Animaux", value: bien.animations, icon: PawPrint },
+    { label: "Animaux", value: bien.animaux, icon: PawPrint },
     { label: "Parking", value: bien.parking, icon: ParkingSquare },
     { label: "Ascenseur", value: bien.ascenseur, icon: ArrowUpDown },
   ].filter((o) => o.value);
@@ -743,6 +752,22 @@ export default function AnnonceDetail() {
       {/* Report Modal */}
       {showReportModal && bien && (
         <ReportModal bienId={bien.id} onClose={() => setShowReportModal(false)} />
+      )}
+
+      {/* Similar Announcements Section */}
+      {similaires && similaires.length > 0 && (
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-white rounded-2xl border border-slate-100 p-5">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">
+              Annonces similaires
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {similaires.map((item) => (
+                <PropertyCard key={item.id} property={item} isApiData={true} />
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

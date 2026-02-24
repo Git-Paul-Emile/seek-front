@@ -19,7 +19,7 @@ const formatPrice = (price: number) =>
   }).format(price);
 
 // Transformer les données de l'API en format PropertyCard
-const transformBienToProperty = (bien: BienAvecIsNew): Property => ({
+const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => ({
   id: parseInt(bien.id.replace(/\D/g, ""), 10) || Math.random(),
   type: bien.typeLogement?.nom || "Bien",
   title: bien.titre || "Annonce",
@@ -31,11 +31,11 @@ const transformBienToProperty = (bien: BienAvecIsNew): Property => ({
   bathrooms: bien.nbSdb || 0,
   images: bien.photos && bien.photos.length > 0 ? bien.photos : ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
   features: { parking: bien.parking || false, generator: false, citerne: false },
-  isNew: bien.isNew,
+  isNew: (bien as BienAvecIsNew).isNew ?? false,
 });
 
 interface PropertyCardProps {
-  property: Property | BienAvecIsNew;
+  property: Property | Bien | BienAvecIsNew;
   isApiData?: boolean;
 }
 

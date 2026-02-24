@@ -248,3 +248,10 @@ export const signalerAnnonce = (
   api
     .post<{ data: { success: boolean; message: string } }>(`/public/${id}/signaler`, payload)
     .then((r) => r.data.data);
+
+// ─── Public API: fetch similar announcements ─────────────────────────────────
+
+export const fetchAnnoncesSimilaires = (id: string, limit: number = 4): Promise<Bien[]> =>
+  api
+    .get<{ data: Bien[] }>(`/public/${id}/similaires`, { params: { limit } })
+    .then((r) => r.data.data);

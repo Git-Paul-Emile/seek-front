@@ -112,6 +112,27 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+const ETABLISSEMENT_LABELS: Record<string, string> = {
+  hopital: "Hôpital",
+  pharmacie: "Pharmacie",
+  ecole_maternelle: "École maternelle",
+  ecole_primaire: "École primaire",
+  college: "Collège",
+  lycee: "Lycée",
+  universite: "Université",
+  supermarche: "Supermarché",
+  marche: "Marché",
+  boulangerie: "Boulangerie",
+  mosquee: "Mosquée",
+  eglise: "Église",
+  gendarmerie: "Gendarmerie",
+  pompiers: "Caserne des pompiers",
+  mairie: "Mairie",
+  arret_bus: "Arrêt de bus",
+  station_brt: "Station BRT",
+  route_principale: "Route principale",
+};
+
 function EtablissementIcon({ type }: { type: string }) {
   const iconMap: Record<string, React.ElementType> = {
     hopital: Hospital,
@@ -119,19 +140,19 @@ function EtablissementIcon({ type }: { type: string }) {
     ecole_maternelle: Baby,
     ecole_primaire: School,
     college: School,
-    lycee: School,
+    lycee: GraduationCap,
     universite: University,
-    supermercado: ShoppingBag,
-    marche: ShoppingBag,
+    supermarche: ShoppingBag,
+    marche: Store,
     boulangerie: ChefHat,
-    patisserie: Landmark,
-    mosquee: Church,
+    mosquee: Landmark,
     eglise: Church,
     gendarmerie: Shield,
-    pompier: Building2,
+    pompiers: Building2,
     mairie: Building2,
     arret_bus: Bus,
     station_brt: Bus,
+    route_principale: MapPin,
   };
   const Icon = iconMap[type] || Building2;
   return <Icon className="w-4 h-4" />;
@@ -648,7 +669,7 @@ export default function AnnonceDetail() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium text-[#D4A843] uppercase tracking-wide">
-                              {e.type.replace(/_/g, ' ')}
+                              {ETABLISSEMENT_LABELS[e.type] ?? e.type.replace(/_/g, ' ')}
                             </p>
                             <p className="text-sm font-medium text-[#0C1A35] truncate">
                               {e.nom || "—"}

@@ -646,12 +646,15 @@ export default function AnnonceDetail() {
                           <div className="w-9 h-9 rounded-lg bg-[#D4A843]/10 flex items-center justify-center shrink-0">
                             <EtablissementIcon type={e.type} />
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-[#D4A843] uppercase tracking-wide">
+                              {e.type.replace(/_/g, ' ')}
+                            </p>
                             <p className="text-sm font-medium text-[#0C1A35] truncate">
-                              {e.nom || e.type}
+                              {e.nom || "—"}
                             </p>
                             {e.distance && (
-                              <p className="text-xs text-slate-400">
+                              <p className="text-xs text-slate-400 mt-0.5">
                                 {e.distance < 1000
                                   ? `${e.distance} m`
                                   : `${(e.distance / 1000).toFixed(1)} km`}

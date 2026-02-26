@@ -177,6 +177,26 @@ export interface PaginatedAnnonces {
   totalPages: number;
 }
 
+// ─── Owner Stats ──────────────────────────────────────────────────────────────
+
+export interface OwnerStats {
+  totalBiens: number;
+  byStatut: { statut: string; count: number }[];
+  recentBiens: {
+    id: string;
+    titre: string | null;
+    statutAnnonce: string;
+    ville: string | null;
+    prix: number | null;
+    photos: string[];
+    updatedAt: string;
+    hasPendingRevision: boolean;
+  }[];
+}
+
+export const fetchOwnerStats = (): Promise<OwnerStats> =>
+  api.get<{ data: OwnerStats }>("/stats").then((r) => r.data.data);
+
 // ─── Owner API calls ──────────────────────────────────────────────────────────
 
 export const fetchDraft = (): Promise<Bien | null> =>

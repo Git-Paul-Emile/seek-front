@@ -3,6 +3,7 @@ import {
   createBien,
   fetchBiens,
   fetchBienById,
+  fetchOwnerStats,
   soumettreAnnonce,
   deleteBien,
   retourBrouillon,
@@ -15,6 +16,13 @@ const QK = "biens";
 
 export const useBiens = () =>
   useQuery({ queryKey: [QK], queryFn: fetchBiens, staleTime: 2 * 60 * 1000 });
+
+export const useOwnerStats = () =>
+  useQuery({
+    queryKey: [QK, "stats"],
+    queryFn: fetchOwnerStats,
+    staleTime: 2 * 60 * 1000,
+  });
 
 export const useBienById = (id: string) =>
   useQuery({

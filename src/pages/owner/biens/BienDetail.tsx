@@ -24,15 +24,18 @@ import {
   Banknote,
   Calendar,
   Edit,
-  Send,
   Trash2,
   Info,
   Image,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
-import { useSoumettreBien, useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/useBien";
+import { useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/useBien";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { StatutAnnonce } from "@/api/bien";
 
@@ -85,7 +88,6 @@ export default function BienDetail() {
   const navigate = useNavigate();
 
   const { data: bien, isLoading, isError } = useBienById(id ?? "");
-  const soumettre = useSoumettreBien();
   const deleteMutation = useDeleteBien();
   const retour = useRetourBrouillon();
   const annuler = useAnnulerAnnonce();
@@ -125,11 +127,18 @@ export default function BienDetail() {
     { label: "Ascenseur", value: bien.ascenseur, icon: ArrowUpDown },
   ].filter((o) => o.value);
 
-  const canEdit   = statut === "BROUILLON" || statut === "PUBLIE" || statut === "REJETE";
-  const canSubmit = statut === "BROUILLON" || statut === "REJETE";
-  const canDelete = statut === "BROUILLON" || statut === "REJETE";
-  const canRetour = statut === "EN_ATTENTE" || statut === "PUBLIE";
-  const canAnnuler = statut === "BROUILLON" || statut === "EN_ATTENTE" || statut === "PUBLIE" || statut === "REJETE";
+  const hasEquipements = bien.equipements && bien.equipements.length > 0;
+  const hasMeubles = bien.meubles && bien.meubles.length > 0;
+
+  const isPendingRevision = bien.hasPendingRevision === true;
+  // EN_ATTENTE: Annuler la soumission + Annuler l'annonce (pas Modifier)
+  // PUBLIE: Modifier (si pas de révision en attente) + Dépublier + Supprimer
+  // BROUILLON/REJETE: Modifier + Annuler l'annonce
+  const canEdit    = (statut === "BROUILLON" || statut === "REJETE") ||
+                     (statut === "PUBLIE" && !isPendingRevision);
+  const canDelete  = statut === "PUBLIE";
+  const canRetour  = statut === "EN_ATTENTE" || statut === "PUBLIE";
+  const canAnnuler = statut === "BROUILLON" || statut === "EN_ATTENTE" || statut === "REJETE";
   const retourLabel = statut === "EN_ATTENTE" ? "Annuler la soumission" : "Dépublier";
   const retourMessage =
     statut === "EN_ATTENTE"
@@ -171,20 +180,6 @@ export default function BienDetail() {
               Modifier
             </Link>
           )}
-          {canSubmit && (
-            <button
-              onClick={() => soumettre.mutate(bien.id, {
-                onSuccess: () => toast.success("Annonce soumise pour validation"),
-                onError: (e: unknown) => toast.error((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur"),
-              })}
-              disabled={soumettre.isPending}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
-                bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              {soumettre.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              Soumettre
-            </button>
-          )}
           {canRetour && (
             <button
               onClick={() => setRetourOpen(true)}
@@ -221,6 +216,30 @@ export default function BienDetail() {
           )}
         </div>
       </div>
+
+      {/* Bannière révision en attente */}
+      {isPendingRevision && (
+        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+          <RefreshCw className="w-4 h-4 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-0.5">Révision en attente de validation</p>
+            <p className="text-blue-600">
+              Vos modifications ont été soumises à l'administrateur. L'annonce reste visible avec les informations actuelles jusqu'à validation.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Note de rejet de révision */}
+      {statut === "PUBLIE" && bien.noteAdmin && !isPendingRevision && (
+        <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-100 rounded-xl text-sm text-orange-700">
+          <Info className="w-4 h-4 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold mb-0.5">Révision rejetée :</p>
+            <p>{bien.noteAdmin}</p>
+          </div>
+        </div>
+      )}
 
       {/* Note de rejet */}
       {statut === "REJETE" && bien.noteAdmin && (
@@ -279,27 +298,52 @@ export default function BienDetail() {
 
           {/* Caractéristiques */}
           <Section title="Caractéristiques">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[
-                { icon: Ruler,           label: "Surface",    value: bien.surface ? `${bien.surface} m²` : null },
-                { icon: BedDouble,       label: "Chambres",   value: bien.nbChambres },
-                { icon: Bath,            label: "Salles de bain", value: bien.nbSdb },
-                { icon: Sofa,            label: "Salons",     value: bien.nbSalons },
-                { icon: UtensilsCrossed, label: "Cuisines",   value: bien.nbCuisines },
-                { icon: Toilet,          label: "WC",         value: bien.nbWc },
-                { icon: Layers,          label: "Étage",      value: bien.etage },
-                { icon: Layers,          label: "Nb étages",  value: bien.nbEtages },
-              ]
-                .filter((c) => c.value !== null && c.value !== undefined)
-                .map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="flex items-center gap-2 p-3 rounded-xl bg-slate-50">
-                    <Icon className="w-4 h-4 text-[#D4A843] shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-medium uppercase">{label}</p>
-                      <p className="text-sm font-semibold text-[#0C1A35]">{String(value)}</p>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const el = document.getElementById("bien-caract-scroll");
+                  if (el) el.scrollBy({ left: -280, behavior: "smooth" });
+                }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  const el = document.getElementById("bien-caract-scroll");
+                  if (el) el.scrollBy({ left: 280, behavior: "smooth" });
+                }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <div
+                id="bien-caract-scroll"
+                className="flex gap-3 overflow-x-auto px-8 py-1 -my-1"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                <style>{`#bien-caract-scroll::-webkit-scrollbar { display: none; }`}</style>
+                {[
+                  { icon: Ruler,           label: "Surface",        value: bien.surface ? `${bien.surface} m²` : null },
+                  { icon: BedDouble,       label: "Chambres",       value: bien.nbChambres },
+                  { icon: Bath,            label: "Salles de bain", value: bien.nbSdb },
+                  { icon: Sofa,            label: "Salons",         value: bien.nbSalons },
+                  { icon: UtensilsCrossed, label: "Cuisines",       value: bien.nbCuisines },
+                  { icon: Toilet,          label: "WC",             value: bien.nbWc },
+                  { icon: Layers,          label: "Étage",          value: bien.etage },
+                  { icon: Layers,          label: "Nb étages",      value: bien.nbEtages },
+                ]
+                  .filter((c) => c.value !== null && c.value !== undefined)
+                  .map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 shrink-0 min-w-[130px]">
+                      <Icon className="w-4 h-4 text-[#D4A843] shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase">{label}</p>
+                        <p className="text-sm font-semibold text-[#0C1A35]">{String(value)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
             {options.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
@@ -313,33 +357,57 @@ export default function BienDetail() {
             )}
           </Section>
 
-          {/* Équipements */}
-          {bien.equipements && bien.equipements.length > 0 && (
-            <Section title="Équipements">
-              <div className="flex flex-wrap gap-2">
-                {bien.equipements.map((e) => (
-                  <span key={e.equipementId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
-                    <BadgeCheck className="w-3 h-3 text-slate-400" />
-                    {e.equipement.nom}
-                  </span>
-                ))}
-              </div>
-            </Section>
-          )}
+          {/* Équipements & Mobilier en onglets */}
+          <Section title="Équipements & Mobilier">
+            <Tabs defaultValue={hasEquipements ? "equipements" : "mobilier"} className="w-full">
+              <TabsList className="w-full justify-start bg-slate-50 p-1 rounded-xl h-auto">
+                <TabsTrigger
+                  value="equipements"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  <BadgeCheck className="w-4 h-4" />
+                  Équipements
+                </TabsTrigger>
+                <TabsTrigger
+                  value="mobilier"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  <Sofa className="w-4 h-4" />
+                  Mobilier
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Meubles */}
-          {bien.meubles && bien.meubles.length > 0 && (
-            <Section title="Mobilier">
-              <div className="flex flex-wrap gap-2">
-                {bien.meubles.map((m) => (
-                  <span key={m.meubleId} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700">
-                    <Sofa className="w-3 h-3 text-slate-400" />
-                    {m.meuble.nom} × {m.quantite}
-                  </span>
-                ))}
-              </div>
-            </Section>
-          )}
+              <TabsContent value="equipements" className="mt-4">
+                {hasEquipements ? (
+                  <div className="flex flex-wrap gap-2">
+                    {bien.equipements!.map((e) => (
+                      <span key={e.equipementId} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700">
+                        <BadgeCheck className="w-4 h-4 text-slate-400" />
+                        {e.equipement.nom}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">Aucun équipement renseigné</p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="mobilier" className="mt-4">
+                {hasMeubles ? (
+                  <div className="flex flex-wrap gap-2">
+                    {bien.meubles!.map((m) => (
+                      <span key={m.meubleId} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700">
+                        <Sofa className="w-3.5 h-3.5 text-slate-400" />
+                        {m.meuble.nom} × {m.quantite}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 text-center py-4">Aucun mobilier renseigné</p>
+                )}
+              </TabsContent>
+            </Tabs>
+          </Section>
         </div>
 
         {/* Colonne latérale */}
@@ -386,8 +454,10 @@ export default function BienDetail() {
 
           {/* Dates */}
           <Section title="Dates">
-            <InfoRow label="Créé le"   value={new Date(bien.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
-            <InfoRow label="Mis à jour" value={new Date(bien.updatedAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
+            <InfoRow label="Créé le" value={new Date(bien.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
+            {Math.abs(new Date(bien.updatedAt).getTime() - new Date(bien.createdAt).getTime()) > 5000 && (
+              <InfoRow label="Mis à jour" value={new Date(bien.updatedAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
+            )}
           </Section>
         </div>
       </div>

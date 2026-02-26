@@ -1,5 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createBien, fetchBiens, fetchBienById, soumettreAnnonce, deleteBien, retourBrouillon, annulerAnnonce, type CreateBienPayload } from "@/api/bien";
+import {
+  createBien,
+  fetchBiens,
+  fetchBienById,
+  soumettreAnnonce,
+  deleteBien,
+  retourBrouillon,
+  annulerAnnonce,
+  soumettreRevision as soumettreRevisionApi,
+  type CreateBienPayload,
+} from "@/api/bien";
 
 const QK = "biens";
 
@@ -56,6 +66,22 @@ export const useAnnulerAnnonce = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => annulerAnnonce(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
+  });
+};
+
+export const useSoumettreRevision = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+      photos,
+    }: {
+      id: string;
+      payload: CreateBienPayload;
+      photos: File[];
+    }) => soumettreRevisionApi(id, payload, photos),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });
 };

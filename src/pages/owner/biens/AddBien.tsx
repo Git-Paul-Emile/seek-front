@@ -5,14 +5,14 @@ import {
   Briefcase, Layers, Ruler, Zap, DollarSign, ImageIcon,
   Plus, X, ChevronRight, Info, Upload, Loader2, AlertCircle,
   ArrowLeftRight, CircleDot, Check, ChevronLeft, ChevronDown,
-  PawPrint, Cigarette, WifiIcon, Search, Star,
+  PawPrint, Cigarette, WifiIcon, Search, Star, ArrowLeft,
 } from "lucide-react";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import { useStatutsBien } from "@/hooks/useStatutsBien";
 import { useEquipements } from "@/hooks/useEquipements";
 import { useMeubles } from "@/hooks/useMeubles";
-import { useCreateBien, useBienById } from "@/hooks/useBien";
+import { useCreateBien, useBienById, useSoumettreRevision } from "@/hooks/useBien";
 import { usePays, useVilles } from "@/hooks/useGeo";
 import type { TypeLogement } from "@/api/typeLogement";
 import type { TypeTransaction } from "@/api/typeTransaction";
@@ -79,6 +79,13 @@ const inputCls =
   "focus:border-[#D4A843]/60 focus:bg-white transition-all";
 
 const labelCls = "block text-xs font-medium text-slate-500 mb-1.5";
+
+const parseOptionalNumber = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -213,7 +220,9 @@ export default function AddBien() {
   const { data: statuts = [], isLoading: stLoading }              = useStatutsBien();
   const { data: equipements = [], isLoading: eqLoading }          = useEquipements();
   const { data: meubles = [], isLoading: mblLoading }             = useMeubles();
-  const { mutateAsync: createBien, isPending: submitting }         = useCreateBien();
+  const { mutateAsync: createBien, isPending: submitting }           = useCreateBien();
+  const { mutateAsync: soumettreRevision, isPending: submittingRev } = useSoumettreRevision();
+  const isEditingPublished = !!editId && bienToEdit?.statutAnnonce === "PUBLIE";
   const [pendingAction, setPendingAction] = useState<"draft" | "publish" | null>(null);
 
   // ── Onglet actif ──
@@ -272,6 +281,11 @@ export default function AddBien() {
   // ── Init refs (évite la double init en mode édition) ──
   const initializedForRef = useRef<string | null>(null);
   const villeInitializedRef = useRef(false);
+
+  // ── Dirty tracking pour brouillon ──
+  const [isDirty, setIsDirty] = useState(false);
+  const prevInitIdRef = useRef<string | null>(null);
+  const initialComparableRef = useRef<string | null>(null);
 
   // ── Géographie DB ──
   const { data: paysList = [], isLoading: paysLoading }   = usePays();
@@ -338,6 +352,82 @@ export default function AddBien() {
       villeInitializedRef.current = true;
     }
   }, [bienToEdit, villesList, villesLoading]);
+
+  const currentComparable = JSON.stringify({
+    titre: titre.trim() || null,
+    description: description.trim() || null,
+    typeLogementId: selectedType?.id ?? null,
+    typeTransactionId: selectedTransaction?.id ?? null,
+    statutBienId: selectedStatut?.id ?? null,
+    pays: selectedPays?.nom ?? null,
+    region: selectedVille?.nom ?? null,
+    quartier: quartierInput.trim() || null,
+    adresse: quartierInput.trim() || null,
+    latitude: latitude ?? null,
+    longitude: longitude ?? null,
+    surface: parseOptionalNumber(surface),
+    etage: parseOptionalNumber(etage),
+    nbChambres,
+    nbCuisines,
+    nbSalons,
+    nbSdb,
+    nbWc,
+    prix: parseOptionalNumber(prix),
+    frequencePaiement: frequence,
+    chargesIncluses,
+    caution: parseOptionalNumber(caution),
+    disponibleLe: disponibleLe || null,
+    meuble,
+    fumeurs,
+    animaux,
+    parking,
+    ascenseur,
+    equipementIds: Array.from(selectedEqs).sort(),
+    meubleIds: Array.from(selectedMeubles).sort(),
+    existingPhotoUrls,
+    newPhotoPreviews: photos.map((p) => p.preview),
+  });
+
+  // ── Détection de modification par comparaison réelle ──
+  useEffect(() => {
+    const isEditableMode =
+      !!editId &&
+      (bienToEdit?.statutAnnonce === "BROUILLON" ||
+        bienToEdit?.statutAnnonce === "REJETE" ||
+        bienToEdit?.statutAnnonce === "PUBLIE");
+    if (!isEditableMode) {
+      setIsDirty(false);
+      initialComparableRef.current = null;
+      return;
+    }
+
+    // Si on vient de finir l'init, reset isDirty
+    if (prevInitIdRef.current !== initializedForRef.current) {
+      prevInitIdRef.current = initializedForRef.current;
+      initialComparableRef.current = currentComparable;
+      setIsDirty(false);
+      return;
+    }
+
+    if (!initialComparableRef.current) {
+      initialComparableRef.current = currentComparable;
+      setIsDirty(false);
+      return;
+    }
+
+    setIsDirty(currentComparable !== initialComparableRef.current);
+  }, [
+    currentComparable,
+    editId,
+    bienToEdit?.statutAnnonce,
+  ]);
+
+  useEffect(() => {
+    if (!editId) return;
+    initialComparableRef.current = null;
+    prevInitIdRef.current = null;
+    setIsDirty(false);
+  }, [editId]);
 
   // Select Nominatim suggestion
   const handleSelectNominatim = useCallback((r: NominatimResult) => {
@@ -451,6 +541,70 @@ export default function AddBien() {
     if (idx > 0) setTab(TABS[idx - 1].id);
   };
 
+  // ── Payload commun ──
+  const buildPayload = () => {
+    const orderedNewPhotos = photos.length > 0
+      ? [photos[mainPhotoIndex].file, ...photos.filter((_, i) => i !== mainPhotoIndex).map((p) => p.file)]
+      : [];
+    const payload = {
+      id: editId || undefined,
+      titre: titre.trim(),
+      description: description.trim() || undefined,
+      typeLogementId: selectedType!.id,
+      typeTransactionId: selectedTransaction!.id,
+      statutBienId: selectedStatut!.id,
+      pays: selectedPays?.nom,
+      region: selectedVille?.nom ?? "",
+      quartier: quartierInput.trim() || undefined,
+      adresse: quartierInput.trim() || undefined,
+      latitude,
+      longitude,
+      surface: surface ? parseFloat(surface) : undefined,
+      nbChambres: nbChambres || undefined,
+      nbSdb: nbSdb || undefined,
+      nbSalons: nbSalons || undefined,
+      nbCuisines: nbCuisines || undefined,
+      nbWc: nbWc || undefined,
+      etage: etage ? parseInt(etage) : undefined,
+      meuble,
+      fumeurs,
+      animaux,
+      parking,
+      ascenseur,
+      prix: parseFloat(prix),
+      frequencePaiement: frequence,
+      chargesIncluses,
+      caution: caution ? parseFloat(caution) : undefined,
+      disponibleLe: disponibleLe || undefined,
+      equipementIds: Array.from(selectedEqs),
+      meubles: Array.from(selectedMeubles).map((meubleId) => ({ meubleId, quantite: 1 })),
+      existingPhotos: existingPhotoUrls,
+    };
+    return { payload, orderedNewPhotos };
+  };
+
+  // ── Submit révision (annonce publiée) ──
+  const handleSubmitRevision = async () => {
+    const allValid = ["general", "transaction", "medias"].every(validateTab);
+    if (!allValid) {
+      toast.error("Veuillez corriger les erreurs avant de continuer");
+      return;
+    }
+    if (!editId) return;
+    setPendingAction("publish");
+    try {
+      const { payload, orderedNewPhotos } = buildPayload();
+      await soumettreRevision({ id: editId, payload, photos: orderedNewPhotos });
+      toast.success("Modification soumise pour validation. L'annonce reste visible avec les informations actuelles.");
+      navigate(`/owner/biens/${editId}`);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Une erreur est survenue";
+      toast.error(msg);
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
   // ── Submit ──
   const handleSubmit = async (brouillon: boolean) => {
     const allValid = ["general", "transaction", "medias"].every(validateTab);
@@ -461,45 +615,9 @@ export default function AddBien() {
 
     setPendingAction(brouillon ? "draft" : "publish");
     try {
-      const orderedNewPhotos = photos.length > 0
-        ? [photos[mainPhotoIndex].file, ...photos.filter((_, i) => i !== mainPhotoIndex).map((p) => p.file)]
-        : [];
+      const { payload, orderedNewPhotos } = buildPayload();
       await createBien({
-        payload: {
-          id: editId || undefined,
-          titre: titre.trim(),
-          description: description.trim() || undefined,
-          typeLogementId: selectedType!.id,
-          typeTransactionId: selectedTransaction!.id,
-          statutBienId: selectedStatut!.id,
-          pays: selectedPays?.nom,
-          region: selectedVille?.nom ?? "",
-          quartier: quartierInput.trim() || undefined,
-          adresse: quartierInput.trim() || undefined,
-          latitude,
-          longitude,
-          surface: surface ? parseFloat(surface) : undefined,
-          nbChambres: nbChambres || undefined,
-          nbSdb: nbSdb || undefined,
-          nbSalons: nbSalons || undefined,
-          nbCuisines: nbCuisines || undefined,
-          nbWc: nbWc || undefined,
-          etage: etage ? parseInt(etage) : undefined,
-          meuble,
-          fumeurs,
-          animaux,
-          parking,
-          ascenseur,
-          prix: parseFloat(prix),
-          frequencePaiement: frequence,
-          chargesIncluses,
-          caution: caution ? parseFloat(caution) : undefined,
-          disponibleLe: disponibleLe || undefined,
-          equipementIds: Array.from(selectedEqs),
-          meubles: Array.from(selectedMeubles).map((meubleId) => ({ meubleId, quantite: 1 })),
-          existingPhotos: existingPhotoUrls,
-          brouillon,
-        },
+        payload: { ...payload, brouillon },
         photos: orderedNewPhotos,
       });
       toast.success(brouillon ? "Bien enregistré comme brouillon" : "Bien soumis pour publication !");
@@ -533,16 +651,34 @@ export default function AddBien() {
           <LayoutDashboard className="w-3 h-3" /> Dashboard
         </Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="text-[#D4A843] font-medium">Ajouter un bien</span>
+        <Link to="/owner/biens" className="hover:text-slate-600 transition-colors">Mes biens</Link>
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-[#D4A843] font-medium">{editId ? "Modifier le bien" : "Ajouter un bien"}</span>
       </div>
 
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">
-          <Building2 className="w-3.5 h-3.5" /> Gestion de biens
+      <div className="mb-6 flex items-center gap-3">
+        <Link
+          to="/owner/biens"
+          className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-100 text-slate-500 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-1">
+            <Building2 className="w-3.5 h-3.5" /> Gestion de biens
+          </div>
+          <h1 className="font-display text-2xl font-bold text-[#0C1A35]">
+            {isEditingPublished ? "Modifier l'annonce publiée" : editId ? "Modifier le bien" : "Ajouter un nouveau bien"}
+          </h1>
+          <p className="text-slate-400 text-sm mt-0.5">
+            {isEditingPublished
+              ? "Les modifications seront soumises à validation. L'annonce reste visible jusqu'à approbation."
+              : editId
+              ? "Mettez à jour les informations de votre bien."
+              : "Renseignez les informations de votre bien pour publier une annonce."}
+          </p>
         </div>
-        <h1 className="font-display text-2xl font-bold text-[#0C1A35]">{editId ? "Modifier le bien" : "Ajouter un nouveau bien"}</h1>
-        <p className="text-slate-400 text-sm mt-1">{editId ? "Mettez à jour les informations de votre bien." : "Renseignez les informations de votre bien pour publier une annonce."}</p>
       </div>
 
       {/* Tab bar */}
@@ -1314,46 +1450,63 @@ export default function AddBien() {
 
         {/* ── Navigation footer ─────────────────────────────────────── */}
         <div className="flex items-center justify-between pt-2 pb-4">
-          <button
-            type="button"
-            onClick={goPrev}
-            disabled={isFirst}
-            className="flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-0 disabled:pointer-events-none"
-          >
-            <ChevronLeft className="w-4 h-4" /> Précédent
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to={isEditingPublished ? `/owner/biens/${editId}` : "/owner/biens"}
+              className="flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
+            >
+              {isEditingPublished ? "Annuler la modification" : "Annuler"}
+            </Link>
+            <button
+              type="button"
+              onClick={goPrev}
+              disabled={isFirst}
+              className="flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-0 disabled:pointer-events-none"
+            >
+              <ChevronLeft className="w-4 h-4" /> Précédent
+            </button>
+          </div>
 
           <div className="flex items-center gap-3">
             {isLast ? (
               <>
-                {editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") ? (
+                {/* Mode modification d'une annonce publiée : pas de brouillon, seulement "Soumettre les changements" */}
+                {isEditingPublished ? (
                   <button
                     type="button"
-                    onClick={() => navigate("/owner/biens")}
-                    className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
+                    onClick={handleSubmitRevision}
+                    disabled={submittingRev || !isDirty}
+                    title={!isDirty ? "Modifiez au moins un élément avant de soumettre" : undefined}
+                    className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Fermer
+                    {submittingRev ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Soumettre les changements
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleSubmit(true)}
-                    disabled={submitting}
-                    className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
-                  >
-                    {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    Enregistrer comme brouillon
-                  </button>
+                  <>
+                    {!editId && (
+                      <button
+                        type="button"
+                        onClick={() => handleSubmit(true)}
+                        disabled={submitting}
+                        className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
+                      >
+                        {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        Enregistrer comme brouillon
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleSubmit(false)}
+                      disabled={submitting || (!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty)}
+                      title={!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty ? "Modifiez au moins un élément avant de soumettre" : undefined}
+                      className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      {!editId ? "Soumettre l'annonce" : bienToEdit?.statutAnnonce === "REJETE" ? "Resoumettre l'annonce" : "Mettre à jour l'annonce"}
+                    </button>
+                  </>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleSubmit(false)}
-                  disabled={submitting}
-                  className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60"
-                >
-                  {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  {editId ? "Mettre à jour l'annonce" : "Soumettre l'annonce"}
-                </button>
               </>
             ) : (
               <button

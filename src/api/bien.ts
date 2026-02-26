@@ -16,6 +16,45 @@ const annonceApi = axios.create({
 
 export type StatutAnnonce = "BROUILLON" | "EN_ATTENTE" | "PUBLIE" | "REJETE" | "ANNULE";
 
+export interface BienPendingRevision {
+  titre?: string | null;
+  description?: string | null;
+  typeLogementId?: string | null;
+  typeTransactionId?: string | null;
+  statutBienId?: string | null;
+  photos?: string[];
+  prix?: number | null;
+  frequencePaiement?: string | null;
+  chargesIncluses?: boolean;
+  caution?: number | null;
+  disponibleLe?: string | null;
+  surface?: number | null;
+  nbChambres?: number | null;
+  nbSdb?: number | null;
+  nbSalons?: number | null;
+  nbCuisines?: number | null;
+  nbWc?: number | null;
+  etage?: number | null;
+  nbEtages?: number | null;
+  meuble?: boolean;
+  fumeurs?: boolean;
+  animaux?: boolean;
+  parking?: boolean;
+  ascenseur?: boolean;
+  pays?: string | null;
+  region?: string | null;
+  ville?: string | null;
+  quartier?: string | null;
+  adresse?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  equipementIds?: string[];
+  meubles?: { meubleId: string; quantite: number }[];
+  typeLogement?: { nom: string; slug: string } | null;
+  typeTransaction?: { nom: string; slug: string } | null;
+  statutBien?: { nom: string; slug: string } | null;
+}
+
 export interface BienEquipement {
   equipementId: string;
   equipement: { id: string; nom: string };
@@ -73,6 +112,8 @@ export interface Bien {
   actif: boolean;
   statutAnnonce: StatutAnnonce;
   noteAdmin: string | null;
+  hasPendingRevision: boolean;
+  pendingRevision?: BienPendingRevision | null;
   createdAt: string;
   updatedAt: string;
   typeLogement?: { id: string; nom: string; slug: string } | null;
@@ -184,6 +225,21 @@ export const retourBrouillon = (id: string): Promise<Bien> =>
 
 export const annulerAnnonce = (id: string): Promise<Bien> =>
   api.patch<{ data: Bien }>(`/${id}/annuler`).then((r) => r.data.data);
+
+export const soumettreRevision = async (
+  id: string,
+  payload: CreateBienPayload,
+  newPhotos: File[]
+): Promise<Bien> => {
+  const formData = new FormData();
+  formData.append("data", JSON.stringify(payload));
+  newPhotos.forEach((f) => formData.append("photos", f));
+  return api
+    .patch<{ data: Bien }>(`/${id}/soumettre-revision`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then((r) => r.data.data);
+};
 
 // ─── Admin API calls ──────────────────────────────────────────────────────────
 

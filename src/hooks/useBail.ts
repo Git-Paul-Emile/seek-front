@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getBailActifApi,
   creerBailApi,
+  annulerBailApi,
   terminerBailApi,
   resilierBailApi,
   prolongerBailApi,
@@ -24,6 +25,19 @@ export const useCreerBail = () => {
   return useMutation({
     mutationFn: ({ bienId, payload }: { bienId: string; payload: CreateBailPayload }) =>
       creerBailApi(bienId, payload),
+    onSuccess: (_data, { bienId }) => {
+      qc.invalidateQueries({ queryKey: [QK, bienId] });
+      qc.invalidateQueries({ queryKey: [QK_BIENS, bienId] });
+      qc.invalidateQueries({ queryKey: [QK_BIENS] });
+    },
+  });
+};
+
+export const useAnnulerBail = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bienId, bailId }: { bienId: string; bailId: string }) =>
+      annulerBailApi(bienId, bailId),
     onSuccess: (_data, { bienId }) => {
       qc.invalidateQueries({ queryKey: [QK, bienId] });
       qc.invalidateQueries({ queryKey: [QK_BIENS, bienId] });

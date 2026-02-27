@@ -10,6 +10,7 @@ import {
   Mail,
   Home,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { useLocataires, useDeleteLocataire } from "@/hooks/useLocataire";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -165,13 +166,22 @@ export default function LocatairesList() {
                     </div>
                   </div>
 
-                  <Link
-                    to={`/owner/locataires/${loc.id}`}
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#0C1A35] font-medium shrink-0 transition-colors"
-                  >
-                    Voir
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setConfirmId(loc.id)}
+                      className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <Link
+                      to={`/owner/locataires/${loc.id}`}
+                      className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#0C1A35] font-medium transition-colors"
+                    >
+                      Voir
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               );
             })}

@@ -92,6 +92,13 @@ export const resilierBailApi = async (
   return data.data;
 };
 
+export const annulerBailApi = async (
+  bienId: string,
+  bailId: string
+): Promise<void> => {
+  await api.delete(`/${bienId}/bail/${bailId}`);
+};
+
 export const prolongerBailApi = async (
   bienId: string,
   bailId: string,

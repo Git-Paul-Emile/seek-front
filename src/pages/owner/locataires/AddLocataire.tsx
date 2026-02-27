@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserPlus, ArrowLeft, Building2, Home } from "lucide-react";
-import { useCreateLocataire } from "@/hooks/useLocataire";
-import { useCreerBail } from "@/hooks/useBail";
+import { useCreateLocataire, useDeleteLocataire } from "@/hooks/useLocataire";
+import { useCreerBail, useAnnulerBail } from "@/hooks/useBail";
 import { useBiens } from "@/hooks/useBien";
 import { toast } from "sonner";
 import type { Bien } from "@/api/bien";
+import type { Bail } from "@/api/bail";
+import ContratModal from "../biens/ContratModal";
 
 // ─── Helpers UI ────────────────────────────────────────────────────────────────
 
@@ -25,7 +27,10 @@ const selectCls = (hasError = false) =>
 export default function AddLocataire() {
   const navigate = useNavigate();
   const createLocataire = useCreateLocataire();
+  const deleteLocataire = useDeleteLocataire();
   const creerBail = useCreerBail();
+  const annulerBail = useAnnulerBail();
+  const creationCancelledRef = useRef(false);
 
   // Biens disponibles : publiés, type location, statut libre
   const { data: tousLesBiens = [] } = useBiens();
@@ -48,26 +53,29 @@ export default function AddLocataire() {
     bienId: "",
     dateDebutBail: "",
     dateFinBail: "",
-    montantLoyer: "",
-    montantCaution: "",
     typeBail: "Habitation",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showContratModal, setShowContratModal] = useState(false);
+  const [createdBail, setCreatedBail] = useState<Bail | null>(null);
+
+  /** Appelé par ContratModal si l'utilisateur ferme sans valider */
+  const handleCancelCreation = async () => {
+    if (!createdBail) return;
+    creationCancelledRef.current = true;
+    try {
+      await annulerBail.mutateAsync({ bienId: createdBail.bienId, bailId: createdBail.id });
+      await deleteLocataire.mutateAsync(createdBail.locataireId);
+    } catch {
+      // best-effort : on navigue quand même
+    }
+  };
 
   const set = (key: string, value: unknown) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  // Auto-remplir loyer et caution quand un bien est sélectionné
-  useEffect(() => {
-    if (!form.bienId) return;
-    const bien = biensLocation.find((b) => b.id === form.bienId);
-    if (bien) {
-      set("montantLoyer", bien.prix != null ? String(bien.prix) : "");
-      set("montantCaution", bien.caution != null ? String(bien.caution) : "");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.bienId]);
+  const bienSelectionne = biensLocation.find((b) => b.id === form.bienId);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -78,8 +86,6 @@ export default function AddLocataire() {
       errs.email = "Email invalide";
     if (!form.bienId) errs.bienId = "Veuillez sélectionner un bien";
     if (!form.dateDebutBail) errs.dateDebutBail = "La date de début est requise";
-    if (!form.montantLoyer || isNaN(Number(form.montantLoyer)) || Number(form.montantLoyer) <= 0)
-      errs.montantLoyer = "Montant du loyer invalide";
     return errs;
   };
 
@@ -103,21 +109,23 @@ export default function AddLocataire() {
         presenceEnfants: form.presenceEnfants,
       });
 
-      // 2. Créer le bail → bien passe automatiquement à "Loué"
-      await creerBail.mutateAsync({
+      // 2. Créer le bail (loyer/caution depuis l'annonce, non modifiables)
+      const bail = await creerBail.mutateAsync({
         bienId: form.bienId,
         payload: {
           locataireId: locataire.id,
           dateDebutBail: form.dateDebutBail,
           dateFinBail: form.dateFinBail || null,
-          montantLoyer: Number(form.montantLoyer),
-          montantCaution: form.montantCaution ? Number(form.montantCaution) : null,
+          montantLoyer: bienSelectionne?.prix ?? 0,
+          montantCaution: bienSelectionne?.caution ?? null,
+          frequencePaiement: bienSelectionne?.frequencePaiement ?? null,
           typeBail: form.typeBail || null,
         },
       });
 
-      toast.success("Locataire ajouté et bail créé avec succès");
-      navigate(`/owner/locataires/${locataire.id}`);
+      toast.success("Locataire créé — génération du contrat en cours…");
+      setCreatedBail(bail);
+      setShowContratModal(true);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -127,7 +135,6 @@ export default function AddLocataire() {
   };
 
   const isPending = createLocataire.isPending || creerBail.isPending;
-  const bienSelectionne = biensLocation.find((b) => b.id === form.bienId);
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -356,38 +363,6 @@ export default function AddLocataire() {
             </div>
           </div>
 
-          {/* Loyer + Caution */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">
-                Loyer mensuel (FCFA) <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="number"
-                value={form.montantLoyer}
-                onChange={(e) => set("montantLoyer", e.target.value)}
-                placeholder="Ex: 150000"
-                className={inputCls(!!errors.montantLoyer)}
-              />
-              {errors.montantLoyer && (
-                <p className="text-xs text-red-400 mt-1">{errors.montantLoyer}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">
-                Caution (FCFA){" "}
-                <span className="text-slate-300 font-normal">(optionnel)</span>
-              </label>
-              <input
-                type="number"
-                value={form.montantCaution}
-                onChange={(e) => set("montantCaution", e.target.value)}
-                placeholder="Ex: 300000"
-                className={inputCls(false)}
-              />
-            </div>
-          </div>
-
           {/* Type de bail */}
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">
@@ -400,7 +375,39 @@ export default function AddLocataire() {
             >
               <option value="Habitation">Habitation</option>
               <option value="Commercial">Commercial</option>
+              <option value="Mixte">Mixte</option>
             </select>
+          </div>
+
+          {/* Conditions financières — lecture seule depuis l'annonce */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">
+              Conditions financières (depuis l'annonce)
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Loyer</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {bienSelectionne?.prix
+                    ? `${bienSelectionne.prix.toLocaleString("fr-FR")} FCFA`
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Caution</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {bienSelectionne?.caution
+                    ? `${bienSelectionne.caution.toLocaleString("fr-FR")} FCFA`
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Fréquence</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {bienSelectionne?.frequencePaiement ?? "—"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -422,6 +429,23 @@ export default function AddLocataire() {
           </button>
         </div>
       </form>
+
+      {/* ContratModal — ouvert automatiquement après création du bail */}
+      {showContratModal && createdBail && (
+        <ContratModal
+          bail={createdBail}
+          isCreationFlow={true}
+          onCancelCreation={handleCancelCreation}
+          onClose={() => {
+            setShowContratModal(false);
+            if (creationCancelledRef.current) {
+              navigate("/owner/locataires");
+            } else {
+              navigate(`/owner/locataires/${createdBail.locataireId}`);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

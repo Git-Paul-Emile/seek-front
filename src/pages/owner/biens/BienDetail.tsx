@@ -46,6 +46,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { StatutAnnonce } from "@/api/bien";
 import { useBailActif, useTerminerBail, useResilierBail, useProlongerBail } from "@/hooks/useBail";
 import BailForm from "./BailForm";
+import ContratModal from "./ContratModal";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -113,6 +114,9 @@ export default function BienDetail() {
   const [retourOpen, setRetourOpen] = useState(false);
   const [annulerOpen, setAnnulerOpen] = useState(false);
   const [showBailForm, setShowBailForm] = useState(false);
+  const [showContratModal, setShowContratModal] = useState(false);
+  const [activeBailForContrat, setActiveBailForContrat] = useState<typeof bail | null>(null);
+  const [isContratCreationFlow, setIsContratCreationFlow] = useState(false);
   const [terminerOpen, setTerminerOpen] = useState(false);
   const [resilierOpen, setResilierOpen] = useState(false);
   const [prolongerOpen, setProlongerOpen] = useState(false);
@@ -484,26 +488,36 @@ export default function BienDetail() {
                   {/* Actions bail */}
                   <div className="flex flex-col gap-2 pt-1">
                     <button
+                      onClick={() => { setActiveBailForContrat(bail); setIsContratCreationFlow(false); setShowContratModal(true); }}
+                      className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Voir le contrat
+                    </button>
+                    <button
                       onClick={() => setProlongerOpen(true)}
                       className="flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors"
                     >
                       <CalendarPlus className="w-3.5 h-3.5" />
                       Prolonger le bail
                     </button>
-                    <button
-                      onClick={() => setTerminerOpen(true)}
-                      className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
-                    >
-                      <StopCircle className="w-3.5 h-3.5" />
-                      Terminer le bail
-                    </button>
-                    <button
-                      onClick={() => setResilierOpen(true)}
-                      className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
-                    >
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      Résilier le bail
-                    </button>
+                    {bail.dateFinBail ? (
+                      <button
+                        onClick={() => setResilierOpen(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Résilier le bail
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setTerminerOpen(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
+                      >
+                        <StopCircle className="w-3.5 h-3.5" />
+                        Terminer le bail
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -725,17 +739,31 @@ export default function BienDetail() {
         </div>
       )}
 
+      {/* ContratModal */}
+      {showContratModal && activeBailForContrat && (
+        <ContratModal
+          bail={activeBailForContrat}
+          isCreationFlow={isContratCreationFlow}
+          onClose={() => { setShowContratModal(false); setActiveBailForContrat(null); setIsContratCreationFlow(false); }}
+        />
+      )}
+
       {/* BailForm modal */}
       {showBailForm && (
         <BailForm
           bienId={bien.id}
-          montantLoyerInitial={bien.prix}
-          montantCautionInitial={bien.caution}
-          frequencePaiementInitial={bien.frequencePaiement}
+          bien={{
+            prix: bien.prix,
+            caution: bien.caution,
+            frequencePaiement: bien.frequencePaiement,
+          }}
           onClose={() => setShowBailForm(false)}
-          onSuccess={() => {
+          onBailCreated={(newBail) => {
             setShowBailForm(false);
             refetchBail();
+            setActiveBailForContrat(newBail);
+            setIsContratCreationFlow(true);
+            setShowContratModal(true);
           }}
         />
       )}

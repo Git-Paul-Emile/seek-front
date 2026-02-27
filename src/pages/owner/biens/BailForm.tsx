@@ -1,28 +1,24 @@
 import { useState } from "react";
-import { X, Plus, User } from "lucide-react";
+import { X, User, Plus } from "lucide-react";
 import { useLocataires } from "@/hooks/useLocataire";
 import { useCreerBail } from "@/hooks/useBail";
+import type { Bail } from "@/api/bail";
 import { toast } from "sonner";
 
 interface BailFormProps {
   bienId: string;
-  montantLoyerInitial?: number | null;
-  montantCautionInitial?: number | null;
-  frequencePaiementInitial?: string | null;
+  bien: {
+    prix?: number | null;
+    caution?: number | null;
+    frequencePaiement?: string | null;
+  };
   onClose: () => void;
-  onSuccess: () => void;
+  onBailCreated: (bail: Bail) => void;
 }
 
-const TYPES_BAIL = ["Meublé", "Non meublé", "Saisonnier", "Commercial"];
+const TYPES_BAIL = ["Habitation", "Commercial", "Mixte"];
 
-export default function BailForm({
-  bienId,
-  montantLoyerInitial,
-  montantCautionInitial,
-  frequencePaiementInitial,
-  onClose,
-  onSuccess,
-}: BailFormProps) {
+export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailFormProps) {
   const { data: locataires = [] } = useLocataires();
   const creerBail = useCreerBail();
 
@@ -32,9 +28,6 @@ export default function BailForm({
     dateDebutBail: "",
     dateFinBail: "",
     renouvellement: false,
-    montantLoyer: montantLoyerInitial ?? 0,
-    montantCaution: montantCautionInitial ?? 0,
-    frequencePaiement: frequencePaiementInitial ?? "mensuel",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -44,9 +37,8 @@ export default function BailForm({
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!form.locataireId) errs.locataireId = "Sélectionnez un locataire";
+    if (!form.typeBail) errs.typeBail = "Le type de bail est requis";
     if (!form.dateDebutBail) errs.dateDebutBail = "La date de début est requise";
-    if (!form.montantLoyer || form.montantLoyer <= 0)
-      errs.montantLoyer = "Le montant du loyer est requis";
     return errs;
   };
 
@@ -60,21 +52,21 @@ export default function BailForm({
     setErrors({});
 
     try {
-      await creerBail.mutateAsync({
+      const createdBail = await creerBail.mutateAsync({
         bienId,
         payload: {
           locataireId: form.locataireId,
-          typeBail: form.typeBail || null,
+          typeBail: form.typeBail,
           dateDebutBail: form.dateDebutBail,
           dateFinBail: form.dateFinBail || null,
           renouvellement: form.renouvellement,
-          montantLoyer: form.montantLoyer,
-          montantCaution: form.montantCaution || null,
-          frequencePaiement: form.frequencePaiement || null,
+          montantLoyer: bien.prix ?? 0,
+          montantCaution: bien.caution ?? null,
+          frequencePaiement: bien.frequencePaiement ?? null,
         },
       });
       toast.success("Bail créé — le bien est maintenant Loué");
-      onSuccess();
+      onBailCreated(createdBail);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -89,10 +81,7 @@ export default function BailForm({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900">Associer un locataire</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -144,20 +133,23 @@ export default function BailForm({
           {/* Type de bail */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de bail
+              Type de bail <span className="text-red-500">*</span>
             </label>
             <select
               value={form.typeBail}
               onChange={(e) => set("typeBail", e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.typeBail ? "border-red-400" : "border-gray-300"
+              }`}
             >
               <option value="">-- Type de bail --</option>
               {TYPES_BAIL.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
+            {errors.typeBail && (
+              <p className="text-xs text-red-500 mt-1">{errors.typeBail}</p>
+            )}
           </div>
 
           {/* Dates */}
@@ -175,14 +167,12 @@ export default function BailForm({
                 }`}
               />
               {errors.dateDebutBail && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.dateDebutBail}
-                </p>
+                <p className="text-xs text-red-500 mt-1">{errors.dateDebutBail}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date de fin
+                Date de fin <span className="text-xs text-gray-400">(optionnelle)</span>
               </label>
               <input
                 type="date"
@@ -201,65 +191,34 @@ export default function BailForm({
               onChange={(e) => set("renouvellement", e.target.checked)}
               className="w-4 h-4 text-blue-600 rounded"
             />
-            <span className="text-sm font-medium text-gray-700">
-              Renouvellement possible
-            </span>
+            <span className="text-sm font-medium text-gray-700">Renouvellement possible</span>
           </label>
 
-          {/* Montants */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Loyer (FCFA) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={form.montantLoyer}
-                onChange={(e) =>
-                  set("montantLoyer", parseFloat(e.target.value) || 0)
-                }
-                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.montantLoyer ? "border-red-400" : "border-gray-300"
-                }`}
-              />
-              {errors.montantLoyer && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.montantLoyer}
+          {/* Tarifs depuis l'annonce — lecture seule */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">
+              Conditions financières (depuis l'annonce)
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Loyer</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} FCFA` : "—"}
                 </p>
-              )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Caution</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {bien.caution ? `${bien.caution.toLocaleString("fr-FR")} FCFA` : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-0.5">Fréquence</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {bien.frequencePaiement ?? "—"}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Caution (FCFA)
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={form.montantCaution}
-                onChange={(e) =>
-                  set("montantCaution", parseFloat(e.target.value) || 0)
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Fréquence de paiement */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fréquence de paiement
-            </label>
-            <select
-              value={form.frequencePaiement}
-              onChange={(e) => set("frequencePaiement", e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="mensuel">Mensuel</option>
-              <option value="trimestriel">Trimestriel</option>
-              <option value="hebdomadaire">Hebdomadaire</option>
-              <option value="journalier">Journalier</option>
-            </select>
           </div>
 
           {/* Actions */}

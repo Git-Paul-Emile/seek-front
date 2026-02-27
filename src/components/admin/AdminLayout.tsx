@@ -14,6 +14,7 @@ import {
   ChevronDown,
   FileSearch,
   User,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -31,10 +32,10 @@ const NAV_GROUPS = [
     icon: Building2,
     basePath: "/admin/biens",
     children: [
-      { to: "/admin/biens/categories",    label: "Catégories",   icon: Tag },
-      { to: "/admin/biens/transactions",  label: "Transactions", icon: ArrowLeftRight },
-      { to: "/admin/biens/statuts",           label: "Statuts",            icon: CircleDot },
-      { to: "/admin/biens/meuble-equipement", label: "Meuble & Equipement", icon: Sofa },
+      { to: "/admin/biens/categories",        label: "Catégories",          icon: Tag },
+      { to: "/admin/biens/transactions",      label: "Transactions",        icon: ArrowLeftRight },
+      { to: "/admin/biens/statuts",           label: "Statuts",             icon: CircleDot },
+      { to: "/admin/biens/meuble-equipement", label: "Meuble & Équipement", icon: Sofa },
     ],
   },
 ];

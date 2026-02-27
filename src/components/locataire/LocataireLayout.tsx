@@ -1,56 +1,41 @@
-import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Search,
-  ArrowUpRight,
-  LogOut,
   Building2,
   House,
-  ChevronDown,
-  List,
+  LayoutDashboard,
+  LogOut,
   User,
-  Users,
+  ArrowUpRight,
+  Search,
 } from "lucide-react";
-import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { to: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/owner/profile", label: "Mon Profil", icon: User },
+  { to: "/locataire/dashboard", label: "Mon espace", icon: LayoutDashboard },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 function Sidebar() {
-  const { owner, logout } = useOwnerAuth();
+  const { locataire, logout } = useLocataireAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [biensOpen, setBiensOpen] = useState(
-    location.pathname.startsWith("/owner/biens")
-  );
-  const [locatairesOpen, setLocatairesOpen] = useState(
-    location.pathname.startsWith("/owner/locataires")
-  );
 
   const handleLogout = async () => {
     await logout();
-    navigate("/proprietaires", { replace: true });
+    navigate("/locataire/login", { replace: true });
   };
 
   const initiales =
-    `${owner?.prenom?.[0] ?? ""}${owner?.nom?.[0] ?? ""}`.toUpperCase() || "P";
-
-  const isBiensActive = location.pathname.startsWith("/owner/biens");
-  const isLocatairesActive = location.pathname.startsWith("/owner/locataires");
+    `${locataire?.prenom?.[0] ?? ""}${locataire?.nom?.[0] ?? ""}`.toUpperCase() || "L";
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-60 bg-white border-r border-slate-100 flex flex-col z-40">
 
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-slate-100 flex-shrink-0">
-        <Link to="/owner/dashboard" className="flex items-center gap-2.5">
+        <Link to="/locataire/dashboard" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#D4A843] flex items-center justify-center flex-shrink-0">
             <House className="w-4 h-4 text-white" />
           </div>
@@ -59,7 +44,7 @@ function Sidebar() {
               Seek
             </span>
             <span className="block text-[10px] text-slate-400 leading-none mt-0.5 font-medium tracking-wide">
-              Propriétaires
+              Locataires
             </span>
           </div>
         </Link>
@@ -68,7 +53,6 @@ function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-0.5">
-          {/* Items plats */}
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
@@ -88,95 +72,22 @@ function Sidebar() {
             </li>
           ))}
 
-          {/* Locataires — groupe collapsible */}
+          {/* Mon profil */}
           <li>
-            <button
-              type="button"
-              onClick={() => setLocatairesOpen((v) => !v)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+            <NavLink
+              to="/locataire/profil"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                 transition-colors duration-150 ${
-                  isLocatairesActive
-                    ? "text-[#0C1A35] bg-slate-50"
+                  isActive
+                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
                     : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                }`}
+                }`
+              }
             >
-              <Users className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1 text-left">Locataires</span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                  locatairesOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            <ul
-              className={`overflow-hidden transition-all duration-200 ml-3 pl-3 border-l border-slate-100 space-y-0.5 ${
-                locatairesOpen ? "max-h-40 opacity-100 mt-0.5" : "max-h-0 opacity-0"
-              }`}
-            >
-              <li>
-                <NavLink
-                  to="/owner/locataires"
-                  end
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
-                    transition-colors duration-150 ${
-                      isActive
-                        ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                    }`
-                  }
-                >
-                  <List className="w-3.5 h-3.5 flex-shrink-0" />
-                  Liste des locataires
-                </NavLink>
-              </li>
-            </ul>
-          </li>
-
-          {/* Gestion de biens — groupe collapsible */}
-          <li>
-            <button
-              type="button"
-              onClick={() => setBiensOpen((v) => !v)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                transition-colors duration-150 ${
-                  isBiensActive
-                    ? "text-[#0C1A35] bg-slate-50"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                }`}
-            >
-              <Building2 className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1 text-left">Gestion de biens</span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                  biensOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {/* Sous-items */}
-            <ul
-              className={`overflow-hidden transition-all duration-200 ml-3 pl-3 border-l border-slate-100 space-y-0.5 ${
-                biensOpen ? "max-h-40 opacity-100 mt-0.5" : "max-h-0 opacity-0"
-              }`}
-            >
-              <li>
-                <NavLink
-                  to="/owner/biens"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
-                    transition-colors duration-150 ${
-                      isActive
-                        ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                    }`
-                  }
-                >
-                  <List className="w-3.5 h-3.5 flex-shrink-0" />
-                  Liste des biens
-                </NavLink>
-              </li>
-            </ul>
+              <User className="w-4 h-4 flex-shrink-0" />
+              Mon profil
+            </NavLink>
           </li>
         </ul>
       </nav>
@@ -189,9 +100,9 @@ function Sidebar() {
           </div>
           <div className="min-w-0">
             <p className="text-xs font-semibold text-[#0C1A35] truncate">
-              {owner?.prenom} {owner?.nom}
+              {locataire?.prenom} {locataire?.nom}
             </p>
-            <p className="text-[10px] text-slate-400 font-medium">Propriétaire</p>
+            <p className="text-[10px] text-slate-400 font-medium">Locataire</p>
           </div>
         </div>
         <button
@@ -224,11 +135,11 @@ function Topbar() {
         />
       </div>
       <Link
-        to="/proprietaires"
+        to="/"
         className="flex items-center gap-1.5 text-sm font-medium text-slate-500
           hover:text-[#0C1A35] transition-colors"
       >
-        Retour à l'accueil
+        Retour au site
         <ArrowUpRight className="w-4 h-4" />
       </Link>
     </header>
@@ -237,7 +148,7 @@ function Topbar() {
 
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
-export default function OwnerLayout() {
+export default function LocataireLayout() {
   return (
     <div className="min-h-screen bg-[#F8F5EE]">
       <Sidebar />

@@ -74,6 +74,20 @@ const Navbar = () => {
             </Link>
           ))}
           <Link
+            to="/locataire/login"
+            className={`text-sm font-medium transition-colors duration-200 ${
+              location.pathname.startsWith("/locataire")
+                ? transparent
+                  ? "text-[#D4A843]"
+                  : "text-[#0C1A35] font-semibold"
+                : transparent
+                ? "text-white/65 hover:text-white"
+                : "text-slate-500 hover:text-[#0C1A35]"
+            }`}
+          >
+            Espace locataire
+          </Link>
+          <Link
             to="/proprietaires"
             className={`text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
               location.pathname === "/proprietaires"
@@ -124,6 +138,17 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                to="/locataire/login"
+                onClick={() => setOpen(false)}
+                className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
+                  location.pathname.startsWith("/locataire")
+                    ? "text-[#D4A843] bg-white/5"
+                    : "text-white/65 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                Espace locataire
+              </Link>
               <Link
                 to="/proprietaires"
                 onClick={() => setOpen(false)}

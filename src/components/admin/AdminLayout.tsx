@@ -47,7 +47,13 @@ function NavGroup({
   group: (typeof NAV_GROUPS)[number];
 }) {
   const location = useLocation();
-  const isGroupActive = location.pathname.startsWith(group.basePath);
+  
+  // Check if any child path matches exactly or is a sub-path
+  const isChildActive = group.children.some(
+    child => location.pathname === child.to || location.pathname.startsWith(child.to + "/")
+  );
+  
+  const isGroupActive = isChildActive;
   const [open, setOpen] = useState(isGroupActive);
   const Icon = group.icon;
 
@@ -77,6 +83,7 @@ function NavGroup({
             <li key={to}>
               <NavLink
                 to={to}
+                end
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium
                   transition-colors duration-150 ${

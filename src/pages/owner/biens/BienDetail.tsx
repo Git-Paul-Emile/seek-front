@@ -31,6 +31,12 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  UserPlus,
+  User,
+  Phone,
+  StopCircle,
+  AlertTriangle,
+  CalendarPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -38,6 +44,8 @@ import { useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/us
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { StatutAnnonce } from "@/api/bien";
+import { useBailActif, useTerminerBail, useResilierBail, useProlongerBail } from "@/hooks/useBail";
+import BailForm from "./BailForm";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -92,10 +100,23 @@ export default function BienDetail() {
   const retour = useRetourBrouillon();
   const annuler = useAnnulerAnnonce();
 
+  const isLocation = bien?.typeTransaction?.slug === "location";
+  const { data: bail, refetch: refetchBail } = useBailActif(
+    isLocation ? (id ?? "") : ""
+  );
+  const terminer = useTerminerBail();
+  const resilier = useResilierBail();
+  const prolonger = useProlongerBail();
+
   const [photoIndex, setPhotoIndex] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [retourOpen, setRetourOpen] = useState(false);
   const [annulerOpen, setAnnulerOpen] = useState(false);
+  const [showBailForm, setShowBailForm] = useState(false);
+  const [terminerOpen, setTerminerOpen] = useState(false);
+  const [resilierOpen, setResilierOpen] = useState(false);
+  const [prolongerOpen, setProlongerOpen] = useState(false);
+  const [newDateFin, setNewDateFin] = useState("");
 
   if (isLoading) {
     return (
@@ -412,6 +433,97 @@ export default function BienDetail() {
 
         {/* Colonne latérale */}
         <div className="space-y-5">
+          {/* Section Locataire — uniquement pour les biens en location */}
+          {isLocation && (
+            <Section title="Locataire actuel">
+              {bail ? (
+                <div className="space-y-3">
+                  {/* Locataire */}
+                  <Link
+                    to={`/owner/locataires/${bail.locataireId}`}
+                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
+                      {bail.locataire.prenom[0]}{bail.locataire.nom[0]}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm text-[#0C1A35]">
+                        {bail.locataire.prenom} {bail.locataire.nom}
+                      </p>
+                      <p className="text-xs text-slate-500 flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        {bail.locataire.telephone}
+                      </p>
+                    </div>
+                  </Link>
+
+                  {/* Infos bail */}
+                  <div className="text-sm space-y-1.5">
+                    {bail.typeBail && (
+                      <InfoRow label="Type de bail" value={bail.typeBail} />
+                    )}
+                    <InfoRow
+                      label="Début du bail"
+                      value={new Date(bail.dateDebutBail).toLocaleDateString("fr-FR")}
+                    />
+                    {bail.dateFinBail && (
+                      <InfoRow
+                        label="Fin du bail"
+                        value={new Date(bail.dateFinBail).toLocaleDateString("fr-FR")}
+                      />
+                    )}
+                    <InfoRow
+                      label="Loyer"
+                      value={`${bail.montantLoyer.toLocaleString("fr-FR")} FCFA`}
+                    />
+                    {bail.renouvellement && (
+                      <p className="text-xs text-green-600">✓ Renouvellement possible</p>
+                    )}
+                  </div>
+
+                  {/* Actions bail */}
+                  <div className="flex flex-col gap-2 pt-1">
+                    <button
+                      onClick={() => setProlongerOpen(true)}
+                      className="flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors"
+                    >
+                      <CalendarPlus className="w-3.5 h-3.5" />
+                      Prolonger le bail
+                    </button>
+                    <button
+                      onClick={() => setTerminerOpen(true)}
+                      className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
+                    >
+                      <StopCircle className="w-3.5 h-3.5" />
+                      Terminer le bail
+                    </button>
+                    <button
+                      onClick={() => setResilierOpen(true)}
+                      className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
+                    >
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Résilier le bail
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <User className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <p className="text-sm text-slate-400 mb-3">
+                    Aucun locataire associé
+                  </p>
+                  <button
+                    onClick={() => setShowBailForm(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    Associer un locataire
+                  </button>
+                </div>
+              )}
+            </Section>
+          )}
+
           {/* Localisation */}
           <Section title="Localisation">
             <div className="flex items-start gap-2">
@@ -515,6 +627,118 @@ export default function BienDetail() {
         }
         onCancel={() => setDeleteOpen(false)}
       />
+
+      {/* Modal terminer bail */}
+      <ConfirmModal
+        open={terminerOpen}
+        title="Terminer le bail"
+        message="Le bail sera marqué comme terminé et le bien reviendra au statut Libre."
+        confirmLabel="Terminer le bail"
+        cancelLabel="Annuler"
+        variant="warning"
+        isPending={terminer.isPending}
+        onConfirm={() =>
+          terminer.mutate(
+            { bienId: bien.id, bailId: bail!.id },
+            {
+              onSuccess: () => {
+                toast.success("Bail terminé — le bien est Libre");
+                setTerminerOpen(false);
+                refetchBail();
+              },
+              onError: () => { toast.error("Erreur"); setTerminerOpen(false); },
+            }
+          )
+        }
+        onCancel={() => setTerminerOpen(false)}
+      />
+
+      {/* Modal résilier bail */}
+      <ConfirmModal
+        open={resilierOpen}
+        title="Résilier le bail"
+        message="Le bail sera résilié et le bien reviendra au statut Libre. Cette action indique une rupture anticipée du contrat."
+        confirmLabel="Résilier le bail"
+        cancelLabel="Annuler"
+        variant="danger"
+        isPending={resilier.isPending}
+        onConfirm={() =>
+          resilier.mutate(
+            { bienId: bien.id, bailId: bail!.id },
+            {
+              onSuccess: () => {
+                toast.success("Bail résilié — le bien est Libre");
+                setResilierOpen(false);
+                refetchBail();
+              },
+              onError: () => { toast.error("Erreur"); setResilierOpen(false); },
+            }
+          )
+        }
+        onCancel={() => setResilierOpen(false)}
+      />
+
+      {/* Modal prolonger bail */}
+      {prolongerOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="font-semibold text-gray-900 mb-4">Prolonger le bail</h3>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nouvelle date de fin
+            </label>
+            <input
+              type="date"
+              value={newDateFin}
+              onChange={(e) => setNewDateFin(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setProlongerOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  if (!newDateFin) { toast.error("Date requise"); return; }
+                  prolonger.mutate(
+                    { bienId: bien.id, bailId: bail!.id, dateFinBail: newDateFin },
+                    {
+                      onSuccess: () => {
+                        toast.success("Bail prolongé");
+                        setProlongerOpen(false);
+                        setNewDateFin("");
+                        refetchBail();
+                      },
+                      onError: () => toast.error("Erreur lors de la prolongation"),
+                    }
+                  );
+                }}
+                disabled={prolonger.isPending}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
+              >
+                {prolonger.isPending ? "Enregistrement..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BailForm modal */}
+      {showBailForm && (
+        <BailForm
+          bienId={bien.id}
+          montantLoyerInitial={bien.prix}
+          montantCautionInitial={bien.caution}
+          frequencePaiementInitial={bien.frequencePaiement}
+          onClose={() => setShowBailForm(false)}
+          onSuccess={() => {
+            setShowBailForm(false);
+            refetchBail();
+          }}
+        />
+      )}
     </div>
   );
 }

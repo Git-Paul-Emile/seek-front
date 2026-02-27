@@ -41,11 +41,11 @@ const FREQUENCES = [
 ];
 
 const TABS = [
-  { id: "general",     label: "Infos générales",    icon: Info },
-  { id: "caract",      label: "Caractéristiques",   icon: Ruler },
-  { id: "transaction", label: "Statut & Prix",       icon: DollarSign },
-  { id: "options",     label: "Options & Équipements", icon: Zap },
-  { id: "medias",      label: "Médias",              icon: ImageIcon },
+  { id: "general",     label: "Infos générales",        icon: Info },
+  { id: "caract",      label: "Caractéristiques",       icon: Ruler },
+  { id: "transaction", label: "Statut & Prix",           icon: DollarSign },
+  { id: "options",     label: "Options & Équipements",  icon: Zap },
+  { id: "medias",      label: "Médias",                 icon: ImageIcon },
 ];
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif", "image/jfif", "image/pjpeg"];
@@ -434,9 +434,19 @@ export default function AddBien() {
     setQuartierInput(r.display_name);
     setLatitude(parseFloat(r.lat));
     setLongitude(parseFloat(r.lon));
+
+    // Auto-sélectionner la région correspondante depuis notre DB
+    const regionName = r.address?.state ?? r.address?.city ?? r.address?.town ?? r.address?.village;
+    if (regionName && villesList.length > 0) {
+      const matched = villesList.find(
+        (v) => v.nom.toLowerCase() === regionName.toLowerCase()
+      );
+      if (matched) setSelectedVille(matched);
+    }
+
     clearNominatim();
     setQuartierOpen(false);
-  }, [clearNominatim]);
+  }, [clearNominatim, villesList]);
 
   // ── Photo handlers ──
   const handlePhotoFiles = (files: FileList | null) => {
@@ -817,6 +827,9 @@ export default function AddBien() {
                           onChange={(e) => {
                             const found = villesList.find((v) => v.id === e.target.value) ?? null;
                             setSelectedVille(found);
+                            setQuartierInput("");
+                            setLatitude(null);
+                            setLongitude(null);
                           }}
                           disabled={!selectedPays}
                           className={`${inputCls} cursor-pointer appearance-none pr-8 disabled:opacity-40 disabled:cursor-not-allowed`}

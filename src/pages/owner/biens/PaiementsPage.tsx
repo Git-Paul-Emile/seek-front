@@ -14,6 +14,7 @@ import {
   Wallet,
   Clock,
   Bell,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -25,6 +26,7 @@ import {
 } from "@/hooks/useBail";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
+import { generateRelancePDF } from "@/lib/generateRelance";
 import { genererQuittanceApi } from "@/api/quittance";
 import { useEnvoyerRappel } from "@/hooks/useQuittance";
 import type { Echeance } from "@/api/bail";
@@ -55,6 +57,9 @@ const ORDER: Record<string, number> = {
 };
 
 const canDownload = (s: string) => s === "PAYE" || s === "PARTIEL";
+
+const joursRetard = (dateEcheance: string) =>
+  Math.max(0, Math.floor((Date.now() - new Date(dateEcheance).getTime()) / 86400000));
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 
@@ -431,6 +436,11 @@ export default function PaiementsPage() {
                     <p className="text-xs text-slate-500 mt-0.5">
                       {fmt(total)} FCFA
                     </p>
+                    {ech.statut === "EN_RETARD" && (
+                      <p className="text-xs text-red-500 font-semibold mt-0.5">
+                        {joursRetard(ech.dateEcheance)} jours de retard
+                      </p>
+                    )}
                     {ech.datePaiement && (
                       <p className="text-xs text-slate-400 mt-0.5">
                         Payé le{" "}
@@ -448,6 +458,34 @@ export default function PaiementsPage() {
                     <p className="text-sm font-bold text-[#0C1A35] whitespace-nowrap">
                       {fmt(total)} F
                     </p>
+                    {/* Relance PDF sur EN_RETARD */}
+                    {ech.statut === "EN_RETARD" && (
+                      <button
+                        onClick={() => {
+                          if (!bail || !bien || !owner) return;
+                          generateRelancePDF({
+                            numero: ech.id.slice(0, 8).toUpperCase(),
+                            dateGeneration: new Date().toLocaleDateString("fr-FR"),
+                            dateEcheance: ech.dateEcheance,
+                            joursRetard: joursRetard(ech.dateEcheance),
+                            montant: ech.montant,
+                            bienTitre: bien.titre ?? undefined,
+                            bienAdresse: [bien.adresse, bien.quartier].filter(Boolean).join(", ") || undefined,
+                            bienVille: bien.ville ?? undefined,
+                            bienPays: bien.pays ?? undefined,
+                            proprietaireNom: `${owner.prenom} ${owner.nom}`,
+                            proprietaireTelephone: owner.telephone,
+                            locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
+                            locataireTelephone: bail.locataire.telephone,
+                          });
+                        }}
+                        title="Télécharger la lettre de relance"
+                        className="flex items-center gap-1 text-xs font-medium text-red-700 hover:text-red-800 px-2.5 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+                      >
+                        <FileText className="w-3 h-3" />
+                        Relance
+                      </button>
+                    )}
                     {/* Rappel SMS sur EN_RETARD / EN_ATTENTE */}
                     {(ech.statut === "EN_RETARD" || ech.statut === "EN_ATTENTE") && bail && (
                       <RappelButton

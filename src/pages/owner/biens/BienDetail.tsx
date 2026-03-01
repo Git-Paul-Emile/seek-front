@@ -57,6 +57,7 @@ import { useBailActif, useTerminerBail, useResilierBail, useProlongerBail, useEc
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
+import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -90,6 +91,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </div>
   );
 }
+
+const joursRetard = (dateEcheance: string) =>
+  Math.max(0, Math.floor((Date.now() - new Date(dateEcheance).getTime()) / 86400000));
 
 function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
   if (!value && value !== 0) return null;
@@ -685,9 +689,41 @@ export default function BienDetail() {
                                   <p className="text-[10px] text-slate-500 mt-0.5">
                                     {ech.montant.toLocaleString("fr-FR")} FCFA
                                   </p>
+                                  {ech.statut === "EN_RETARD" && (
+                                    <p className="text-[10px] text-red-500 font-semibold">
+                                      {joursRetard(ech.dateEcheance)} j. de retard
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                {ech.statut === "EN_RETARD" && (
+                                  <button
+                                    onClick={() => {
+                                      if (!bail || !bien || !owner) return;
+                                      generateRelancePDF({
+                                        numero: ech.id.slice(0, 8).toUpperCase(),
+                                        dateGeneration: new Date().toLocaleDateString("fr-FR"),
+                                        dateEcheance: ech.dateEcheance,
+                                        joursRetard: joursRetard(ech.dateEcheance),
+                                        montant: ech.montant,
+                                        bienTitre: bien.titre ?? undefined,
+                                        bienAdresse: [bien.adresse, bien.quartier].filter(Boolean).join(", ") || undefined,
+                                        bienVille: bien.ville ?? undefined,
+                                        bienPays: bien.pays ?? undefined,
+                                        proprietaireNom: `${owner.prenom} ${owner.nom}`,
+                                        proprietaireTelephone: owner.telephone,
+                                        locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
+                                        locataireTelephone: bail.locataire.telephone,
+                                      });
+                                    }}
+                                    title="Télécharger la lettre de relance"
+                                    className="flex items-center gap-1 text-[10px] font-medium text-red-700 hover:text-red-800 px-2 py-1 rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+                                  >
+                                    <FileText className="w-3 h-3" />
+                                    Relance
+                                  </button>
+                                )}
                                 {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.datePaiement && (
                                   <button
                                     onClick={() => {

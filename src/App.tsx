@@ -30,6 +30,7 @@ import Profile from "./pages/owner/Profile";
 import BiensList from "./pages/owner/biens/BiensList";
 import AddBien from "./pages/owner/biens/AddBien";
 import BienDetail from "./pages/owner/biens/BienDetail";
+import PaiementsPage from "./pages/owner/biens/PaiementsPage";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProfile from "./pages/admin/Profile";
@@ -45,6 +46,7 @@ import LocataireDetail from "./pages/owner/locataires/LocataireDetail";
 import LocataireActivate from "./pages/locataire/Activate";
 import LocataireLogin from "./pages/locataire/Login";
 import LocataireDashboard from "./pages/locataire/Dashboard";
+import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +94,7 @@ const App = () => (
                     <Route path="/owner/biens" element={<BiensList />} />
                     <Route path="/owner/biens/ajouter" element={<AddBien />} />
                     <Route path="/owner/biens/:id" element={<BienDetail />} />
+                    <Route path="/owner/biens/:id/paiements" element={<PaiementsPage />} />
                     <Route path="/owner/locataires" element={<LocatairesList />} />
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
@@ -110,6 +113,7 @@ const App = () => (
                 <Route element={<LocataireProtectedRoute />}>
                   <Route element={<LocataireLayout />}>
                     <Route path="/locataire/dashboard" element={<LocataireDashboard />} />
+                    <Route path="/locataire/paiements" element={<PaiementsLocatairePage />} />
                   </Route>
                 </Route>
 

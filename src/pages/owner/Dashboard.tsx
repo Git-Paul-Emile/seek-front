@@ -12,6 +12,7 @@ import {
   PlusCircle,
   MapPin,
   Banknote,
+  Users,
 } from "lucide-react";
 import {
   PieChart,
@@ -23,6 +24,7 @@ import {
 } from "recharts";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
+import { useLocataires } from "@/hooks/useLocataire";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -91,6 +93,8 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { name
 export default function OwnerDashboard() {
   const { owner } = useOwnerAuth();
   const { data: stats, isLoading } = useOwnerStats();
+  const { data: locataires = [] } = useLocataires();
+  const nbLocatairesActifs = locataires.filter((l) => l.statut === "ACTIF").length;
 
   const pieData = (stats?.byStatut ?? [])
     .filter((s) => s.count > 0)
@@ -162,6 +166,13 @@ export default function OwnerDashboard() {
             {statutsSorted.map((s) => (
               <StatCard key={s.statut} statut={s.statut} count={s.count} />
             ))}
+            <div className="rounded-2xl border border-slate-100 p-4 flex items-center gap-3 bg-indigo-50">
+              <Users className="w-5 h-5 shrink-0 text-indigo-600" />
+              <div>
+                <p className="text-xl font-bold text-[#0C1A35]">{nbLocatairesActifs}</p>
+                <p className="text-xs font-medium text-indigo-600">Locataires actifs</p>
+              </div>
+            </div>
           </div>
 
           {/* Donut + biens récents */}

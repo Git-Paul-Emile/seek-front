@@ -11,6 +11,9 @@ interface BailFormProps {
     prix?: number | null;
     caution?: number | null;
     frequencePaiement?: string | null;
+    titre?: string | null;
+    adresse?: string | null;
+    ville?: string | null;
   };
   onClose: () => void;
   onBailCreated: (bail: Bail) => void;
@@ -28,6 +31,8 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
     dateDebutBail: "",
     dateFinBail: "",
     renouvellement: false,
+    cautionVersee: "" as "" | "oui" | "non",
+    jourLimitePaiement: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -39,6 +44,12 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
     if (!form.locataireId) errs.locataireId = "Sélectionnez un locataire";
     if (!form.typeBail) errs.typeBail = "Le type de bail est requis";
     if (!form.dateDebutBail) errs.dateDebutBail = "La date de début est requise";
+    if (!form.cautionVersee) errs.cautionVersee = "Indiquez si la caution a été versée";
+    if (form.jourLimitePaiement) {
+      const j = Number(form.jourLimitePaiement);
+      if (!Number.isInteger(j) || j < 1 || j > 28)
+        errs.jourLimitePaiement = "Le jour doit être entre 1 et 28";
+    }
     return errs;
   };
 
@@ -62,6 +73,8 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
           renouvellement: form.renouvellement,
           montantLoyer: bien.prix ?? 0,
           montantCaution: bien.caution ?? null,
+          cautionVersee: form.cautionVersee === "oui",
+          jourLimitePaiement: form.jourLimitePaiement ? Number(form.jourLimitePaiement) : null,
           frequencePaiement: bien.frequencePaiement ?? null,
         },
       });
@@ -75,12 +88,19 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
     }
   };
 
+  const bienLabel = bien.titre || bien.adresse || "Bien";
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">Associer un locataire</h2>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Associer un locataire</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {bienLabel}{bien.ville ? ` · ${bien.ville}` : ""}
+            </p>
+          </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5" />
           </button>
@@ -194,10 +214,10 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
             <span className="text-sm font-medium text-gray-700">Renouvellement possible</span>
           </label>
 
-          {/* Tarifs depuis l'annonce — lecture seule */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">
-              Conditions financières (depuis l'annonce)
+          {/* Tarifs depuis l'annonce — lecture seule + nouveaux champs */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-4">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+              Conditions financières
             </p>
             <div className="grid grid-cols-3 gap-4">
               <div>
@@ -214,10 +234,60 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-0.5">Fréquence</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900 capitalize">
                   {bien.frequencePaiement ?? "—"}
                 </p>
               </div>
+            </div>
+
+            {/* Caution versée */}
+            <div>
+              <label className="block text-xs font-medium text-blue-700 mb-2">
+                Caution versée <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-4">
+                {(["oui", "non"] as const).map((val) => (
+                  <label key={val} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cautionVersee"
+                      value={val}
+                      checked={form.cautionVersee === val}
+                      onChange={() => set("cautionVersee", val)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700 capitalize">{val === "oui" ? "Oui" : "Non"}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.cautionVersee && (
+                <p className="text-xs text-red-500 mt-1">{errors.cautionVersee}</p>
+              )}
+            </div>
+
+            {/* Date butoir de paiement */}
+            <div>
+              <label className="block text-xs font-medium text-blue-700 mb-1">
+                Date butoir de paiement{" "}
+                <span className="font-normal text-blue-500">(optionnel)</span>
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="28"
+                placeholder="ex : 5"
+                value={form.jourLimitePaiement}
+                onChange={(e) => set("jourLimitePaiement", e.target.value)}
+                className={`w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                  errors.jourLimitePaiement ? "border-red-400" : "border-blue-200"
+                }`}
+              />
+              <p className="text-[11px] text-blue-500 mt-1">
+                Jour du mois avant lequel le loyer doit être payé (ex : 5 → avant le 5 de chaque mois).
+              </p>
+              {errors.jourLimitePaiement && (
+                <p className="text-xs text-red-500 mt-1">{errors.jourLimitePaiement}</p>
+              )}
             </div>
           </div>
 

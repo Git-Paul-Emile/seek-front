@@ -33,6 +33,8 @@ export interface Bail {
   renouvellement: boolean;
   montantLoyer: number;
   montantCaution?: number | null;
+  cautionVersee: boolean;
+  jourLimitePaiement?: number | null;
   frequencePaiement?: string | null;
   statut: StatutBail;
   createdAt: string;
@@ -58,6 +60,8 @@ export interface CreateBailPayload {
   renouvellement?: boolean;
   montantLoyer: number;
   montantCaution?: number | null;
+  cautionVersee?: boolean;
+  jourLimitePaiement?: number | null;
   frequencePaiement?: string | null;
 }
 
@@ -107,5 +111,127 @@ export const prolongerBailApi = async (
   const { data } = await api.patch(`/${bienId}/bail/${bailId}/prolonger`, {
     dateFinBail,
   });
+  return data.data;
+};
+
+// ─── Échéancier ───────────────────────────────────────────────────────────────
+
+export type StatutPaiement = "A_VENIR" | "EN_ATTENTE" | "EN_RETARD" | "PAYE" | "PARTIEL" | "ANNULE";
+
+export interface Echeance {
+  id: string;
+  bailId: string;
+  bienId: string;
+  dateEcheance: string;
+  montant: number;
+  statut: StatutPaiement;
+  datePaiement?: string | null;
+  modePaiement?: string | null;
+  reference?: string | null;
+  note?: string | null;
+}
+
+export interface PayerEcheancePayload {
+  datePaiement: string;
+  modePaiement?: string;
+  reference?: string;
+  note?: string;
+  montant?: number;
+}
+
+export const getEcheancierApi = async (bienId: string, bailId: string): Promise<Echeance[]> => {
+  const { data } = await api.get(`/${bienId}/bail/${bailId}/echeancier`);
+  return data.data;
+};
+
+export const payerEcheanceApi = async (
+  bienId: string,
+  bailId: string,
+  echeanceId: string,
+  payload: PayerEcheancePayload
+): Promise<Echeance> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/echeancier/${echeanceId}/payer`, payload);
+  return data.data;
+};
+
+export interface PayerMoisMultiplesPayload {
+  datePaiement: string;
+  nombreMois: number;
+  modePaiement?: string;
+  reference?: string;
+  note?: string;
+}
+
+export const payerMoisMultiplesApi = async (
+  bienId: string,
+  bailId: string,
+  payload: PayerMoisMultiplesPayload
+): Promise<{ paye: number; ids: string[] }> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/echeancier/payer-multiple`, payload);
+  return data.data;
+};
+
+// ─── Caution ──────────────────────────────────────────────────────────────────
+
+export type StatutDepot = "RECU" | "RESTITUE" | "PARTIELLEMENT_RESTITUE" | "RETENU";
+
+export interface DepotCaution {
+  id: string;
+  bailId: string;
+  montant: number;
+  statut: StatutDepot;
+  dateReception: string;
+  dateRestitution?: string | null;
+  montantRestitue?: number | null;
+  motifRetenue?: string | null;
+}
+
+export const getCautionApi = async (bienId: string, bailId: string): Promise<DepotCaution | null> => {
+  const { data } = await api.get(`/${bienId}/bail/${bailId}/caution`);
+  return data.data;
+};
+
+export const restituerCautionApi = async (
+  bienId: string,
+  bailId: string,
+  payload: { montantRestitue: number; motifRetenue?: string; dateRestitution?: string }
+): Promise<DepotCaution> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/caution/restituer`, payload);
+  return data.data;
+};
+
+// ─── Mobile Money ─────────────────────────────────────────────────────────────
+
+export interface MobileMoneyProvider {
+  nom: string;
+  instructions: string;
+}
+
+export interface MobileMoneyInfo {
+  pays: string | null;
+  providers: MobileMoneyProvider[];
+}
+
+export const getMobileMoneyApi = async (bienId: string): Promise<MobileMoneyInfo> => {
+  const { data } = await api.get(`/${bienId}/bail/mobile-money`);
+  return data.data;
+};
+
+// ─── Solde ────────────────────────────────────────────────────────────────────
+
+export interface SoldeData {
+  totalEcheances: number;
+  nbPaye: number;
+  nbEnRetard: number;
+  nbEnAttente: number;
+  nbAVenir: number;
+  montantTotalDu: number;
+  montantPaye: number;
+  montantEnRetard: number;
+  solde: number;
+}
+
+export const getSoldeApi = async (bienId: string, bailId: string): Promise<SoldeData> => {
+  const { data } = await api.get(`/${bienId}/bail/${bailId}/solde`);
   return data.data;
 };

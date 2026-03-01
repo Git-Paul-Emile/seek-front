@@ -32,14 +32,19 @@ export default function AddLocataire() {
   const annulerBail = useAnnulerBail();
   const creationCancelledRef = useRef(false);
 
-  // Biens disponibles : publiés, type location, statut libre
+  // Biens disponibles : publiés et sans bail actif
+  // On affiche tous les biens publiés qui n'ont pas de bail actif
   const { data: tousLesBiens = [] } = useBiens();
-  const biensLocation: Bien[] = tousLesBiens.filter(
-    (b) =>
-      b.statutAnnonce === "PUBLIE" &&
-      b.typeTransaction?.slug === "location" &&
-      b.statutBien?.slug === "libre"
+  const biensPubliés = tousLesBiens.filter(
+    (b) => b.statutAnnonce === "PUBLIE" && !b.hasBailActif
   );
+
+  // Debug: voir tous les biens et leurs propriétés
+  console.log("Tous les biens:", tousLesBiens);
+  console.log("Bi Published:", biensPubliés);
+  console.log("Bi typeTransaction:", tousLesBiens.map(b => ({ id: b.id, titre: b.titre, typeTransaction: b.typeTransaction, statutBien: b.statutBien, hasBailActif: b.hasBailActif })));
+
+  const biensLocation: Bien[] = biensPubliés;
 
   const [form, setForm] = useState({
     // Locataire
@@ -295,7 +300,7 @@ export default function AddLocataire() {
             {biensLocation.length === 0 ? (
               <div className="flex items-center gap-2 h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-400">
                 <Home className="w-4 h-4 text-slate-300" />
-                Aucun bien de type « Location » disponible
+                Aucun bien publié disponible
               </div>
             ) : (
               <select

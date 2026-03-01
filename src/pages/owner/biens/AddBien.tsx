@@ -5,7 +5,7 @@ import {
   Briefcase, Layers, Ruler, Zap, DollarSign, ImageIcon,
   Plus, X, ChevronRight, Info, Upload, Loader2, AlertCircle,
   ArrowLeftRight, CircleDot, Check, ChevronLeft, ChevronDown,
-  PawPrint, Cigarette, WifiIcon, Search, Star, ArrowLeft,
+  PawPrint, Cigarette, WifiIcon, Search, Star, ArrowLeft, Lock,
 } from "lucide-react";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
@@ -13,6 +13,7 @@ import { useStatutsBien } from "@/hooks/useStatutsBien";
 import { useEquipements } from "@/hooks/useEquipements";
 import { useMeubles } from "@/hooks/useMeubles";
 import { useCreateBien, useBienById, useSoumettreRevision } from "@/hooks/useBien";
+import { useBailActif } from "@/hooks/useBail";
 import { usePays, useVilles } from "@/hooks/useGeo";
 import type { TypeLogement } from "@/api/typeLogement";
 import type { TypeTransaction } from "@/api/typeTransaction";
@@ -223,6 +224,8 @@ export default function AddBien() {
   const { mutateAsync: createBien, isPending: submitting }           = useCreateBien();
   const { mutateAsync: soumettreRevision, isPending: submittingRev } = useSoumettreRevision();
   const isEditingPublished = !!editId && bienToEdit?.statutAnnonce === "PUBLIE";
+  const { data: bailActif } = useBailActif(editId || "");
+  const isLockedByBail = !!editId && !!bailActif && bailActif.statut === "ACTIF";
   const [pendingAction, setPendingAction] = useState<"draft" | "publish" | null>(null);
 
   // ── Onglet actif ──
@@ -691,12 +694,36 @@ export default function AddBien() {
         </div>
       </div>
 
+      {/* Bannière bail actif */}
+      {isLockedByBail && (
+        <div className="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+          <div className="mt-0.5 w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <Lock className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800">Contrat de bail actif — formulaire en lecture seule</p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              Les éléments contractuels (loyer, charges, surface, adresse, type de bien…) ne peuvent pas être modifiés
+              tant qu'un bail est en cours. Pour modifier ces éléments, créez un avenant depuis la fiche du bien.
+            </p>
+            <Link
+              to={`/owner/biens/${editId}`}
+              className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900 transition-colors"
+            >
+              Gérer le bail →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Tab bar */}
       <div className="mb-6">
         <TabBar active={tab} onSelect={handleTabSelect} />
       </div>
 
       <form noValidate className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+
+        <div className={isLockedByBail ? "pointer-events-none select-none opacity-70" : ""}>
 
         {/* ═══════════════════════════════════════════════════════════
             Tab 1 — Informations générales
@@ -1461,8 +1488,28 @@ export default function AddBien() {
           </div>
         )}
 
+        </div>{/* end pointer-events wrapper */}
+
         {/* ── Navigation footer ─────────────────────────────────────── */}
         <div className="flex items-center justify-between pt-2 pb-4">
+          {isLockedByBail ? (
+            /* Footer bail verrouillé */
+            <div className="flex items-center gap-3 w-full justify-between">
+              <Link
+                to={`/owner/biens/${editId}`}
+                className="flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" /> Retour au bien
+              </Link>
+              <Link
+                to={`/owner/biens/${editId}`}
+                className="flex items-center gap-2 h-10 px-6 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-sm transition-all"
+              >
+                <Lock className="w-4 h-4" /> Gérer le bail
+              </Link>
+            </div>
+          ) : (
+          <>
           <div className="flex items-center gap-2">
             <Link
               to={isEditingPublished ? `/owner/biens/${editId}` : "/owner/biens"}
@@ -1531,6 +1578,7 @@ export default function AddBien() {
               </button>
             )}
           </div>
+          </>)}
         </div>
 
       </form>

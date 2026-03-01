@@ -1,10 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
   Building2,
   CheckCircle,
   XCircle,
+  X,
   Clock,
   FileText,
   Loader2,
@@ -37,6 +38,14 @@ import {
   StopCircle,
   AlertTriangle,
   CalendarPlus,
+  TrendingUp,
+  CheckCircle2,
+  CircleDashed,
+  AlertCircle,
+  Shield,
+  ChevronDown,
+  Download,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -44,9 +53,11 @@ import { useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/us
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { StatutAnnonce } from "@/api/bien";
-import { useBailActif, useTerminerBail, useResilierBail, useProlongerBail } from "@/hooks/useBail";
+import { useBailActif, useTerminerBail, useResilierBail, useProlongerBail, useEcheancier, useCaution, useRestituerCaution } from "@/hooks/useBail";
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
+import { generateQuittancePDF } from "@/lib/generateQuittance";
+import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -109,11 +120,22 @@ export default function BienDetail() {
   const resilier = useResilierBail();
   const prolonger = useProlongerBail();
 
+  // Suivi financier — chargé uniquement si bail actif
+  const { data: echeancier = [] } = useEcheancier(id ?? "", bail?.id ?? "");
+  const { data: caution } = useCaution(id ?? "", bail?.id ?? "");
+  const restituerCaution = useRestituerCaution();
+  const { owner } = useOwnerAuth();
+
   const [photoIndex, setPhotoIndex] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [retourOpen, setRetourOpen] = useState(false);
   const [annulerOpen, setAnnulerOpen] = useState(false);
   const [showBailForm, setShowBailForm] = useState(false);
+  const [showNote, setShowNote] = useState(true);
+  React.useEffect(() => {
+    const t = setTimeout(() => setShowNote(false), 8000);
+    return () => clearTimeout(t);
+  }, []);
   const [showContratModal, setShowContratModal] = useState(false);
   const [activeBailForContrat, setActiveBailForContrat] = useState<typeof bail | null>(null);
   const [isContratCreationFlow, setIsContratCreationFlow] = useState(false);
@@ -121,6 +143,10 @@ export default function BienDetail() {
   const [resilierOpen, setResilierOpen] = useState(false);
   const [prolongerOpen, setProlongerOpen] = useState(false);
   const [newDateFin, setNewDateFin] = useState("");
+  const [restituerOpen, setRestituerOpen] = useState(false);
+  const [restituerMontant, setRestituerMontant] = useState("");
+  const [restituerMotif, setRestituerMotif] = useState("");
+  const [echeancierExpanded, setEcheancierExpanded] = useState(false);
 
   if (isLoading) {
     return (
@@ -256,24 +282,30 @@ export default function BienDetail() {
       )}
 
       {/* Note de rejet de révision */}
-      {statut === "PUBLIE" && bien.noteAdmin && !isPendingRevision && (
+      {showNote && statut === "PUBLIE" && bien.noteAdmin && !isPendingRevision && (
         <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-100 rounded-xl text-sm text-orange-700">
           <Info className="w-4 h-4 mt-0.5 shrink-0" />
-          <div>
+          <div className="flex-1">
             <p className="font-semibold mb-0.5">Révision rejetée :</p>
             <p>{bien.noteAdmin}</p>
           </div>
+          <button onClick={() => setShowNote(false)} className="p-1 hover:bg-orange-100 rounded">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
       {/* Note de rejet */}
-      {statut === "REJETE" && bien.noteAdmin && (
+      {showNote && statut === "REJETE" && bien.noteAdmin && (
         <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
           <Info className="w-4 h-4 mt-0.5 shrink-0" />
-          <div>
+          <div className="flex-1">
             <p className="font-semibold mb-0.5">Motif de rejet :</p>
             <p>{bien.noteAdmin}</p>
           </div>
+          <button onClick={() => setShowNote(false)} className="p-1 hover:bg-red-100 rounded">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -538,6 +570,177 @@ export default function BienDetail() {
             </Section>
           )}
 
+          {/* Suivi financier — uniquement si bail actif */}
+          {bail && (
+            <Section title="Suivi financier">
+              <div className="space-y-4">
+
+                {/* Caution */}
+                {caution && (
+                  <div className="bg-slate-50 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-[#D4A843]" />
+                        <span className="text-xs font-semibold text-slate-700">Dépôt de caution</span>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        caution.statut === "RESTITUE" ? "bg-green-100 text-green-700" :
+                        caution.statut === "PARTIELLEMENT_RESTITUE" ? "bg-yellow-100 text-yellow-700" :
+                        caution.statut === "RETENU" ? "bg-red-100 text-red-700" :
+                        "bg-blue-100 text-blue-700"
+                      }`}>
+                        {caution.statut === "RECU" ? "Reçu" :
+                         caution.statut === "RESTITUE" ? "Restitué" :
+                         caution.statut === "PARTIELLEMENT_RESTITUE" ? "Partiel" : "Retenu"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-[#0C1A35]">
+                        {caution.montant.toLocaleString("fr-FR")} FCFA
+                      </span>
+                      {caution.statut === "RECU" && (
+                        <button
+                          onClick={() => { setRestituerMontant(String(caution.montant)); setRestituerOpen(true); }}
+                          className="text-xs text-blue-600 underline hover:text-blue-800"
+                        >
+                          Restituer
+                        </button>
+                      )}
+                    </div>
+                    {caution.montantRestitue != null && (
+                      <p className="text-xs text-slate-500">Restitué : {caution.montantRestitue.toLocaleString("fr-FR")} FCFA</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Échéancier */}
+                {echeancier.length > 0 && (() => {
+                  const total   = echeancier.length;
+                  const payes   = echeancier.filter(e => e.statut === "PAYE" || e.statut === "PARTIEL").length;
+                  const retards = echeancier.filter(e => e.statut === "EN_RETARD").length;
+                  const avenir  = echeancier.filter(e => e.statut === "A_VENIR").length;
+
+                  // Tri : EN_RETARD → EN_ATTENTE → A_VENIR → PAYE/PARTIEL
+                  const ORDER: Record<string, number> = { EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PARTIEL: 3, PAYE: 4, ANNULE: 5 };
+                  const sorted = [...echeancier].sort((a, b) =>
+                    (ORDER[a.statut] ?? 9) - (ORDER[b.statut] ?? 9) ||
+                    new Date(a.dateEcheance).getTime() - new Date(b.dateEcheance).getTime()
+                  );
+                  const visible = echeancierExpanded ? sorted : sorted.slice(0, 4);
+
+                  const STATUT_ECHEANCE: Record<string, { label: string; icon: React.ElementType; rowCls: string; iconCls: string; badgeCls: string }> = {
+                    A_VENIR:    { label: "À venir",            icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-500" },
+                    EN_ATTENTE: { label: "En attente",         icon: AlertCircle,   rowCls: "bg-amber-50 border-amber-100",   iconCls: "text-amber-400",  badgeCls: "bg-amber-100 text-amber-700" },
+                    EN_RETARD:  { label: "En retard",          icon: AlertCircle,   rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
+                    PAYE:       { label: "Payé",               icon: CheckCircle2,  rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
+                    PARTIEL:    { label: "Partiellement payé", icon: CheckCircle2,  rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
+                    ANNULE:     { label: "Annulé",             icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
+                  };
+
+                  return (
+                    <div className="space-y-2">
+                      {/* En-tête */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-[#D4A843]" />
+                          <span className="text-xs font-semibold text-slate-700">Loyers</span>
+                        </div>
+                        <Link
+                          to={`/owner/biens/${id}/paiements`}
+                          className="flex items-center gap-1 text-[10px] text-[#D4A843] font-semibold hover:underline"
+                        >
+                          <History className="w-3 h-3" />
+                          Historique complet
+                        </Link>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="text-slate-500">{payes}/{total} payés</span>
+                          {retards > 0 && <span className="font-semibold text-red-500">{retards} en retard</span>}
+                          {avenir > 0 && <span className="text-slate-400">{avenir} à venir</span>}
+                        </div>
+                      </div>
+
+                      {/* Barre de progression */}
+                      <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${total > 0 ? (payes / total) * 100 : 0}%` }} />
+                      </div>
+
+                      {/* Liste */}
+                      <div className="space-y-1.5 mt-1">
+                        {visible.map((ech) => {
+                          const cfg = STATUT_ECHEANCE[ech.statut] ?? STATUT_ECHEANCE.A_VENIR;
+                          const Icon = cfg.icon;
+                          return (
+                            <div key={ech.id} className={`flex items-center justify-between p-2 rounded-lg border ${cfg.rowCls}`}>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Icon className={`w-3.5 h-3.5 shrink-0 ${cfg.iconCls}`} />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <p className="text-xs font-medium text-slate-700">
+                                      {new Date(ech.dateEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                                    </p>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.badgeCls}`}>
+                                      {cfg.label}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 mt-0.5">
+                                    {ech.montant.toLocaleString("fr-FR")} FCFA
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.datePaiement && (
+                                  <button
+                                    onClick={() => {
+                                      if (!bail || !bien || !owner) return;
+                                      generateQuittancePDF({
+                                        numero: ech.id.slice(0, 8).toUpperCase(),
+                                        dateGeneration: new Date().toLocaleDateString("fr-FR"),
+                                        dateEcheance: ech.dateEcheance,
+                                        datePaiement: ech.datePaiement!,
+                                        modePaiement: ech.modePaiement ?? undefined,
+                                        reference: ech.reference ?? undefined,
+                                        note: ech.note ?? undefined,
+                                        montantLoyer: ech.montant,
+                                        statut: ech.statut,
+                                        bienTitre: bien.titre ?? undefined,
+                                        bienAdresse: [bien.adresse, bien.quartier].filter(Boolean).join(", ") || undefined,
+                                        bienVille: bien.ville ?? undefined,
+                                        bienPays: bien.pays ?? undefined,
+                                        proprietaireNom: `${owner.prenom} ${owner.nom}`,
+                                        proprietaireTelephone: owner.telephone,
+                                        locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
+                                        locataireTelephone: bail.locataire.telephone,
+                                      });
+                                    }}
+                                    title="Télécharger la quittance"
+                                    className="flex items-center gap-1 text-[10px] font-medium text-green-700 hover:text-green-800 px-2 py-1 rounded-lg border border-green-200 hover:bg-green-50 transition-colors"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {total > 4 && (
+                        <button
+                          onClick={() => setEcheancierExpanded(v => !v)}
+                          className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                        >
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${echeancierExpanded ? "rotate-180" : ""}`} />
+                          {echeancierExpanded ? "Réduire" : `Voir tout (${total})`}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+
+              </div>
+            </Section>
+          )}
+
           {/* Localisation */}
           <Section title="Localisation">
             <div className="flex items-start gap-2">
@@ -748,6 +951,46 @@ export default function BienDetail() {
         />
       )}
 
+      {/* Modal restituer la caution */}
+      {restituerOpen && caution && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="font-semibold text-gray-900 mb-1">Restituer la caution</h3>
+            <p className="text-xs text-gray-500 mb-4">Montant initial : {caution.montant.toLocaleString("fr-FR")} FCFA</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Montant restitué (FCFA) *</label>
+                <input type="number" min={0} value={restituerMontant} onChange={e => setRestituerMontant(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Motif de retenue</label>
+                <input type="text" value={restituerMotif} onChange={e => setRestituerMotif(e.target.value)}
+                  placeholder="Ex: Réparations, dégradations…"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none" />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => setRestituerOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Annuler</button>
+              <button
+                disabled={!restituerMontant || restituerCaution.isPending}
+                onClick={() => {
+                  if (!bail) return;
+                  restituerCaution.mutate(
+                    { bienId: id!, bailId: bail.id, payload: { montantRestitue: parseFloat(restituerMontant), motifRetenue: restituerMotif || undefined } },
+                    { onSuccess: () => { toast.success("Caution mise à jour"); setRestituerOpen(false); },
+                      onError: () => toast.error("Erreur") }
+                  );
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
+                {restituerCaution.isPending ? "Enregistrement..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* BailForm modal */}
       {showBailForm && (
         <BailForm
@@ -756,6 +999,9 @@ export default function BienDetail() {
             prix: bien.prix,
             caution: bien.caution,
             frequencePaiement: bien.frequencePaiement,
+            titre: bien.titre,
+            adresse: bien.adresse,
+            ville: bien.ville,
           }}
           onClose={() => setShowBailForm(false)}
           onBailCreated={(newBail) => {

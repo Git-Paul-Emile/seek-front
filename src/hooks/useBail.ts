@@ -6,7 +6,16 @@ import {
   terminerBailApi,
   resilierBailApi,
   prolongerBailApi,
+  getEcheancierApi,
+  payerEcheanceApi,
+  payerMoisMultiplesApi,
+  getCautionApi,
+  restituerCautionApi,
+  getMobileMoneyApi,
+  getSoldeApi,
   type CreateBailPayload,
+  type PayerEcheancePayload,
+  type PayerMoisMultiplesPayload,
 } from "@/api/bail";
 
 const QK = "bail";
@@ -86,6 +95,100 @@ export const useProlongerBail = () => {
     }) => prolongerBailApi(bienId, bailId, dateFinBail),
     onSuccess: (_data, { bienId }) => {
       qc.invalidateQueries({ queryKey: [QK, bienId] });
+    },
+  });
+};
+
+// ─── Échéancier ───────────────────────────────────────────────────────────────
+
+export const useEcheancier = (bienId: string, bailId: string) =>
+  useQuery({
+    queryKey: ["echeancier", bailId],
+    queryFn: () => getEcheancierApi(bienId, bailId),
+    enabled: !!bienId && !!bailId,
+    staleTime: 60 * 1000,
+  });
+
+export const usePayerEcheance = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bienId, bailId, echeanceId, payload,
+    }: { bienId: string; bailId: string; echeanceId: string; payload: PayerEcheancePayload }) =>
+      payerEcheanceApi(bienId, bailId, echeanceId, payload),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
+    },
+  });
+};
+
+// ─── Caution ──────────────────────────────────────────────────────────────────
+
+export const useCaution = (bienId: string, bailId: string) =>
+  useQuery({
+    queryKey: ["caution", bailId],
+    queryFn: () => getCautionApi(bienId, bailId),
+    enabled: !!bienId && !!bailId,
+    staleTime: 2 * 60 * 1000,
+  });
+
+export const useRestituerCaution = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bienId, bailId, payload,
+    }: { bienId: string; bailId: string; payload: { montantRestitue: number; motifRetenue?: string; dateRestitution?: string } }) =>
+      restituerCautionApi(bienId, bailId, payload),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["caution", bailId] });
+    },
+  });
+};
+
+// ─── Mobile Money ─────────────────────────────────────────────────────────────
+
+export const useMobileMoney = (bienId: string) =>
+  useQuery({
+    queryKey: ["mobile-money", bienId],
+    queryFn: () => getMobileMoneyApi(bienId),
+    enabled: !!bienId,
+    staleTime: 10 * 60 * 1000,
+  });
+
+// ─── Solde ────────────────────────────────────────────────────────────────────
+
+export const useSolde = (bienId: string, bailId: string) =>
+  useQuery({
+    queryKey: ["solde", bailId],
+    queryFn: () => getSoldeApi(bienId, bailId),
+    enabled: !!bienId && !!bailId,
+    staleTime: 60 * 1000,
+  });
+
+export const usePayerEcheanceAvecInvalidation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bienId, bailId, echeanceId, payload,
+    }: { bienId: string; bailId: string; echeanceId: string; payload: PayerEcheancePayload }) =>
+      payerEcheanceApi(bienId, bailId, echeanceId, payload),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
+      qc.invalidateQueries({ queryKey: ["solde", bailId] });
+    },
+  });
+};
+
+export const usePayerMoisMultiples = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bienId, bailId, payload,
+    }: { bienId: string; bailId: string; payload: PayerMoisMultiplesPayload }) =>
+      payerMoisMultiplesApi(bienId, bailId, payload),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
+      qc.invalidateQueries({ queryKey: ["solde", bailId] });
     },
   });
 };

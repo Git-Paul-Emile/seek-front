@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { TypePieceIdentite } from "./locataire";
+import type { Echeance } from "./bail";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -82,5 +83,62 @@ export const updateProfilLocataireApi = async (
   payload: UpdateProfilLocatairePayload
 ) => {
   const { data } = await api.put("/profil", payload);
+  return data.data;
+};
+
+export const getLocataireEcheancierApi = async (): Promise<Echeance[]> => {
+  const { data } = await api.get("/echeancier");
+  return data.data;
+};
+
+// ─── Types pour le contrat ────────────────────────────────────────────────────
+
+export interface BailInfo {
+  id: string;
+  typeBail: string | null;
+  dateDebutBail: string;
+  dateFinBail: string | null;
+  montantLoyer: number;
+  montantCaution: number | null;
+  cautionVersee: boolean;
+  jourLimitePaiement: number | null;
+  frequencePaiement: string | null;
+}
+
+export interface BienInfo {
+  id: string;
+  titre: string | null;
+  adresse: string | null;
+  quartier: string | null;
+  ville: string | null;
+  region: string | null;
+}
+
+export interface ModeleInfo {
+  id: string;
+  titre: string;
+  typeBail: string | null;
+}
+
+export interface ContratInfo {
+  id: string;
+  titre: string;
+  contenu: string;
+  statut: string;
+  createdAt: string;
+  updatedAt: string;
+  modele: ModeleInfo;
+}
+
+export interface ContratLocataireData {
+  bail: BailInfo;
+  bien: BienInfo;
+  contrat: ContratInfo;
+}
+
+// ─── API pour le contrat ─────────────────────────────────────────────────────
+
+export const getLocataireContratApi = async (): Promise<ContratLocataireData | null> => {
+  const { data } = await api.get("/contrat");
   return data.data;
 };

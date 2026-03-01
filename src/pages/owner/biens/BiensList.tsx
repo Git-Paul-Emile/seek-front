@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Building2,
@@ -13,6 +13,7 @@ import {
   Eye,
   RotateCcw,
   RefreshCw,
+  UserCheck,
 } from "lucide-react";
 import { StatutAnnonce } from "@/api/bien";
 import { useBiens, useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/useBien";
@@ -41,10 +42,15 @@ function StatutBadge({ statut }: { statut: StatutAnnonce }) {
 }
 
 export default function BiensList() {
-  const [filter, setFilter] = useState<StatutAnnonce | "TOUS">("TOUS");
+  const [filter, setFilter] = useState<StatutAnnonce | "TOUS" | "ASSOCIE">("TOUS");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [retourTargetId, setRetourTargetId] = useState<string | null>(null);
   const [annulerTargetId, setAnnulerTargetId] = useState<string | null>(null);
+  const [showRejetAlert, setShowRejetAlert] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setShowRejetAlert(false), 8000);
+    return () => clearTimeout(t);
+  }, []);
 
   const { data: biens = [], isLoading } = useBiens();
   const deleteMutation = useDeleteBien();
@@ -63,8 +69,12 @@ export default function BiensList() {
     [biens]
   );
 
+  const associeCount = biens.filter((b) => b.hasBailActif).length;
+
   const filteredBiens =
-    filter === "TOUS" ? biens : biens.filter((b) => b.statutAnnonce === filter);
+    filter === "TOUS" ? biens :
+    filter === "ASSOCIE" ? biens.filter((b) => b.hasBailActif) :
+    biens.filter((b) => b.statutAnnonce === filter);
 
   const rejeteCount = counts.REJETE ?? 0;
 
@@ -120,6 +130,19 @@ export default function BiensList() {
           </span>
         </button>
 
+        <button
+          onClick={() => setFilter("ASSOCIE")}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            filter === "ASSOCIE" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          <UserCheck className={`w-3.5 h-3.5 ${filter === "ASSOCIE" ? "text-white" : "text-indigo-500"}`} />
+          Associé
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${filter === "ASSOCIE" ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600"}`}>
+            {associeCount}
+          </span>
+        </button>
+
         {(["BROUILLON", "EN_ATTENTE", "PUBLIE", "REJETE"] as const).map((statut) => {
           const { color, textColor, icon: Icon, label } = STATUT_CONFIG[statut];
           const count = counts[statut] ?? 0;
@@ -143,13 +166,16 @@ export default function BiensList() {
       </div>
 
       {/* Alerte biens rejetés */}
-      {rejeteCount > 0 && (filter === "TOUS" || filter === "REJETE") && (
+      {showRejetAlert && rejeteCount > 0 && (filter === "TOUS" || filter === "REJETE") && (
         <div className="mb-4 flex items-start gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-          <span>
+          <span className="flex-1">
             {rejeteCount} bien{rejeteCount > 1 ? "s" : ""} rejeté
             {rejeteCount > 1 ? "s" : ""}. Consultez le motif et corrigez avant de resoumettre.
           </span>
+          <button onClick={() => setShowRejetAlert(false)} className="p-1 hover:bg-red-100 rounded shrink-0">
+            <XCircle className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -163,6 +189,8 @@ export default function BiensList() {
           <p className="text-slate-500">
             {filter === "TOUS"
               ? "Vous n'avez pas encore de biens."
+              : filter === "ASSOCIE"
+              ? "Vous n'avez aucun bien avec un locataire actif."
               : `Vous n'avez aucun bien avec le statut « ${STATUT_CONFIG[filter].label} ».`}
           </p>
         </div>

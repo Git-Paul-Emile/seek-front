@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { Building2, KeyRound, CheckCircle, ArrowLeft } from "lucide-react";
+import { Building2, KeyRound, CheckCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { activerLocataireApi, meLocataireApi } from "@/api/locataireAuth";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { toast } from "sonner";
@@ -35,6 +35,8 @@ export default function LocataireActivate() {
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
   const [form, setForm] = useState({
     password: "",
@@ -206,13 +208,23 @@ export default function LocataireActivate() {
                     <label className="block text-xs font-medium text-white/50 mb-1.5">
                       Mot de passe <span className="text-red-400">*</span>
                     </label>
-                    <input
-                      type="password"
-                      value={form.password}
-                      onChange={(e) => set("password", e.target.value)}
-                      placeholder="Minimum 6 caractères"
-                      className={inputCls(!!errors.password)}
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPwd ? "text" : "password"}
+                        value={form.password}
+                        onChange={(e) => set("password", e.target.value)}
+                        placeholder="Minimum 6 caractères"
+                        className={inputCls(!!errors.password) + " pr-10"}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPwd((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                     {errors.password && (
                       <p className="text-xs text-red-400 mt-1">{errors.password}</p>
                     )}
@@ -221,13 +233,23 @@ export default function LocataireActivate() {
                     <label className="block text-xs font-medium text-white/50 mb-1.5">
                       Confirmer le mot de passe <span className="text-red-400">*</span>
                     </label>
-                    <input
-                      type="password"
-                      value={form.confirmPassword}
-                      onChange={(e) => set("confirmPassword", e.target.value)}
-                      placeholder="Répéter le mot de passe"
-                      className={inputCls(!!errors.confirmPassword)}
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPwd ? "text" : "password"}
+                        value={form.confirmPassword}
+                        onChange={(e) => set("confirmPassword", e.target.value)}
+                        placeholder="Répéter le mot de passe"
+                        className={inputCls(!!errors.confirmPassword) + " pr-10"}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPwd((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                     {errors.confirmPassword && (
                       <p className="text-xs text-red-400 mt-1">{errors.confirmPassword}</p>
                     )}

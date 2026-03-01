@@ -113,6 +113,7 @@ export interface Bien {
   statutAnnonce: StatutAnnonce;
   noteAdmin: string | null;
   hasPendingRevision: boolean;
+  hasBailActif?: boolean;
   pendingRevision?: BienPendingRevision | null;
   createdAt: string;
   updatedAt: string;

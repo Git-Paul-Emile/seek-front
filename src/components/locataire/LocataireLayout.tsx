@@ -7,6 +7,7 @@ import {
   User,
   ArrowUpRight,
   Search,
+  TrendingUp,
 } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
@@ -14,6 +15,7 @@ import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 const NAV_ITEMS = [
   { to: "/locataire/dashboard", label: "Mon espace", icon: LayoutDashboard },
+  { to: "/locataire/paiements", label: "Mes paiements", icon: TrendingUp },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────

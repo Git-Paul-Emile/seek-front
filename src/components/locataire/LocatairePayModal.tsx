@@ -3,31 +3,31 @@ import {
   X,
   Smartphone,
   Loader2,
-  Send,
+  CheckCircle2,
   Layers,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
-import { initierPaiementLocataireApi } from "@/api/quittance";
 import type { Echeance } from "@/api/bail";
-import type { InitierPaiementResult } from "@/api/quittance";
+import { usePayerEcheancesLocataire } from "@/hooks/useLocataireEcheancier";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
-const PROVIDERS = ["Orange Money", "Wave"];
+const PROVIDERS = ["Orange Money", "Wave", "Autre"];
 
 const PROVIDER_INFO: Record<string, string> = {
   "Orange Money": "Composez *144# puis suivez les instructions pour envoyer le montant.",
   "Wave": "Ouvrez l'application Wave et effectuez un envoi d'argent.",
+  "Autre": "Conservez votre référence de transaction pour la saisir ci-dessous.",
 };
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
+const todayIso = () => new Date().toISOString().split("T")[0];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface LocatairePayModalProps {
-  /** Toutes les échéances du bail (pour calculer les impayées) */
   echeancier: Echeance[];
   onClose: () => void;
 }
@@ -35,53 +35,64 @@ interface LocatairePayModalProps {
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
 export default function LocatairePayModal({ echeancier, onClose }: LocatairePayModalProps) {
-  // Échéances impayées triées chronologiquement
   const unpaid = echeancier
     .filter(e => e.statut !== "PAYE" && e.statut !== "ANNULE")
     .sort((a, b) => new Date(a.dateEcheance).getTime() - new Date(b.dateEcheance).getTime());
 
-  const nextPayable = unpaid[0];
   const unpaidCount = unpaid.length;
 
   const [nombreMois, setNombreMois] = useState(1);
-  const [provider, setProvider] = useState(PROVIDERS[0]);
-  const [showProviderInfo, setShowProviderInfo] = useState(true);
-  const [result, setResult] = useState<InitierPaiementResult | null>(null);
-  const [isPending, setIsPending] = useState(false);
+  const [datePaiement, setDatePaiement] = useState(todayIso());
+  const [modePaiement, setModePaiement] = useState(PROVIDERS[0]);
+  const [reference, setReference] = useState("");
+  const [note, setNote] = useState("");
+  const [showProviderInfo, setShowProviderInfo] = useState(false);
 
-  // Échéances à payer selon le nombre de mois sélectionné
+  const { mutate, isPending } = usePayerEcheancesLocataire();
+
   const echeancesToPay = unpaid.slice(0, nombreMois);
   const totalAmount = echeancesToPay.reduce((s, e) => s + e.montant, 0);
 
-  const handleSubmit = async () => {
-    setIsPending(true);
-    setResult(null);
-    try {
-      let lastResult: InitierPaiementResult | null = null;
-      for (const ech of echeancesToPay) {
-        lastResult = await initierPaiementLocataireApi({ echeanceId: ech.id, provider });
+  const canSubmit =
+    datePaiement.length > 0 &&
+    new Date(datePaiement) <= new Date(todayIso()) &&
+    totalAmount > 0 &&
+    !isPending;
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    mutate(
+      {
+        nombreMois,
+        datePaiement,
+        modePaiement,
+        reference: reference.trim() || undefined,
+        note: note.trim() || undefined,
+      },
+      {
+        onSuccess: (res) => {
+          toast.success(
+            res.paye > 1
+              ? `${res.paye} mois enregistrés avec succès`
+              : "Paiement enregistré avec succès"
+          );
+          onClose();
+        },
+        onError: () => {
+          toast.error("Erreur lors de l'enregistrement du paiement");
+        },
       }
-      setResult(lastResult);
-      toast.success(
-        nombreMois > 1
-          ? `${nombreMois} mois initiés — votre propriétaire a été notifié`
-          : "Initiation enregistrée — votre propriétaire a été notifié"
-      );
-    } catch {
-      toast.error("Erreur lors de l'initiation du paiement");
-    } finally {
-      setIsPending(false);
-    }
+    );
   };
 
-  if (!nextPayable) return null;
+  if (unpaidCount === 0) return null;
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-[#0C1A35]">Payer mon loyer</h3>
+          <h3 className="font-bold text-[#0C1A35]">Enregistrer un paiement</h3>
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg">
             <X className="w-4 h-4 text-slate-500" />
           </button>
@@ -92,12 +103,12 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
           <div className="bg-slate-50 rounded-xl p-3">
             <p className="text-xs text-slate-500 mb-0.5">Prochaine échéance</p>
             <p className="font-semibold text-[#0C1A35] text-sm">
-              {new Date(nextPayable.dateEcheance).toLocaleDateString("fr-FR", {
+              {new Date(unpaid[0].dateEcheance).toLocaleDateString("fr-FR", {
                 day: "numeric", month: "long", year: "numeric",
               })}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
-              {fmt(nextPayable.montant)} FCFA / mois
+              {fmt(unpaid[0].montant)} FCFA / mois
             </p>
           </div>
 
@@ -120,50 +131,62 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
                   {nombreMois}
                 </span>
               </div>
-              {nombreMois > 1 && (
-                <div className="mt-2 flex items-center gap-2 bg-[#D4A843]/10 border border-[#D4A843]/30 rounded-lg px-3 py-2">
-                  <Layers className="w-3.5 h-3.5 text-[#D4A843] shrink-0" />
-                  <p className="text-xs text-[#0C1A35]">
-                    <span className="font-bold">{nombreMois} mois</span> d'un coup ·{" "}
-                    <span className="font-bold">{fmt(totalAmount)} FCFA</span> au total
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
-          {/* Info Mobile Money */}
-          <div className="border border-[#D4A843]/30 rounded-xl overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowProviderInfo(v => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-[#D4A843]/10 hover:bg-[#D4A843]/15 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-[#D4A843]" />
-                <span className="text-sm font-semibold text-[#0C1A35]">
-                  Payer via Mobile Money
-                </span>
+          {/* Résumé montant */}
+          {nombreMois > 0 && (
+            <div className="flex items-center gap-2 bg-[#D4A843]/10 border border-[#D4A843]/30 rounded-lg px-3 py-2">
+              <Layers className="w-3.5 h-3.5 text-[#D4A843] shrink-0" />
+              <p className="text-xs text-[#0C1A35]">
+                <span className="font-bold">{nombreMois} mois</span>
+                {nombreMois > 1 ? " d'un coup" : ""} ·{" "}
+                <span className="font-bold">{fmt(totalAmount)} FCFA</span> au total
+              </p>
+            </div>
+          )}
+
+          {/* Mois concernés */}
+          {echeancesToPay.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-slate-500">Mois concernés</p>
+              <div className="flex flex-wrap gap-1.5">
+                {echeancesToPay.map(e => (
+                  <span
+                    key={e.id}
+                    className="text-[10px] bg-slate-100 text-slate-600 rounded-full px-2 py-0.5 capitalize"
+                  >
+                    {new Date(e.dateEcheance).toLocaleDateString("fr-FR", {
+                      month: "short", year: "numeric",
+                    })}
+                  </span>
+                ))}
               </div>
-              {showProviderInfo
-                ? <ChevronUp className="w-4 h-4 text-slate-400" />
-                : <ChevronDown className="w-4 h-4 text-slate-400" />
-              }
-            </button>
-            {showProviderInfo && (
-              <div className="px-4 py-3 space-y-1">
-                <p className="text-xs font-bold text-[#0C1A35]">{provider}</p>
-                <p className="text-xs text-slate-500">{PROVIDER_INFO[provider]}</p>
-              </div>
-            )}
+            </div>
+          )}
+
+          {/* Date de paiement */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Date de paiement <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={datePaiement}
+              max={todayIso()}
+              onChange={e => setDatePaiement(e.target.value)}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50"
+            />
           </div>
 
-          {/* Choix opérateur */}
+          {/* Opérateur / mode de paiement */}
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Opérateur</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Opérateur / Mode de paiement <span className="text-red-500">*</span>
+            </label>
             <select
-              value={provider}
-              onChange={e => setProvider(e.target.value)}
+              value={modePaiement}
+              onChange={e => setModePaiement(e.target.value)}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50"
             >
               {PROVIDERS.map(p => (
@@ -172,46 +195,87 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
             </select>
           </div>
 
-          {/* Résultat de l'initiation */}
-          {result && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 space-y-1">
-              <p className="font-semibold">{result.statut}</p>
-              {result.instructions && <p>{result.instructions}</p>}
-              {result.message && <p className="text-blue-400">{result.message}</p>}
-            </div>
-          )}
+          {/* Référence transaction */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Référence de transaction <span className="text-slate-400">(optionnel)</span>
+            </label>
+            <input
+              type="text"
+              value={reference}
+              onChange={e => setReference(e.target.value)}
+              placeholder="Ex : TXN-123456"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50"
+            />
+          </div>
+
+          {/* Note */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Note <span className="text-slate-400">(optionnel)</span>
+            </label>
+            <input
+              type="text"
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="Remarque éventuelle"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50"
+            />
+          </div>
+
+          {/* Instructions Mobile Money (collapsible) */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowProviderInfo(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-slate-100 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-slate-400" />
+                <span className="text-xs font-medium text-slate-600">
+                  Comment payer via {modePaiement}
+                </span>
+              </div>
+              {showProviderInfo
+                ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              }
+            </button>
+            {showProviderInfo && (
+              <div className="px-4 py-3 bg-white">
+                <p className="text-xs text-slate-500">
+                  {PROVIDER_INFO[modePaiement] ?? "Effectuez votre paiement et notez la référence."}
+                </p>
+              </div>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="flex gap-3 pt-1">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition-colors"
+              disabled={isPending}
+              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 disabled:opacity-60 transition-colors"
             >
-              {result ? "Fermer" : "Annuler"}
+              Annuler
             </button>
-            {!result && (
-              <button
-                onClick={handleSubmit}
-                disabled={isPending}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#D4A843] text-white rounded-xl text-sm font-semibold hover:bg-[#c49a38] disabled:opacity-60 transition-colors"
-              >
-                {isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-                {isPending
-                  ? "Envoi..."
-                  : nombreMois > 1
-                  ? `Initier ${nombreMois} mois`
-                  : "Initier le paiement"}
-              </button>
-            )}
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#D4A843] text-white rounded-xl text-sm font-semibold hover:bg-[#c49a38] disabled:opacity-60 transition-colors"
+            >
+              {isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4" />
+              )}
+              {isPending
+                ? "Enregistrement..."
+                : nombreMois > 1
+                ? `Enregistrer ${nombreMois} mois`
+                : "Enregistrer le paiement"}
+            </button>
           </div>
-
-          <p className="text-[10px] text-slate-400 text-center">
-            Votre propriétaire recevra une notification et confirmera le paiement.
-          </p>
         </div>
       </div>
     </div>

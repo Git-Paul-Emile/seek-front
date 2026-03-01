@@ -136,6 +136,23 @@ export interface ContratLocataireData {
   contrat: ContratInfo;
 }
 
+// ─── Paiement direct (locataire) ─────────────────────────────────────────────
+
+export interface PayerEcheancesLocatairePayload {
+  nombreMois: number;
+  datePaiement: string;
+  modePaiement: string;
+  reference?: string;
+  note?: string;
+}
+
+export const payerEcheancesLocataireApi = async (
+  payload: PayerEcheancesLocatairePayload
+): Promise<{ paye: number; ids: string[] }> => {
+  const { data } = await api.post("/paiement/payer", payload);
+  return data.data;
+};
+
 // ─── API pour le contrat ─────────────────────────────────────────────────────
 
 export const getLocataireContratApi = async (): Promise<ContratLocataireData | null> => {

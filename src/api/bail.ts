@@ -9,7 +9,7 @@ const api = axios.create({
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type StatutBail = "ACTIF" | "TERMINE" | "RESILIE";
+export type StatutBail = "ACTIF" | "EN_PREAVIS" | "EN_RENOUVELLEMENT" | "TERMINE" | "RESILIE" | "ARCHIVE";
 
 export interface BailLocataire {
   id: string;
@@ -17,7 +17,7 @@ export interface BailLocataire {
   prenom: string;
   telephone: string;
   email?: string | null;
-  statut: "INVITE" | "ACTIF" | "INACTIF";
+  statut: "INVITE" | "ACTIF" | "INACTIF" | "ANCIEN";
   nbOccupants: number;
   presenceEnfants: boolean;
 }
@@ -129,6 +129,7 @@ export interface Echeance {
   modePaiement?: string | null;
   reference?: string | null;
   note?: string | null;
+  sourceEnregistrement?: "LOCATAIRE" | "PROPRIETAIRE" | null;
 }
 
 export interface PayerEcheancePayload {
@@ -233,5 +234,39 @@ export interface SoldeData {
 
 export const getSoldeApi = async (bienId: string, bailId: string): Promise<SoldeData> => {
   const { data } = await api.get(`/${bienId}/bail/${bailId}/solde`);
+  return data.data;
+};
+
+export const prolongerEcheancesAnneeApi = async (
+  bienId: string,
+  bailId: string,
+  anneeActuelle: number
+): Promise<{ generated: number; annee: number; existed?: number }> => {
+  const { data } = await api.post(
+    `/${bienId}/bail/${bailId}/echeancier/prolonger-annee`,
+    { anneeActuelle }
+  );
+  return data.data;
+};
+
+// ─── Fin de bail ──────────────────────────────────────────────────────────────
+
+export const mettreEnPreavisApi = async (bienId: string, bailId: string): Promise<Bail> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/preavis`);
+  return data.data;
+};
+
+export const mettreEnRenouvellementApi = async (bienId: string, bailId: string): Promise<Bail> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/renouvellement`);
+  return data.data;
+};
+
+export const archiverBailApi = async (bienId: string, bailId: string): Promise<Bail> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/archiver`);
+  return data.data;
+};
+
+export const getBailAArchiverApi = async (bienId: string): Promise<Bail | null> => {
+  const { data } = await api.get(`/${bienId}/bail/a-archiver`);
   return data.data;
 };

@@ -46,6 +46,9 @@ import {
   ChevronDown,
   Download,
   History,
+  Archive,
+  Bell,
+  RefreshCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -53,7 +56,11 @@ import { useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/us
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { StatutAnnonce } from "@/api/bien";
-import { useBailActif, useTerminerBail, useResilierBail, useProlongerBail, useEcheancier, useCaution, useRestituerCaution } from "@/hooks/useBail";
+import {
+  useBailActif, useTerminerBail, useResilierBail, useProlongerBail,
+  useEcheancier, useCaution, useRestituerCaution,
+  useBailAArchiver, useMettreEnPreavis, useMettreEnRenouvellement, useArchiverBail,
+} from "@/hooks/useBail";
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
@@ -123,6 +130,14 @@ export default function BienDetail() {
   const terminer = useTerminerBail();
   const resilier = useResilierBail();
   const prolonger = useProlongerBail();
+  const mettreEnPreavis = useMettreEnPreavis();
+  const mettreEnRenouvellement = useMettreEnRenouvellement();
+  const archiver = useArchiverBail();
+
+  // Bail à archiver (TERMINE/RESILIE) — chargé uniquement si pas de bail actif
+  const { data: bailAArchiver } = useBailAArchiver(
+    isLocation && !bail ? (id ?? "") : ""
+  );
 
   // Suivi financier — chargé uniquement si bail actif
   const { data: echeancier = [] } = useEcheancier(id ?? "", bail?.id ?? "");
@@ -151,6 +166,11 @@ export default function BienDetail() {
   const [restituerMontant, setRestituerMontant] = useState("");
   const [restituerMotif, setRestituerMotif] = useState("");
   const [echeancierExpanded, setEcheancierExpanded] = useState(false);
+  const [preavisOpen, setPreavisOpen] = useState(false);
+  const [renouvellementOpen, setRenouvellementOpen] = useState(false);
+  const [archiverOpen, setArchiverOpen] = useState(false);
+  const [archiverRestituerMontant, setArchiverRestituerMontant] = useState("");
+  const [archiverRestituerMotif, setArchiverRestituerMotif] = useState("");
 
   if (isLoading) {
     return (
@@ -476,87 +496,167 @@ export default function BienDetail() {
           {/* Section Locataire — uniquement pour les biens en location */}
           {isLocation && (
             <Section title="Locataire actuel">
-              {bail ? (
-                <div className="space-y-3">
-                  {/* Locataire */}
-                  <Link
-                    to={`/owner/locataires/${bail.locataireId}`}
-                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
-                  >
-                    <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
-                      {bail.locataire.prenom[0]}{bail.locataire.nom[0]}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm text-[#0C1A35]">
-                        {bail.locataire.prenom} {bail.locataire.nom}
-                      </p>
-                      <p className="text-xs text-slate-500 flex items-center gap-1">
-                        <Phone className="w-3 h-3" />
-                        {bail.locataire.telephone}
-                      </p>
-                    </div>
-                  </Link>
+              {bail ? (() => {
+                const statut = bail.statut;
+                const daysUntilEnd = bail.dateFinBail
+                  ? Math.ceil((new Date(bail.dateFinBail).getTime() - Date.now()) / 86400000)
+                  : null;
+                const approachingEnd = statut === "ACTIF" && daysUntilEnd !== null && daysUntilEnd <= 30 && daysUntilEnd >= 0;
 
-                  {/* Infos bail */}
-                  <div className="text-sm space-y-1.5">
-                    {bail.typeBail && (
-                      <InfoRow label="Type de bail" value={bail.typeBail} />
+                const BAIL_STATUT_BADGE: Record<string, { label: string; cls: string }> = {
+                  ACTIF:             { label: "Actif",              cls: "bg-green-100 text-green-700" },
+                  EN_PREAVIS:        { label: "En préavis",         cls: "bg-orange-100 text-orange-700" },
+                  EN_RENOUVELLEMENT: { label: "En renouvellement",  cls: "bg-blue-100 text-blue-700" },
+                };
+                const badge = BAIL_STATUT_BADGE[statut];
+
+                return (
+                  <div className="space-y-3">
+                    {/* Locataire */}
+                    <Link
+                      to={`/owner/locataires/${bail.locataireId}`}
+                      className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
+                        {bail.locataire.prenom[0]}{bail.locataire.nom[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-[#0C1A35]">
+                          {bail.locataire.prenom} {bail.locataire.nom}
+                        </p>
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          {bail.locataire.telephone}
+                        </p>
+                      </div>
+                      {badge && (
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${badge.cls}`}>
+                          {badge.label}
+                        </span>
+                      )}
+                    </Link>
+
+                    {/* Alerte approche fin de bail */}
+                    {approachingEnd && (
+                      <div className="flex items-start gap-2 p-2.5 bg-orange-50 border border-orange-100 rounded-lg text-xs text-orange-700">
+                        <Bell className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                        <span>
+                          Le bail se termine dans <strong>{daysUntilEnd} jour{daysUntilEnd > 1 ? "s" : ""}</strong>.
+                          Mettez-le en préavis pour entamer la procédure de fin.
+                        </span>
+                      </div>
                     )}
-                    <InfoRow
-                      label="Début du bail"
-                      value={new Date(bail.dateDebutBail).toLocaleDateString("fr-FR")}
-                    />
-                    {bail.dateFinBail && (
+
+                    {/* Alerte EN_PREAVIS */}
+                    {statut === "EN_PREAVIS" && (
+                      <div className="flex items-start gap-2 p-2.5 bg-orange-50 border border-orange-100 rounded-lg text-xs text-orange-700">
+                        <Bell className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                        <span>
+                          Bail en période de préavis.
+                          {bail.dateFinBail && ` Fin prévue le ${new Date(bail.dateFinBail).toLocaleDateString("fr-FR")}.`}
+                          {" "}Choisissez de renouveler ou de terminer.
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Alerte EN_RENOUVELLEMENT */}
+                    {statut === "EN_RENOUVELLEMENT" && (
+                      <div className="flex items-start gap-2 p-2.5 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
+                        <RefreshCcw className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                        <span>
+                          Renouvellement en cours. Prolongez le bail pour confirmer la nouvelle période.
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Infos bail */}
+                    <div className="text-sm space-y-1.5">
+                      {bail.typeBail && (
+                        <InfoRow label="Type de bail" value={bail.typeBail} />
+                      )}
                       <InfoRow
-                        label="Fin du bail"
-                        value={new Date(bail.dateFinBail).toLocaleDateString("fr-FR")}
+                        label="Début du bail"
+                        value={new Date(bail.dateDebutBail).toLocaleDateString("fr-FR")}
                       />
-                    )}
-                    <InfoRow
-                      label="Loyer"
-                      value={`${bail.montantLoyer.toLocaleString("fr-FR")} FCFA`}
-                    />
-                    {bail.renouvellement && (
-                      <p className="text-xs text-green-600">✓ Renouvellement possible</p>
-                    )}
-                  </div>
+                      {bail.dateFinBail && (
+                        <InfoRow
+                          label="Fin du bail"
+                          value={new Date(bail.dateFinBail).toLocaleDateString("fr-FR")}
+                        />
+                      )}
+                      <InfoRow
+                        label="Loyer"
+                        value={`${bail.montantLoyer.toLocaleString("fr-FR")} FCFA`}
+                      />
+                      {bail.renouvellement && (
+                        <p className="text-xs text-green-600">✓ Renouvellement possible</p>
+                      )}
+                    </div>
 
-                  {/* Actions bail */}
-                  <div className="flex flex-col gap-2 pt-1">
-                    <button
-                      onClick={() => { setActiveBailForContrat(bail); setIsContratCreationFlow(false); setShowContratModal(true); }}
-                      className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      Voir le contrat
-                    </button>
-                    <button
-                      onClick={() => setProlongerOpen(true)}
-                      className="flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors"
-                    >
-                      <CalendarPlus className="w-3.5 h-3.5" />
-                      Prolonger le bail
-                    </button>
-                    {bail.dateFinBail ? (
+                    {/* Actions bail — selon statut */}
+                    <div className="flex flex-col gap-2 pt-1">
                       <button
-                        onClick={() => setResilierOpen(true)}
-                        className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
+                        onClick={() => { setActiveBailForContrat(bail); setIsContratCreationFlow(false); setShowContratModal(true); }}
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
                       >
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        Résilier le bail
+                        <FileText className="w-3.5 h-3.5" />
+                        Voir le contrat
                       </button>
-                    ) : (
+
+                      {/* Prolonger / Confirmer renouvellement */}
                       <button
-                        onClick={() => setTerminerOpen(true)}
-                        className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
+                        onClick={() => setProlongerOpen(true)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors"
                       >
-                        <StopCircle className="w-3.5 h-3.5" />
-                        Terminer le bail
+                        <CalendarPlus className="w-3.5 h-3.5" />
+                        {statut === "EN_RENOUVELLEMENT" ? "Confirmer la nouvelle date" : "Prolonger le bail"}
                       </button>
-                    )}
+
+                      {/* Mettre en préavis — ACTIF uniquement, si dateFinBail renseignée */}
+                      {statut === "ACTIF" && bail.dateFinBail && (
+                        <button
+                          onClick={() => setPreavisOpen(true)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
+                        >
+                          <Bell className="w-3.5 h-3.5" />
+                          Mettre en préavis
+                        </button>
+                      )}
+
+                      {/* Mettre en renouvellement — EN_PREAVIS uniquement */}
+                      {statut === "EN_PREAVIS" && (
+                        <button
+                          onClick={() => setRenouvellementOpen(true)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5" />
+                          Mettre en renouvellement
+                        </button>
+                      )}
+
+                      {/* Résilier / Terminer */}
+                      {(statut === "ACTIF" || statut === "EN_PREAVIS") ? (
+                        <button
+                          onClick={() => setResilierOpen(true)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          Résilier le bail
+                        </button>
+                      ) : null}
+                      {(statut === "ACTIF" || statut === "EN_PREAVIS" || statut === "EN_RENOUVELLEMENT") && (
+                        <button
+                          onClick={() => setTerminerOpen(true)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
+                        >
+                          <StopCircle className="w-3.5 h-3.5" />
+                          Terminer le bail
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ) : (
+                );
+              })() : (
                 <div className="text-center py-4">
                   <User className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                   <p className="text-sm text-slate-400 mb-3">
@@ -571,6 +671,58 @@ export default function BienDetail() {
                   </button>
                 </div>
               )}
+            </Section>
+          )}
+
+          {/* Section Bail à archiver — bail terminé ou résilié en attente d'archivage */}
+          {isLocation && !bail && bailAArchiver && (
+            <Section title="Bail terminé">
+              <div className="space-y-3">
+                {/* Locataire */}
+                <Link
+                  to={`/owner/locataires/${bailAArchiver.locataireId}`}
+                  className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center font-bold text-sm shrink-0">
+                    {bailAArchiver.locataire.prenom[0]}{bailAArchiver.locataire.nom[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-[#0C1A35]">
+                      {bailAArchiver.locataire.prenom} {bailAArchiver.locataire.nom}
+                    </p>
+                    <p className="text-xs text-slate-500 flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {bailAArchiver.locataire.telephone}
+                    </p>
+                  </div>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                    bailAArchiver.statut === "RESILIE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    {bailAArchiver.statut === "RESILIE" ? "Résilié" : "Terminé"}
+                  </span>
+                </Link>
+
+                {/* Infos */}
+                <div className="text-sm space-y-1.5">
+                  <InfoRow label="Début" value={new Date(bailAArchiver.dateDebutBail).toLocaleDateString("fr-FR")} />
+                  {bailAArchiver.dateFinBail && (
+                    <InfoRow label="Fin" value={new Date(bailAArchiver.dateFinBail).toLocaleDateString("fr-FR")} />
+                  )}
+                  <InfoRow label="Loyer" value={`${bailAArchiver.montantLoyer.toLocaleString("fr-FR")} FCFA`} />
+                </div>
+
+                <button
+                  onClick={() => {
+                    setArchiverRestituerMontant("");
+                    setArchiverRestituerMotif("");
+                    setArchiverOpen(true);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors"
+                >
+                  <Archive className="w-3.5 h-3.5" />
+                  Archiver le bail
+                </button>
+              </div>
             </Section>
           )}
 
@@ -685,6 +837,15 @@ export default function BienDetail() {
                                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.badgeCls}`}>
                                       {cfg.label}
                                     </span>
+                                    {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
+                                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                                        ech.sourceEnregistrement === "LOCATAIRE"
+                                          ? "bg-blue-100 text-blue-700"
+                                          : "bg-purple-100 text-purple-700"
+                                      }`}>
+                                        {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="text-[10px] text-slate-500 mt-0.5">
                                     {ech.montant.toLocaleString("fr-FR")} FCFA
@@ -1021,6 +1182,125 @@ export default function BienDetail() {
                 }}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
                 {restituerCaution.isPending ? "Enregistrement..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal mettre en préavis */}
+      <ConfirmModal
+        open={preavisOpen}
+        title="Mettre le bail en préavis"
+        message={`Le bail passera en statut "En préavis". Vous pourrez ensuite choisir de le renouveler ou de le terminer à la date prévue.`}
+        confirmLabel="Confirmer le préavis"
+        cancelLabel="Annuler"
+        variant="warning"
+        isPending={mettreEnPreavis.isPending}
+        onConfirm={() =>
+          mettreEnPreavis.mutate(
+            { bienId: bien.id, bailId: bail!.id },
+            {
+              onSuccess: () => { toast.success("Bail en préavis"); setPreavisOpen(false); refetchBail(); },
+              onError: () => { toast.error("Erreur"); setPreavisOpen(false); },
+            }
+          )
+        }
+        onCancel={() => setPreavisOpen(false)}
+      />
+
+      {/* Modal mettre en renouvellement */}
+      <ConfirmModal
+        open={renouvellementOpen}
+        title="Mettre le bail en renouvellement"
+        message={`Le bail passera en statut "En renouvellement". Prolongez ensuite le bail pour confirmer la nouvelle période.`}
+        confirmLabel="Confirmer le renouvellement"
+        cancelLabel="Annuler"
+        variant="warning"
+        isPending={mettreEnRenouvellement.isPending}
+        onConfirm={() =>
+          mettreEnRenouvellement.mutate(
+            { bienId: bien.id, bailId: bail!.id },
+            {
+              onSuccess: () => { toast.success("Bail en renouvellement"); setRenouvellementOpen(false); refetchBail(); },
+              onError: () => { toast.error("Erreur"); setRenouvellementOpen(false); },
+            }
+          )
+        }
+        onCancel={() => setRenouvellementOpen(false)}
+      />
+
+      {/* Modal archiver le bail */}
+      {archiverOpen && bailAArchiver && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Archive className="w-5 h-5 text-slate-500" />
+              <h3 className="font-semibold text-gray-900">Archiver le bail</h3>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              Le contrat passera en archivé et le locataire sera marqué comme ancien locataire.
+            </p>
+
+            {/* Restitution caution optionnelle */}
+            {bailAArchiver.montantCaution && bailAArchiver.montantCaution > 0 && (
+              <div className="space-y-3 mb-4 p-3 bg-slate-50 rounded-lg">
+                <p className="text-xs font-semibold text-slate-700">
+                  Restitution de la caution (optionnel)
+                </p>
+                <p className="text-xs text-slate-500">
+                  Caution initiale : {bailAArchiver.montantCaution.toLocaleString("fr-FR")} FCFA
+                </p>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Montant restitué (FCFA)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={archiverRestituerMontant}
+                    onChange={e => setArchiverRestituerMontant(e.target.value)}
+                    placeholder="Laisser vide si déjà traitée"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                {archiverRestituerMontant && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Motif de retenue</label>
+                    <input
+                      type="text"
+                      value={archiverRestituerMotif}
+                      onChange={e => setArchiverRestituerMotif(e.target.value)}
+                      placeholder="Ex: Réparations, dégradations…"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setArchiverOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                disabled={archiver.isPending}
+                onClick={() => {
+                  archiver.mutate(
+                    { bienId: bien.id, bailId: bailAArchiver.id },
+                    {
+                      onSuccess: () => {
+                        toast.success("Bail archivé — locataire passé en ancien locataire");
+                        setArchiverOpen(false);
+                      },
+                      onError: () => toast.error("Erreur lors de l'archivage"),
+                    }
+                  );
+                }}
+                className="flex-1 px-4 py-2 bg-slate-700 text-white rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-60"
+              >
+                {archiver.isPending ? "Archivage…" : "Archiver"}
               </button>
             </div>
           </div>

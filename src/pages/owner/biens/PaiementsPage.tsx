@@ -15,6 +15,7 @@ import {
   Clock,
   Bell,
   FileText,
+  CalendarPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -23,6 +24,7 @@ import {
   useEcheancier,
   useSolde,
   useMobileMoney,
+  useProlongerEcheancesAnnee,
 } from "@/hooks/useBail";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
@@ -117,13 +119,38 @@ export default function PaiementsPage() {
   const { data: solde } = useSolde(id ?? "", bail?.id ?? "");
   const { data: mobileMoney } = useMobileMoney(id ?? "");
 
+  const { mutate: prolongerAnnee, isPending: isProlonging } = useProlongerEcheancesAnnee();
+
   const [filter, setFilter] = useState<StatutFilter>("TOUT");
   const [showAllMM, setShowAllMM] = useState(false);
 
+  const currentYear = new Date().getFullYear();
+  // displayYear contrôle jusqu'à quelle année les A_VENIR sont affichées
+  const [displayYear, setDisplayYear] = useState(currentYear);
+
+  // N'afficher les A_VENIR que jusqu'à displayYear (masque les années futures pré-générées)
+  const visibleEcheancier = echeancier.filter(
+    e => e.statut !== "A_VENIR" || new Date(e.dateEcheance).getFullYear() <= displayYear
+  );
+
+  // Bannière : dernière échéance visible est en décembre de displayYear, bail continue au-delà
+  const lastVisible = visibleEcheancier.length > 0
+    ? visibleEcheancier.reduce((a, b) =>
+        new Date(a.dateEcheance) > new Date(b.dateEcheance) ? a : b
+      )
+    : null;
+  const showRenewalBanner =
+    !!bail &&
+    ["ACTIF", "EN_PREAVIS", "EN_RENOUVELLEMENT"].includes(bail.statut) &&
+    !!lastVisible &&
+    new Date(lastVisible.dateEcheance).getFullYear() === displayYear &&
+    new Date(lastVisible.dateEcheance).getMonth() === 11 &&
+    (!bail.dateFinBail || new Date(bail.dateFinBail).getFullYear() > displayYear);
+
   const isLoading = bienLoading || bailLoading || echLoading;
 
-  // Filtrage + tri
-  const filtered = echeancier.filter(
+  // Filtrage + tri sur les échéances visibles
+  const filtered = visibleEcheancier.filter(
     e => filter === "TOUT" || e.statut === filter
   );
   const sorted = [...filtered].sort(
@@ -167,32 +194,12 @@ export default function PaiementsPage() {
   };
 
   const FILTER_TABS: { key: StatutFilter; label: string; count?: number }[] = [
-    { key: "TOUT", label: "Tout", count: echeancier.length },
-    {
-      key: "EN_RETARD",
-      label: "En retard",
-      count: echeancier.filter(e => e.statut === "EN_RETARD").length,
-    },
-    {
-      key: "EN_ATTENTE",
-      label: "En attente",
-      count: echeancier.filter(e => e.statut === "EN_ATTENTE").length,
-    },
-    {
-      key: "A_VENIR",
-      label: "À venir",
-      count: echeancier.filter(e => e.statut === "A_VENIR").length,
-    },
-    {
-      key: "PAYE",
-      label: "Payés",
-      count: echeancier.filter(e => e.statut === "PAYE").length,
-    },
-    {
-      key: "PARTIEL",
-      label: "Partiels",
-      count: echeancier.filter(e => e.statut === "PARTIEL").length,
-    },
+    { key: "TOUT",       label: "Tout",       count: visibleEcheancier.length },
+    { key: "EN_RETARD",  label: "En retard",  count: visibleEcheancier.filter(e => e.statut === "EN_RETARD").length },
+    { key: "EN_ATTENTE", label: "En attente", count: visibleEcheancier.filter(e => e.statut === "EN_ATTENTE").length },
+    { key: "A_VENIR",    label: "À venir",    count: visibleEcheancier.filter(e => e.statut === "A_VENIR").length },
+    { key: "PAYE",       label: "Payés",      count: visibleEcheancier.filter(e => e.statut === "PAYE").length },
+    { key: "PARTIEL",    label: "Partiels",   count: visibleEcheancier.filter(e => e.statut === "PARTIEL").length },
   ];
 
   if (isLoading) {
@@ -372,6 +379,52 @@ export default function PaiementsPage() {
         </div>
       )}
 
+      {/* Bannière renouvellement annuel */}
+      {showRenewalBanner && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center gap-4">
+          <div className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-100">
+            <CalendarPlus className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-indigo-800">
+              Paiements planifiés jusqu'en décembre {currentYear}
+            </p>
+            <p className="text-xs text-indigo-600 mt-0.5">
+              Renouvelez le bail pour générer les paiements de {currentYear + 1}.
+            </p>
+          </div>
+          <button
+            onClick={() =>
+              prolongerAnnee(
+                { bienId: id!, bailId: bail!.id, anneeActuelle: displayYear },
+                {
+                  onSuccess: (res) => {
+                    setDisplayYear(res.annee);
+                    toast.success(
+                      res.generated > 0
+                        ? `${res.generated} paiement(s) générés pour ${res.annee}`
+                        : `Paiements de ${res.annee} affichés`
+                    );
+                  },
+                  onError: () =>
+                    toast.error("Impossible de générer les paiements"),
+                }
+              )
+            }
+            disabled={isProlonging}
+            className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700
+              text-white text-sm font-semibold transition-colors disabled:opacity-60"
+          >
+            {isProlonging ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <CalendarPlus className="w-4 h-4" />
+            )}
+            Générer {currentYear + 1}
+          </button>
+        </div>
+      )}
+
       {/* Filtres + liste */}
       <div className="bg-white rounded-2xl border border-slate-100 p-4">
         <div className="flex flex-wrap gap-2 mb-4">
@@ -432,6 +485,15 @@ export default function PaiementsPage() {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
                         {cfg.label}
                       </span>
+                      {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                          ech.sourceEnregistrement === "LOCATAIRE"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-purple-100 text-purple-700"
+                        }`}>
+                          {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {fmt(total)} FCFA

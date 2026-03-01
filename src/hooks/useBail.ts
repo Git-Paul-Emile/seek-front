@@ -13,6 +13,11 @@ import {
   restituerCautionApi,
   getMobileMoneyApi,
   getSoldeApi,
+  mettreEnPreavisApi,
+  mettreEnRenouvellementApi,
+  archiverBailApi,
+  getBailAArchiverApi,
+  prolongerEcheancesAnneeApi,
   type CreateBailPayload,
   type PayerEcheancePayload,
   type PayerMoisMultiplesPayload,
@@ -189,6 +194,64 @@ export const usePayerMoisMultiples = () => {
     onSuccess: (_data, { bailId }) => {
       qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
       qc.invalidateQueries({ queryKey: ["solde", bailId] });
+    },
+  });
+};
+
+// ─── Fin de bail ──────────────────────────────────────────────────────────────
+
+export const useBailAArchiver = (bienId: string) =>
+  useQuery({
+    queryKey: [QK + "_a_archiver", bienId],
+    queryFn: () => getBailAArchiverApi(bienId),
+    enabled: !!bienId,
+    staleTime: 60 * 1000,
+  });
+
+export const useMettreEnPreavis = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bienId, bailId }: { bienId: string; bailId: string }) =>
+      mettreEnPreavisApi(bienId, bailId),
+    onSuccess: (_data, { bienId }) => {
+      qc.invalidateQueries({ queryKey: [QK, bienId] });
+    },
+  });
+};
+
+export const useMettreEnRenouvellement = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bienId, bailId }: { bienId: string; bailId: string }) =>
+      mettreEnRenouvellementApi(bienId, bailId),
+    onSuccess: (_data, { bienId }) => {
+      qc.invalidateQueries({ queryKey: [QK, bienId] });
+    },
+  });
+};
+
+export const useProlongerEcheancesAnnee = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bienId, bailId, anneeActuelle }: { bienId: string; bailId: string; anneeActuelle: number }) =>
+      prolongerEcheancesAnneeApi(bienId, bailId, anneeActuelle),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
+      qc.invalidateQueries({ queryKey: ["solde", bailId] });
+    },
+  });
+};
+
+export const useArchiverBail = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bienId, bailId }: { bienId: string; bailId: string }) =>
+      archiverBailApi(bienId, bailId),
+    onSuccess: (_data, { bienId }) => {
+      qc.invalidateQueries({ queryKey: [QK, bienId] });
+      qc.invalidateQueries({ queryKey: [QK + "_a_archiver", bienId] });
+      qc.invalidateQueries({ queryKey: [QK_BIENS, bienId] });
+      qc.invalidateQueries({ queryKey: [QK_BIENS] });
     },
   });
 };

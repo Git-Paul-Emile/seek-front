@@ -19,7 +19,7 @@ import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useLocataireEcheancier } from "@/hooks/useLocataireEcheancier";
 import { useQuittancesLocataire } from "@/hooks/useQuittance";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
-import type { StatutPaiement } from "@/api/bail";
+import type { Echeance, StatutPaiement } from "@/api/bail";
 import LocatairePayModal from "@/components/locataire/LocatairePayModal";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -56,12 +56,18 @@ export default function PaiementsLocatairePage() {
   const bailActif = locataire?.bails?.find(b => b.statut === "ACTIF");
   const hasBailActif = !!bailActif;
 
-  const { data: echeancier = [], isLoading } = useLocataireEcheancier(hasBailActif);
+  const { data: rawEcheancier = [], isLoading } = useLocataireEcheancier(hasBailActif);
   const { data: quittances = [] } = useQuittancesLocataire(hasBailActif);
 
   const [filter, setFilter] = useState<StatutFilter>("TOUT");
   const [showPayModal, setShowPayModal] = useState(false);
   const [showMM, setShowMM] = useState(false);
+
+  // On n'affiche les A_VENIR que pour l'année en cours (masque les futures années pré-générées)
+  const currentYear = new Date().getFullYear();
+  const echeancier = rawEcheancier.filter(
+    e => e.statut !== "A_VENIR" || new Date(e.dateEcheance).getFullYear() === currentYear
+  );
 
   // Stats calculées depuis l'échéancier
   const nbPaye    = echeancier.filter(e => e.statut === "PAYE").length;
@@ -339,6 +345,15 @@ export default function PaiementsLocatairePage() {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
                         {cfg.label}
                       </span>
+                      {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                          ech.sourceEnregistrement === "LOCATAIRE"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-purple-100 text-purple-700"
+                        }`}>
+                          {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {fmt(ech.montant)} FCFA

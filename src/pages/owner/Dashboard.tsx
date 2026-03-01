@@ -13,6 +13,8 @@ import {
   MapPin,
   Banknote,
   Users,
+  TrendingUp,
+  AlertTriangle,
 } from "lucide-react";
 import {
   PieChart,
@@ -24,7 +26,6 @@ import {
 } from "recharts";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
-import { useLocataires } from "@/hooks/useLocataire";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -93,8 +94,6 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { name
 export default function OwnerDashboard() {
   const { owner } = useOwnerAuth();
   const { data: stats, isLoading } = useOwnerStats();
-  const { data: locataires = [] } = useLocataires();
-  const nbLocatairesActifs = locataires.filter((l) => l.statut === "ACTIF").length;
 
   const pieData = (stats?.byStatut ?? [])
     .filter((s) => s.count > 0)
@@ -166,11 +165,38 @@ export default function OwnerDashboard() {
             {statutsSorted.map((s) => (
               <StatCard key={s.statut} statut={s.statut} count={s.count} />
             ))}
+          </div>
+
+          {/* Stats locataires & paiements */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="rounded-2xl border border-slate-100 p-4 flex items-center gap-3 bg-indigo-50">
               <Users className="w-5 h-5 shrink-0 text-indigo-600" />
               <div>
-                <p className="text-xl font-bold text-[#0C1A35]">{nbLocatairesActifs}</p>
+                <p className="text-xl font-bold text-[#0C1A35]">{stats?.nbLocatairesActifs ?? 0}</p>
                 <p className="text-xs font-medium text-indigo-600">Locataires actifs</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-100 p-4 flex items-center gap-3 bg-emerald-50">
+              <Building2 className="w-5 h-5 shrink-0 text-emerald-600" />
+              <div>
+                <p className="text-xl font-bold text-[#0C1A35]">{stats?.nbBailsActifs ?? 0}</p>
+                <p className="text-xs font-medium text-emerald-600">Baux actifs</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-100 p-4 flex items-center gap-3 bg-[#D4A843]/10">
+              <TrendingUp className="w-5 h-5 shrink-0 text-[#D4A843]" />
+              <div className="min-w-0">
+                <p className="text-xl font-bold text-[#0C1A35] truncate">
+                  {(stats?.montantMensuelLoyers ?? 0).toLocaleString("fr-FR")}
+                </p>
+                <p className="text-xs font-medium text-[#D4A843]">FCFA / mois</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-100 p-4 flex items-center gap-3 bg-red-50">
+              <AlertTriangle className="w-5 h-5 shrink-0 text-red-500" />
+              <div>
+                <p className="text-xl font-bold text-[#0C1A35]">{stats?.nbEcheancesEnRetard ?? 0}</p>
+                <p className="text-xs font-medium text-red-500">Loyers en retard</p>
               </div>
             </div>
           </div>

@@ -1116,17 +1116,10 @@ export default function AddBien() {
                     </div>
                   )}
                 </div>
-                <label className="flex items-center gap-2.5 cursor-pointer group select-none">
-                  <input
-                    type="checkbox"
-                    checked={chargesIncluses}
-                    onChange={(e) => setChargesIncluses(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-[#D4A843] accent-[#D4A843] cursor-pointer"
-                  />
-                  <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">
-                    Charges comprises dans le prix <span className="text-slate-400">(eau, électricité…)</span>
-                  </span>
-                </label>
+                <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Charges non incluses</span>
+                  <span className="text-xs text-slate-400">Le locataire règle eau, électricité… en sus du loyer</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1563,7 +1556,7 @@ export default function AddBien() {
                       className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                      {!editId ? "Soumettre l'annonce" : bienToEdit?.statutAnnonce === "REJETE" ? "Resoumettre l'annonce" : "Mettre à jour l'annonce"}
+                      {!editId ? "Soumettre l'annonce" : bienToEdit?.statutAnnonce === "REJETE" ? "Resoumettre l'annonce" : bienToEdit?.statutAnnonce === "BROUILLON" ? "Soumettre l'annonce" : "Mettre à jour l'annonce"}
                     </button>
                   </>
                 )}

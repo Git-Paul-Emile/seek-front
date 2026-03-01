@@ -193,6 +193,10 @@ export interface OwnerStats {
     updatedAt: string;
     hasPendingRevision: boolean;
   }[];
+  nbLocatairesActifs: number;
+  nbBailsActifs: number;
+  montantMensuelLoyers: number;
+  nbEcheancesEnRetard: number;
 }
 
 export const fetchOwnerStats = (): Promise<OwnerStats> =>

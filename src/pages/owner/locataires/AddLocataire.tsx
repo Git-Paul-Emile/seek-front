@@ -59,6 +59,8 @@ export default function AddLocataire() {
     dateDebutBail: "",
     dateFinBail: "",
     typeBail: "Habitation",
+    cautionVersee: false,
+    jourLimitePaiement: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -125,6 +127,8 @@ export default function AddLocataire() {
           montantCaution: bienSelectionne?.caution ?? null,
           frequencePaiement: bienSelectionne?.frequencePaiement ?? null,
           typeBail: form.typeBail || null,
+          cautionVersee: form.cautionVersee,
+          jourLimitePaiement: form.jourLimitePaiement ? parseInt(form.jourLimitePaiement) : null,
         },
       });
 
@@ -382,6 +386,44 @@ export default function AddLocataire() {
               <option value="Commercial">Commercial</option>
               <option value="Mixte">Mixte</option>
             </select>
+          </div>
+
+          {/* Caution versée + Jour limite paiement */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                Caution versée <span className="text-red-400">*</span>
+              </label>
+              <div className="flex gap-3 h-10 items-center">
+                {[{ label: "Oui", value: true }, { label: "Non", value: false }].map(({ label, value }) => (
+                  <label key={label} className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cautionVersee"
+                      checked={form.cautionVersee === value}
+                      onChange={() => set("cautionVersee", value)}
+                      className="accent-[#D4A843]"
+                    />
+                    <span className="text-sm text-slate-700">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                Date butoir de paiement{" "}
+                <span className="text-slate-300 font-normal">(1–28, optionnel)</span>
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={28}
+                value={form.jourLimitePaiement}
+                onChange={(e) => set("jourLimitePaiement", e.target.value)}
+                placeholder="Ex : 5"
+                className={inputCls(false)}
+              />
+            </div>
           </div>
 
           {/* Conditions financières — lecture seule depuis l'annonce */}

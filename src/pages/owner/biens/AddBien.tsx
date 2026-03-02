@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Home, BedDouble, MapPin,
@@ -14,13 +14,13 @@ import { useEquipements } from "@/hooks/useEquipements";
 import { useMeubles } from "@/hooks/useMeubles";
 import { useCreateBien, useBienById, useSoumettreRevision } from "@/hooks/useBien";
 import { useBailActif } from "@/hooks/useBail";
-import { usePays, useVilles } from "@/hooks/useGeo";
+import { usePays, useVilles, useQuartiers } from "@/hooks/useGeo";
 import type { TypeLogement } from "@/api/typeLogement";
 import type { TypeTransaction } from "@/api/typeTransaction";
 import type { StatutBien } from "@/api/statutBien";
 import type { Equipement } from "@/api/equipement";
 import type { Meuble } from "@/api/meuble";
-import type { Pays, Ville } from "@/api/geo";
+import type { Pays, Ville, Quartier } from "@/api/geo";
 import { toast } from "sonner";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -51,26 +51,6 @@ const TABS = [
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif", "image/jfif", "image/pjpeg"];
 const MAX_SIZE = 5 * 1024 * 1024;
-
-// ─── Nominatim types ──────────────────────────────────────────────────────────
-
-interface NominatimResult {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
-  address?: {
-    road?: string;
-    neighbourhood?: string;
-    suburb?: string;
-    city?: string;
-    town?: string;
-    village?: string;
-    state?: string;
-    country?: string;
-    country_code?: string;
-  };
-}
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 
@@ -167,46 +147,6 @@ interface PhotoFile {
   preview: string;
 }
 
-// ─── Nominatim autocomplete ───────────────────────────────────────────────────
-
-function useNominatim(query: string, countryCode: string) {
-  const [results, setResults] = useState<NominatimResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (query.length <= 2) {
-      setResults([]);
-      return;
-    }
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    timerRef.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const ccParam = countryCode ? `&countrycodes=${countryCode.toLowerCase()}` : "";
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}${ccParam}&limit=5&addressdetails=1`;
-        const res = await fetch(url, {
-          headers: { "Accept-Language": "fr", "User-Agent": "seek-immobilier/1.0" },
-        });
-        const data: NominatimResult[] = await res.json();
-        setResults(data);
-      } catch {
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [query, countryCode]);
-
-  return { results, loading, clear: () => setResults([]) };
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AddBien() {
@@ -236,11 +176,10 @@ export default function AddBien() {
   const [titre,            setTitre]            = useState("");
   const [selectedPays,     setSelectedPays]     = useState<Pays | null>(null);
   const [selectedVille,    setSelectedVille]    = useState<Ville | null>(null);
-  const [quartierInput,    setQuartierInput]    = useState("");
+  const [selectedQuartier, setSelectedQuartier] = useState<Quartier | null>(null);
   const [latitude,         setLatitude]         = useState<number | null>(null);
   const [longitude,        setLongitude]        = useState<number | null>(null);
   const [description,      setDescription]      = useState("");
-  const [quartierOpen,     setQuartierOpen]     = useState(false);
 
   // ── Onglet 2 : Caractéristiques ──
   const [surface,    setSurface]    = useState<string>("");
@@ -291,12 +230,9 @@ export default function AddBien() {
   const initialComparableRef = useRef<string | null>(null);
 
   // ── Géographie DB ──
-  const { data: paysList = [], isLoading: paysLoading }   = usePays();
+  const { data: paysList = [], isLoading: paysLoading }     = usePays();
   const { data: villesList = [], isLoading: villesLoading } = useVilles(selectedPays?.id ?? null);
-
-  // ── Nominatim ──
-  const { results: nominatimResults, loading: nominatimLoading, clear: clearNominatim } =
-    useNominatim(quartierInput, selectedPays?.code ?? "");
+  const { data: quartiersList = [], isLoading: quartiersLoading } = useQuartiers(selectedVille?.id ?? null);
 
   // ── Init champs en mode édition — attend que toutes les listes soient chargées ──
   useEffect(() => {
@@ -310,7 +246,6 @@ export default function AddBien() {
     // Champs simples
     if (bienToEdit.titre)            setTitre(bienToEdit.titre);
     if (bienToEdit.description)      setDescription(bienToEdit.description);
-    if (bienToEdit.quartier)         setQuartierInput(bienToEdit.quartier);
     if (bienToEdit.latitude)         setLatitude(bienToEdit.latitude);
     if (bienToEdit.longitude)        setLongitude(bienToEdit.longitude);
     if (bienToEdit.surface)          setSurface(String(bienToEdit.surface));
@@ -356,6 +291,17 @@ export default function AddBien() {
     }
   }, [bienToEdit, villesList, villesLoading]);
 
+  // ── Init quartier (dépend de quartiersList qui se charge après selectedVille) ──
+  useEffect(() => {
+    if (!bienToEdit?.quartier || quartiersLoading || !quartiersList.length || selectedQuartier) return;
+    const q = quartiersList.find(q => q.nom === bienToEdit.quartier);
+    if (q) {
+      setSelectedQuartier(q);
+      setLatitude(q.latitude);
+      setLongitude(q.longitude);
+    }
+  }, [bienToEdit, quartiersList, quartiersLoading, selectedQuartier]);
+
   const currentComparable = JSON.stringify({
     titre: titre.trim() || null,
     description: description.trim() || null,
@@ -364,8 +310,8 @@ export default function AddBien() {
     statutBienId: selectedStatut?.id ?? null,
     pays: selectedPays?.nom ?? null,
     region: selectedVille?.nom ?? null,
-    quartier: quartierInput.trim() || null,
-    adresse: quartierInput.trim() || null,
+    quartier: selectedQuartier?.nom ?? null,
+    quartierId: selectedQuartier?.id ?? null,
     latitude: latitude ?? null,
     longitude: longitude ?? null,
     surface: parseOptionalNumber(surface),
@@ -431,25 +377,6 @@ export default function AddBien() {
     prevInitIdRef.current = null;
     setIsDirty(false);
   }, [editId]);
-
-  // Select Nominatim suggestion
-  const handleSelectNominatim = useCallback((r: NominatimResult) => {
-    setQuartierInput(r.display_name);
-    setLatitude(parseFloat(r.lat));
-    setLongitude(parseFloat(r.lon));
-
-    // Auto-sélectionner la région correspondante depuis notre DB
-    const regionName = r.address?.state ?? r.address?.city ?? r.address?.town ?? r.address?.village;
-    if (regionName && villesList.length > 0) {
-      const matched = villesList.find(
-        (v) => v.nom.toLowerCase() === regionName.toLowerCase()
-      );
-      if (matched) setSelectedVille(matched);
-    }
-
-    clearNominatim();
-    setQuartierOpen(false);
-  }, [clearNominatim, villesList]);
 
   // ── Photo handlers ──
   const handlePhotoFiles = (files: FileList | null) => {
@@ -568,10 +495,10 @@ export default function AddBien() {
       statutBienId: selectedStatut!.id,
       pays: selectedPays?.nom,
       region: selectedVille?.nom ?? "",
-      quartier: quartierInput.trim() || undefined,
-      adresse: quartierInput.trim() || undefined,
-      latitude,
-      longitude,
+      quartier: selectedQuartier?.nom || undefined,
+      quartierId: selectedQuartier?.id || undefined,
+      latitude: selectedQuartier?.latitude ?? latitude,
+      longitude: selectedQuartier?.longitude ?? longitude,
       surface: surface ? parseFloat(surface) : undefined,
       nbChambres: nbChambres || undefined,
       nbSdb: nbSdb || undefined,
@@ -854,7 +781,7 @@ export default function AddBien() {
                           onChange={(e) => {
                             const found = villesList.find((v) => v.id === e.target.value) ?? null;
                             setSelectedVille(found);
-                            setQuartierInput("");
+                            setSelectedQuartier(null);
                             setLatitude(null);
                             setLongitude(null);
                           }}
@@ -875,49 +802,45 @@ export default function AddBien() {
                   </div>
                 </div>
 
-                {/* Quartier avec Nominatim */}
-                <div className="relative">
-                  <label className={labelCls}>
-                    Quartier
-                    <span className="text-slate-400 font-normal ml-1">(autocomplete)</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={quartierInput}
-                      onChange={(e) => {
-                        setQuartierInput(e.target.value);
-                        setLatitude(null);
-                        setLongitude(null);
-                        setQuartierOpen(true);
-                      }}
-                      onFocus={() => setQuartierOpen(true)}
-                      onBlur={() => setTimeout(() => setQuartierOpen(false), 200)}
-                      placeholder="Tapez un quartier ou une adresse (min. 3 caractères)…"
-                      className={`${inputCls} pr-9`}
-                    />
-                    {nominatimLoading && (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />
-                    )}
-                  </div>
-
-                  {/* Suggestions dropdown — z-[200] pour passer au-dessus de tout */}
-                  {quartierOpen && nominatimResults.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-[200] mt-1 bg-white rounded-xl border border-slate-200 shadow-2xl">
-                      {nominatimResults.map((r) => (
-                        <button
-                          key={r.place_id}
-                          type="button"
-                          onMouseDown={() => handleSelectNominatim(r)}
-                          className="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-[#D4A843]/8 hover:text-[#0C1A35] border-b border-slate-100 last:border-0 transition-colors first:rounded-t-xl last:rounded-b-xl"
-                        >
-                          <div className="flex items-start gap-2.5">
-                            <MapPin className="w-4 h-4 text-[#D4A843] flex-shrink-0 mt-0.5" />
-                            <span className="leading-snug">{r.display_name}</span>
-                          </div>
-                        </button>
-                      ))}
+                {/* Quartier — select depuis la DB */}
+                <div>
+                  <label className={labelCls}>Quartier</label>
+                  {quartiersLoading ? (
+                    <div className="flex items-center gap-2 h-10 text-slate-400 text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Chargement…
                     </div>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        value={selectedQuartier?.id ?? ""}
+                        onChange={(e) => {
+                          const q = quartiersList.find((q) => q.id === e.target.value) ?? null;
+                          setSelectedQuartier(q);
+                          setLatitude(q?.latitude ?? null);
+                          setLongitude(q?.longitude ?? null);
+                        }}
+                        disabled={!selectedVille}
+                        className={`${inputCls} cursor-pointer appearance-none pr-8 disabled:opacity-40 disabled:cursor-not-allowed`}
+                      >
+                        <option value="">
+                          {selectedVille
+                            ? quartiersList.length === 0
+                              ? "— Aucun quartier disponible —"
+                              : "— Choisir un quartier —"
+                            : "— Sélectionnez d'abord une région —"}
+                        </option>
+                        {quartiersList.map((q) => (
+                          <option key={q.id} value={q.id}>{q.nom}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                  )}
+                  {selectedQuartier && (
+                    <p className="mt-1.5 text-xs text-emerald-600 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      GPS : {selectedQuartier.latitude.toFixed(5)}, {selectedQuartier.longitude.toFixed(5)}
+                    </p>
                   )}
                 </div>
 

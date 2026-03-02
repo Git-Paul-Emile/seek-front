@@ -41,6 +41,9 @@ import StatutsBien from "./pages/admin/categories/StatutsBien";
 import MeubleEquipement from "./pages/admin/categories/MeubleEquipement";
 import Annonces from "./pages/admin/Annonces";
 import AdminAnnonceDetail from "./pages/admin/AnnonceDetail";
+import PaysPage from "./pages/admin/geo/PaysPage";
+import VillesPage from "./pages/admin/geo/VillesPage";
+import QuartiersPage from "./pages/admin/geo/QuartiersPage";
 import LocatairesList from "./pages/owner/locataires/LocatairesList";
 import AddLocataire from "./pages/owner/locataires/AddLocataire";
 import LocataireDetail from "./pages/owner/locataires/LocataireDetail";
@@ -136,6 +139,9 @@ const App = () => (
                     <Route path="biens/meuble-equipement" element={<MeubleEquipement />} />
                     <Route path="annonces"                element={<Annonces />} />
                     <Route path="annonces/:id"            element={<AdminAnnonceDetail />} />
+                    <Route path="geo/pays"                element={<PaysPage />} />
+                    <Route path="geo/villes"              element={<VillesPage />} />
+                    <Route path="geo/quartiers"           element={<QuartiersPage />} />
                   </Route>
                 </Route>
               </Routes>

@@ -15,6 +15,9 @@ import {
   FileSearch,
   User,
   FileText,
+  Globe,
+  MapPin,
+  Navigation,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -36,6 +39,16 @@ const NAV_GROUPS = [
       { to: "/admin/biens/transactions",      label: "Transactions",        icon: ArrowLeftRight },
       { to: "/admin/biens/statuts",           label: "Statuts",             icon: CircleDot },
       { to: "/admin/biens/meuble-equipement", label: "Meuble & Équipement", icon: Sofa },
+    ],
+  },
+  {
+    label: "Géographie",
+    icon: Globe,
+    basePath: "/admin/geo",
+    children: [
+      { to: "/admin/geo/pays",      label: "Pays",      icon: Globe },
+      { to: "/admin/geo/villes",    label: "Villes",    icon: MapPin },
+      { to: "/admin/geo/quartiers", label: "Quartiers", icon: Navigation },
     ],
   },
 ];

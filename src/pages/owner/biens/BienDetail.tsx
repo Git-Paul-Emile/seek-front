@@ -49,10 +49,11 @@ import {
   Archive,
   Bell,
   RefreshCcw,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
-import { useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/useBien";
+import { useDeleteBien, useRetourBrouillon, useAnnulerAnnonce, useSoumettreBien } from "@/hooks/useBien";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import type { StatutAnnonce } from "@/api/bien";
@@ -122,6 +123,7 @@ export default function BienDetail() {
   const deleteMutation = useDeleteBien();
   const retour = useRetourBrouillon();
   const annuler = useAnnulerAnnonce();
+  const soumettre = useSoumettreBien();
 
   const isLocation = bien?.typeTransaction?.slug === "location";
   const { data: bail, refetch: refetchBail } = useBailActif(
@@ -206,14 +208,14 @@ export default function BienDetail() {
   const hasMeubles = bien.meubles && bien.meubles.length > 0;
 
   const isPendingRevision = bien.hasPendingRevision === true;
-  // EN_ATTENTE: Annuler la soumission + Annuler l'annonce (pas Modifier)
+  // EN_ATTENTE: Annuler la soumission (→ BROUILLON, pas modifier)
   // PUBLIE: Modifier (si pas de révision en attente) + Dépublier + Supprimer
-  // BROUILLON/REJETE: Modifier + Annuler l'annonce
+  // BROUILLON/REJETE: Modifier + Annuler l'annonce (= suppression définitive)
   const canEdit    = (statut === "BROUILLON" || statut === "REJETE") ||
                      (statut === "PUBLIE" && !isPendingRevision);
   const canDelete  = statut === "PUBLIE";
   const canRetour  = statut === "EN_ATTENTE" || statut === "PUBLIE";
-  const canAnnuler = statut === "BROUILLON" || statut === "EN_ATTENTE" || statut === "REJETE";
+  const canAnnuler = statut === "BROUILLON" || statut === "REJETE";
   const retourLabel = statut === "EN_ATTENTE" ? "Annuler la soumission" : "Dépublier";
   const retourMessage =
     statut === "EN_ATTENTE"
@@ -245,6 +247,20 @@ export default function BienDetail() {
 
         <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
           <StatutBadge statut={statut} />
+          {statut === "BROUILLON" && (
+            <button
+              onClick={() => soumettre.mutate(bien.id, {
+                onSuccess: () => toast.success("Annonce soumise à la modération"),
+                onError: () => toast.error("Erreur lors de la soumission"),
+              })}
+              disabled={soumettre.isPending}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
+                bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />
+              Soumettre l'annonce
+            </button>
+          )}
           {canEdit && (
             <Link
               to={`/owner/biens/ajouter?edit=${bien.id}`}
@@ -662,13 +678,23 @@ export default function BienDetail() {
                   <p className="text-sm text-slate-400 mb-3">
                     Aucun locataire associé
                   </p>
-                  <button
-                    onClick={() => setShowBailForm(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    <UserPlus className="w-3.5 h-3.5" />
-                    Associer un locataire
-                  </button>
+                  {statut !== "PUBLIE" ? (
+                    <p className="text-xs text-slate-400 italic">
+                      Publiez le bien pour pouvoir associer un locataire.
+                    </p>
+                  ) : bien.statutBien?.slug !== "libre" ? (
+                    <p className="text-xs text-slate-400 italic">
+                      Le bien doit être au statut <strong>Libre</strong> pour associer un locataire.
+                    </p>
+                  ) : (
+                    <button
+                      onClick={() => setShowBailForm(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      Associer un locataire
+                    </button>
+                  )}
                 </div>
               )}
             </Section>
@@ -1009,9 +1035,9 @@ export default function BienDetail() {
       {/* Modal annulation */}
       <ConfirmModal
         open={annulerOpen}
-        title="Annuler l'annonce"
-        message="Cette action annulera définitivement l'annonce. Elle ne sera plus visible ni comptabilisée côté administration."
-        confirmLabel="Confirmer l'annulation"
+        title="Supprimer l'annonce"
+        message="Cette action est irréversible. L'annonce et toutes ses données seront définitivement supprimées."
+        confirmLabel="Supprimer définitivement"
         cancelLabel="Retour"
         variant="danger"
         isPending={annuler.isPending}

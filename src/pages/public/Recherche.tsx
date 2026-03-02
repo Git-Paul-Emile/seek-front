@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
   Search, MapPin, X, Loader2, Building2,
-  LayoutGrid, List, BedDouble, Maximize2, ShowerHead,
+  BedDouble, Maximize2, ShowerHead,
   ArrowRight, Car, Armchair, ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -150,7 +150,6 @@ const RecherchePage = () => {
   const [typeLogement,    setTypeLogement]    = useState(searchParams.get("typeLogement") ?? "");
   const [typeTransaction, setTypeTransaction] = useState(searchParams.get("typeTransaction") ?? "");
   const [sort,            setSort]            = useState<SortKey>((searchParams.get("sort") as SortKey) ?? "recent");
-  const [viewMode,        setViewMode]        = useState<"grid" | "list">("grid");
 
   const sp = searchParams;
   const sortParams = sortToParams((sp.get("sort") as SortKey) ?? "recent");
@@ -357,36 +356,14 @@ const RecherchePage = () => {
             {isFetching && !isLoading && (
               <Loader2 className="w-4 h-4 animate-spin text-[#D4A843]" />
             )}
-            <div className="flex border border-slate-200 rounded-lg overflow-hidden">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 transition-colors ${viewMode === "grid" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-400 hover:text-slate-600"}`}
-                aria-label="Vue grille"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 transition-colors border-l border-slate-200 ${viewMode === "list" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-400 hover:text-slate-600"}`}
-                aria-label="Vue liste"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
 
         {/* ── Résultats ── */}
         {isLoading ? (
-          viewMode === "grid" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)}
-            </div>
-          )
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center">
             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
@@ -407,16 +384,10 @@ const RecherchePage = () => {
               </Button>
             )}
           </div>
-        ) : viewMode === "grid" ? (
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {items.map((bien) => (
               <PropertyCard key={bien.id} property={bien} isApiData />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {items.map((bien) => (
-              <ListCard key={bien.id} bien={bien} />
             ))}
           </div>
         )}
@@ -444,40 +415,6 @@ const RecherchePage = () => {
           );
         })()}
       </div>
-
-      {/* ── Bloc SEO ── */}
-      {!isLoading && (
-        <div className="bg-white border-t border-slate-100 py-12 px-4 mt-6">
-          <div className="container mx-auto max-w-3xl">
-            <h2 className="text-xl font-bold text-[#1A2942] mb-3">
-              Immobilier à Dakar et au Sénégal — SEEK
-            </h2>
-            <p className="text-slate-500 text-sm leading-relaxed mb-5">
-              Découvrez des milliers d'annonces immobilières au Sénégal : appartements, maisons, terrains et bureaux
-              à louer ou à vendre à Dakar, Thiès, Saint-Louis et dans toutes les grandes villes.
-              SEEK connecte propriétaires et locataires en toute simplicité.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: "Appartements à Dakar", q: "Dakar",   t: "appartement" },
-                { label: "Maisons à Dakar",       q: "Dakar",   t: "maison"      },
-                { label: "Terrains à Thiès",      q: "Thiès",   t: "terrain"     },
-                { label: "Bureaux à Dakar",        q: "Dakar",   t: "bureau"      },
-                { label: "Location Plateau",       q: "Plateau", t: ""            },
-                { label: "Location Almadies",      q: "Almadies",t: ""            },
-              ].map(({ label, q, t }) => (
-                <Link
-                  key={label}
-                  to={`/annonces?${new URLSearchParams({ ...(q ? { quartier: q } : {}), ...(t ? { typeLogement: t } : {}), page: "1" }).toString()}`}
-                  className="text-xs border border-slate-200 text-slate-500 hover:border-[#0C1A35] hover:text-[#0C1A35] px-3 py-1.5 rounded-full transition-colors"
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

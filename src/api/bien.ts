@@ -248,8 +248,8 @@ export const deleteBien = (id: string): Promise<void> =>
 export const retourBrouillon = (id: string): Promise<Bien> =>
   api.patch<{ data: Bien }>(`/${id}/retour-brouillon`).then((r) => r.data.data);
 
-export const annulerAnnonce = (id: string): Promise<Bien> =>
-  api.patch<{ data: Bien }>(`/${id}/annuler`).then((r) => r.data.data);
+export const annulerAnnonce = (id: string): Promise<void> =>
+  api.patch(`/${id}/annuler`).then(() => undefined);
 
 export const soumettreRevision = async (
   id: string,

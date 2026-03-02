@@ -14,9 +14,10 @@ import {
   RotateCcw,
   RefreshCw,
   UserCheck,
+  Send,
 } from "lucide-react";
 import { StatutAnnonce } from "@/api/bien";
-import { useBiens, useDeleteBien, useRetourBrouillon, useAnnulerAnnonce } from "@/hooks/useBien";
+import { useBiens, useDeleteBien, useRetourBrouillon, useSoumettreBien } from "@/hooks/useBien";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { toast } from "sonner";
 
@@ -45,7 +46,6 @@ export default function BiensList() {
   const [filter, setFilter] = useState<StatutAnnonce | "TOUS" | "ASSOCIE">("TOUS");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [retourTargetId, setRetourTargetId] = useState<string | null>(null);
-  const [annulerTargetId, setAnnulerTargetId] = useState<string | null>(null);
   const [showRejetAlert, setShowRejetAlert] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setShowRejetAlert(false), 8000);
@@ -55,7 +55,7 @@ export default function BiensList() {
   const { data: biens = [], isLoading } = useBiens();
   const deleteMutation = useDeleteBien();
   const retour = useRetourBrouillon();
-  const annuler = useAnnulerAnnonce();
+  const soumettre = useSoumettreBien();
 
   const counts = useMemo(
     () =>
@@ -261,13 +261,9 @@ export default function BiensList() {
 
                       {/* Date */}
                       <td className="px-6 py-4 hidden lg:table-cell">
-                        {Math.abs(new Date(bien.updatedAt).getTime() - new Date(bien.createdAt).getTime()) > 5000 ? (
-                          <span className="text-sm text-slate-500">
-                            {new Date(bien.updatedAt).toLocaleDateString("fr-FR")}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-slate-300">-</span>
-                        )}
+                        <span className="text-sm text-slate-500">
+                          {new Date(bien.createdAt).toLocaleDateString("fr-FR")}
+                        </span>
                       </td>
 
                       {/* Actions */}
@@ -285,6 +281,17 @@ export default function BiensList() {
                           {/* BROUILLON */}
                           {bien.statutAnnonce === "BROUILLON" && (
                             <>
+                              <button
+                                onClick={() => soumettre.mutate(bien.id, {
+                                  onSuccess: () => toast.success("Annonce soumise à la modération"),
+                                  onError: () => toast.error("Erreur lors de la soumission"),
+                                })}
+                                disabled={soumettre.isPending}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors disabled:opacity-50"
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                                Soumettre
+                              </button>
                               <Link
                                 to={`/owner/biens/ajouter?edit=${bien.id}`}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
@@ -304,22 +311,13 @@ export default function BiensList() {
 
                           {/* EN_ATTENTE */}
                           {bien.statutAnnonce === "EN_ATTENTE" && (
-                            <>
-                              <button
-                                onClick={() => setRetourTargetId(bien.id)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
-                              >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                                Annuler la soumission
-                              </button>
-                              <button
-                                onClick={() => setAnnulerTargetId(bien.id)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                Annuler l'annonce
-                              </button>
-                            </>
+                            <button
+                              onClick={() => setRetourTargetId(bien.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              Annuler la soumission
+                            </button>
                           )}
 
                           {/* PUBLIE */}
@@ -420,24 +418,6 @@ export default function BiensList() {
         onCancel={() => setRetourTargetId(null)}
       />
 
-      {/* Modal annuler l'annonce (EN_ATTENTE) */}
-      <ConfirmModal
-        open={annulerTargetId !== null}
-        title="Annuler l'annonce"
-        message="L'annonce sera définitivement annulée et retirée de la file d'attente."
-        confirmLabel="Annuler l'annonce"
-        cancelLabel="Retour"
-        variant="danger"
-        isPending={annuler.isPending}
-        onConfirm={() => {
-          if (annulerTargetId)
-            annuler.mutate(annulerTargetId, {
-              onSuccess: () => { toast.success("Annonce annulée"); setAnnulerTargetId(null); },
-              onError: () => { toast.error("Erreur lors de l'annulation"); setAnnulerTargetId(null); },
-            });
-        }}
-        onCancel={() => setAnnulerTargetId(null)}
-      />
     </div>
   );
 }

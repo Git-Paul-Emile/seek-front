@@ -511,10 +511,10 @@ export default function AddBien() {
       animaux,
       parking,
       ascenseur,
-      prix: parseFloat(prix),
+      prix: parseInt(prix),
       frequencePaiement: frequence,
       chargesIncluses,
-      caution: caution ? parseFloat(caution) : undefined,
+      caution: caution ? parseInt(caution) : undefined,
       disponibleLe: disponibleLe || undefined,
       equipementIds: Array.from(selectedEqs),
       meubles: Array.from(selectedMeubles).map((meubleId) => ({ meubleId, quantite: 1 })),
@@ -573,6 +573,10 @@ export default function AddBien() {
   const tabIdx = TABS.findIndex((t) => t.id === tab);
   const isFirst = tabIdx === 0;
   const isLast  = tabIdx === TABS.length - 1;
+
+  // Peut sauvegarder en brouillon : création OU édition d'un brouillon existant
+  const canSaveAsDraft = !isEditingPublished && (!editId || bienToEdit?.statutAnnonce === "BROUILLON");
+  const draftLabel = editId ? "Enregistrer les modifications" : "Enregistrer comme brouillon";
 
   // Navigation via TabBar : retour libre, avance soumise à validation
   const handleTabSelect = (targetId: string) => {
@@ -836,12 +840,7 @@ export default function AddBien() {
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
                   )}
-                  {selectedQuartier && (
-                    <p className="mt-1.5 text-xs text-emerald-600 flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      GPS : {selectedQuartier.latitude.toFixed(5)}, {selectedQuartier.longitude.toFixed(5)}
-                    </p>
-                  )}
+
                 </div>
 
               </div>
@@ -1460,7 +1459,7 @@ export default function AddBien() {
                   </button>
                 ) : (
                   <>
-                    {!editId && (
+                    {canSaveAsDraft && (
                       <button
                         type="button"
                         onClick={() => handleSubmit(true)}
@@ -1468,7 +1467,7 @@ export default function AddBien() {
                         className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
                       >
                         {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                        Enregistrer comme brouillon
+                        {draftLabel}
                       </button>
                     )}
                     <button
@@ -1485,13 +1484,26 @@ export default function AddBien() {
                 )}
               </>
             ) : (
-              <button
-                type="button"
-                onClick={goNext}
-                className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#0C1A35] hover:bg-[#162540] text-white text-sm font-semibold transition-all hover:scale-[1.01]"
-              >
-                Suivant <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-3">
+                {canSaveAsDraft && (
+                  <button
+                    type="button"
+                    onClick={() => handleSubmit(true)}
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
+                  >
+                    {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {draftLabel}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={goNext}
+                  className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#0C1A35] hover:bg-[#162540] text-white text-sm font-semibold transition-all hover:scale-[1.01]"
+                >
+                  Suivant <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             )}
           </div>
           </>)}

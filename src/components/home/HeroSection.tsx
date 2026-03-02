@@ -63,10 +63,30 @@ const HeroSection = () => {
           au Sénégal
         </h1>
 
-        <p className="text-white/60 text-xl mb-10 max-w-2xl leading-relaxed">
+        <p className="text-white/60 text-xl mb-8 max-w-2xl leading-relaxed">
           Appartements, villas, studios ou espaces commerciaux, explorez des
           milliers d'annonces à Dakar et partout au Sénégal.
         </p>
+
+        {/* Arguments de confiance */}
+        <div className="flex flex-wrap gap-4 mb-10">
+          <div className="flex items-center gap-2 text-white">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]"></span>
+            <span className="text-sm font-medium">Annonces vérifiées</span>
+          </div>
+          <div className="flex items-center gap-2 text-white">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]"></span>
+            <span className="text-sm font-medium">Propriétaires certifiés</span>
+          </div>
+          <div className="flex items-center gap-2 text-white">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]"></span>
+            <span className="text-sm font-medium">Paiement sécurisé</span>
+          </div>
+          <div className="flex items-center gap-2 text-white">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]"></span>
+            <span className="text-sm font-medium">Contrats digitaux</span>
+          </div>
+        </div>
 
         {/* Search bar */}
         <div className="max-w-3xl bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4">

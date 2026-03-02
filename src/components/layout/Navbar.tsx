@@ -5,9 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 
 const STATIC_NAV_LINKS = [
-  { to: "/", label: "Accueil" },
-  // { to: "/annonces", label: "Annonces" },
-  // { to: "/dashboard", label: "Espace propriétaire" },
+  { to: "/",          label: "Accueil"   },
+  { to: "/annonces",  label: "Annonces"  },
 ];
 
 const Navbar = () => {

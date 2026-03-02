@@ -75,6 +75,7 @@ const App = () => (
                 {/* Routes publiques */}
                 <Route element={<PublicLayout />}>
                   <Route path="/" element={<Index />} />
+                  <Route path="/annonces" element={<RecherchePage />} />
                   <Route path="/recherche" element={<RecherchePage />} />
                   <Route path="/annonce/:id" element={<PublicAnnonceDetail />} />
                 </Route>

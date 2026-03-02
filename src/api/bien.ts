@@ -349,6 +349,14 @@ export interface RechercheParams {
   typeTransaction?: string;
   prixMin?: number;
   prixMax?: number;
+  chambres?: number;
+  surfaceMin?: number;
+  surfaceMax?: number;
+  meuble?: "1";
+  parking?: "1";
+  ascenseur?: "1";
+  sortBy?: "prix" | "createdAt";
+  sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
 }

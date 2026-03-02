@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -63,10 +64,12 @@ const PropertiesSection = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" className="h-9 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm">
-              Toutes les annonces
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+            <Link to="/annonces">
+              <Button variant="outline" className="h-9 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm">
+                Toutes les annonces
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
 

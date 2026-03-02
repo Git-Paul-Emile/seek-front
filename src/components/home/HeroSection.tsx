@@ -36,7 +36,7 @@ const HeroSection = () => {
     if (!isNaN(mn) && mn > 0) params.set("prixMin", String(mn));
     if (!isNaN(mx) && mx > 0) params.set("prixMax", String(mx));
     params.set("page", "1");
-    navigate(`/recherche?${params.toString()}`);
+    navigate(`/annonces?${params.toString()}`);
   };
 
   // Options lieu : quartiers groupés sous "Quartiers", villes sous "Villes"

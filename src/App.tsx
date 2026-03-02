@@ -23,6 +23,7 @@ import LocataireLayout from "@/components/locataire/LocataireLayout";
 import Index from "./pages/Index";
 import Proprietaires from "./pages/Proprietaires";
 import PublicAnnonceDetail from "./pages/public/AnnonceDetail";
+import RecherchePage from "./pages/public/Recherche";
 import OwnerRegister from "./pages/owner/Register";
 import OwnerLogin from "./pages/owner/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
@@ -74,6 +75,7 @@ const App = () => (
                 {/* Routes publiques */}
                 <Route element={<PublicLayout />}>
                   <Route path="/" element={<Index />} />
+                  <Route path="/recherche" element={<RecherchePage />} />
                   <Route path="/annonce/:id" element={<PublicAnnonceDetail />} />
                 </Route>
 

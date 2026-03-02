@@ -1,33 +1,51 @@
 import { useState } from "react";
-import { Search, MapPin, SlidersHorizontal, ChevronDown, Navigation, Info } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, SlidersHorizontal, ChevronDown, Navigation, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 import heroBg from "@/assets/hero-bg.jpg";
-import { TRAVEL_TIMES } from "@/data/home";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useStats } from "@/hooks/useStats";
+import { useLieux } from "@/hooks/useRecherche";
 
 const HeroSection = () => {
-  const { data: typesLogement = [] } = useTypeLogements();
-  const { data: statsData } = useStats();
+  const navigate = useNavigate();
+  const { data: typesLogement = [] }    = useTypeLogements();
+  const { data: statsData }             = useStats();
+  const { data: lieux }                 = useLieux();
+
   const [searchLocation, setSearchLocation] = useState("");
-  const [propertyType, setPropertyType] = useState("");
-  const [budget, setBudget] = useState("");
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [propertyType, setPropertyType]     = useState("");
+  const [budgetMin, setBudgetMin]           = useState("");
+  const [budgetMax, setBudgetMax]           = useState("");
+  const [advancedOpen, setAdvancedOpen]     = useState(false);
   const [preciseAddress, setPreciseAddress] = useState("");
-  const [searchRadius, setSearchRadius] = useState("");
 
   const formatBudget = (value: string) => {
     const num = value.replace(/\D/g, "");
-    return num.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return num.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
   };
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchLocation) params.set("quartier", searchLocation);
+    if (propertyType)   params.set("typeLogement", propertyType);
+    const mn = parseInt(budgetMin.replace(/\u00a0/g, ""), 10);
+    const mx = parseInt(budgetMax.replace(/\u00a0/g, ""), 10);
+    if (!isNaN(mn) && mn > 0) params.set("prixMin", String(mn));
+    if (!isNaN(mx) && mx > 0) params.set("prixMax", String(mx));
+    params.set("page", "1");
+    navigate(`/recherche?${params.toString()}`);
+  };
+
+  // Options lieu : quartiers groupés sous "Quartiers", villes sous "Villes"
+  const lieuOptions = [
+    ...(lieux?.quartiers ?? []).map((q) => ({ value: q, label: q, group: "Quartiers" })),
+    ...(lieux?.villes    ?? []).map((v) => ({ value: v, label: v, group: "Villes"    })),
+  ];
+
+  const typeLogementOptions = typesLogement.map((t) => ({ value: t.slug, label: t.nom }));
 
   return (
     <section className="relative min-h-screen flex flex-col justify-end pb-16 overflow-hidden">
@@ -53,48 +71,54 @@ const HeroSection = () => {
         {/* Search bar */}
         <div className="max-w-3xl bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="relative">
-              <label className="text-white/50 text-xs font-medium block mb-1.5 ml-0.5">Quartier</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35 pointer-events-none z-10" />
-                <Input
-                  type="text"
-                  placeholder="Almadies, Point E…"
-                  value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                  className="pl-9 h-11 bg-white/10 border-white/20 text-white placeholder:text-white/35 focus:border-white/40 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm transition-all"
-                />
-              </div>
+            <div>
+              <label className="text-white/50 text-xs font-medium block mb-1.5 ml-0.5">Quartier / Ville</label>
+              <SearchableSelect
+                value={searchLocation}
+                onChange={setSearchLocation}
+                options={lieuOptions}
+                placeholder="Almadies, Dakar…"
+                searchPlaceholder="Rechercher un lieu…"
+                dark
+              />
             </div>
 
             <div>
               <label className="text-white/50 text-xs font-medium block mb-1.5 ml-0.5">Type de logement</label>
-              <Select value={propertyType} onValueChange={setPropertyType}>
-                <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white focus:border-white/40 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {typesLogement.map((t) => (
-                    <SelectItem key={t.slug} value={t.slug}>{t.nom}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={propertyType}
+                onChange={setPropertyType}
+                options={typeLogementOptions}
+                placeholder="Tous les types"
+                searchPlaceholder="Rechercher un type…"
+                dark
+              />
             </div>
 
             <div>
               <label className="text-white/50 text-xs font-medium block mb-1.5 ml-0.5">Budget</label>
-              <Input
-                type="text"
-                placeholder="Max FCFA"
-                value={budget}
-                onChange={(e) => setBudget(formatBudget(e.target.value))}
-                className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/35 focus:border-white/40 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm transition-all"
-              />
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Min"
+                  value={budgetMin}
+                  onChange={(e) => setBudgetMin(formatBudget(e.target.value))}
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/35 focus:border-white/40 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm transition-all"
+                />
+                <Input
+                  type="text"
+                  placeholder="Max"
+                  value={budgetMax}
+                  onChange={(e) => setBudgetMax(formatBudget(e.target.value))}
+                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-white/35 focus:border-white/40 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm transition-all"
+                />
+              </div>
             </div>
 
             <div className="flex flex-col justify-end">
               <Button
-                type="submit"
+                type="button"
+                onClick={handleSearch}
                 className="h-11 w-full bg-[#D4A843] hover:bg-[#C09535] text-white font-semibold shadow-lg shadow-[#D4A843]/20 transition-all hover:scale-[1.02]"
               >
                 <Search className="w-4 h-4 mr-2" />
@@ -138,29 +162,6 @@ const HeroSection = () => {
                       className="pl-9 h-11 bg-white/10 border-white/20 text-white placeholder:text-white/35 focus:border-white/40 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm transition-all"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-white/50 text-xs font-medium flex items-center gap-1.5 mb-1.5 ml-0.5">
-                    Temps de trajet
-                    <div className="relative group/traj">
-                      <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60 cursor-default transition-colors" />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-[#0C1A35] border border-white/10 text-white/80 text-xs px-3 py-2 rounded-xl leading-relaxed opacity-0 group-hover/traj:opacity-100 transition-opacity pointer-events-none z-30">
-                        Le temps de trajet indique combien de minutes il faudra pour rejoindre un lieu précis depuis un logement.
-                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0C1A35]" />
-                      </div>
-                    </div>
-                  </label>
-                  <Select value={searchRadius} onValueChange={setSearchRadius}>
-                    <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white focus:border-white/40 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm">
-                      <SelectValue placeholder="Choisir un temps" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TRAVEL_TIMES.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             )}

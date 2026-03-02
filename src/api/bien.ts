@@ -340,3 +340,38 @@ export const fetchAnnoncesSimilaires = (id: string, limit: number = 4): Promise<
   api
     .get<{ data: Bien[] }>(`/public/${id}/similaires`, { params: { limit } })
     .then((r) => r.data.data);
+
+// ─── Public API: recherche avec filtres ──────────────────────────────────────
+
+export interface RechercheParams {
+  quartier?: string;
+  typeLogement?: string;
+  typeTransaction?: string;
+  prixMin?: number;
+  prixMax?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface RechercheResult {
+  items: Bien[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export const fetchRecherchePublique = (params: RechercheParams): Promise<RechercheResult> =>
+  api
+    .get<{ data: RechercheResult }>("/public/recherche", { params })
+    .then((r) => r.data.data);
+
+// ─── Public API: lieux distincts (quartiers + villes) ────────────────────────
+
+export interface LieuxData {
+  quartiers: string[];
+  villes: string[];
+}
+
+export const fetchLieux = (): Promise<LieuxData> =>
+  api.get<{ data: LieuxData }>("/public/lieux").then((r) => r.data.data);

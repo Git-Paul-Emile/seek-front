@@ -14,13 +14,14 @@ import {
   ChevronDown,
   FileSearch,
   User,
-  FileText,
   Globe,
   MapPin,
   Navigation,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
+import { usePendingVerificationsCount } from "@/hooks/useAdminVerification";
 
 // ─── Structure de navigation ──────────────────────────────────────────────────
 
@@ -124,7 +125,9 @@ function Sidebar() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
   const { data: pendingData } = useAnnoncesPendingCount();
+  const { data: verificationData } = usePendingVerificationsCount();
   const pendingCount = pendingData?.count ?? 0;
+  const verificationCount = verificationData ?? 0;
 
   const handleLogout = async () => {
     await logout();
@@ -175,7 +178,39 @@ function Sidebar() {
             </li>
           ))}
 
-          {/* Annonces avec puce de notification */}
+          {/* Vérifications avec badge */}
+          <li>
+            <NavLink
+              to="/admin/verifications"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  isActive
+                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`}
+            >
+              {({ isActive }) => (
+                <>
+                  <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1">Vérifications</span>
+                  {verificationCount > 0 && (
+                    <span
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                        isActive
+                          ? "bg-white/25 text-white"
+                          : "bg-red-500 text-white"
+                      }`}
+                    >
+                      {verificationCount > 99 ? "99+" : verificationCount}
+                    </span>
+                  )}
+                </>
+              )}
+            </NavLink>
+          </li>
+
+          {/* Annonces avec badge */}
           <li>
             <NavLink
               to="/admin/annonces"
@@ -185,8 +220,7 @@ function Sidebar() {
                   isActive
                     ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
                     : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                }`
-              }
+                }`}
             >
               {({ isActive }) => (
                 <>

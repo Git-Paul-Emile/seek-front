@@ -8,6 +8,20 @@ export const ownerAuthApi = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// API pour la vérification d'identité (route différente)
+const verificationApi = axios.create({
+  baseURL: `${API_URL}/api/owner`,
+  withCredentials: true,
+  headers: { "Content-Type": "application/json" },
+});
+
+// API pour l'upload de fichiers
+const uploadApi = axios.create({
+  baseURL: `${API_URL}/api/owner`,
+  withCredentials: true,
+  headers: { "Content-Type": "multipart/form-data" },
+});
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface RegisterPayload {
@@ -31,6 +45,32 @@ export interface OwnerInfo {
   telephone: string;
   email?: string;
   sexe?: string;
+  statutVerification: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  verifiedAt?: string | null;
+}
+
+export interface VerificationStatus {
+  proprietaireId: string;
+  statut: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  verifiedAt: string | null;
+  documents?: {
+    typePiece: string;
+    pieceIdentiteRecto: string | null;
+    pieceIdentiteVerso: string | null;
+    selfie: string | null;
+    conditionsAcceptees: boolean;
+    motifRejet?: string | null;
+    traitePar?: string | null;
+    dateTraitement?: string | null;
+  };
+}
+
+export interface SubmitVerificationPayload {
+  typePiece: string;
+  pieceIdentiteRecto: string;
+  pieceIdentiteVerso?: string;
+  selfie: string;
+  conditionsAcceptees: boolean;
 }
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
@@ -73,3 +113,76 @@ export const updateProfileApi = (payload: UpdateProfilePayload) =>
 
 export const deleteProfileApi = () =>
   ownerAuthApi.delete<{ status: string; message: string }>("/profile");
+
+// ─── Vérification d'identité ───────────────────────────────────────────────
+
+export const getVerificationStatusApi = () =>
+  verificationApi.get<{ status: string; data: VerificationStatus }>("/verification");
+
+export const submitVerificationApi = (payload: SubmitVerificationPayload) =>
+  verificationApi.post<{ status: string; message: string; data: VerificationStatus }>(
+    "/verification",
+    payload
+  );
+
+export const cancelVerificationApi = () =>
+  verificationApi.delete<{ status: string; message: string; data: VerificationStatus }>(
+    "/verification"
+  );
+
+// Upload d'une image de vérification vers Cloudinary
+export const uploadVerificationImageApi = async (file: File) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  
+  const response = await uploadApi.post<{ status: string; data: { url: string; publicId: string } }>(
+    "/verification/upload",
+    formData
+  );
+  
+  return response.data.data.url;
+};
+
+// ─── Admin API pour la vérification ───────────────────────────────────────
+
+const adminApi = axios.create({
+  baseURL: `${API_URL}/api/admin`,
+  withCredentials: true,
+  headers: { "Content-Type": "application/json" },
+});
+
+export interface PendingVerification {
+  id: string;
+  prenom: string;
+  nom: string;
+  telephone: string;
+  email: string | null;
+  statutVerification: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  verifiedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  verification: {
+    id: string;
+    typePiece: string;
+    pieceIdentiteRecto: string | null;
+    pieceIdentiteVerso: string | null;
+    selfie: string | null;
+    conditionsAcceptees: boolean;
+    motifRejet: string | null;
+    traitePar: string | null;
+    dateTraitement: string | null;
+    createdAt: string;
+  } | null;
+}
+
+export const getPendingVerificationsApi = () =>
+  adminApi.get<{ status: string; data: PendingVerification[] }>("/verifications");
+
+export const approveVerificationApi = (proprietaireId: string) =>
+  adminApi.post<{ status: string; message: string }>(`/verifications/${proprietaireId}/approve`);
+
+export const rejectVerificationApi = (proprietaireId: string, motif: string) =>
+  adminApi.post<{ status: string; message: string }>(`/verifications/${proprietaireId}/reject`, { motif });
+
+export const getPendingVerificationsCountApi = () =>
+  adminApi.get<{ status: string; data: { count: number } }>("/verifications/count");

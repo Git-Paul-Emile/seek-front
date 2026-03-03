@@ -26,6 +26,7 @@ import {
 } from "recharts";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
+import { VerificationAlert } from "@/components/owner/VerificationAlert";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -110,6 +111,9 @@ export default function OwnerDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Alerte de vérification */}
+      <VerificationAlert variant="banner" />
+
       {/* En-tête */}
       <div className="flex items-start justify-between gap-4">
         <div>

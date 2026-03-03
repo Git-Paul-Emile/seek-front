@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useOwnerStats } from "@/hooks/useBien";
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
@@ -33,6 +34,11 @@ function Sidebar() {
   const [locatairesOpen, setLocatairesOpen] = useState(
     location.pathname.startsWith("/owner/locataires")
   );
+
+  // fetch stats to know if we have any pending annonces
+  const { data: stats } = useOwnerStats();
+  const pendingCount =
+    stats?.byStatut.find((s) => s.statut === "EN_ATTENTE")?.count ?? 0;
 
   const handleLogout = async () => {
     await logout();
@@ -172,8 +178,23 @@ function Sidebar() {
                     }`
                   }
                 >
-                  <List className="w-3.5 h-3.5 flex-shrink-0" />
-                  Liste des biens
+                  {({ isActive }) => (
+                    <>
+                      <List className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span className="flex-1">Liste des biens</span>
+                      {pendingCount > 0 && (
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                            isActive
+                              ? "bg-white/25 text-white"
+                              : "bg-red-500 text-white"
+                          }`}
+                        >
+                          {pendingCount > 99 ? "99+" : pendingCount}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </NavLink>
               </li>
             </ul>

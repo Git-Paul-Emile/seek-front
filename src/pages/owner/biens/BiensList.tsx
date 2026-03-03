@@ -20,6 +20,7 @@ import {
 import { StatutAnnonce } from "@/api/bien";
 import { useBiens, useDeleteBien, useRetourBrouillon, useSoumettreBien } from "@/hooks/useBien";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { VerificationAlert } from "@/components/owner/VerificationAlert";
 import { toast } from "sonner";
 
 const STATUT_CONFIG: Record<
@@ -95,6 +96,11 @@ export default function BiensList() {
 
   return (
     <div>
+      {/* Alerte de vérification */}
+      <div className="mb-4">
+        <VerificationAlert variant="banner" />
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

@@ -15,6 +15,7 @@ import { useMeubles } from "@/hooks/useMeubles";
 import { useCreateBien, useBienById, useSoumettreRevision } from "@/hooks/useBien";
 import { useBailActif } from "@/hooks/useBail";
 import { usePays, useVilles, useQuartiers } from "@/hooks/useGeo";
+import { VerificationBanner } from "@/components/owner/VerificationAlert";
 import type { TypeLogement } from "@/api/typeLogement";
 import type { TypeTransaction } from "@/api/typeTransaction";
 import type { StatutBien } from "@/api/statutBien";
@@ -167,6 +168,7 @@ export default function AddBien() {
   const { data: bailActif } = useBailActif(editId || "");
   const isLockedByBail = !!editId && !!bailActif && bailActif.statut === "ACTIF";
   const [pendingAction, setPendingAction] = useState<"draft" | "publish" | null>(null);
+  const [showVerificationBanner, setShowVerificationBanner] = useState(true);
 
   // ── Onglet actif ──
   const [tab, setTab] = useState("general");
@@ -624,6 +626,13 @@ export default function AddBien() {
           </p>
         </div>
       </div>
+
+      {/* Bannière vérification (soft restriction) */}
+      {showVerificationBanner && (
+        <div className="mb-4">
+          <VerificationBanner onDismiss={() => setShowVerificationBanner(false)} />
+        </div>
+      )}
 
       {/* Bannière bail actif */}
       {isLockedByBail && (

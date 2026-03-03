@@ -27,6 +27,7 @@ import RecherchePage from "./pages/public/Recherche";
 import OwnerRegister from "./pages/owner/Register";
 import OwnerLogin from "./pages/owner/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
+import OwnerVerification from "./pages/owner/Verification";
 import Profile from "./pages/owner/Profile";
 import BiensList from "./pages/owner/biens/BiensList";
 import AddBien from "./pages/owner/biens/AddBien";
@@ -41,6 +42,7 @@ import StatutsBien from "./pages/admin/categories/StatutsBien";
 import MeubleEquipement from "./pages/admin/categories/MeubleEquipement";
 import Annonces from "./pages/admin/Annonces";
 import AdminAnnonceDetail from "./pages/admin/AnnonceDetail";
+import AdminVerificationsPage from "./pages/admin/Verifications";
 import PaysPage from "./pages/admin/geo/PaysPage";
 import VillesPage from "./pages/admin/geo/VillesPage";
 import QuartiersPage from "./pages/admin/geo/QuartiersPage";
@@ -96,6 +98,7 @@ const App = () => (
                 <Route element={<OwnerProtectedRoute />}>
                   <Route element={<OwnerLayout />}>
                     <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+                    <Route path="/owner/verification" element={<OwnerVerification />} />
                     <Route path="/owner/profile" element={<Profile />} />
                     <Route path="/owner/biens" element={<BiensList />} />
                     <Route path="/owner/biens/ajouter" element={<AddBien />} />
@@ -139,6 +142,7 @@ const App = () => (
                     <Route path="biens/meuble-equipement" element={<MeubleEquipement />} />
                     <Route path="annonces"                element={<Annonces />} />
                     <Route path="annonces/:id"            element={<AdminAnnonceDetail />} />
+                    <Route path="verifications"             element={<AdminVerificationsPage />} />
                     <Route path="geo/pays"                element={<PaysPage />} />
                     <Route path="geo/villes"              element={<VillesPage />} />
                     <Route path="geo/quartiers"           element={<QuartiersPage />} />

@@ -4,7 +4,7 @@ import { AlertTriangle, Loader2, X } from "lucide-react";
 interface ConfirmModalProps {
   open: boolean;
   title?: string;
-  message: string;
+  message: string | React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "danger" | "warning";
@@ -92,7 +92,7 @@ export default function ConfirmModal({
         </div>
 
         {/* Message */}
-        <p className="text-sm text-slate-600">{message}</p>
+        <div className="text-sm text-slate-600">{message}</div>
 
         {/* Actions */}
         <div className="flex justify-end gap-2 mt-1">

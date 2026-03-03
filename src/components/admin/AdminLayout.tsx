@@ -17,7 +17,7 @@ import {
   Globe,
   MapPin,
   Navigation,
-  ShieldCheck,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -28,6 +28,7 @@ import { usePendingVerificationsCount } from "@/hooks/useAdminVerification";
 const NAV_ITEMS = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/profile", label: "Mon Profil", icon: User },
+  { to: "/admin/proprietaires", label: "Propriétaires", icon: Users },
 ];
 
 const NAV_GROUPS = [
@@ -169,46 +170,28 @@ function Sidebar() {
                     isActive
                       ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
                       : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                  }`
-                }
+                  }`}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {label}
+                {({ isActive }) => (
+                  <>
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="flex-1">{label}</span>
+                    {to === "/admin/proprietaires" && verificationCount > 0 && (
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                          isActive
+                            ? "bg-white/25 text-white"
+                            : "bg-red-500 text-white"
+                        }`}
+                      >
+                        {verificationCount > 99 ? "99+" : verificationCount}
+                      </span>
+                    )}
+                  </>
+                )}
               </NavLink>
             </li>
           ))}
-
-          {/* Vérifications avec badge */}
-          <li>
-            <NavLink
-              to="/admin/verifications"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                transition-colors duration-150 ${
-                  isActive
-                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                }`}
-            >
-              {({ isActive }) => (
-                <>
-                  <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">Vérifications</span>
-                  {verificationCount > 0 && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                        isActive
-                          ? "bg-white/25 text-white"
-                          : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {verificationCount > 99 ? "99+" : verificationCount}
-                    </span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          </li>
 
           {/* Annonces avec badge */}
           <li>

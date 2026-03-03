@@ -43,6 +43,7 @@ import MeubleEquipement from "./pages/admin/categories/MeubleEquipement";
 import Annonces from "./pages/admin/Annonces";
 import AdminAnnonceDetail from "./pages/admin/AnnonceDetail";
 import AdminVerificationsPage from "./pages/admin/Verifications";
+import ProprietairesStats from "./pages/admin/ProprietairesStats";
 import PaysPage from "./pages/admin/geo/PaysPage";
 import VillesPage from "./pages/admin/geo/VillesPage";
 import QuartiersPage from "./pages/admin/geo/QuartiersPage";
@@ -143,6 +144,7 @@ const App = () => (
                     <Route path="annonces"                element={<Annonces />} />
                     <Route path="annonces/:id"            element={<AdminAnnonceDetail />} />
                     <Route path="verifications"             element={<AdminVerificationsPage />} />
+                    <Route path="proprietaires"          element={<ProprietairesStats />} />
                     <Route path="geo/pays"                element={<PaysPage />} />
                     <Route path="geo/villes"              element={<VillesPage />} />
                     <Route path="geo/quartiers"           element={<QuartiersPage />} />

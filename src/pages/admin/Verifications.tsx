@@ -10,7 +10,9 @@ import {
   Loader2,
   X,
   ZoomIn,
+  ArrowLeft,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   usePendingVerifications,
   useApproveVerification,
@@ -87,17 +89,26 @@ export default function AdminVerificationsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">
-            <Shield className="w-3.5 h-3.5" />
-            Vérifications d'identité
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            to="/admin/proprietaires"
+            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-100
+              text-slate-500 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-1">
+              <Shield className="w-3.5 h-3.5" />
+              Vérifications d'identité
+            </div>
+            <h1 className="font-display text-xl font-bold text-[#0C1A35]">
+              Demandes en attente
+            </h1>
+            <p className="text-slate-400 text-sm mt-0.5">
+              {verifications?.length ?? 0} demande{verifications?.length !== 1 ? "s" : ""} en attente de validation
+            </p>
           </div>
-          <h1 className="font-display text-2xl font-bold text-[#0C1A35]">
-            Demandes en attente
-          </h1>
-          <p className="text-slate-400 text-sm mt-0.5">
-            {verifications?.length ?? 0} demande{verifications?.length !== 1 ? "s" : ""} en attente de validation
-          </p>
         </div>
       </div>
 

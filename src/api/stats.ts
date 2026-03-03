@@ -33,6 +33,54 @@ export interface AdminStats {
   }[];
 }
 
+export interface ProprietaireStats {
+  total: number;
+  byStatutVerification: { statut: string; count: number }[];
+  byVille: { ville: string; count: number }[];
+  topProprietaires: {
+    id: string;
+    nom: string;
+    prenom: string;
+    telephone: string;
+    email: string | null;
+    totalBiens: number;
+    biensActifs: number;
+    totalLocataires: number;
+  }[];
+  recentProprietaires: {
+    id: string;
+    nom: string;
+    prenom: string;
+    telephone: string;
+    email: string | null;
+    statutVerification: string;
+    createdAt: string;
+  }[];
+}
+
+export interface ProprietaireDetail {
+  id: string;
+  prenom: string;
+  nom: string;
+  telephone: string;
+  email: string | null;
+  statutVerification: string;
+  verifiedAt: string | null;
+  createdAt: string;
+  totalBiens: number;
+  biens: {
+    id: string;
+    titre: string | null;
+    ville: string | null;
+    statutAnnonce: string;
+    prix: number | null;
+    createdAt: string;
+  }[];
+  totalLocataires: number;
+  totalBails: number;
+  bailsActifs: number;
+}
+
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
 
 export const fetchStats = () =>
@@ -40,3 +88,9 @@ export const fetchStats = () =>
 
 export const fetchAdminStats = () =>
   api.get<{ data: AdminStats }>("/admin").then((r) => r.data.data);
+
+export const fetchProprietairesStats = () =>
+  api.get<{ data: ProprietaireStats }>("/proprietaires").then((r) => r.data.data);
+
+export const fetchProprietaireDetail = (id: string) =>
+  api.get<{ data: ProprietaireDetail }>(`/proprietaires/${id}`).then((r) => r.data.data);

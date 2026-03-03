@@ -15,6 +15,7 @@ import {
   RefreshCw,
   UserCheck,
   Send,
+  Star,
 } from "lucide-react";
 import { StatutAnnonce } from "@/api/bien";
 import { useBiens, useDeleteBien, useRetourBrouillon, useSoumettreBien } from "@/hooks/useBien";
@@ -254,6 +255,12 @@ export default function BiensList() {
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
                               <RefreshCw className="w-2.5 h-2.5" />
                               Révision en attente
+                            </span>
+                          )}
+                          {bien.estMisEnAvant && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-600">
+                              <Star className="w-2.5 h-2.5" />
+                              En avant
                             </span>
                           )}
                         </div>

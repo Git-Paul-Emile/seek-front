@@ -64,6 +64,7 @@ import {
 } from "@/hooks/useBail";
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
+import PromotionCard from "@/components/owner/PromotionCard";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
 import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
@@ -980,6 +981,11 @@ export default function BienDetail() {
             <InfoRow label="Type de transaction" value={bien.typeTransaction?.nom} />
             <InfoRow label="Statut du bien"      value={bien.statutBien?.nom} />
           </Section>
+
+          {/* Promotion - uniquement pour les annonces publiées */}
+          {statut === "PUBLIE" && (
+            <PromotionCard bienId={bien.id} bienTitre={bien.titre || "Annonce"} />
+          )}
 
           {/* Tarifs */}
           <Section title="Tarifs">

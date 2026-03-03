@@ -115,6 +115,10 @@ export interface Bien {
   hasPendingRevision: boolean;
   hasBailActif?: boolean;
   pendingRevision?: BienPendingRevision | null;
+  // Champs de promotion
+  estMisEnAvant?: boolean;
+  dateDebutPromotion?: string | null;
+  dateFinPromotion?: string | null;
   createdAt: string;
   updatedAt: string;
   typeLogement?: { id: string; nom: string; slug: string } | null;

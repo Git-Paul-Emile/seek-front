@@ -479,6 +479,45 @@ export default function AnnonceDetail() {
                   <h1 className="font-display text-2xl font-bold text-[#0C1A35]">
                     {bien.titre || "Annonce"}
                   </h1>
+                  {/* Statut du bien - Badge visible et coloré */}
+                  {bien.statutBien && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold">
+                      {bien.statutBien.nom.toLowerCase().includes('disponible') && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          {bien.statutBien.nom}
+                        </span>
+                      )}
+                      {bien.statutBien.nom.toLowerCase().includes('offre') && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                          <span className="w-2 h-2 rounded-full bg-amber-500" />
+                          {bien.statutBien.nom}
+                        </span>
+                      )}
+                      {(bien.statutBien.nom.toLowerCase().includes('vendu') || bien.statutBien.nom.toLowerCase().includes('loué')) && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                          <span className="w-2 h-2 rounded-full bg-red-500" />
+                          {bien.statutBien.nom}
+                        </span>
+                      )}
+                      {bien.statutBien.nom.toLowerCase().includes('réservé') && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                          <span className="w-2 h-2 rounded-full bg-purple-500" />
+                          {bien.statutBien.nom}
+                        </span>
+                      )}
+                      {!bien.statutBien.nom.toLowerCase().includes('disponible') && 
+                       !bien.statutBien.nom.toLowerCase().includes('offre') && 
+                       !bien.statutBien.nom.toLowerCase().includes('vendu') && 
+                       !bien.statutBien.nom.toLowerCase().includes('loué') &&
+                       !bien.statutBien.nom.toLowerCase().includes('réservé') && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                          <span className="w-2 h-2 rounded-full bg-slate-500" />
+                          {bien.statutBien.nom}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {bien.prix && (
                   <div className="text-right">

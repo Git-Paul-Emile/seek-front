@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, BadgeCheck, Star, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
@@ -39,9 +39,25 @@ interface PropertyCardProps {
   isApiData?: boolean;
 }
 
+// Type pour le propriétaire avec statut de vérification
+interface ProprietaireWithVerification {
+  id: string;
+  prenom: string;
+  nom: string;
+  telephone: string;
+  email: string | null;
+  statutVerification?: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+}
+
 const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
   // Si les données viennent de l'API, les transformer
   const displayProperty = isApiData ? transformBienToProperty(property as BienAvecIsNew) : (property as Property);
+  
+  // Extraire les informations supplémentaires de l'API si disponibles
+  const bienData = isApiData ? (property as BienAvecIsNew) : null;
+  const proprietaire = bienData?.proprietaire as ProprietaireWithVerification | undefined;
+  const isProprietaireVerified = proprietaire?.statutVerification === "VERIFIED";
+  const estMisEnAvant = bienData?.estMisEnAvant ?? false;
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 border border-slate-100">
@@ -66,16 +82,39 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           <CarouselNext className="right-2 h-7 w-7 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity border-0 shadow-md" />
         </Carousel>
 
-        <div className="absolute top-3 left-3 bg-[#0C1A35]/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-lg">
+        {/* Badge Type de bien - coin supérieur gauche */}
+        <div className="absolute top-3 left-3 bg-[#0C1A35]/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-lg z-10">
           {displayProperty.type}
         </div>
 
-        {displayProperty.isNew && (
-          <div className="absolute top-3 right-3 bg-[#D4A843] text-[#0C1A35] text-xs font-bold px-2.5 py-1 rounded-lg">
-            Nouveau
-          </div>
-        )}
+        {/* Zone des badges - coin supérieur droit */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
+          {/* Badge Nouveau */}
+          {displayProperty.isNew && (
+            <div className="bg-[#D4A843] text-[#0C1A35] text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+              <Star className="w-3 h-3" />
+              Nouveau
+            </div>
+          )}
 
+          {/* Badge Propriétaire vérifié */}
+          {isApiData && isProprietaireVerified && (
+            <div className="bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+              <BadgeCheck className="w-3 h-3" />
+              Vérifié
+            </div>
+          )}
+
+          {/* Badge Mis en avant / Coup de cœur */}
+          {isApiData && estMisEnAvant && (
+            <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+              <Home className="w-3 h-3" />
+              Coup de cœur
+            </div>
+          )}
+        </div>
+
+        {/* Prix - en bas à gauche */}
         <div className="absolute bottom-3 left-3">
           <span className="text-white font-bold text-lg drop-shadow-lg">
             {formatPrice(displayProperty.price)}

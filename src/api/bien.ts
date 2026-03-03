@@ -127,7 +127,7 @@ export interface Bien {
   equipements?: BienEquipement[];
   meubles?: BienMeuble[];
   etablissements?: Etablissement[];
-  proprietaire?: { id: string; prenom: string; nom: string; telephone: string; email: string | null };
+  proprietaire?: { id: string; prenom: string; nom: string; telephone: string; email: string | null; statutVerification?: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED" };
 }
 
 // ─── Payloads ─────────────────────────────────────────────────────────────────

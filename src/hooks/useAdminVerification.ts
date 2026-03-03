@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import {
   getPendingVerificationsApi,
   getPendingVerificationsCountApi,
@@ -8,7 +8,7 @@ import {
 } from "@/api/ownerAuth";
 
 export function usePendingVerificationsCount() {
-  return useQuery({
+  return useQuery<number, Error>({
     queryKey: ["adminPendingVerificationsCount"],
     queryFn: async () => {
       const { data } = await getPendingVerificationsCountApi();
@@ -20,9 +20,9 @@ export function usePendingVerificationsCount() {
   });
 }
 
-export function usePendingVerifications() {
+export function usePendingVerifications(): UseQueryResult<PendingVerification[], Error> {
   const queryClient = useQueryClient();
-  return useQuery({
+  return useQuery<PendingVerification[], Error>({
     queryKey: ["adminPendingVerifications"],
     queryFn: async () => {
       const { data } = await getPendingVerificationsApi();

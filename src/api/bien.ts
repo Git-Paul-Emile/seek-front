@@ -130,6 +130,8 @@ export interface Bien {
   meubles?: BienMeuble[];
   etablissements?: Etablissement[];
   proprietaire?: { id: string; prenom: string; nom: string; telephone: string; email: string | null; statutVerification?: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED" };
+  // Nombre d'annonces du propriétaire (pour affichage public)
+  nombreAnnoncesProprietaire?: number;
 }
 
 // ─── Payloads ─────────────────────────────────────────────────────────────────

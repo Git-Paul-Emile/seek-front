@@ -760,18 +760,28 @@ export default function AnnonceDetail() {
                 
                 {/* Owner Info */}
                 {bien.proprietaire && (
-                  <div className="flex items-center gap-3 mb-5">
+                  <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 rounded-full bg-[#0C1A35] flex items-center justify-center shrink-0">
                       <span className="text-white text-lg font-bold">
                         {bien.proprietaire.prenom?.[0]?.toUpperCase() ?? "P"}
                       </span>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-semibold text-[#0C1A35]">
                         {bien.proprietaire.prenom} {bien.proprietaire.nom}
                       </p>
                       <p className="text-xs text-slate-400">Propriétaire</p>
                     </div>
+                  </div>
+                )}
+
+                {/* Nombre d'annonces du propriétaire */}
+                {bien.nombreAnnoncesProprietaire !== undefined && bien.nombreAnnoncesProprietaire > 0 && (
+                  <div className="flex items-center gap-2 mb-5 px-3 py-2 rounded-lg bg-slate-50">
+                    <Building2 className="w-4 h-4 text-[#D4A843]" />
+                    <span className="text-sm text-slate-600">
+                      <span className="font-semibold text-[#0C1A35]">{bien.nombreAnnoncesProprietaire}</span> {bien.nombreAnnoncesProprietaire === 1 ? 'annonce' : 'annonces'} {bien.nombreAnnoncesProprietaire === 1 ? 'publiée' : 'publiées'} sur Seek
+                    </span>
                   </div>
                 )}
 

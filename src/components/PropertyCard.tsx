@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, BadgeCheck, Star, Home, TrendingDown } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, BadgeCheck, Star, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
@@ -87,13 +87,16 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
   const afficherBaisseDePrix = pourcentageBaisse !== null && baisseRecente;
 
   return (
-    <div className="group bg-white overflow-hidden hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1.5 border border-slate-100" style={{ borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-      <div className="relative h-52">
+    <div 
+      className="group bg-white overflow-hidden hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1.5 border border-slate-100"
+      style={{ borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+    >
+      <div className="relative h-40 sm:h-44 md:h-48">
         <Carousel className="w-full h-full">
           <CarouselContent>
             {displayProperty.images.map((img, idx) => (
               <CarouselItem key={idx}>
-                <div className="relative h-52 bg-slate-100">
+                <div className="relative h-40 sm:h-44 md:h-48 bg-slate-100">
                   <img
                     src={img}
                     alt={`${displayProperty.title} — image ${idx + 1}`}
@@ -119,13 +122,13 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
             </div>
           )}
 
-          {/* Badge Mis en avant / Coup de cœur */}
-          {isApiData && estMisEnAvant && (
-            <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
-              <Home className="w-3 h-3" />
+          {/* Badge Mis en avant / Premium */}
+          {(isApiData && estMisEnAvant) ? (
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+              <Star className="w-3 h-3" />
               Coup de cœur
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Prix - en bas à gauche */}
@@ -136,7 +139,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
                 {formatPrice(bienData.prixAncien)}
               </span>
             )}
-            <span className="text-white font-bold text-xl drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+            <span className="text-white font-bold text-base sm:text-lg drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
               {formatPrice(displayProperty.price)}
             </span>
           </div>
@@ -149,8 +152,8 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         </div>
       </div>
 
-      <div className="p-4">
-        <h3 className="font-semibold text-[#1A2942] text-base mb-1 line-clamp-1 flex items-center gap-2">
+      <div className="p-3 sm:p-4">
+        <h3 className="font-semibold text-[#1A2942] text-sm sm:text-base mb-1 line-clamp-1 flex items-center gap-2">
           {isApiData && bienData?.statutBien && (
             <span 
               className="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -172,12 +175,12 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 text-sm text-slate-400 mb-3">
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-400 mb-2 sm:mb-3">
           <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-[#D4A843]" />
           {displayProperty.location}, {displayProperty.city}
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           {[
             { icon: Maximize2, label: `${displayProperty.surface} m²` },
             ...(displayProperty.bedrooms > 0
@@ -186,8 +189,8 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
             { icon: ShowerHead, label: `${displayProperty.bathrooms} salle${displayProperty.bathrooms > 1 ? "s" : ""} de bain` },
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="relative group/spec">
-              <span className="flex items-center justify-center w-8 h-8 bg-slate-50 border border-slate-100 rounded-full cursor-default hover:border-slate-300 hover:bg-slate-100 transition-colors">
-                <Icon className="w-3.5 h-3.5 text-slate-400" />
+              <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-slate-50 border border-slate-100 rounded-full cursor-default hover:border-slate-300 hover:bg-slate-100 transition-colors">
+                <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
               </span>
               <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-[#0C1A35] text-white text-xs px-2.5 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover/spec:opacity-100 transition-opacity pointer-events-none z-20">
                 {label}
@@ -197,7 +200,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           ))}
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-slate-50">
+        <div className="flex justify-end pt-2 sm:pt-3 border-t border-slate-50">
           {isApiData ? (
             <Link
               to={`/annonce/${(property as BienAvecIsNew).id}`}

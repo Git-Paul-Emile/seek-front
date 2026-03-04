@@ -102,3 +102,40 @@ export const extendPromotion = (
   api
     .post<{ data: ExtendResult }>(`/${bienId}/prolonger`, { joursSupplementaires })
     .then((r) => r.data.data);
+
+// ─── Public API: Annonces mises en avant pour la page d'accueil ────────────────
+
+export interface AnnonceMiseEnAvant {
+  id: string;
+  titre: string | null;
+  description: string | null;
+  prix: number | null;
+  photos: string[];
+  ville: string | null;
+  quartier: string | null;
+  surface: number | null;
+  nbChambres: number | null;
+  nbSdb: number | null;
+  typeLogement: { id: string; nom: string; slug: string } | null;
+  typeTransaction: { id: string; nom: string; slug: string } | null;
+  statutBien: { id: string; nom: string; slug: string } | null;
+  estMisEnAvant: boolean;
+  dateDebutPromotion: string | null;
+  dateFinPromotion: string | null;
+  proprietaire: { id: string; prenom: string; nom: string; telephone: string; email: string | null; statutVerification?: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED" };
+  nombreAnnoncesProprietaire?: number;
+}
+
+export interface MiseEnAvantResponse {
+  annonces: AnnonceMiseEnAvant[];
+  total: number;
+  rotation: boolean;
+}
+
+/**
+ * Récupère les annonces mises en avant pour la page d'accueil (public)
+ */
+export const fetchAnnoncesMiseEnAvant = (limit: number = 6): Promise<MiseEnAvantResponse> =>
+  api
+    .get<{ data: MiseEnAvantResponse }>("/accueil", { params: { limit } })
+    .then((r) => r.data.data);

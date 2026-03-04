@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, BadgeCheck, Star, Home } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, BadgeCheck, Star, Home, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
@@ -15,8 +15,22 @@ const formatPrice = (price: number) =>
   new Intl.NumberFormat("fr-SN", {
     style: "currency",
     currency: "XOF",
-    maximumFractionDigits: 0,
   }).format(price);
+
+// Fonction pour calculer le pourcentage de baisse de prix
+const calculatePriceDropPercentage = (prixActuel: number | null, prixAncien: number | null): number | null => {
+  if (!prixActuel || !prixAncien || prixAncien <= prixActuel) return null;
+  const pourcentage = ((prixAncien - prixActuel) / prixAncien) * 100;
+  return pourcentage >= 5 ? Math.round(pourcentage) : null;
+};
+
+// Fonction pour vérifier si la baisse est récente (moins de 30 jours)
+const isPriceDropRecent = (dateModification: string | null): boolean => {
+  if (!dateModification) return false;
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  return new Date(dateModification) >= thirtyDaysAgo;
+};
 
 // Transformer les données de l'API en format PropertyCard
 const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => ({
@@ -59,8 +73,21 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
   const isProprietaireVerified = proprietaire?.statutVerification === "VERIFIED";
   const estMisEnAvant = bienData?.estMisEnAvant ?? false;
 
+  // Calculer le pourcentage de baisse de prix
+  const pourcentageBaisse = isApiData 
+    ? calculatePriceDropPercentage(bienData?.prix ?? null, bienData?.prixAncien ?? null)
+    : null;
+  
+  // Vérifier si la baisse est récente
+  const baisseRecente = isApiData 
+    ? isPriceDropRecent(bienData?.dateDerniereModificationPrix ?? null)
+    : false;
+
+  // Afficher le badge si la baisse est significative et récente
+  const afficherBaisseDePrix = pourcentageBaisse !== null && baisseRecente;
+
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 border border-slate-100">
+    <div className="group bg-white overflow-hidden hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1.5 border border-slate-100" style={{ borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
       <div className="relative h-52">
         <Carousel className="w-full h-full">
           <CarouselContent>
@@ -73,7 +100,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 </div>
               </CarouselItem>
             ))}
@@ -82,11 +109,6 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           <CarouselNext className="right-2 h-7 w-7 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity border-0 shadow-md" />
         </Carousel>
 
-        {/* Badge Type de bien - coin supérieur gauche */}
-        <div className="absolute top-3 left-3 bg-[#0C1A35]/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-lg z-10">
-          {displayProperty.type}
-        </div>
-
         {/* Zone des badges - coin supérieur droit */}
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
           {/* Badge Nouveau */}
@@ -94,14 +116,6 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
             <div className="bg-[#D4A843] text-[#0C1A35] text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
               <Star className="w-3 h-3" />
               Nouveau
-            </div>
-          )}
-
-          {/* Badge Propriétaire vérifié */}
-          {isApiData && isProprietaireVerified && (
-            <div className="bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
-              <BadgeCheck className="w-3 h-3" />
-              Vérifié
             </div>
           )}
 
@@ -115,10 +129,23 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         </div>
 
         {/* Prix - en bas à gauche */}
-        <div className="absolute bottom-3 left-3">
-          <span className="text-white font-bold text-lg drop-shadow-lg">
-            {formatPrice(displayProperty.price)}
-          </span>
+        <div className="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between">
+          <div className="flex flex-col gap-0.5">
+            {isApiData && afficherBaisseDePrix && bienData?.prixAncien && (
+              <span className="text-white/70 text-xs line-through">
+                {formatPrice(bienData.prixAncien)}
+              </span>
+            )}
+            <span className="text-white font-bold text-xl drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+              {formatPrice(displayProperty.price)}
+            </span>
+          </div>
+          {/* Badge Baisse de prix - à côté du prix */}
+          {isApiData && afficherBaisseDePrix && pourcentageBaisse !== null && (
+            <div className="text-red-500 text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-white/90">
+              🔻 -{pourcentageBaisse}%
+            </div>
+          )}
         </div>
       </div>
 
@@ -126,6 +153,16 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         <h3 className="font-semibold text-[#1A2942] text-base mb-1 line-clamp-1">
           {displayProperty.title}
         </h3>
+
+        {/* Badge Vérifié */}
+        {isApiData && isProprietaireVerified && (
+          <div className="flex items-center gap-2 mb-3">
+            <div className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1">
+              <BadgeCheck className="w-3 h-3" />
+              Vérifié
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-1.5 text-sm text-slate-400 mb-3">
           <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-[#D4A843]" />

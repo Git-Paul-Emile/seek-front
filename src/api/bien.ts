@@ -104,6 +104,8 @@ export interface Bien {
   parking: boolean;
   ascenseur: boolean;
   prix: number | null;
+  prixAncien: number | null;
+  dateDerniereModificationPrix: string | null;
   frequencePaiement: string | null;
   chargesIncluses: boolean;
   caution: number | null;

@@ -62,7 +62,7 @@ const SkeletonRow = () => (
 // ─── Card liste horizontale ───────────────────────────────────────────────────
 
 const formatPrice = (price: number) =>
-  new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF", maximumFractionDigits: 0 }).format(price);
+  new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(price);
 
 const ListCard = ({ bien }: { bien: Bien }) => {
   const img = bien.photos?.[0] ?? "/placeholder.svg";
@@ -74,11 +74,6 @@ const ListCard = ({ bien }: { bien: Bien }) => {
           alt={bien.titre ?? "Annonce"}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        {bien.typeLogement && (
-          <span className="absolute top-2 left-2 bg-[#0C1A35]/80 text-white text-xs font-semibold px-2 py-0.5 rounded-md">
-            {bien.typeLogement.nom}
-          </span>
-        )}
       </div>
       <div className="flex-1 min-w-0 p-4 flex flex-col justify-between">
         <div>

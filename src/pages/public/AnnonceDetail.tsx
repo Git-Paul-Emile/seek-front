@@ -45,6 +45,7 @@ import {
   ChefHat,
   Search,
   Home,
+  TrendingDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
@@ -68,7 +69,6 @@ function formatPrice(price: number) {
   return new Intl.NumberFormat("fr-SN", {
     style: "currency",
     currency: "XOF",
-    maximumFractionDigits: 0,
   }).format(price);
 }
 
@@ -92,6 +92,21 @@ function getTimeAgo(dateString: string): string {
   if (diffInSeconds < 604800) return `il y a ${Math.floor(diffInSeconds / 86400)} j`;
   return formatDate(dateString);
 }
+
+// Fonction pour calculer le pourcentage de baisse de prix
+const calculatePriceDropPercentage = (prixActuel: number | null, prixAncien: number | null): number | null => {
+  if (!prixActuel || !prixAncien || prixAncien <= prixActuel) return null;
+  const pourcentage = ((prixAncien - prixActuel) / prixAncien) * 100;
+  return pourcentage >= 5 ? Math.round(pourcentage) : null;
+};
+
+// Fonction pour vérifier si la baisse est récente (moins de 30 jours)
+const isPriceDropRecent = (dateModification: string | null): boolean => {
+  if (!dateModification) return false;
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  return new Date(dateModification) >= thirtyDaysAgo;
+};
 
 function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
   if (!value && value !== 0) return null;
@@ -788,6 +803,20 @@ export default function AnnonceDetail() {
                 <h3 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">
                   Détails du prix
                 </h3>
+                {/* Badge de baisse de prix */}
+                {(() => {
+                  const pourcentageBaisse = calculatePriceDropPercentage(bien.prix, bien.prixAncien);
+                  const baisseRecente = isPriceDropRecent(bien.dateDerniereModificationPrix);
+                  const afficherBaisse = pourcentageBaisse !== null && baisseRecente;
+                  
+                  if (!afficherBaisse) return null;
+                  
+                  return (
+                    <div className="mb-4 flex items-center gap-2 text-red-600 font-bold">
+                      🔻 -{pourcentageBaisse}%
+                    </div>
+                  );
+                })()}
                 <div className="space-y-2">
                   <InfoRow label="Loyer" value={bien.prix ? formatPrice(bien.prix) : null} />
                   <InfoRow label="Fréquence" value={bien.frequencePaiement} />

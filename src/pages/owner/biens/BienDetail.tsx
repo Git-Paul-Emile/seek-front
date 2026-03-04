@@ -64,7 +64,7 @@ import {
 } from "@/hooks/useBail";
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
-import PromotionCard from "@/components/owner/PromotionCard";
+import PremiumPayment from "@/components/owner/PremiumPayment";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
 import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
@@ -984,7 +984,7 @@ export default function BienDetail() {
 
           {/* Promotion - uniquement pour les annonces publiées */}
           {statut === "PUBLIE" && (
-            <PromotionCard bienId={bien.id} bienTitre={bien.titre || "Annonce"} />
+            <PremiumPayment bienId={bien.id} bienTitre={bien.titre || "Annonce"} />
           )}
 
           {/* Tarifs */}

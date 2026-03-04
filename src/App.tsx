@@ -28,6 +28,7 @@ import OwnerRegister from "./pages/owner/Register";
 import OwnerLogin from "./pages/owner/Login";
 import OwnerDashboard from "./pages/owner/Dashboard";
 import OwnerVerification from "./pages/owner/Verification";
+import HistoriquePaiements from "./pages/owner/HistoriquePaiements";
 import Profile from "./pages/owner/Profile";
 import BiensList from "./pages/owner/biens/BiensList";
 import AddBien from "./pages/owner/biens/AddBien";
@@ -101,6 +102,7 @@ const App = () => (
                     <Route path="/owner/dashboard" element={<OwnerDashboard />} />
                     <Route path="/owner/verification" element={<OwnerVerification />} />
                     <Route path="/owner/profile" element={<Profile />} />
+                    <Route path="/owner/paiements" element={<HistoriquePaiements />} />
                     <Route path="/owner/biens" element={<BiensList />} />
                     <Route path="/owner/biens/ajouter" element={<AddBien />} />
                     <Route path="/owner/biens/:id" element={<BienDetail />} />

@@ -78,9 +78,13 @@ export default function LocataireDetail() {
     }
   }, [searchParams, queryClient, id]);
 
-  // Vérifier si le locataire a un bail avec un contrat validé
-  const aContratValide = locataire?.bails?.some(
-    (bail) => bail.contrat?.statut === "ACTIF"
+  // Afficher le lien d'activation si le locataire est en attente d'activation
+  // ET qu'il a au moins un bail avec un contrat actif
+  const peutAfficherLien = Boolean(
+    locataire &&
+    locataire.statut === "INVITE" &&
+    Array.isArray(locataire.bails) &&
+    locataire.bails.some((bail) => bail.contrat && bail.contrat.statut === "ACTIF")
   );
 
   // Auto-fetch lien d'activation au chargement si contrat validé
@@ -94,10 +98,10 @@ export default function LocataireDetail() {
   }, [getLien, id]);
 
   useEffect(() => {
-    if (aContratValide && !lien && !getLien.isPending) {
+    if (peutAfficherLien && !lien && !getLien.isPending) {
       handleGetLien();
     }
-  }, [aContratValide, lien, getLien.isPending, handleGetLien]);
+  }, [peutAfficherLien, lien, getLien.isPending, handleGetLien]);
 
   const handleCopy = () => {
     if (!lien) return;
@@ -175,8 +179,8 @@ export default function LocataireDetail() {
         </button>
       </div>
 
-      {/* Lien d'activation - uniquement si contrat validé */}
-      {aContratValide && (
+      {/* Lien d'activation - uniquement si contrat validé ET locataire pas encore actif */}
+      {peutAfficherLien && (
         <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-5">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
@@ -184,7 +188,9 @@ export default function LocataireDetail() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-amber-900 text-sm">
-                Contrat validé — partagez ce lien d'activation avec le locataire
+                {locataire.statut === 'INVITE' 
+                  ? 'Contrat validé — partagez ce lien d\'activation avec le locataire'
+                  : 'Le locataire peut désormais se connecter à son espace'}
               </p>
               {lien ? (
                 <div className="mt-3 flex items-center gap-2">

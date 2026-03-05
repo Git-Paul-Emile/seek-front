@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { updateProfileApi, deleteProfileApi, meOwnerApi } from "@/api/ownerAuth";
+import { useVerificationStatus } from "@/hooks/useVerification";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-import { Loader2, Save, Trash2, User, Mail, Phone, Lock, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2, Save, Trash2, User, Mail, Phone, Lock, ChevronDown, Shield, Check, AlertCircle, Clock, Eye, CreditCard } from "lucide-react";
 
 interface ProfileFormData {
   prenom: string;
@@ -25,6 +27,10 @@ export default function Profile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Vérification d'identité
+  const { data: verificationStatus, isLoading: isVerificationLoading } = useVerificationStatus();
+  const [showDocumentPreview, setShowDocumentPreview] = useState(false);
   
   const [formData, setFormData] = useState<ProfileFormData>({
     prenom: "",
@@ -63,18 +69,14 @@ export default function Profile() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrorMessage(null);
-    setSuccessMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
     
     // Validation du mot de passe
     if (formData.password && formData.password !== formData.confirmPassword) {
-      setErrorMessage("Les mots de passe ne correspondent pas.");
+      toast.error("Les mots de passe ne correspondent pas.");
       return;
     }
 
@@ -102,12 +104,13 @@ export default function Profile() {
       // Mettre à jour le contexte
       setOwner(data.data);
       
-      setSuccessMessage(data.message);
+      // Afficher le toast de succès
+      toast.success(data.message || "Profil mis à jour avec succès");
       
       // Reset password fields
       setFormData((prev) => ({ ...prev, password: "", confirmPassword: "" }));
     } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || "Une erreur est survenue lors de la mise à jour du profil.");
+      toast.error(error.response?.data?.message || "Une erreur est survenue lors de la mise à jour du profil.");
     } finally {
       setIsSaving(false);
     }
@@ -120,7 +123,7 @@ export default function Profile() {
       await logout();
       navigate("/proprietaires");
     } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || "Une erreur est survenue lors de la suppression du compte.");
+      toast.error(error.response?.data?.message || "Une erreur est survenue lors de la suppression du compte.");
       setShowDeleteModal(false);
     } finally {
       setIsDeleting(false);
@@ -144,18 +147,174 @@ export default function Profile() {
         </p>
       </div>
 
-      {/* Messages de succès/erreur */}
-      {successMessage && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/25 px-4 py-3">
-          <p className="text-sm text-emerald-600">{successMessage}</p>
+      {/* Section Vérification d'identité */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-[#0C1A35] flex items-center gap-2">
+            <Shield className="w-5 h-5 text-[#D4A843]" />
+            Vérification d'identité
+          </h2>
+          {verificationStatus?.statut === "VERIFIED" && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
+              <Check className="w-3.5 h-3.5" />
+              Vérifié
+            </span>
+          )}
+          {verificationStatus?.statut === "PENDING" && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+              <Clock className="w-3.5 h-3.5" />
+              En attente
+            </span>
+          )}
+          {verificationStatus?.statut === "REJECTED" && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+              <AlertCircle className="w-3.5 h-3.5" />
+              Rejeté
+            </span>
+          )}
         </div>
-      )}
 
-      {errorMessage && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-red-500/15 border border-red-400/25 px-4 py-3">
-          <p className="text-sm text-red-600">{errorMessage}</p>
-        </div>
-      )}
+        {isVerificationLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
+          </div>
+        ) : verificationStatus?.statut && (verificationStatus.statut === "VERIFIED" || verificationStatus.statut === "PENDING") ? (
+          /* Documents soumis - afficher les détails */
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Type de pièce */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <p className="text-xs text-slate-400 mb-1">Type de pièce</p>
+                <p className="text-sm font-medium text-[#0C1A35] flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-slate-400" />
+                  {verificationStatus?.documents?.typePiece === "CNI" ? "CNI" : 
+                   verificationStatus?.documents?.typePiece === "PASSEPORT" ? "Passeport" : 
+                   verificationStatus?.documents?.typePiece || "Non spécifié"}
+                </p>
+              </div>
+
+              {/* Date de soumission */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <p className="text-xs text-slate-400 mb-1">
+                  {verificationStatus?.statut === "VERIFIED" ? "Date de vérification" : "Date de soumission"}
+                </p>
+                <p className="text-sm font-medium text-[#0C1A35]">
+                  {verificationStatus?.verifiedAt 
+                    ? new Date(verificationStatus.verifiedAt).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : "En attente d'approbation"}
+                </p>
+              </div>
+            </div>
+
+            {/* Documents */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <p className="text-xs text-slate-400 mb-3">Documents soumis</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {verificationStatus?.documents?.pieceIdentiteRecto && (
+                  <button
+                    onClick={() => setShowDocumentPreview(true)}
+                    className="relative group p-3 rounded-lg bg-white border border-slate-200 hover:border-[#D4A843] transition-all text-left"
+                  >
+                    <div className="aspect-[4/3] rounded-md overflow-hidden bg-slate-100 mb-2">
+                      <img 
+                        src={verificationStatus.documents.pieceIdentiteRecto} 
+                        alt="Recto"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <p className="text-xs font-medium text-slate-600">Pièce identité (Recto)</p>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                      <Eye className="w-5 h-5 text-white" />
+                    </div>
+                  </button>
+                )}
+                {verificationStatus?.documents?.pieceIdentiteVerso && (
+                  <button
+                    onClick={() => setShowDocumentPreview(true)}
+                    className="relative group p-3 rounded-lg bg-white border border-slate-200 hover:border-[#D4A843] transition-all text-left"
+                  >
+                    <div className="aspect-[4/3] rounded-md overflow-hidden bg-slate-100 mb-2">
+                      <img 
+                        src={verificationStatus.documents.pieceIdentiteVerso} 
+                        alt="Verso"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <p className="text-xs font-medium text-slate-600">Pièce identité (Verso)</p>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                      <Eye className="w-5 h-5 text-white" />
+                    </div>
+                  </button>
+                )}
+                {verificationStatus?.documents?.selfie && (
+                  <button
+                    onClick={() => setShowDocumentPreview(true)}
+                    className="relative group p-3 rounded-lg bg-white border border-slate-200 hover:border-[#D4A843] transition-all text-left"
+                  >
+                    <div className="aspect-square rounded-md overflow-hidden bg-slate-100 mb-2">
+                      <img 
+                        src={verificationStatus.documents.selfie} 
+                        alt="Selfie"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <p className="text-xs font-medium text-slate-600">Selfie</p>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                      <Eye className="w-5 h-5 text-white" />
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {verificationStatus?.statut === "PENDING" && (
+              <p className="text-sm text-slate-500">
+                Votre demande est en cours d'analyse. Vous ne pouvez pas soumettre de nouvelle demande pour le moment.
+              </p>
+            )}
+          </div>
+        ) : verificationStatus?.statut === "REJECTED" ? (
+          /* Documents rejetés */
+          <div className="space-y-4">
+            {/* Message de rejet */}
+            {verificationStatus?.documents?.motifRejet && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200">
+                <p className="text-sm font-medium text-red-800 mb-1">Motif du rejet</p>
+                <p className="text-sm text-red-700">{verificationStatus.documents.motifRejet}</p>
+              </div>
+            )}
+
+            {/* Bouton pour soumettre une nouvelle demande */}
+            <Link
+              to="/owner/verification"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4A843] hover:bg-[#c49933] text-[#0C1A35] text-sm font-semibold transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+              Soumettre une nouvelle demande
+            </Link>
+          </div>
+        ) : (
+          /* Pas encore de documents soumis - afficher le formulaire de vérification */
+          <div className="space-y-4">
+            <p className="text-sm text-slate-500">
+              Pour publier des annonces et gérer vos biens, vous devez vérifier votre identité.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/owner/verification"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#D4A843] hover:bg-[#c49933] text-[#0C1A35] text-sm font-semibold transition-colors"
+              >
+                <Shield className="w-4 h-4" />
+                Vérifier mon identité
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 p-6">
         <h2 className="text-lg font-semibold text-[#0C1A35] mb-4">

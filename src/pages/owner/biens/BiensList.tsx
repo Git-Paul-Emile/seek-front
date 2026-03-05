@@ -12,7 +12,7 @@ import {
   Trash2,
   Eye,
   RotateCcw,
-  RefreshCw,
+  RefreshCw, 
   UserCheck,
   Send,
 } from "lucide-react";
@@ -44,7 +44,7 @@ function StatutBadge({ statut }: { statut: StatutAnnonce }) {
 }
 
 export default function BiensList() {
-  const [filter, setFilter] = useState<StatutAnnonce | "TOUS" | "ASSOCIE">("TOUS");
+  const [filter, setFilter] = useState<StatutAnnonce | "TOUS" | "ASSOCIE" | "MIS_EN_AVANT">("TOUS");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [retourTargetId, setRetourTargetId] = useState<string | null>(null);
   const [showRejetAlert, setShowRejetAlert] = useState(true);
@@ -72,9 +72,12 @@ export default function BiensList() {
 
   const associeCount = biens.filter((b) => b.hasBailActif).length;
 
+  const miseEnAvantCount = biens.filter((b) => b.estMisEnAvant).length;
+
   const filteredBiens =
     filter === "TOUS" ? biens :
     filter === "ASSOCIE" ? biens.filter((b) => b.hasBailActif) :
+    filter === "MIS_EN_AVANT" ? biens.filter((b) => b.estMisEnAvant) :
     biens.filter((b) => b.statutAnnonce === filter);
 
   const rejeteCount = counts.REJETE ?? 0;
@@ -149,6 +152,19 @@ export default function BiensList() {
           </span>
         </button>
 
+        <button
+          onClick={() => setFilter("MIS_EN_AVANT")}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            filter === "MIS_EN_AVANT" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          <span className={`text-xs ${filter === "MIS_EN_AVANT" ? "text-white" : "text-amber-500"}`}>★</span>
+          En avant
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${filter === "MIS_EN_AVANT" ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600"}`}>
+            {miseEnAvantCount}
+          </span>
+        </button>
+
         {(["BROUILLON", "EN_ATTENTE", "PUBLIE", "REJETE"] as const).map((statut) => {
           const { color, textColor, icon: Icon, label } = STATUT_CONFIG[statut];
           const count = counts[statut] ?? 0;
@@ -197,7 +213,9 @@ export default function BiensList() {
               ? "Vous n'avez pas encore de biens."
               : filter === "ASSOCIE"
               ? "Vous n'avez aucun bien avec un locataire actif."
-              : `Vous n'avez aucun bien avec le statut « ${STATUT_CONFIG[filter].label} ».`}
+              : filter === "MIS_EN_AVANT"
+              ? "Vous n'avez aucun bien mis en avant."
+              : `Vous n'avez aucun bien avec le statut « ${STATUT_CONFIG[filter as StatutAnnonce].label} ».`}
           </p>
         </div>
       ) : (
@@ -231,7 +249,7 @@ export default function BiensList() {
                           <div className="min-w-0">
                             <p className="font-medium text-[#0C1A35] truncate">{bien.titre || "Sans titre"}</p>
                             <p className="text-sm text-slate-500 truncate">
-                              {bien.ville && bien.quartier ? `${bien.ville}, ${bien.quartier}` : bien.adresse || "Adresse non spécifiée"}
+                              {bien.region && bien.quartier ? `${bien.region}, ${bien.quartier}` : bien.region || bien.pays || "Localisation non spécifiée"}
                             </p>
                           </div>
                         </div>

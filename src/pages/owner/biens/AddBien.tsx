@@ -53,6 +53,10 @@ const TABS = [
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/avif", "image/jfif", "image/pjpeg"];
 const MAX_SIZE = 5 * 1024 * 1024;
 
+// ─── Description limits ───────────────────────────────────────────────────────
+const MIN_DESCRIPTION = 200;
+const MAX_DESCRIPTION = 1500;
+
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 
 const inputCls =
@@ -457,6 +461,13 @@ export default function AddBien() {
     if (tabId === "general") {
       if (!selectedType)  errs.type   = "Choisissez un type de bien";
       if (!titre.trim())  errs.titre  = "Le titre est requis";
+      if (!description.trim()) {
+        errs.description = "La description est requise (min. 200 caractères)";
+      } else if (description.trim().length < MIN_DESCRIPTION) {
+        errs.description = `La description doit contenir au moins ${MIN_DESCRIPTION} caractères`;
+      } else if (description.trim().length > MAX_DESCRIPTION) {
+        errs.description = `La description ne peut pas dépasser ${MAX_DESCRIPTION} caractères`;
+      }
       if (!selectedPays)  errs.pays   = "Choisissez un pays";
       if (!selectedVille) errs.region = "Choisissez une région";
     }
@@ -729,14 +740,22 @@ export default function AddBien() {
                   {errors.titre && <p className="mt-1 text-xs text-red-500">{errors.titre}</p>}
                 </div>
                 <div>
-                  <label className={labelCls}>Description détaillée</label>
+                  <label className={labelCls}>Description détaillée <span className="text-slate-400 font-normal">(min. {MIN_DESCRIPTION} caractères)</span></label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
+                    rows={6}
+                    maxLength={MAX_DESCRIPTION}
                     placeholder="Décrivez le bien, l'environnement, les points forts…"
                     className="w-full px-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 placeholder:text-slate-300 outline-none focus:border-[#D4A843]/60 focus:bg-white transition-all resize-none"
                   />
+                  <div className="flex items-center justify-between mt-1.5">
+                    <p className="text-xs text-slate-400">Minimum {MIN_DESCRIPTION} caractères</p>
+                    <p className={`text-xs font-medium ${description.length > MAX_DESCRIPTION ? 'text-red-500' : description.length >= MIN_DESCRIPTION ? 'text-emerald-500' : 'text-slate-400'}`}>
+                      {description.length} / {MAX_DESCRIPTION} caractères
+                    </p>
+                  </div>
+                  {errors.description && <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{errors.description}</p>}
                 </div>
               </div>
             </div>

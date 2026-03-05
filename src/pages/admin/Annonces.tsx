@@ -127,9 +127,9 @@ function AnnonceRow({
               {bien.titre || "Sans titre"}
             </p>
             <p className="text-xs text-slate-400 truncate">
-              {[bien.ville, bien.quartier].filter(Boolean).join(", ") ||
-                bien.adresse ||
-                "Adresse non spécifiée"}
+              {[bien.quartier, bien.region].filter(Boolean).join(", ") ||
+                bien.pays ||
+                "Localisation non spécifiée"}
             </p>
           </div>
         </div>

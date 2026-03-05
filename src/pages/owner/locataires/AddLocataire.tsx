@@ -32,17 +32,26 @@ export default function AddLocataire() {
   const annulerBail = useAnnulerBail();
   const creationCancelledRef = useRef(false);
 
-  // Biens disponibles : publiés et sans bail actif
-  // On affiche tous les biens publiés qui n'ont pas de bail actif
+  // Biens disponibles pour nouvelle location
+  // On affiche:
+  // 1. Les biens publiés avec statut "libre" (disponibles pour location)
+  // 2. Les biens publiés avec bail actif (statut "loué") - pour gestion des baux
   const { data: tousLesBiens = [] } = useBiens();
-  const biensPubliés = tousLesBiens.filter(
-    (b) => b.statutAnnonce === "PUBLIE" && !b.hasBailActif
+  
+  // Biens publiés avec statut libre (nouvelle location)
+  const biensLibres = tousLesBiens.filter(
+    (b) => b.statutAnnonce === "PUBLIE" && 
+           b.statutBien?.slug === "libre" && 
+           !b.hasBailActif
   );
-
-  // Debug: voir tous les biens et leurs propriétés
-  console.log("Tous les biens:", tousLesBiens);
-  console.log("Bi Published:", biensPubliés);
-  console.log("Bi typeTransaction:", tousLesBiens.map(b => ({ id: b.id, titre: b.titre, typeTransaction: b.typeTransaction, statutBien: b.statutBien, hasBailActif: b.hasBailActif })));
+  
+  // Biens publiés avec bail actif (déjà loués)
+  const biensLoues = tousLesBiens.filter(
+    (b) => b.statutAnnonce === "PUBLIE" && b.hasBailActif
+  );
+  
+  // Tous les biens publiés disponibles (libres + déjà loués)
+  const biensPubliés = [...biensLibres, ...biensLoues];
 
   const biensLocation: Bien[] = biensPubliés;
 
@@ -59,6 +68,7 @@ export default function AddLocataire() {
     dateDebutBail: "",
     dateFinBail: "",
     typeBail: "Habitation",
+    renouvellement: false,
     cautionVersee: false,
     jourLimitePaiement: "",
   });
@@ -127,6 +137,7 @@ export default function AddLocataire() {
           montantCaution: bienSelectionne?.caution ?? null,
           frequencePaiement: bienSelectionne?.frequencePaiement ?? null,
           typeBail: form.typeBail || null,
+          renouvellement: form.renouvellement || false,
           cautionVersee: form.cautionVersee,
           jourLimitePaiement: form.jourLimitePaiement ? parseInt(form.jourLimitePaiement) : null,
         },
@@ -318,6 +329,7 @@ export default function AddLocataire() {
                     {b.titre || b.ville || "Bien sans titre"}
                     {b.ville && b.titre ? ` — ${b.ville}` : ""}
                     {b.prix ? ` (${b.prix.toLocaleString("fr-FR")} FCFA/mois)` : ""}
+                    {b.hasBailActif ? " [LOUÉ]" : ""}
                   </option>
                 ))}
               </select>
@@ -325,21 +337,22 @@ export default function AddLocataire() {
             {errors.bienId && (
               <p className="text-xs text-red-400 mt-1">{errors.bienId}</p>
             )}
-            {/* Aperçu du bien sélectionné */}
-            {bienSelectionne && (
-              <div className="mt-2 flex items-center gap-2 text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
-                <Building2 className="w-3.5 h-3.5 text-[#D4A843]" />
-                <span className="font-medium text-[#0C1A35]">
-                  {bienSelectionne.titre || bienSelectionne.ville}
-                </span>
-                {bienSelectionne.ville && bienSelectionne.titre && (
-                  <span>· {bienSelectionne.ville}</span>
-                )}
-                {bienSelectionne.typeLogement && (
-                  <span>· {bienSelectionne.typeLogement.nom}</span>
-                )}
-              </div>
-            )}
+          </div>
+
+          {/* Type de bail */}
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">
+              Type de bail <span className="text-red-400">*</span>
+            </label>
+            <select
+              value={form.typeBail}
+              onChange={(e) => set("typeBail", e.target.value)}
+              className={selectCls(false)}
+            >
+              <option value="Habitation">Habitation</option>
+              <option value="Commercial">Commercial</option>
+              <option value="Mixte">Mixte</option>
+            </select>
           </div>
 
           {/* Date de début + Date de fin */}
@@ -372,64 +385,21 @@ export default function AddLocataire() {
             </div>
           </div>
 
-          {/* Type de bail */}
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">
-              Type de bail
-            </label>
-            <select
-              value={form.typeBail}
-              onChange={(e) => set("typeBail", e.target.value)}
-              className={selectCls(false)}
-            >
-              <option value="Habitation">Habitation</option>
-              <option value="Commercial">Commercial</option>
-              <option value="Mixte">Mixte</option>
-            </select>
-          </div>
-
-          {/* Caution versée + Jour limite paiement */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">
-                Caution versée <span className="text-red-400">*</span>
-              </label>
-              <div className="flex gap-3 h-10 items-center">
-                {[{ label: "Oui", value: true }, { label: "Non", value: false }].map(({ label, value }) => (
-                  <label key={label} className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="cautionVersee"
-                      checked={form.cautionVersee === value}
-                      onChange={() => set("cautionVersee", value)}
-                      className="accent-[#D4A843]"
-                    />
-                    <span className="text-sm text-slate-700">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">
-                Date butoir de paiement{" "}
-                <span className="text-slate-300 font-normal">(1–28, optionnel)</span>
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={28}
-                value={form.jourLimitePaiement}
-                onChange={(e) => set("jourLimitePaiement", e.target.value)}
-                placeholder="Ex : 5"
-                className={inputCls(false)}
-              />
-            </div>
-          </div>
+          {/* Renouvellement */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!!form.renouvellement}
+              onChange={(e) => set("renouvellement", e.target.checked)}
+              className="w-4 h-4 text-blue-600 rounded"
+            />
+            <span className="text-sm font-medium text-gray-700">Renouvellement possible</span>
+          </label>
 
           {/* Conditions financières — lecture seule depuis l'annonce */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">
-              Conditions financières (depuis l'annonce)
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-4">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+              Conditions financières
             </p>
             <div className="grid grid-cols-3 gap-4">
               <div>
@@ -450,10 +420,52 @@ export default function AddLocataire() {
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-0.5">Fréquence</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900 capitalize">
                   {bienSelectionne?.frequencePaiement ?? "—"}
                 </p>
               </div>
+            </div>
+
+            {/* Caution versée */}
+            <div>
+              <label className="block text-xs font-medium text-blue-700 mb-2">
+                Caution versée <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-4">
+                {["Oui", "Non"].map((val) => (
+                  <label key={val} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cautionVersee"
+                      value={val.toLowerCase()}
+                      checked={form.cautionVersee === (val === "Oui")}
+                      onChange={() => set("cautionVersee", val === "Oui")}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-sm font-medium text-gray-700">{val}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Date butoir de paiement */}
+            <div>
+              <label className="block text-xs font-medium text-blue-700 mb-1">
+                Date butoir de paiement{" "}
+                <span className="font-normal text-blue-500">(optionnel)</span>
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={28}
+                placeholder="Ex : 5"
+                value={form.jourLimitePaiement}
+                onChange={(e) => set("jourLimitePaiement", e.target.value)}
+                className="w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 border-blue-200"
+              />
+              <p className="text-[11px] text-blue-500 mt-1">
+                Jour du mois avant lequel le loyer doit être payé (ex : 5 → avant le 5 de chaque mois).
+              </p>
             </div>
           </div>
         </div>

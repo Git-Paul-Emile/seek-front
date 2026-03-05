@@ -232,16 +232,22 @@ export default function ContratModal({
               </button>
             )}
 
-            {/* Consultation : Renvoyer au locataire */}
+            {/* Consultation : Valider ou Renvoyer au locataire selon le statut */}
             {!isCreationFlow && (
               <button
                 onClick={handleRenvoyer}
                 disabled={isBusy}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors ${
+                  contrat?.statut === "BROUILLON"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 {envoyer.isPending
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi...</>
-                  : <><Send className="w-3.5 h-3.5" /> Renvoyer au locataire</>
+                  : contrat?.statut === "BROUILLON"
+                    ? <>Valider</>
+                    : <>Renvoyer au locataire</>
                 }
               </button>
             )}

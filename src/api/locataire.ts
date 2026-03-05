@@ -18,7 +18,11 @@ export interface BailResume {
   dateDebutBail: string;
   dateFinBail?: string | null;
   montantLoyer: number;
-  bien: { id: string; titre?: string | null; ville?: string | null };
+  bienId: string;
+  bien: { id: string; titre?: string | null; ville?: string | null; quartier?: string | null };
+  locataireId: string;
+  typeBail?: string | null;
+  contrat?: { id: string; statut: string } | null;
 }
 
 export interface Locataire {

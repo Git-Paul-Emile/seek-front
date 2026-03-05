@@ -89,7 +89,7 @@ const ListCard = ({ bien }: { bien: Bien }) => {
           </div>
           <div className="flex items-center gap-1 text-sm text-slate-400 mb-3">
             <MapPin className="w-3.5 h-3.5 text-[#D4A843] flex-shrink-0" />
-            {[bien.quartier, bien.ville].filter(Boolean).join(", ")}
+            {[bien.quartier, bien.region].filter(Boolean).join(", ") || bien.pays}
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
             {bien.surface && (

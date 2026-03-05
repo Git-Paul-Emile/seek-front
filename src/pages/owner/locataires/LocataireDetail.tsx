@@ -17,11 +17,14 @@ import {
   Calendar,
   Banknote,
   Trash2,
+  FileText,
 } from "lucide-react";
 import { useLocataireById, useDeleteLocataire, useGetLienActivation } from "@/hooks/useLocataire";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { toast } from "sonner";
 import type { StatutLocataire } from "@/api/locataire";
+import ContratModal from "../biens/ContratModal";
+import type { Bail } from "@/api/bail";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,6 +66,7 @@ export default function LocataireDetail() {
   const [lien, setLien] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedBail, setSelectedBail] = useState<Bail | null>(null);
 
   const handleGetLien = async () => {
     try {
@@ -319,6 +323,16 @@ export default function LocataireDetail() {
                     {fmtMontant(bail.montantLoyer)} / mois
                   </span>
                 </div>
+                {/* Bouton voir le contrat */}
+                {bail.contrat && (
+                  <button
+                    onClick={() => setSelectedBail(bail as unknown as Bail)}
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                  >
+                    <FileText className="w-3 h-3" />
+                    Voir le contrat
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -337,6 +351,15 @@ export default function LocataireDetail() {
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
       />
+
+      {/* Modal contrat */}
+      {selectedBail && (
+        <ContratModal
+          bail={selectedBail}
+          onClose={() => setSelectedBail(null)}
+          isCreationFlow={false}
+        />
+      )}
     </div>
   );
 }

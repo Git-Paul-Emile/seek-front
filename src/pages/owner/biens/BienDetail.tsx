@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Building2,
@@ -53,6 +54,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
+import { useLocataires } from "@/hooks/useLocataire";
 import { useDeleteBien, useRetourBrouillon, useAnnulerAnnonce, useSoumettreBien } from "@/hooks/useBien";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -121,6 +123,7 @@ export default function BienDetail() {
   const navigate = useNavigate();
 
   const { data: bien, isLoading, isError } = useBienById(id ?? "");
+  const { data: locataires = [] } = useLocataires();
   const deleteMutation = useDeleteBien();
   const retour = useRetourBrouillon();
   const annuler = useAnnulerAnnonce();
@@ -147,6 +150,7 @@ export default function BienDetail() {
   const { data: caution } = useCaution(id ?? "", bail?.id ?? "");
   const restituerCaution = useRestituerCaution();
   const { owner } = useOwnerAuth();
+  const queryClient = useQueryClient();
 
   const [photoIndex, setPhotoIndex] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -689,7 +693,13 @@ export default function BienDetail() {
                     </p>
                   ) : (
                     <button
-                      onClick={() => setShowBailForm(true)}
+                      onClick={() => {
+                        if (locataires.length === 0) {
+                          toast.error("Aucun locataire disponible. Vous devez d'abord créer un locataire.");
+                          return;
+                        }
+                        setShowBailForm(true);
+                      }}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors"
                     >
                       <UserPlus className="w-3.5 h-3.5" />
@@ -1177,6 +1187,15 @@ export default function BienDetail() {
           bail={activeBailForContrat}
           isCreationFlow={isContratCreationFlow}
           onClose={() => { setShowContratModal(false); setActiveBailForContrat(null); setIsContratCreationFlow(false); }}
+          onValiderSuccess={(locataireId) => {
+            setShowContratModal(false);
+            setActiveBailForContrat(null);
+            setIsContratCreationFlow(false);
+            // Rafraîchir les données du locataire pour refléter le contrat validé
+            queryClient.invalidateQueries({ queryKey: ["locataires"] });
+            queryClient.invalidateQueries({ queryKey: ["locataires", locataireId] });
+            navigate(`/owner/locataires/${locataireId}?refreshed=true`);
+          }}
         />
       )}
 

@@ -1,13 +1,8 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserPlus, ArrowLeft, Building2, Home } from "lucide-react";
-import { useCreateLocataire, useDeleteLocataire } from "@/hooks/useLocataire";
-import { useCreerBail, useAnnulerBail } from "@/hooks/useBail";
-import { useBiens } from "@/hooks/useBien";
+import { UserPlus, ArrowLeft } from "lucide-react";
+import { useCreateLocataire } from "@/hooks/useLocataire";
 import { toast } from "sonner";
-import type { Bien } from "@/api/bien";
-import type { Bail } from "@/api/bail";
-import ContratModal from "../biens/ContratModal";
 
 // ─── Helpers UI ────────────────────────────────────────────────────────────────
 
@@ -17,43 +12,11 @@ const inputCls = (hasError = false) =>
    focus:border-[#D4A843] focus:ring-2 focus:ring-[#D4A843]/10
    ${hasError ? "border-red-400" : "border-slate-200"}`;
 
-const selectCls = (hasError = false) =>
-  `w-full h-10 border rounded-xl px-3 text-sm text-slate-700 outline-none transition-all bg-white
-   focus:border-[#D4A843] focus:ring-2 focus:ring-[#D4A843]/10
-   ${hasError ? "border-red-400" : "border-slate-200"}`;
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AddLocataire() {
   const navigate = useNavigate();
   const createLocataire = useCreateLocataire();
-  const deleteLocataire = useDeleteLocataire();
-  const creerBail = useCreerBail();
-  const annulerBail = useAnnulerBail();
-  const creationCancelledRef = useRef(false);
-
-  // Biens disponibles pour nouvelle location
-  // On affiche:
-  // 1. Les biens publiés avec statut "libre" (disponibles pour location)
-  // 2. Les biens publiés avec bail actif (statut "loué") - pour gestion des baux
-  const { data: tousLesBiens = [] } = useBiens();
-  
-  // Biens publiés avec statut libre (nouvelle location)
-  const biensLibres = tousLesBiens.filter(
-    (b) => b.statutAnnonce === "PUBLIE" && 
-           b.statutBien?.slug === "libre" && 
-           !b.hasBailActif
-  );
-  
-  // Biens publiés avec bail actif (déjà loués)
-  const biensLoues = tousLesBiens.filter(
-    (b) => b.statutAnnonce === "PUBLIE" && b.hasBailActif
-  );
-  
-  // Tous les biens publiés disponibles (libres + déjà loués)
-  const biensPubliés = [...biensLibres, ...biensLoues];
-
-  const biensLocation: Bien[] = biensPubliés;
 
   const [form, setForm] = useState({
     // Locataire
@@ -63,36 +26,12 @@ export default function AddLocataire() {
     email: "",
     nbOccupants: 1,
     presenceEnfants: false,
-    // Bail
-    bienId: "",
-    dateDebutBail: "",
-    dateFinBail: "",
-    typeBail: "Habitation",
-    renouvellement: false,
-    cautionVersee: false,
-    jourLimitePaiement: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showContratModal, setShowContratModal] = useState(false);
-  const [createdBail, setCreatedBail] = useState<Bail | null>(null);
-
-  /** Appelé par ContratModal si l'utilisateur ferme sans valider */
-  const handleCancelCreation = async () => {
-    if (!createdBail) return;
-    creationCancelledRef.current = true;
-    try {
-      await annulerBail.mutateAsync({ bienId: createdBail.bienId, bailId: createdBail.id });
-      await deleteLocataire.mutateAsync(createdBail.locataireId);
-    } catch {
-      // best-effort : on navigue quand même
-    }
-  };
 
   const set = (key: string, value: unknown) =>
     setForm((prev) => ({ ...prev, [key]: value }));
-
-  const bienSelectionne = biensLocation.find((b) => b.id === form.bienId);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -101,8 +40,6 @@ export default function AddLocataire() {
     if (!form.telephone.trim()) errs.telephone = "Le téléphone est requis";
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       errs.email = "Email invalide";
-    if (!form.bienId) errs.bienId = "Veuillez sélectionner un bien";
-    if (!form.dateDebutBail) errs.dateDebutBail = "La date de début est requise";
     return errs;
   };
 
@@ -116,8 +53,8 @@ export default function AddLocataire() {
     setErrors({});
 
     try {
-      // 1. Créer le locataire
-      const locataire = await createLocataire.mutateAsync({
+      // Créer le locataire
+      await createLocataire.mutateAsync({
         nom: form.nom.trim(),
         prenom: form.prenom.trim(),
         telephone: form.telephone.trim(),
@@ -126,26 +63,8 @@ export default function AddLocataire() {
         presenceEnfants: form.presenceEnfants,
       });
 
-      // 2. Créer le bail (loyer/caution depuis l'annonce, non modifiables)
-      const bail = await creerBail.mutateAsync({
-        bienId: form.bienId,
-        payload: {
-          locataireId: locataire.id,
-          dateDebutBail: form.dateDebutBail,
-          dateFinBail: form.dateFinBail || null,
-          montantLoyer: bienSelectionne?.prix ?? 0,
-          montantCaution: bienSelectionne?.caution ?? null,
-          frequencePaiement: bienSelectionne?.frequencePaiement ?? null,
-          typeBail: form.typeBail || null,
-          renouvellement: form.renouvellement || false,
-          cautionVersee: form.cautionVersee,
-          jourLimitePaiement: form.jourLimitePaiement ? parseInt(form.jourLimitePaiement) : null,
-        },
-      });
-
-      toast.success("Locataire créé — génération du contrat en cours…");
-      setCreatedBail(bail);
-      setShowContratModal(true);
+      toast.success("Locataire créé avec succès !");
+      navigate("/owner/locataires");
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -154,7 +73,7 @@ export default function AddLocataire() {
     }
   };
 
-  const isPending = createLocataire.isPending || creerBail.isPending;
+  const isPending = createLocataire.isPending;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -178,7 +97,6 @@ export default function AddLocataire() {
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
-
         {/* ── Section 1 : Informations du locataire ── */}
         <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-5">
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
@@ -300,176 +218,6 @@ export default function AddLocataire() {
           </div>
         </div>
 
-        {/* ── Section 2 : Association au bien + Bail ── */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-5">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-            <Building2 className="w-3.5 h-3.5" />
-            Bien & Bail
-          </h2>
-
-          {/* Sélection du bien */}
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">
-              Bien à louer <span className="text-red-400">*</span>
-            </label>
-            {biensLocation.length === 0 ? (
-              <div className="flex items-center gap-2 h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-400">
-                <Home className="w-4 h-4 text-slate-300" />
-                Aucun bien publié disponible
-              </div>
-            ) : (
-              <select
-                value={form.bienId}
-                onChange={(e) => set("bienId", e.target.value)}
-                className={selectCls(!!errors.bienId)}
-              >
-                <option value="">-- Sélectionner un bien --</option>
-                {biensLocation.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.titre || b.ville || "Bien sans titre"}
-                    {b.ville && b.titre ? ` — ${b.ville}` : ""}
-                    {b.prix ? ` (${b.prix.toLocaleString("fr-FR")} FCFA/mois)` : ""}
-                    {b.hasBailActif ? " [LOUÉ]" : ""}
-                  </option>
-                ))}
-              </select>
-            )}
-            {errors.bienId && (
-              <p className="text-xs text-red-400 mt-1">{errors.bienId}</p>
-            )}
-          </div>
-
-          {/* Type de bail */}
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">
-              Type de bail <span className="text-red-400">*</span>
-            </label>
-            <select
-              value={form.typeBail}
-              onChange={(e) => set("typeBail", e.target.value)}
-              className={selectCls(false)}
-            >
-              <option value="Habitation">Habitation</option>
-              <option value="Commercial">Commercial</option>
-              <option value="Mixte">Mixte</option>
-            </select>
-          </div>
-
-          {/* Date de début + Date de fin */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">
-                Date de début <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="date"
-                value={form.dateDebutBail}
-                onChange={(e) => set("dateDebutBail", e.target.value)}
-                className={inputCls(!!errors.dateDebutBail)}
-              />
-              {errors.dateDebutBail && (
-                <p className="text-xs text-red-400 mt-1">{errors.dateDebutBail}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">
-                Date de fin{" "}
-                <span className="text-slate-300 font-normal">(optionnel)</span>
-              </label>
-              <input
-                type="date"
-                value={form.dateFinBail}
-                onChange={(e) => set("dateFinBail", e.target.value)}
-                className={inputCls(false)}
-              />
-            </div>
-          </div>
-
-          {/* Renouvellement */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={!!form.renouvellement}
-              onChange={(e) => set("renouvellement", e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded"
-            />
-            <span className="text-sm font-medium text-gray-700">Renouvellement possible</span>
-          </label>
-
-          {/* Conditions financières — lecture seule depuis l'annonce */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-4">
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-              Conditions financières
-            </p>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Loyer</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {bienSelectionne?.prix
-                    ? `${bienSelectionne.prix.toLocaleString("fr-FR")} FCFA`
-                    : "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Caution</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {bienSelectionne?.caution
-                    ? `${bienSelectionne.caution.toLocaleString("fr-FR")} FCFA`
-                    : "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Fréquence</p>
-                <p className="text-sm font-semibold text-gray-900 capitalize">
-                  {bienSelectionne?.frequencePaiement ?? "—"}
-                </p>
-              </div>
-            </div>
-
-            {/* Caution versée */}
-            <div>
-              <label className="block text-xs font-medium text-blue-700 mb-2">
-                Caution versée <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-4">
-                {["Oui", "Non"].map((val) => (
-                  <label key={val} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="cautionVersee"
-                      value={val.toLowerCase()}
-                      checked={form.cautionVersee === (val === "Oui")}
-                      onChange={() => set("cautionVersee", val === "Oui")}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <span className="text-sm font-medium text-gray-700">{val}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Date butoir de paiement */}
-            <div>
-              <label className="block text-xs font-medium text-blue-700 mb-1">
-                Date butoir de paiement{" "}
-                <span className="font-normal text-blue-500">(optionnel)</span>
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={28}
-                placeholder="Ex : 5"
-                value={form.jourLimitePaiement}
-                onChange={(e) => set("jourLimitePaiement", e.target.value)}
-                className="w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 border-blue-200"
-              />
-              <p className="text-[11px] text-blue-500 mt-1">
-                Jour du mois avant lequel le loyer doit être payé (ex : 5 → avant le 5 de chaque mois).
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Actions */}
         <div className="flex gap-3">
           <button
@@ -481,30 +229,13 @@ export default function AddLocataire() {
           </button>
           <button
             type="submit"
-            disabled={isPending || biensLocation.length === 0}
+            disabled={isPending}
             className="flex-1 px-4 py-2.5 bg-[#D4A843] text-white rounded-xl text-sm font-medium hover:bg-[#c49a3a] disabled:opacity-60 transition-colors"
           >
-            {isPending ? "Création en cours..." : "Créer et associer au bien"}
+            {isPending ? "Création en cours..." : "Créer le locataire"}
           </button>
         </div>
       </form>
-
-      {/* ContratModal — ouvert automatiquement après création du bail */}
-      {showContratModal && createdBail && (
-        <ContratModal
-          bail={createdBail}
-          isCreationFlow={true}
-          onCancelCreation={handleCancelCreation}
-          onClose={() => {
-            setShowContratModal(false);
-            if (creationCancelledRef.current) {
-              navigate("/owner/locataires");
-            } else {
-              navigate(`/owner/locataires/${createdBail.locataireId}`);
-            }
-          }}
-        />
-      )}
     </div>
   );
 }

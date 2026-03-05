@@ -50,7 +50,7 @@ export const activerContratApi = async (
   bienId: string,
   bailId: string,
   contratId: string
-): Promise<Contrat> => {
+): Promise<{ contrat: Contrat; lienActivation: string | null }> => {
   const { data } = await api.patch(`/${bienId}/bail/${bailId}/contrat/${contratId}/activer`);
   return data.data;
 };
@@ -60,7 +60,7 @@ export const envoyerContratApi = async (
   bienId: string,
   bailId: string,
   contratId: string
-): Promise<{ sent: boolean; email: string }> => {
+): Promise<{ sent: boolean; email: string | null; lienActivation: string | null }> => {
   const { data } = await api.post(`/${bienId}/bail/${bailId}/contrat/${contratId}/envoyer`);
   return data.data;
 };

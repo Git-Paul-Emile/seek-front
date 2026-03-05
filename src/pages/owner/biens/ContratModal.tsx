@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   X, FileText, Download, CheckCircle,
-  Loader2, FileCheck, Send, Link2, Copy, Check,
+  Loader2, FileCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -11,7 +12,6 @@ import {
   useGenererContrat,
   useEnvoyerContrat,
 } from "@/hooks/useContrat";
-import { useGetLienActivation } from "@/hooks/useLocataire";
 import type { Bail } from "@/api/bail";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -25,6 +25,9 @@ interface ContratModalProps {
   /** Appelé si l'utilisateur ferme la modal SANS valider (flux création uniquement).
    *  Permet au parent d'annuler le bail et supprimer le locataire. */
   onCancelCreation?: () => Promise<void>;
+  /** Called when the contract is successfully validated (creation flow only).
+   *  Provides the tenant ID for redirection to tenant detail page. */
+  onValiderSuccess?: (locataireId: string) => void;
 }
 
 // ─── Badge statut ─────────────────────────────────────────────────────────────
@@ -52,6 +55,7 @@ export default function ContratModal({
   onClose,
   isCreationFlow = false,
   onCancelCreation,
+  onValiderSuccess,
 }: ContratModalProps) {
   const bienId = bail.bienId;
   const bailId = bail.id;
@@ -59,12 +63,10 @@ export default function ContratModal({
   const { data: contrat, isLoading } = useContrat(bienId, bailId);
   const generer = useGenererContrat();
   const envoyer = useEnvoyerContrat();
-  const getLien = useGetLienActivation();
+  const queryClient = useQueryClient();
 
   const [contenu, setContenu] = useState("");
   const [autoGenDone, setAutoGenDone] = useState(false);
-  const [lienActivation, setLienActivation] = useState<string | null>(null);
-  const [lienCopied, setLienCopied] = useState(false);
   // Track whether the contract was validated so X-close doesn't trigger cancellation
   const validatedRef = useRef(false);
 
@@ -92,33 +94,25 @@ export default function ContratModal({
   const contratId = contrat?.id ?? "";
   const titre     = contrat?.titre ?? "Contrat de bail";
 
-  // ── Valider (création) → active + envoie automatiquement + génère lien ───
+  // ── Valider (création) → active + envoie automatiquement ───
   const handleValider = async () => {
-    if (!contratId) return;
+    if (!contratId) {
+      return;
+    }
     try {
       await envoyer.mutateAsync({ bienId, bailId, contratId });
+      queryClient.invalidateQueries({ queryKey: ["locataires", bail.locataireId] });
       validatedRef.current = true;
       toast.success("Contrat validé !");
-      // Fetch lien d'activation pour partage manuel
-      try {
-        const result = await getLien.mutateAsync(bail.locataireId);
-        setLienActivation(result.lien);
-      } catch {
-        // non-bloquant
+      // Rediriger vers la page détails du locataire dans le flux de création
+      if (isCreationFlow && onValiderSuccess && bail.locataireId) {
+        onValiderSuccess(bail.locataireId);
       }
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
       toast.error(msg);
     }
-  };
-
-  const handleCopyLien = () => {
-    if (!lienActivation) return;
-    navigator.clipboard.writeText(lienActivation);
-    setLienCopied(true);
-    toast.success("Lien copié !");
-    setTimeout(() => setLienCopied(false), 2000);
   };
 
   // ── Fermeture avec annulation (X en flux création sans validation) ─────────
@@ -218,14 +212,14 @@ export default function ContratModal({
 
             <div className="flex-1" />
 
-            {/* Flux création : Valider (active + envoie + génère lien) */}
-            {isCreationFlow && !lienActivation && (
+            {/* Flux création : Valider */}
+            {isCreationFlow && (
               <button
                 onClick={handleValider}
-                disabled={isBusy || getLien.isPending}
+                disabled={isBusy}
                 className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors"
               >
-                {(envoyer.isPending || getLien.isPending)
+                {envoyer.isPending
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Validation...</>
                   : <><FileCheck className="w-3.5 h-3.5" /> Valider</>
                 }
@@ -287,45 +281,12 @@ export default function ContratModal({
           )}
         </div>
 
-        {/* Bandeau flux création : info validation ou lien d'activation */}
+        {/* Flux création : info avant validation */}
         {isCreationFlow && !isLoading && !isGenerating && contrat && (
-          lienActivation ? (
-            <div className="px-6 py-4 border-t border-green-100 bg-green-50 flex-shrink-0 rounded-b-2xl space-y-2">
-              <div className="flex items-center gap-2 text-xs text-green-700 font-semibold">
-                <CheckCircle className="w-4 h-4 shrink-0" />
-                Bail validé — partagez ce lien d'activation avec le locataire
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <Link2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
-                  <input
-                    type="text"
-                    value={lienActivation}
-                    readOnly
-                    className="flex-1 text-xs bg-white border border-green-200 rounded-lg px-2.5 py-1.5 text-slate-700 min-w-0 outline-none"
-                  />
-                </div>
-                <button
-                  onClick={handleCopyLien}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors shrink-0"
-                >
-                  {lienCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {lienCopied ? "Copié" : "Copier"}
-                </button>
-                <button
-                  onClick={onClose}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-green-300 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-colors shrink-0"
-                >
-                  Terminer
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="px-6 py-3 border-t border-amber-100 bg-amber-50 flex items-center gap-2 text-xs text-amber-700 flex-shrink-0 rounded-b-2xl">
-              <FileCheck className="w-4 h-4 shrink-0" />
-              Lisez le contrat puis cliquez <strong className="mx-1">Valider</strong> pour finaliser le bail.
-            </div>
-          )
+          <div className="px-6 py-3 border-t border-amber-100 bg-amber-50 flex items-center gap-2 text-xs text-amber-700 flex-shrink-0 rounded-b-2xl">
+            <FileCheck className="w-4 h-4 shrink-0" />
+            Lisez le contrat puis cliquez <strong className="mx-1">Valider</strong> pour finaliser le bail.
+          </div>
         )}
       </div>
     </div>

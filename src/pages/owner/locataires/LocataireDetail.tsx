@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   User,
@@ -60,6 +61,8 @@ const fmtMontant = (n?: number | null) =>
 export default function LocataireDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const { data: locataire, isLoading } = useLocataireById(id!);
   const deleteLocataire = useDeleteLocataire();
   const getLien = useGetLienActivation();
@@ -68,14 +71,33 @@ export default function LocataireDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedBail, setSelectedBail] = useState<Bail | null>(null);
 
-  const handleGetLien = async () => {
+  // Forcer refresh si paramètre refreshed=true
+  useEffect(() => {
+    if (searchParams.get('refreshed') === 'true') {
+      queryClient.invalidateQueries({ queryKey: ["locataires", id] });
+    }
+  }, [searchParams, queryClient, id]);
+
+  // Vérifier si le locataire a un bail avec un contrat validé
+  const aContratValide = locataire?.bails?.some(
+    (bail) => bail.contrat?.statut === "ACTIF"
+  );
+
+  // Auto-fetch lien d'activation au chargement si contrat validé
+  const handleGetLien = useCallback(async () => {
     try {
       const result = await getLien.mutateAsync(id!);
       setLien(result.lien);
     } catch {
       toast.error("Erreur lors de la récupération du lien");
     }
-  };
+  }, [getLien, id]);
+
+  useEffect(() => {
+    if (aContratValide && !lien && !getLien.isPending) {
+      handleGetLien();
+    }
+  }, [aContratValide, lien, getLien.isPending, handleGetLien]);
 
   const handleCopy = () => {
     if (!lien) return;
@@ -153,8 +175,8 @@ export default function LocataireDetail() {
         </button>
       </div>
 
-      {/* Lien d'activation */}
-      {locataire.statut === "INVITE" && (
+      {/* Lien d'activation - uniquement si contrat validé */}
+      {aContratValide && (
         <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-5">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
@@ -162,10 +184,7 @@ export default function LocataireDetail() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-amber-900 text-sm">
-                Lien d'activation
-              </p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                Partagez ce lien avec le locataire pour qu'il active son espace.
+                Contrat validé — partagez ce lien d'activation avec le locataire
               </p>
               {lien ? (
                 <div className="mt-3 flex items-center gap-2">

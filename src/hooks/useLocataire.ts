@@ -25,6 +25,7 @@ export const useLocataireById = (id: string) =>
     queryFn: () => getLocataireByIdApi(id),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
+    refetchOnMount: true,
   });
 
 export const useCreateLocataire = () => {

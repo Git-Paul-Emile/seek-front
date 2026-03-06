@@ -294,8 +294,8 @@ export default function LocataireActivate() {
                       <select value={form.sexe} onChange={(e) => set("sexe", e.target.value)}
                         className={selectCls}>
                         <option value="">--</option>
-                        <option value="Masculin">Masculin</option>
-                        <option value="Féminin">Féminin</option>
+                        <option value="M">Masculin</option>
+                        <option value="F">Féminin</option>
                       </select>
                     </div>
                   </div>

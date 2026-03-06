@@ -54,6 +54,7 @@ import LocataireDetail from "./pages/owner/locataires/LocataireDetail";
 import LocataireActivate from "./pages/locataire/Activate";
 import LocataireLogin from "./pages/locataire/Login";
 import LocataireDashboard from "./pages/locataire/Dashboard";
+import LocataireProfil from "./pages/locataire/Profil";
 import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
 
 const queryClient = new QueryClient();
@@ -125,6 +126,7 @@ const App = () => (
                 <Route element={<LocataireProtectedRoute />}>
                   <Route element={<LocataireLayout />}>
                     <Route path="/locataire/dashboard" element={<LocataireDashboard />} />
+                    <Route path="/locataire/profil" element={<LocataireProfil />} />
                     <Route path="/locataire/paiements" element={<PaiementsLocatairePage />} />
                   </Route>
                 </Route>

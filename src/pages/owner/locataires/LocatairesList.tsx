@@ -11,8 +11,9 @@ import {
   Home,
   ChevronRight,
   Trash2,
+  Shield,
 } from "lucide-react";
-import { useLocataires, useDeleteLocataire } from "@/hooks/useLocataire";
+import { useLocataires, useDeleteLocataire, usePendingVerificationsCount } from "@/hooks/useLocataire";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { toast } from "sonner";
 import type { StatutLocataire } from "@/api/locataire";
@@ -56,6 +57,8 @@ const StatutBadge = ({ statut }: { statut: StatutLocataire }) => {
 
 export default function LocatairesList() {
   const { data: locataires = [], isLoading } = useLocataires();
+  const { data: pendingData } = usePendingVerificationsCount();
+  const pendingCount = pendingData?.count ?? 0;
   const deleteLocataire = useDeleteLocataire();
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
@@ -81,10 +84,20 @@ export default function LocatairesList() {
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843]">
             <Users className="w-3.5 h-3.5" />
             Locataires
+            {pendingCount > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
+                {pendingCount > 9 ? "9+" : pendingCount}
+              </span>
+            )}
           </div>
           {locataires.length > 0 && (
             <p className="text-sm text-slate-500 mt-1">
               {locataires.length} locataire{locataires.length !== 1 ? "s" : ""}
+              {pendingCount > 0 && (
+                <span className="ml-2 text-amber-600">
+                  • {pendingCount} vérification{pendingCount !== 1 ? "s" : ""} en attente
+                </span>
+              )}
             </p>
           )}
         </div>

@@ -11,6 +11,21 @@ const api = axios.create({
 
 export type StatutLocataire = "INVITE" | "ACTIF" | "INACTIF";
 export type TypePieceIdentite = "CNI" | "PASSEPORT" | "CARTE_CONSULAIRE" | "AUTRE";
+export type StatutVerificationLocataire = "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+
+export interface LocataireVerification {
+  id: string;
+  typePiece: string;
+  pieceIdentiteRecto?: string | null;
+  pieceIdentiteVerso?: string | null;
+  selfie?: string | null;
+  statut: StatutVerificationLocataire;
+  conditionsAcceptees: boolean;
+  motifRejet?: string | null;
+  dateTraitement?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface BailResume {
   id: string;
@@ -34,15 +49,17 @@ export interface Locataire {
   email?: string | null;
   nbOccupants: number;
   presenceEnfants: boolean;
-  dateNaissance?: string | null;
-  lieuNaissance?: string | null;
+  // Date et lieu de naissance
+  dateNaissance: string | null;
+  lieuNaissance: string | null;
+  // Pièce d'identité
   nationalite?: string | null;
   sexe?: string | null;
   numPieceIdentite?: string | null;
   typePiece?: TypePieceIdentite | null;
   dateDelivrance?: string | null;
-  dateExpiration?: string | null;
   autoriteDelivrance?: string | null;
+  dateExpiration?: string | null;
   situationProfessionnelle?: string | null;
   statut: StatutLocataire;
   activationToken?: string | null;
@@ -50,6 +67,7 @@ export interface Locataire {
   createdAt: string;
   updatedAt: string;
   bails?: BailResume[];
+  verification?: LocataireVerification | null;
 }
 
 export interface CreateLocatairePayload {
@@ -111,5 +129,29 @@ export const getLienActivationApi = async (
   id: string
 ): Promise<LienActivation> => {
   const { data } = await api.get(`/${id}/lien`);
+  return data.data;
+};
+
+// ─── Vérification du locataire ─────────────────────────────────────────────────
+
+export const approveLocataireVerificationApi = async (
+  locataireId: string
+): Promise<{ status: string; message: string }> => {
+  const { data } = await api.post(`/${locataireId}/verification/approve`);
+  return data;
+};
+
+export const rejectLocataireVerificationApi = async (
+  locataireId: string,
+  motif: string
+): Promise<{ status: string; message: string }> => {
+  const { data } = await api.post(`/${locataireId}/verification/reject`, { motif });
+  return data;
+};
+
+// ─── Nombre de vérifications en attente ────────────────────────────────────
+
+export const getPendingVerificationsCountApi = async (): Promise<{ count: number }> => {
+  const { data } = await api.get("/verifications/pending/count");
   return data.data;
 };

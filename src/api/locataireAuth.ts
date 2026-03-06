@@ -9,6 +9,45 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// API pour l'upload de fichiers
+const uploadApi = axios.create({
+  baseURL: `${API_URL}/api/locataire/auth`,
+  withCredentials: true,
+  headers: { "Content-Type": "multipart/form-data" },
+});
+
+// Intercepteur pour rafraîchir automatiquement le token en cas d'erreur 401
+const setupInterceptors = (axiosInstance: typeof api) => {
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+      
+      // Si l'erreur est 401 et que ce n'est pas déjà une tentative de rafraîchissement
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        try {
+          // Tenter de rafraîchir le token
+          await axios.post(`${API_URL}/api/locataire/auth/refresh`, {}, { withCredentials: true });
+          
+          // Réessayer la requête originale
+          return axiosInstance(originalRequest);
+        } catch (refreshError) {
+          // Si le rafraîchissement échoue, rejeter l'erreur
+          return Promise.reject(refreshError);
+        }
+      }
+      
+      return Promise.reject(error);
+    }
+  );
+};
+
+// Configurer les intercepteurs pour les deux instances
+setupInterceptors(api);
+setupInterceptors(uploadApi);
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface LocataireInfo {
@@ -20,14 +59,14 @@ export interface LocataireInfo {
 export interface ActiverPayload {
   token: string;
   password: string;
-  dateNaissance?: string | null;
-  lieuNaissance?: string | null;
+  dateNaissance?: string | null; // Date de naissance
+  lieuNaissance?: string | null; // Lieu de naissance
   nationalite?: string | null;
   sexe?: string | null;
   numPieceIdentite?: string | null;
   typePiece?: TypePieceIdentite | null;
   dateDelivrance?: string | null;
-  dateExpiration?: string | null;
+  dateExpiration?: string | null; // Date d'expiration de la pièce
   autoriteDelivrance?: string | null;
   situationProfessionnelle?: string | null;
 }
@@ -38,14 +77,14 @@ export interface LoginLocatairePayload {
 }
 
 export interface UpdateProfilLocatairePayload {
-  dateNaissance?: string | null;
-  lieuNaissance?: string | null;
+  dateNaissance?: string | null; // Date de naissance
+  lieuNaissance?: string | null; // Lieu de naissance
   nationalite?: string | null;
   sexe?: string | null;
   numPieceIdentite?: string | null;
   typePiece?: TypePieceIdentite | null;
   dateDelivrance?: string | null;
-  dateExpiration?: string | null;
+  dateExpiration?: string | null; // Date d'expiration de la pièce
   autoriteDelivrance?: string | null;
   situationProfessionnelle?: string | null;
 }
@@ -158,4 +197,57 @@ export const payerEcheancesLocataireApi = async (
 export const getLocataireContratApi = async (): Promise<ContratLocataireData | null> => {
   const { data } = await api.get("/contrat");
   return data.data;
+};
+
+// ─── Vérification d'identité du locataire ─────────────────────────────────────
+
+export interface LocataireVerificationStatus {
+  locataireId: string;
+  statut: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
+  verifiedAt: string | null;
+  documents?: {
+    typePiece: "CNI" | "PASSEPORT";
+    pieceIdentiteRecto: string | null;
+    pieceIdentiteVerso: string | null;
+    selfie: string | null;
+    conditionsAcceptees: boolean;
+    motifRejet?: string | null;
+    traitePar?: string | null;
+    dateTraitement?: string | null;
+  };
+}
+
+export interface SubmitLocataireVerificationPayload {
+  typePiece: "CNI" | "PASSEPORT";
+  pieceIdentiteRecto: string;
+  pieceIdentiteVerso?: string;
+  selfie: string;
+  conditionsAcceptees: boolean;
+}
+
+export const getLocataireVerificationStatusApi = () =>
+  api.get<{ status: string; data: LocataireVerificationStatus }>("/verification");
+
+export const submitLocataireVerificationApi = (payload: SubmitLocataireVerificationPayload) =>
+  api.post<{ status: string; message: string; data: LocataireVerificationStatus }>(
+    "/verification",
+    payload
+  );
+
+export const cancelLocataireVerificationApi = () =>
+  api.delete<{ status: string; message: string; data: LocataireVerificationStatus }>(
+    "/verification"
+  );
+
+// Upload d'une image de vérification vers Cloudinary
+export const uploadLocataireVerificationImageApi = async (file: File) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  
+  const response = await uploadApi.post<{ status: string; data: { url: string; publicId: string } }>(
+    "/verification/upload",
+    formData
+  );
+  
+  return response.data.data.url;
 };

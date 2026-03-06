@@ -6,6 +6,9 @@ import {
   updateLocataireApi,
   deleteLocataireApi,
   getLienActivationApi,
+  approveLocataireVerificationApi,
+  rejectLocataireVerificationApi,
+  getPendingVerificationsCountApi,
   type CreateLocatairePayload,
   type UpdateLocatairePayload,
 } from "@/api/locataire";
@@ -59,4 +62,38 @@ export const useDeleteLocataire = () => {
 export const useGetLienActivation = () =>
   useMutation({
     mutationFn: (id: string) => getLienActivationApi(id),
+  });
+
+// ─── Vérification du locataire ─────────────────────────────────────────────────
+
+export const useApproveLocataireVerification = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (locataireId: string) => approveLocataireVerificationApi(locataireId),
+    onSuccess: (_data, locataireId) => {
+      qc.invalidateQueries({ queryKey: [QK] });
+      qc.invalidateQueries({ queryKey: [QK, locataireId] });
+    },
+  });
+};
+
+export const useRejectLocataireVerification = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ locataireId, motif }: { locataireId: string; motif: string }) =>
+      rejectLocataireVerificationApi(locataireId, motif),
+    onSuccess: (_data, { locataireId }) => {
+      qc.invalidateQueries({ queryKey: [QK] });
+      qc.invalidateQueries({ queryKey: [QK, locataireId] });
+    },
+  });
+};
+
+// ─── Nombre de vérifications en attente ─────────────────────────────────────
+
+export const usePendingVerificationsCount = () =>
+  useQuery({
+    queryKey: [QK, "pending-verifications-count"],
+    queryFn: getPendingVerificationsCountApi,
+    staleTime: 30 * 1000, // 30 secondes
   });

@@ -48,6 +48,8 @@ import ProprietairesStats from "./pages/admin/ProprietairesStats";
 import PaysPage from "./pages/admin/geo/PaysPage";
 import VillesPage from "./pages/admin/geo/VillesPage";
 import QuartiersPage from "./pages/admin/geo/QuartiersPage";
+import SuspensionsPage from "./pages/admin/Suspensions";
+import UtilisateursPage from "./pages/admin/Utilisateurs";
 import LocatairesList from "./pages/owner/locataires/LocatairesList";
 import AddLocataire from "./pages/owner/locataires/AddLocataire";
 import LocataireDetail from "./pages/owner/locataires/LocataireDetail";
@@ -149,6 +151,8 @@ const App = () => (
                     <Route path="annonces/:id"            element={<AdminAnnonceDetail />} />
                     <Route path="verifications"             element={<AdminVerificationsPage />} />
                     <Route path="proprietaires"          element={<ProprietairesStats />} />
+                    <Route path="utilisateurs/:type" element={<UtilisateursPage />} />
+                    <Route path="suspensions"           element={<SuspensionsPage />} />
                     <Route path="geo/pays"                element={<PaysPage />} />
                     <Route path="geo/villes"              element={<VillesPage />} />
                     <Route path="geo/quartiers"           element={<QuartiersPage />} />

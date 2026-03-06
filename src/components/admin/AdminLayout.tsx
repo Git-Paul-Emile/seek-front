@@ -12,12 +12,14 @@ import {
   CircleDot,
   Sofa,
   ChevronDown,
+  ChevronRight,
   FileSearch,
   User,
   Globe,
   MapPin,
   Navigation,
   Users,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -28,7 +30,6 @@ import { usePendingVerificationsCount } from "@/hooks/useAdminVerification";
 const NAV_ITEMS = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/profile", label: "Mon Profil", icon: User },
-  { to: "/admin/proprietaires", label: "Propriétaires", icon: Users },
 ];
 
 const NAV_GROUPS = [
@@ -125,10 +126,15 @@ function NavGroup({
 function Sidebar() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: pendingData } = useAnnoncesPendingCount();
   const { data: verificationData } = usePendingVerificationsCount();
   const pendingCount = pendingData?.count ?? 0;
   const verificationCount = verificationData ?? 0;
+
+  const [usersOpen, setUsersOpen] = useState(
+    location.pathname.startsWith("/admin/utilisateurs")
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -176,22 +182,64 @@ function Sidebar() {
                   <>
                     <Icon className="w-4 h-4 flex-shrink-0" />
                     <span className="flex-1">{label}</span>
-                    {to === "/admin/proprietaires" && verificationCount > 0 && (
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                          isActive
-                            ? "bg-white/25 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
-                      >
-                        {verificationCount > 99 ? "99+" : verificationCount}
-                      </span>
-                    )}
                   </>
                 )}
               </NavLink>
             </li>
           ))}
+
+          {/* Menu Utilisateurs avec dropdown */}
+          <li>
+            <button
+              onClick={() => setUsersOpen((v) => !v)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  location.pathname.startsWith("/admin/utilisateurs")
+                    ? "text-[#D4A843] bg-[#D4A843]/8"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`}
+            >
+              <Users className="w-4 h-4 flex-shrink-0" />
+              <span className="flex-1 text-left">Utilisateurs</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${usersOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            {usersOpen && (
+              <ul className="mt-0.5 ml-3 pl-4 border-l border-slate-100 space-y-0.5">
+                <li>
+                  <NavLink
+                    to="/admin/utilisateurs/proprietaires"
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium
+                      transition-colors duration-150 ${
+                        isActive
+                          ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                      }`}
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    Propriétaire
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/admin/utilisateurs/locataires"
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium
+                      transition-colors duration-150 ${
+                        isActive
+                          ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                      }`}
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    Locataire
+                  </NavLink>
+                </li>
+              </ul>
+            )}
+          </li>
 
           {/* Annonces avec badge */}
           <li>

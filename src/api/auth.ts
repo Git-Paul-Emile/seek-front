@@ -45,3 +45,17 @@ export const updateProfileApi = (payload: UpdateProfilePayload) =>
     "/profile",
     payload
   );
+
+// ─── Changement de mot de passe ──────────────────────────────────────────────
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export const changePasswordApi = (payload: ChangePasswordPayload) =>
+  authApi.put<{ status: string; message: string }>(
+    "/change-password",
+    payload
+  );

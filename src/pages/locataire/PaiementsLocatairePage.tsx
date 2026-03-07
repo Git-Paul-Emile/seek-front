@@ -18,6 +18,7 @@ import {
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useLocataireEcheancier } from "@/hooks/useLocataireEcheancier";
 import { useQuittancesLocataire } from "@/hooks/useQuittance";
+import { useProprietaireLocataire } from "@/hooks/useProprietaireLocataire";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
 import type { Echeance, StatutPaiement } from "@/api/bail";
 import LocatairePayModal from "@/components/locataire/LocatairePayModal";
@@ -58,6 +59,7 @@ export default function PaiementsLocatairePage() {
 
   const { data: rawEcheancier = [], isLoading } = useLocataireEcheancier(hasBailActif);
   const { data: quittances = [] } = useQuittancesLocataire(hasBailActif);
+  const { data: proprietaireData } = useProprietaireLocataire(hasBailActif);
 
   const [filter, setFilter] = useState<StatutFilter>("TOUT");
   const [showPayModal, setShowPayModal] = useState(false);
@@ -96,6 +98,12 @@ export default function PaiementsLocatairePage() {
   const handleDownload = (ech: Echeance) => {
     const quittance = quittances.find(q => q.echeanceId === ech.id);
     if (!quittance || !ech.datePaiement) return;
+    
+    // Utiliser les vraies infos du propriétaire si disponibles
+    const proprietaireNom = proprietaireData?.proprietaire 
+      ? `${proprietaireData.proprietaire.prenom} ${proprietaireData.proprietaire.nom}`
+      : "Votre propriétaire";
+    
     generateQuittancePDF({
       numero: quittance.numero,
       dateGeneration: new Date(quittance.dateGeneration).toLocaleDateString("fr-FR"),
@@ -106,9 +114,12 @@ export default function PaiementsLocatairePage() {
       note: ech.note ?? undefined,
       montantLoyer: ech.montant,
       statut: ech.statut,
-      bienTitre: bailActif?.bien?.titre ?? undefined,
-      bienVille: bailActif?.bien?.ville ?? undefined,
-      proprietaireNom: "Votre propriétaire",
+      bienTitre: proprietaireData?.bien?.titre ?? bailActif?.bien?.titre ?? undefined,
+      bienAdresse: proprietaireData?.bien?.adresse ?? undefined,
+      bienVille: proprietaireData?.bien?.ville ?? bailActif?.bien?.ville ?? undefined,
+      bienPays: proprietaireData?.bien?.pays ?? undefined,
+      proprietaireNom,
+      proprietaireTelephone: proprietaireData?.proprietaire?.telephone,
       locataireNom: `${locataire?.prenom ?? ""} ${locataire?.nom ?? ""}`.trim(),
       locataireTelephone: locataire?.telephone ?? undefined,
     });

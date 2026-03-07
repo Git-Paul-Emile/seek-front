@@ -1,13 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { 
-  getFormulesPremium, 
-  payerEtActiverPremium, 
+import {
+  getFormulesPremium,
+  payerEtActiverPremium,
   arreterPremium,
-  type FormulePremium, 
+  adminGetFormules,
+  adminCreateFormule,
+  adminUpdateFormule,
+  adminDeleteFormule,
+  adminGetHistoriquePromotions,
+  adminGetStatsPromotions,
+  type FormulePremium,
+  type FormulePremiumFull,
   type MoyenPaiement
 } from "@/api/premium";
-import { 
+import {
   getHistoriqueTransactions,
+  getAdminHistoriqueTransactions,
+  getAdminStatsTransactions,
   type Transaction
 } from "@/api/transaction";
 import { toast } from "sonner";
@@ -85,5 +94,69 @@ export const useHistoriqueTransactions = (ownerId: string, page?: number, limit?
   });
 };
 
+// ─── Admin Formules Premium ───────────────────────────────────────────────────
+
+export const useAdminFormules = () =>
+  useQuery({ queryKey: ["admin-formules"], queryFn: adminGetFormules });
+
+export const useAdminCreateFormule = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<FormulePremiumFull>) => adminCreateFormule(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-formules"] }),
+  });
+};
+
+export const useAdminUpdateFormule = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<FormulePremiumFull> }) => adminUpdateFormule(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-formules"] }),
+  });
+};
+
+export const useAdminDeleteFormule = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => adminDeleteFormule(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-formules"] }),
+  });
+};
+
+// ─── Admin Historique Promotions ──────────────────────────────────────────────
+
+export const useAdminHistoriquePromotions = (params?: {
+  page?: number;
+  limit?: number;
+  statut?: string;
+  proprietaireId?: string;
+}) =>
+  useQuery({
+    queryKey: ["admin-historique-promotions", params],
+    queryFn: () => adminGetHistoriquePromotions(params),
+  });
+
+export const useAdminStatsPromotions = () =>
+  useQuery({ queryKey: ["admin-stats-promotions"], queryFn: adminGetStatsPromotions });
+
+// ─── Admin Historique Transactions ────────────────────────────────────────────
+
+export const useAdminHistoriqueTransactions = (params?: {
+  page?: number;
+  limit?: number;
+  type?: string;
+  statut?: string;
+  proprietaireId?: string;
+  dateDebut?: string;
+  dateFin?: string;
+}) =>
+  useQuery({
+    queryKey: ["admin-historique-transactions", params],
+    queryFn: () => getAdminHistoriqueTransactions(params),
+  });
+
+export const useAdminStatsTransactions = () =>
+  useQuery({ queryKey: ["admin-stats-transactions"], queryFn: getAdminStatsTransactions });
+
 // Type pour l'affichage
-export type { FormulePremium, MoyenPaiement, Transaction };
+export type { FormulePremium, FormulePremiumFull, MoyenPaiement, Transaction };

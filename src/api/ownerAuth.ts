@@ -130,6 +130,12 @@ export const cancelVerificationApi = () =>
     "/verification"
   );
 
+export const forgotPasswordApi = (identifiant: string) =>
+  ownerAuthApi.post<{ status: string; message: string }>("/forgot-password", { identifiant });
+
+export const resetPasswordApi = (token: string, password: string) =>
+  ownerAuthApi.post<{ status: string; message: string }>("/reset-password", { token, password });
+
 // Upload d'une image de vérification vers Cloudinary
 export const uploadVerificationImageApi = async (file: File) => {
   const formData = new FormData();

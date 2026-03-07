@@ -94,3 +94,23 @@ export const fetchProprietairesStats = () =>
 
 export const fetchProprietaireDetail = (id: string) =>
   api.get<{ data: ProprietaireDetail }>(`/proprietaires/${id}`).then((r) => r.data.data);
+
+// ─── Revenus ──────────────────────────────────────────────────────────────────
+
+export interface RevenusStats {
+  totalRevenus: number;
+  revenusMois: number;
+  revenusPremium: number;
+  revenus12Mois: { mois: string; total: number }[];
+  revenus12MoisPremium: { mois: string; total: number }[];
+  topProprietairesLoyer: {
+    id: string;
+    prenom: string;
+    nom: string;
+    telephone: string;
+    totalLoyer: number;
+  }[];
+}
+
+export const fetchRevenusStats = () =>
+  api.get<{ data: RevenusStats }>("/revenus").then((r) => r.data.data);

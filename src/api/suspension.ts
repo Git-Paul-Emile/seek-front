@@ -280,3 +280,33 @@ export const getStatutSuspensionLocataireApi = async (
   const { data } = await suspensionApi.get(`/locataire/${id}/statut`);
   return data;
 };
+
+// ─── Locataire avec documents ─────────────────────────────────────────────────
+
+export interface VerificationDocument {
+  id: string;
+  type: string;
+  url: string;
+  statut: string;
+  createdAt: string;
+}
+
+export interface LocataireVerification {
+  id: string;
+  statut: string;
+  verifiedAt: string | null;
+  documents: VerificationDocument[];
+}
+
+export interface LocataireAvecDocuments extends LocataireListItem {
+  proprietaire: ProprietaireInfo | null;
+  verification: LocataireVerification | null;
+  bails: BailWithBienDetails[];
+}
+
+export const getLocataireAvecDocumentsApi = async (
+  id: string
+): Promise<{ status: string; message: string; data: LocataireAvecDocuments }> => {
+  const { data } = await suspensionApi.get(`/locataires/${id}/documents`);
+  return data;
+};

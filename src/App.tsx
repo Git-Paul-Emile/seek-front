@@ -58,6 +58,17 @@ import LocataireLogin from "./pages/locataire/Login";
 import LocataireDashboard from "./pages/locataire/Dashboard";
 import LocataireProfil from "./pages/locataire/Profil";
 import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
+import ProprietaireLocatairePage from "./pages/locataire/Proprietaire";
+import OwnerForgotPassword from "./pages/owner/ForgotPassword";
+import OwnerResetPassword from "./pages/owner/ResetPassword";
+import StatsVues from "./pages/owner/StatsVues";
+import AdminSignalements from "./pages/admin/Signalements";
+import AdminSignalementDetail from "./pages/admin/SignalementDetail";
+import AdminTransactions from "./pages/admin/TransactionsAdmin";
+import AdminPromotions from "./pages/admin/PromotionsAdmin";
+import AdminFormulesPremium from "./pages/admin/FormulesPremium";
+import AdminStatsRevenus from "./pages/admin/StatsRevenus";
+import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +110,10 @@ const App = () => (
                   <Route path="/owner/login" element={<OwnerLogin />} />
                 </Route>
 
+                {/* Owner — mot de passe (public) */}
+                <Route path="/owner/forgot-password" element={<OwnerForgotPassword />} />
+                <Route path="/owner/reset-password" element={<OwnerResetPassword />} />
+
                 {/* Owner — protégées */}
                 <Route element={<OwnerProtectedRoute />}>
                   <Route element={<OwnerLayout />}>
@@ -113,6 +128,7 @@ const App = () => (
                     <Route path="/owner/locataires" element={<LocatairesList />} />
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
+                    <Route path="/owner/stats/vues" element={<StatsVues />} />
                   </Route>
                 </Route>
 
@@ -130,6 +146,7 @@ const App = () => (
                     <Route path="/locataire/dashboard" element={<LocataireDashboard />} />
                     <Route path="/locataire/profil" element={<LocataireProfil />} />
                     <Route path="/locataire/paiements" element={<PaiementsLocatairePage />} />
+                    <Route path="/locataire/proprietaire" element={<ProprietaireLocatairePage />} />
                   </Route>
                 </Route>
 
@@ -156,6 +173,13 @@ const App = () => (
                     <Route path="geo/pays"                element={<PaysPage />} />
                     <Route path="geo/villes"              element={<VillesPage />} />
                     <Route path="geo/quartiers"           element={<QuartiersPage />} />
+                    <Route path="signalements"            element={<AdminSignalements />} />
+                    <Route path="signalements/:id"        element={<AdminSignalementDetail />} />
+                    <Route path="transactions"            element={<AdminTransactions />} />
+                    <Route path="premium/historique"      element={<AdminPromotions />} />
+                    <Route path="premium/formules"        element={<AdminFormulesPremium />} />
+                    <Route path="stats/revenus"           element={<AdminStatsRevenus />} />
+                    <Route path="locataires/:id/documents" element={<AdminLocataireDocuments />} />
                   </Route>
                 </Route>
               </Routes>

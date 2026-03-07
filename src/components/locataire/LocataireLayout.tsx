@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   Search,
   TrendingUp,
+  UserCog,
 } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
@@ -16,6 +17,7 @@ import { useLocataireAuth } from "@/context/LocataireAuthContext";
 const NAV_ITEMS = [
   { to: "/locataire/dashboard", label: "Mon espace", icon: LayoutDashboard },
   { to: "/locataire/paiements", label: "Mes paiements", icon: TrendingUp },
+  { to: "/locataire/proprietaire", label: "Mon propriétaire", icon: UserCog },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────

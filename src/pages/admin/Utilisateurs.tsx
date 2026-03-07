@@ -12,6 +12,7 @@ import {
   Trash2,
   X,
   Home,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -436,6 +437,13 @@ export default function UtilisateursPage() {
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={() => navigate(`/admin/locataires/${l.id}/documents`)}
+            className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+            title="Voir les documents"
+          >
+            <FileText className="w-4 h-4" />
+          </button>
           <button
             onClick={() => openDetailsModal(l)}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

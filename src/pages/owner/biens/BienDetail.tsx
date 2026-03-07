@@ -51,6 +51,8 @@ import {
   Bell,
   RefreshCcw,
   Send,
+  UploadCloud,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -70,6 +72,7 @@ import PremiumPayment from "@/components/owner/PremiumPayment";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
 import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useDocumentsBien, useUploadDocumentBien, useDeleteDocumentBien } from "@/hooks/useDocumentBien";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -113,6 +116,94 @@ function InfoRow({ label, value }: { label: string; value?: string | number | nu
       <span className="text-xs font-medium text-slate-400 w-36 shrink-0 mt-0.5">{label}</span>
       <span className="text-sm text-[#0C1A35]">{value}</span>
     </div>
+  );
+}
+
+// ─── Documents Bien ───────────────────────────────────────────────────────────
+
+const DOC_TYPES = [
+  { value: "ACTE_PROPRIETE", label: "Acte de propriété" },
+  { value: "PLAN_CADASTRAL", label: "Plan cadastral" },
+  { value: "PERMIS_CONSTRUIRE", label: "Permis de construire" },
+  { value: "AUTRE", label: "Autre" },
+];
+
+function DocumentsBienSection({ bienId }: { bienId: string }) {
+  const { data: documents = [], isLoading } = useDocumentsBien(bienId);
+  const upload = useUploadDocumentBien(bienId);
+  const remove = useDeleteDocumentBien(bienId);
+  const [docType, setDocType] = useState("ACTE_PROPRIETE");
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    upload.mutate(
+      { file, type: docType },
+      {
+        onSuccess: () => toast.success("Document ajouté"),
+        onError: () => toast.error("Erreur lors de l'ajout"),
+      }
+    );
+    e.target.value = "";
+  };
+
+  return (
+    <Section title="Documents">
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-[#D4A843]" />
+          </div>
+        ) : documents.length === 0 ? (
+          <p className="text-sm text-slate-400">Aucun document ajouté</p>
+        ) : (
+          documents.map((doc) => (
+            <div key={doc.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50">
+              <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-700 truncate">{doc.nom}</p>
+                <p className="text-xs text-slate-400">{DOC_TYPES.find((t) => t.value === doc.type)?.label ?? doc.type}</p>
+              </div>
+              <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-[#D4A843] hover:bg-[#D4A843]/5 transition-colors">
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <button
+                onClick={() => {
+                  if (!confirm("Supprimer ce document ?")) return;
+                  remove.mutate(doc.id, { onError: () => toast.error("Erreur lors de la suppression") });
+                }}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))
+        )}
+
+        {/* Upload */}
+        <div className="flex items-center gap-2 pt-2">
+          <select
+            value={docType}
+            onChange={(e) => setDocType(e.target.value)}
+            className="h-9 px-3 rounded-xl border border-slate-200 text-xs text-slate-700 bg-white outline-none focus:border-[#D4A843] shrink-0"
+          >
+            {DOC_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+          <label className="flex-1 cursor-pointer">
+            <input type="file" accept="image/*,.pdf" onChange={handleFile} className="hidden" disabled={upload.isPending} />
+            <div className="flex items-center justify-center gap-2 h-9 px-4 rounded-xl border border-dashed border-[#D4A843]/50 bg-[#D4A843]/5
+              text-xs font-medium text-[#D4A843] hover:bg-[#D4A843]/10 transition-colors">
+              {upload.isPending
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi…</>
+                : <><UploadCloud className="w-3.5 h-3.5" /> Ajouter un document</>
+              }
+            </div>
+          </label>
+        </div>
+      </div>
+    </Section>
   );
 }
 
@@ -1027,6 +1118,8 @@ export default function BienDetail() {
               <InfoRow label="Mis à jour" value={new Date(bien.updatedAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
             )}
           </Section>
+
+          <DocumentsBienSection bienId={bien.id} />
         </div>
       </div>
 

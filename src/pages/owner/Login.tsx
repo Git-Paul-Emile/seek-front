@@ -209,6 +209,16 @@ export default function OwnerLogin() {
                 <FieldError message={errors.password?.message} />
               </div>
 
+              {/* Mot de passe oublié */}
+              <div className="text-right -mt-1">
+                <Link
+                  to="/owner/forgot-password"
+                  className="text-xs text-white/50 hover:text-white/80 transition-colors"
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
+
               {/* Erreur serveur */}
               <AnimatePresence>
                 {serverError && (

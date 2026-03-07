@@ -8,7 +8,6 @@ import {
 } from "react";
 import {
   meLocataireApi,
-  refreshLocataireApi,
   logoutLocataireApi,
 } from "@/api/locataireAuth";
 import type { Locataire } from "@/api/locataire";
@@ -43,13 +42,7 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
         const data = await meLocataireApi();
         setLocataire(data);
       } catch {
-        try {
-          await refreshLocataireApi();
-          const data = await meLocataireApi();
-          setLocataire(data);
-        } catch {
-          setLocataire(null);
-        }
+        setLocataire(null);
       } finally {
         setIsLoading(false);
       }

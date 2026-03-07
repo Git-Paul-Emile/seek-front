@@ -186,3 +186,49 @@ export const getHistoriquePaiementsPremium = (
       },
     })
     .then((r) => r.data.data);
+
+// ─── Admin CRUD FormulePremium ────────────────────────────────────────────────
+
+export interface FormulePremiumFull extends FormulePremium {
+  code: string;
+  accroche: string;
+  description: string;
+  idealPour: string[];
+  actif: boolean;
+  ordre: number;
+}
+
+export const adminGetFormules = (): Promise<FormulePremiumFull[]> =>
+  api.get<{ data: FormulePremiumFull[] }>("/admin/formules").then((r) => r.data.data);
+
+export const adminCreateFormule = (data: Partial<FormulePremiumFull>): Promise<FormulePremiumFull> =>
+  api.post<{ data: FormulePremiumFull }>("/admin/formules", data).then((r) => r.data.data);
+
+export const adminUpdateFormule = (id: string, data: Partial<FormulePremiumFull>): Promise<FormulePremiumFull> =>
+  api.put<{ data: FormulePremiumFull }>(`/admin/formules/${id}`, data).then((r) => r.data.data);
+
+export const adminDeleteFormule = (id: string): Promise<void> =>
+  api.delete(`/admin/formules/${id}`).then(() => undefined);
+
+// ─── Admin historique promotions ──────────────────────────────────────────────
+
+export interface AdminPromotionStats {
+  total: number;
+  actives: number;
+  montantTotal: number;
+  montantMois: number;
+  parFormule: { formuleNom: string; count: number; montant: number }[];
+}
+
+export const adminGetHistoriquePromotions = (params?: {
+  page?: number;
+  limit?: number;
+  statut?: string;
+  proprietaireId?: string;
+}): Promise<{ data: PromotionHistory[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> =>
+  api
+    .get<{ data: { data: PromotionHistory[]; pagination: { page: number; limit: number; total: number; totalPages: number } } }>("/admin/historique", { params })
+    .then((r) => r.data.data);
+
+export const adminGetStatsPromotions = (): Promise<AdminPromotionStats> =>
+  api.get<{ data: AdminPromotionStats }>("/admin/stats").then((r) => r.data.data);

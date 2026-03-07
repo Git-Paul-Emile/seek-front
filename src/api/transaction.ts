@@ -80,3 +80,29 @@ export const getHistoriqueTransactions = (
       },
     })
     .then((r) => r.data.data);
+
+// ─── Admin ─────────────────────────────────────────────────────────────────────
+
+export interface AdminTransactionStats {
+  totalConfirme: number;
+  montantTotal: number;
+  montantMois: number;
+  montantAnnee: number;
+  parType: { type: string; count: number; montant: number }[];
+}
+
+export const getAdminHistoriqueTransactions = (params?: {
+  page?: number;
+  limit?: number;
+  type?: string;
+  statut?: string;
+  proprietaireId?: string;
+  dateDebut?: string;
+  dateFin?: string;
+}): Promise<{ data: Transaction[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> =>
+  api
+    .get<{ data: { data: Transaction[]; pagination: { page: number; limit: number; total: number; totalPages: number } } }>("/admin", { params })
+    .then((r) => r.data.data);
+
+export const getAdminStatsTransactions = (): Promise<AdminTransactionStats> =>
+  api.get<{ data: AdminTransactionStats }>("/admin/stats").then((r) => r.data.data);

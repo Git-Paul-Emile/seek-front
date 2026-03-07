@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchStats, fetchAdminStats, fetchProprietairesStats, fetchProprietaireDetail } from "@/api/stats";
+import { fetchStats, fetchAdminStats, fetchProprietairesStats, fetchProprietaireDetail, fetchRevenusStats } from "@/api/stats";
 
 export const useStats = () =>
   useQuery({
@@ -28,4 +28,11 @@ export const useProprietaireDetail = (id: string) =>
     queryFn:  () => fetchProprietaireDetail(id),
     staleTime: 1 * 60 * 1000, // 1 min
     enabled: !!id,
+  });
+
+export const useRevenusStats = () =>
+  useQuery({
+    queryKey: ["revenus-stats"],
+    queryFn:  fetchRevenusStats,
+    staleTime: 2 * 60 * 1000,
   });

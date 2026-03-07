@@ -14,6 +14,7 @@ import {
   supprimerLocataireApi,
   getProprietaireWithBiensApi,
   getLocataireWithBailsApi,
+  getLocataireAvecDocumentsApi,
   type SuspensionInfo,
   type ProprietaireListItem,
   type LocataireListItem,
@@ -162,6 +163,16 @@ export function useLocataireWithBails(id: string) {
   return useQuery({
     queryKey: ["locataireWithBails", id],
     queryFn: () => getLocataireWithBailsApi(id),
+    enabled: !!id,
+  });
+}
+
+// ─── Locataire avec documents de vérification ────────────────────────────────
+
+export function useLocataireAvecDocuments(id: string) {
+  return useQuery({
+    queryKey: ["locataireAvecDocuments", id],
+    queryFn: () => getLocataireAvecDocumentsApi(id),
     enabled: !!id,
   });
 }

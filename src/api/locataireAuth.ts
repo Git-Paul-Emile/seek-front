@@ -9,6 +9,24 @@ const api = axios.create({
   withCredentials: true,
 });
 
+type RefreshGlobal = typeof globalThis & {
+  __locataireRefreshPromise?: Promise<void> | null;
+};
+
+const refreshGlobal = globalThis as RefreshGlobal;
+
+const refreshSession = async (): Promise<void> => {
+  if (!refreshGlobal.__locataireRefreshPromise) {
+    refreshGlobal.__locataireRefreshPromise = axios
+      .post(`${API_URL}/api/locataire/auth/refresh`, {}, { withCredentials: true })
+      .then(() => undefined)
+      .finally(() => {
+        refreshGlobal.__locataireRefreshPromise = null;
+      });
+  }
+  return refreshGlobal.__locataireRefreshPromise;
+};
+
 // API pour l'upload de fichiers
 const uploadApi = axios.create({
   baseURL: `${API_URL}/api/locataire/auth`,
@@ -21,15 +39,25 @@ const setupInterceptors = (axiosInstance: typeof api) => {
   axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
-      const originalRequest = error.config;
+      const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
+      const requestUrl = String(originalRequest?.url ?? "");
+      const isRefreshRequest = requestUrl.includes("/refresh");
+      const message = String(error?.response?.data?.message ?? "");
+      const isMissingToken = message.toLowerCase().includes("token manquant");
       
       // Si l'erreur est 401 et que ce n'est pas déjà une tentative de rafraîchissement
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      if (
+        error.response?.status === 401 &&
+        originalRequest &&
+        !originalRequest._retry &&
+        !isRefreshRequest &&
+        !isMissingToken
+      ) {
         originalRequest._retry = true;
         
         try {
-          // Tenter de rafraîchir le token
-          await axios.post(`${API_URL}/api/locataire/auth/refresh`, {}, { withCredentials: true });
+          // Éviter les refresh concurrents qui invalident le token rotatif
+          await refreshSession();
           
           // Réessayer la requête originale
           return axiosInstance(originalRequest);
@@ -250,4 +278,34 @@ export const uploadLocataireVerificationImageApi = async (file: File) => {
   );
   
   return response.data.data.url;
+};
+
+// ─── Infos propriétaire pour le locataire ───────────────────────────────────────
+
+export interface ProprietaireInfo {
+  id: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  email: string | null;
+}
+
+export interface BienInfo {
+  id: string;
+  titre: string | null;
+  adresse: string | null;
+  quartier: string | null;
+  ville: string | null;
+  region: string | null;
+  pays: string | null;
+}
+
+export interface ProprietaireLocataireData {
+  bien: BienInfo;
+  proprietaire: ProprietaireInfo;
+}
+
+export const getProprietaireLocataireApi = async (): Promise<ProprietaireLocataireData | null> => {
+  const { data } = await api.get("/proprietaire");
+  return data.data;
 };

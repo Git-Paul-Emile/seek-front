@@ -129,7 +129,7 @@ export interface AnnonceMiseEnAvant {
 export interface MiseEnAvantResponse {
   annonces: AnnonceMiseEnAvant[];
   total: number;
-  rotation: boolean;
+  rotation: { intervalleMinutes: number; prochaineRotationPossible: boolean } | boolean | null;
 }
 
 /**

@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import axios from "axios";
 import { loginApi, logoutApi, meApi, refreshApi, type AdminInfo } from "@/api/auth";
+import { useLocation } from "react-router-dom";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,9 +32,16 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<AdminInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { pathname } = useLocation();
 
   // Tenter de restaurer la session via /me au montage
   useEffect(() => {
+    if (!pathname.startsWith("/admin")) {
+      setAdmin(null);
+      setIsLoading(false);
+      return;
+    }
+
     (async () => {
       try {
         const { data } = await meApi();
@@ -51,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [pathname]);
 
   const login = useCallback(async (email: string, password: string) => {
     await loginApi({ email, password });

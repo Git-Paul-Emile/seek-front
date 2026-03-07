@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -51,6 +51,7 @@ import { toast } from "sonner";
 import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PropertyCard from "@/components/PropertyCard";
+import CarteBienDetail from "@/components/carte/CarteBienDetail";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -582,7 +583,7 @@ export default function AnnonceDetail() {
                     const container = document.getElementById('caracteristiques-scroll');
                     if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
                   }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -591,7 +592,7 @@ export default function AnnonceDetail() {
                     const container = document.getElementById('caracteristiques-scroll');
                     if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
                   }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -711,6 +712,16 @@ export default function AnnonceDetail() {
                 </TabsContent>
 
                 <TabsContent value="proximite" className="mt-4">
+                  {bien.latitude !== null && bien.longitude !== null && (
+                    <div className="mb-4">
+                      <CarteBienDetail
+                        latitude={bien.latitude}
+                        longitude={bien.longitude}
+                        titreBien={bien.titre}
+                        etablissements={bien.etablissements ?? []}
+                      />
+                    </div>
+                  )}
                   {bien.etablissements && bien.etablissements.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {bien.etablissements.map((e) => (
@@ -953,3 +964,4 @@ export default function AnnonceDetail() {
     </div>
   );
 }
+

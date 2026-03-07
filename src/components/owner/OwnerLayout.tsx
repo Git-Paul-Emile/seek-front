@@ -12,7 +12,6 @@ import {
   User,
   Users,
   Wallet,
-  BarChart3,
 } from "lucide-react";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
@@ -22,7 +21,6 @@ import { useOwnerStats } from "@/hooks/useBien";
 const NAV_ITEMS = [
   { to: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/owner/paiements", label: "Paiements", icon: Wallet },
-  { to: "/owner/stats/vues", label: "Statistiques vues", icon: BarChart3 },
   { to: "/owner/profile", label: "Mon Profil", icon: User },
 ];
 
@@ -264,11 +262,11 @@ function Topbar() {
 
 export default function OwnerLayout() {
   return (
-    <div className="min-h-screen bg-[#F8F5EE]">
+    <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">
       <Sidebar />
       <Topbar />
-      <div className="ml-60 pt-16">
-        <main className="p-6">
+      <div className="ml-60 pt-16 overflow-x-clip">
+        <main className="p-6 overflow-x-clip">
           <Outlet />
         </main>
       </div>

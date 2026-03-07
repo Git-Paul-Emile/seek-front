@@ -270,3 +270,8 @@ export const getBailAArchiverApi = async (bienId: string): Promise<Bail | null> 
   const { data } = await api.get(`/${bienId}/bail/a-archiver`);
   return data.data;
 };
+
+export const getHistoriqueBailsApi = async (bienId: string): Promise<Bail[]> => {
+  const { data } = await api.get(`/${bienId}/bail/historique`);
+  return data.data;
+};

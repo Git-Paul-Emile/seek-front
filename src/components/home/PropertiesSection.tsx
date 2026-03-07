@@ -73,7 +73,7 @@ const PropertiesSection = () => {
               <div className="relative">
                 <Carousel 
                   opts={{ align: "start", loop: true }} 
-                  className="w-full"
+                  className="w-full overflow-x-clip"
                 >
                   <CarouselContent className="-ml-4">
                     {annoncesMiseEnAvant.map((property) => (
@@ -90,8 +90,8 @@ const PropertiesSection = () => {
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <CarouselPrevious className="left-0 -translate-x-1/2 bg-white/90 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
-                  <CarouselNext className="right-0 translate-x-1/2 bg-white/90 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
+                  <CarouselPrevious className="left-2 bg-white/90 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
+                  <CarouselNext className="right-2 bg-white/90 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
                 </Carousel>
               </div>
             )}

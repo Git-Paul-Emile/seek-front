@@ -12,9 +12,11 @@ import {
   Trash2,
   Eye,
   RotateCcw,
-  RefreshCw, 
+  RefreshCw,
   UserCheck,
   Send,
+  Search,
+  X,
 } from "lucide-react";
 import { StatutAnnonce } from "@/api/bien";
 import { useBiens, useDeleteBien, useRetourBrouillon, useSoumettreBien } from "@/hooks/useBien";
@@ -45,6 +47,7 @@ function StatutBadge({ statut }: { statut: StatutAnnonce }) {
 
 export default function BiensList() {
   const [filter, setFilter] = useState<StatutAnnonce | "TOUS" | "ASSOCIE" | "MIS_EN_AVANT">("TOUS");
+  const [search, setSearch] = useState("");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [retourTargetId, setRetourTargetId] = useState<string | null>(null);
   const [showRejetAlert, setShowRejetAlert] = useState(true);
@@ -74,11 +77,24 @@ export default function BiensList() {
 
   const miseEnAvantCount = biens.filter((b) => b.estMisEnAvant).length;
 
-  const filteredBiens =
-    filter === "TOUS" ? biens :
-    filter === "ASSOCIE" ? biens.filter((b) => b.hasBailActif) :
-    filter === "MIS_EN_AVANT" ? biens.filter((b) => b.estMisEnAvant) :
-    biens.filter((b) => b.statutAnnonce === filter);
+  const filteredBiens = useMemo(() => {
+    let result = filter === "TOUS" ? biens :
+      filter === "ASSOCIE" ? biens.filter((b) => b.hasBailActif) :
+      filter === "MIS_EN_AVANT" ? biens.filter((b) => b.estMisEnAvant) :
+      biens.filter((b) => b.statutAnnonce === filter);
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((b) =>
+        b.titre?.toLowerCase().includes(q) ||
+        b.region?.toLowerCase().includes(q) ||
+        b.quartier?.toLowerCase().includes(q) ||
+        b.pays?.toLowerCase().includes(q) ||
+        b.typeLogement?.nom?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [biens, filter, search]);
 
   const rejeteCount = counts.REJETE ?? 0;
 
@@ -123,6 +139,23 @@ export default function BiensList() {
           <Plus className="w-4 h-4" />
           Ajouter un bien
         </Link>
+      </div>
+
+      {/* Barre de recherche */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher par titre, ville, type…"
+          className="w-full h-10 pl-9 pr-9 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#D4A843] transition-colors"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Filtres */}
@@ -209,7 +242,9 @@ export default function BiensList() {
           </div>
           <h3 className="text-lg font-semibold text-[#0C1A35] mb-2">Aucun bien trouvé</h3>
           <p className="text-slate-500">
-            {filter === "TOUS"
+            {search.trim()
+              ? `Aucun bien ne correspond à « ${search} ».`
+              : filter === "TOUS"
               ? "Vous n'avez pas encore de biens."
               : filter === "ASSOCIE"
               ? "Vous n'avez aucun bien avec un locataire actif."

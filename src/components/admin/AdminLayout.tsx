@@ -24,7 +24,6 @@ import {
   CreditCard,
   Star,
   TrendingUp,
-  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -68,7 +67,6 @@ const NAV_GROUPS = [
       { to: "/admin/premium/formules",    label: "Formules premium",  icon: Star },
       { to: "/admin/premium/historique",  label: "Mises en avant",    icon: TrendingUp },
       { to: "/admin/transactions",        label: "Transactions",      icon: CreditCard },
-      { to: "/admin/stats/revenus",       label: "Statistiques revenus", icon: BarChart3 },
     ],
   },
 ];
@@ -395,11 +393,11 @@ function Topbar() {
 
 export default function AdminLayout() {
   return (
-    <div className="min-h-screen bg-[#F8F5EE]">
+    <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">
       <Sidebar />
       <Topbar />
-      <div className="ml-60 pt-16">
-        <main className="p-6">
+      <div className="ml-60 pt-16 overflow-x-clip">
+        <main className="p-6 overflow-x-clip">
           <Outlet />
         </main>
       </div>

@@ -65,6 +65,7 @@ import {
   useBailActif, useTerminerBail, useResilierBail, useProlongerBail,
   useEcheancier, useCaution, useRestituerCaution,
   useBailAArchiver, useMettreEnPreavis, useMettreEnRenouvellement, useArchiverBail,
+  useHistoriqueBails,
 } from "@/hooks/useBail";
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
@@ -235,6 +236,10 @@ export default function BienDetail() {
   const { data: bailAArchiver } = useBailAArchiver(
     isLocation && !bail ? (id ?? "") : ""
   );
+
+  // Historique des baux
+  const { data: historiqueBails = [] } = useHistoriqueBails(isLocation ? (id ?? "") : "");
+  const [historiqueOpen, setHistoriqueOpen] = useState(false);
 
   // Suivi financier — chargé uniquement si bail actif
   const { data: echeancier = [] } = useEcheancier(id ?? "", bail?.id ?? "");
@@ -497,7 +502,7 @@ export default function BienDetail() {
                   const el = document.getElementById("bien-caract-scroll");
                   if (el) el.scrollBy({ left: -280, behavior: "smooth" });
                 }}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -506,7 +511,7 @@ export default function BienDetail() {
                   const el = document.getElementById("bien-caract-scroll");
                   if (el) el.scrollBy({ left: 280, behavior: "smooth" });
                 }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -746,8 +751,10 @@ export default function BienDetail() {
                         </button>
                       )}
 
-                      {/* Résilier / Terminer */}
-                      {(statut === "ACTIF" || statut === "EN_PREAVIS") ? (
+                      {/* Résilier / Terminer — logique conditionnelle sur dateFinBail */}
+                      {/* Bail AVEC date de fin → "Résilier" seulement (résiliation anticipée) */}
+                      {/* Bail SANS date de fin → "Résilier" + "Terminer" (bail indéterminé) */}
+                      {(statut === "ACTIF" || statut === "EN_PREAVIS") && (
                         <button
                           onClick={() => setResilierOpen(true)}
                           className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
@@ -755,8 +762,8 @@ export default function BienDetail() {
                           <AlertTriangle className="w-3.5 h-3.5" />
                           Résilier le bail
                         </button>
-                      ) : null}
-                      {(statut === "ACTIF" || statut === "EN_PREAVIS" || statut === "EN_RENOUVELLEMENT") && (
+                      )}
+                      {(statut === "ACTIF" || statut === "EN_PREAVIS" || statut === "EN_RENOUVELLEMENT") && !bail.dateFinBail && (
                         <button
                           onClick={() => setTerminerOpen(true)}
                           className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
@@ -804,7 +811,7 @@ export default function BienDetail() {
 
           {/* Section Bail à archiver — bail terminé ou résilié en attente d'archivage */}
           {isLocation && !bail && bailAArchiver && (
-            <Section title="Bail terminé">
+            <Section title="Bail en attente d'archivage">
               <div className="space-y-3">
                 {/* Locataire */}
                 <Link
@@ -850,6 +857,69 @@ export default function BienDetail() {
                   <Archive className="w-3.5 h-3.5" />
                   Archiver le bail
                 </button>
+              </div>
+            </Section>
+          )}
+
+          {/* Historique des baux */}
+          {isLocation && historiqueBails.filter(b => b.statut === "TERMINE" || b.statut === "RESILIE" || b.statut === "ARCHIVE").length > 0 && (
+            <Section title="Historique des baux">
+              <div className="space-y-2">
+                <button
+                  onClick={() => setHistoriqueOpen(prev => !prev)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <History className="w-4 h-4 text-slate-400" />
+                    {historiqueBails.filter(b => b.statut === "TERMINE" || b.statut === "RESILIE" || b.statut === "ARCHIVE").length} bail(s) terminé(s)
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${historiqueOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {historiqueOpen && (
+                  <div className="space-y-2 pt-1">
+                    {historiqueBails
+                      .filter(b => b.statut === "TERMINE" || b.statut === "RESILIE" || b.statut === "ARCHIVE")
+                      .sort((a, b) => new Date(b.dateDebutBail).getTime() - new Date(a.dateDebutBail).getTime())
+                      .map(b => (
+                        <div key={b.id} className="p-3 rounded-xl border border-slate-100 bg-slate-50 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Link
+                              to={`/owner/locataires/${b.locataireId}`}
+                              className="flex items-center gap-2 hover:opacity-80"
+                            >
+                              <div className="w-7 h-7 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center font-bold text-xs shrink-0">
+                                {b.locataire.prenom[0]}{b.locataire.nom[0]}
+                              </div>
+                              <span className="text-sm font-medium text-[#0C1A35]">
+                                {b.locataire.prenom} {b.locataire.nom}
+                              </span>
+                            </Link>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                              b.statut === "RESILIE" ? "bg-red-100 text-red-700" :
+                              b.statut === "ARCHIVE" ? "bg-slate-200 text-slate-500" :
+                              "bg-slate-100 text-slate-600"
+                            }`}>
+                              {b.statut === "RESILIE" ? "Résilié" : b.statut === "ARCHIVE" ? "Archivé" : "Terminé"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-slate-500">
+                            <span>{new Date(b.dateDebutBail).toLocaleDateString("fr-FR")}</span>
+                            {b.dateFinBail && (
+                              <>
+                                <span>→</span>
+                                <span>{new Date(b.dateFinBail).toLocaleDateString("fr-FR")}</span>
+                              </>
+                            )}
+                            <span className="ml-auto font-semibold text-slate-700">
+                              {b.montantLoyer.toLocaleString("fr-FR")} FCFA
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
             </Section>
           )}

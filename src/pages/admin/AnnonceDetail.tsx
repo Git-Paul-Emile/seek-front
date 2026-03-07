@@ -641,7 +641,7 @@ export default function AnnonceDetail() {
                     const el = document.getElementById("admin-carac-scroll");
                     if (el) el.scrollBy({ left: -260, behavior: "smooth" });
                   }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-8 h-8 rounded-full
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full
                     bg-white shadow-lg flex items-center justify-center text-slate-600
                     hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
                 >
@@ -652,7 +652,7 @@ export default function AnnonceDetail() {
                     const el = document.getElementById("admin-carac-scroll");
                     if (el) el.scrollBy({ left: 260, behavior: "smooth" });
                   }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-8 h-8 rounded-full
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full
                     bg-white shadow-lg flex items-center justify-center text-slate-600
                     hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
                 >

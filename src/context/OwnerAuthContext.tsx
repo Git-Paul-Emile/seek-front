@@ -6,6 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import { useLocation } from "react-router-dom";
 import {
   meOwnerApi,
   refreshOwnerApi,
@@ -35,9 +36,16 @@ const OwnerAuthContext = createContext<OwnerAuthContextValue | null>(null);
 export function OwnerAuthProvider({ children }: { children: ReactNode }) {
   const [owner, setOwner] = useState<OwnerInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { pathname } = useLocation();
 
   // Restaurer la session au montage
   useEffect(() => {
+    if (!pathname.startsWith("/owner")) {
+      setOwner(null);
+      setIsLoading(false);
+      return;
+    }
+
     (async () => {
       try {
         const { data } = await meOwnerApi();
@@ -54,7 +62,7 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [pathname]);
 
   const logout = useCallback(async () => {
     try {

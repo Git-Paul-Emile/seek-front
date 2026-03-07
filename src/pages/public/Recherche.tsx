@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
   Search, MapPin, X, Loader2, Building2,
   BedDouble, Maximize2, ShowerHead,
-  ArrowRight, Car, Armchair, ChevronDown,
+  ArrowRight, Car, Armchair, ChevronDown, SlidersHorizontal,
+  LayoutGrid, Map,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchableSelect from "@/components/ui/SearchableSelect";
@@ -13,6 +14,8 @@ import { useRecherchePublique, useLieux } from "@/hooks/useRecherche";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import type { Bien } from "@/api/bien";
+
+const CarteAnnonces = lazy(() => import("@/components/carte/CarteAnnonces"));
 
 // ─── Tri ──────────────────────────────────────────────────────────────────────
 
@@ -146,6 +149,16 @@ const RecherchePage = () => {
   const [typeTransaction, setTypeTransaction] = useState(searchParams.get("typeTransaction") ?? "");
   const [sort,            setSort]            = useState<SortKey>((searchParams.get("sort") as SortKey) ?? "recent");
 
+  // Filtres avancés
+  const [showAvanced,  setShowAdvanced] = useState(false);
+  const [prixMin,      setPrixMin]      = useState(searchParams.get("prixMin") ?? "");
+  const [prixMax,      setPrixMax]      = useState(searchParams.get("prixMax") ?? "");
+  const [chambres,     setChambres]     = useState(searchParams.get("chambres") ?? "");
+  const [surfaceMin,   setSurfaceMin]   = useState(searchParams.get("surfaceMin") ?? "");
+  const [surfaceMax,   setSurfaceMax]   = useState(searchParams.get("surfaceMax") ?? "");
+  const [meuble,       setMeuble]       = useState(searchParams.get("meuble") === "1");
+  const [parking,      setParking]      = useState(searchParams.get("parking") === "1");
+
   const sp = searchParams;
   const sortParams = sortToParams((sp.get("sort") as SortKey) ?? "recent");
 
@@ -153,6 +166,13 @@ const RecherchePage = () => {
     quartier:        sp.get("quartier")        || undefined,
     typeLogement:    sp.get("typeLogement")    || undefined,
     typeTransaction: sp.get("typeTransaction") || undefined,
+    prixMin:    sp.get("prixMin")    ? Number(sp.get("prixMin"))    : undefined,
+    prixMax:    sp.get("prixMax")    ? Number(sp.get("prixMax"))    : undefined,
+    chambres:   sp.get("chambres")   ? Number(sp.get("chambres"))   : undefined,
+    surfaceMin: sp.get("surfaceMin") ? Number(sp.get("surfaceMin")) : undefined,
+    surfaceMax: sp.get("surfaceMax") ? Number(sp.get("surfaceMax")) : undefined,
+    meuble:     sp.get("meuble")  === "1" ? "1" as const : undefined,
+    parking:    sp.get("parking") === "1" ? "1" as const : undefined,
     sortBy:    sortParams.sortBy,
     sortOrder: sortParams.sortOrder,
     page:  parseInt(sp.get("page") ?? "1"),
@@ -173,6 +193,13 @@ const RecherchePage = () => {
     setTypeLogement(searchParams.get("typeLogement") ?? "");
     setTypeTransaction(searchParams.get("typeTransaction") ?? "");
     setSort((searchParams.get("sort") as SortKey) ?? "recent");
+    setPrixMin(searchParams.get("prixMin") ?? "");
+    setPrixMax(searchParams.get("prixMax") ?? "");
+    setChambres(searchParams.get("chambres") ?? "");
+    setSurfaceMin(searchParams.get("surfaceMin") ?? "");
+    setSurfaceMax(searchParams.get("surfaceMax") ?? "");
+    setMeuble(searchParams.get("meuble") === "1");
+    setParking(searchParams.get("parking") === "1");
   }, [searchParams]);
 
   const buildParams = (overridePage?: number, overrideSort?: SortKey) => {
@@ -181,6 +208,13 @@ const RecherchePage = () => {
     if (quartier)        next.set("quartier",        quartier);
     if (typeLogement)    next.set("typeLogement",    typeLogement);
     if (typeTransaction) next.set("typeTransaction", typeTransaction);
+    if (prixMin)         next.set("prixMin",         prixMin);
+    if (prixMax)         next.set("prixMax",         prixMax);
+    if (chambres)        next.set("chambres",        chambres);
+    if (surfaceMin)      next.set("surfaceMin",      surfaceMin);
+    if (surfaceMax)      next.set("surfaceMax",      surfaceMax);
+    if (meuble)          next.set("meuble",          "1");
+    if (parking)         next.set("parking",         "1");
     if (s !== "recent")  next.set("sort",            s);
     next.set("page", String(overridePage ?? 1));
     return next;
@@ -195,6 +229,8 @@ const RecherchePage = () => {
 
   const clearFilters = () => {
     setQuartier(""); setTypeLogement(""); setTypeTransaction(""); setSort("recent");
+    setPrixMin(""); setPrixMax(""); setChambres(""); setSurfaceMin(""); setSurfaceMax("");
+    setMeuble(false); setParking(false);
     setSearchParams({ page: "1" });
   };
 
@@ -228,8 +264,32 @@ const RecherchePage = () => {
       label: typeTransactionOptions.find((t) => t.value === sp.get("typeTransaction"))?.label ?? sp.get("typeTransaction")!,
       onRemove: () => removeFilter("typeTransaction"),
     });
+  if (sp.get("prixMin") || sp.get("prixMax")) {
+    const min = sp.get("prixMin"), max = sp.get("prixMax");
+    const label = min && max ? `${Number(min).toLocaleString("fr-FR")} – ${Number(max).toLocaleString("fr-FR")} FCFA`
+      : min ? `≥ ${Number(min).toLocaleString("fr-FR")} FCFA`
+      : `≤ ${Number(max).toLocaleString("fr-FR")} FCFA`;
+    chips.push({ label, onRemove: () => { removeFilter("prixMin"); removeFilter("prixMax"); } });
+  }
+  if (sp.get("chambres"))
+    chips.push({ label: `${sp.get("chambres")}+ chambre(s)`, onRemove: () => removeFilter("chambres") });
+  if (sp.get("surfaceMin") || sp.get("surfaceMax")) {
+    const min = sp.get("surfaceMin"), max = sp.get("surfaceMax");
+    const label = min && max ? `${min}–${max} m²` : min ? `≥ ${min} m²` : `≤ ${max} m²`;
+    chips.push({ label, onRemove: () => { removeFilter("surfaceMin"); removeFilter("surfaceMax"); } });
+  }
+  if (sp.get("meuble") === "1")
+    chips.push({ label: "Meublé", onRemove: () => removeFilter("meuble") });
+  if (sp.get("parking") === "1")
+    chips.push({ label: "Parking", onRemove: () => removeFilter("parking") });
+
+  const nbAdvancedActive = [sp.get("prixMin"), sp.get("prixMax"), sp.get("chambres"),
+    sp.get("surfaceMin"), sp.get("surfaceMax"),
+    sp.get("meuble"), sp.get("parking")].filter(Boolean).length;
 
   const hasFilters = chips.length > 0;
+
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
 
   return (
     <div className="min-h-screen bg-[#F8F5EE]">
@@ -287,6 +347,23 @@ const RecherchePage = () => {
               <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
             </div>
 
+            <button
+              onClick={() => setShowAdvanced(prev => !prev)}
+              className={`h-11 flex items-center gap-2 px-4 rounded-lg border text-sm font-medium transition-colors flex-shrink-0 w-full sm:w-auto justify-center ${
+                showAvanced || nbAdvancedActive > 0
+                  ? "border-[#D4A843] bg-[#D4A843]/20 text-[#D4A843]"
+                  : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtres
+              {nbAdvancedActive > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#D4A843] text-white text-xs flex items-center justify-center font-bold">
+                  {nbAdvancedActive}
+                </span>
+              )}
+            </button>
+
             <Button
               onClick={() => applyFilters()}
               className="h-11 bg-[#D4A843] hover:bg-[#C09535] text-white font-semibold flex-shrink-0 w-full sm:w-auto"
@@ -295,6 +372,102 @@ const RecherchePage = () => {
               Rechercher
             </Button>
           </div>
+
+          {/* Panneau filtres avancés */}
+          {showAvanced && (
+            <div className="border-t border-white/10 pt-4 mt-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {/* Prix min */}
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Prix min (FCFA)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={prixMin}
+                  onChange={e => setPrixMin(e.target.value)}
+                  placeholder="0"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                />
+              </div>
+              {/* Prix max */}
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Prix max (FCFA)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={prixMax}
+                  onChange={e => setPrixMax(e.target.value)}
+                  placeholder="Illimité"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                />
+              </div>
+              {/* Chambres */}
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Chambres min</label>
+                <div className="relative">
+                  <select
+                    value={chambres}
+                    onChange={e => setChambres(e.target.value)}
+                    className="w-full h-9 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-7 focus:outline-none focus:border-white/40"
+                  >
+                    <option value="" className="bg-[#0C1A35]">Toutes</option>
+                    {[1,2,3,4,5].map(n => (
+                      <option key={n} value={n} className="bg-[#0C1A35]">{n}+</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                </div>
+              </div>
+              {/* Surface min */}
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Surface min (m²)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={surfaceMin}
+                  onChange={e => setSurfaceMin(e.target.value)}
+                  placeholder="0"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                />
+              </div>
+              {/* Surface max */}
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Surface max (m²)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={surfaceMax}
+                  onChange={e => setSurfaceMax(e.target.value)}
+                  placeholder="Illimitée"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                />
+              </div>
+              {/* Options */}
+              <div className="flex flex-col gap-2 justify-center">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={meuble}
+                    onChange={e => setMeuble(e.target.checked)}
+                    className="w-4 h-4 rounded border-white/30 text-[#D4A843] focus:ring-[#D4A843]"
+                  />
+                  <span className="text-sm text-white/80 flex items-center gap-1">
+                    <Armchair className="w-3.5 h-3.5" /> Meublé
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={parking}
+                    onChange={e => setParking(e.target.checked)}
+                    className="w-4 h-4 rounded border-white/30 text-[#D4A843] focus:ring-[#D4A843]"
+                  />
+                  <span className="text-sm text-white/80 flex items-center gap-1">
+                    <Car className="w-3.5 h-3.5" /> Parking
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -351,6 +524,26 @@ const RecherchePage = () => {
             {isFetching && !isLoading && (
               <Loader2 className="w-4 h-4 animate-spin text-[#D4A843]" />
             )}
+            <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`h-8 w-8 flex items-center justify-center transition-colors ${
+                  viewMode === "grid" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-400 hover:text-slate-600"
+                }`}
+                title="Vue grille"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`h-8 w-8 flex items-center justify-center transition-colors border-l border-slate-200 ${
+                  viewMode === "map" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-400 hover:text-slate-600"
+                }`}
+                title="Vue carte"
+              >
+                <Map className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -379,6 +572,10 @@ const RecherchePage = () => {
               </Button>
             )}
           </div>
+        ) : viewMode === "map" ? (
+          <Suspense fallback={<div className="h-[520px] bg-slate-100 rounded-2xl animate-pulse" />}>
+            <CarteAnnonces items={items} />
+          </Suspense>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {items.map((bien) => (

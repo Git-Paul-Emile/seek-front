@@ -322,7 +322,7 @@ const STEPS = [
 ];
 
 const HowItWorks = () => (
-  <section id="comment-ca-marche" className="py-24 bg-[#F8F5EE]">
+  <section id="comment-ca-marche" className="py-24 bg-[#F8F5EE] overflow-x-clip">
     <div className="container mx-auto px-4">
       <div className="text-center mb-16">
         <div className="inline-flex items-center gap-2 bg-[#D4A843]/10 border border-[#D4A843]/20 text-[#D4A843] rounded-full px-4 py-1.5 text-sm font-medium mb-4">
@@ -471,9 +471,9 @@ const SeekSolution = () => (
 // ─── CTA final ─────────────────────────────────────────────────────────────
 
 const FinalCTA = () => (
-  <section className="relative py-24 bg-[#F8F5EE] overflow-hidden">
-    <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#D4A843] opacity-[0.06] blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-500 opacity-[0.04] blur-3xl -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+  <section className="relative py-24 bg-[#F8F5EE] overflow-clip">
+    <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#D4A843] opacity-[0.06] blur-3xl -translate-y-1/3 pointer-events-none" />
+    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-500 opacity-[0.04] blur-3xl translate-y-1/3 pointer-events-none" />
 
     <div className="relative container mx-auto px-4 text-center">
       <motion.div
@@ -520,7 +520,7 @@ const FinalCTA = () => (
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 const Proprietaires = () => (
-  <div>
+  <div className="overflow-x-clip">
     <ProprietairesNavbar />
     <Hero />
     <HowItWorks />

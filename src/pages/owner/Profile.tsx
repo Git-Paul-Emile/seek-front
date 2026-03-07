@@ -5,7 +5,7 @@ import { updateProfileApi, deleteProfileApi, meOwnerApi } from "@/api/ownerAuth"
 import { useVerificationStatus } from "@/hooks/useVerification";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { toast } from "sonner";
-import { Loader2, Save, Trash2, User, Mail, Phone, Lock, ChevronDown, Shield, Check, AlertCircle, Clock, Eye, CreditCard } from "lucide-react";
+import { Loader2, Save, Trash2, User, Mail, Phone, Lock, ChevronDown, Shield, Check, AlertCircle, Clock, Eye, CreditCard, X } from "lucide-react";
 
 interface ProfileFormData {
   prenom: string;
@@ -30,7 +30,7 @@ export default function Profile() {
   
   // Vérification d'identité
   const { data: verificationStatus, isLoading: isVerificationLoading } = useVerificationStatus();
-  const [showDocumentPreview, setShowDocumentPreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<ProfileFormData>({
     prenom: "",
@@ -216,7 +216,7 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {verificationStatus?.documents?.pieceIdentiteRecto && (
                   <button
-                    onClick={() => setShowDocumentPreview(true)}
+                    onClick={() => setPreviewImage(verificationStatus?.documents?.pieceIdentiteRecto || null)}
                     className="relative group p-3 rounded-lg bg-white border border-slate-200 hover:border-[#D4A843] transition-all text-left"
                   >
                     <div className="aspect-[4/3] rounded-md overflow-hidden bg-slate-100 mb-2">
@@ -234,7 +234,7 @@ export default function Profile() {
                 )}
                 {verificationStatus?.documents?.pieceIdentiteVerso && (
                   <button
-                    onClick={() => setShowDocumentPreview(true)}
+                    onClick={() => setPreviewImage(verificationStatus?.documents?.pieceIdentiteVerso || null)}
                     className="relative group p-3 rounded-lg bg-white border border-slate-200 hover:border-[#D4A843] transition-all text-left"
                   >
                     <div className="aspect-[4/3] rounded-md overflow-hidden bg-slate-100 mb-2">
@@ -252,7 +252,7 @@ export default function Profile() {
                 )}
                 {verificationStatus?.documents?.selfie && (
                   <button
-                    onClick={() => setShowDocumentPreview(true)}
+                    onClick={() => setPreviewImage(verificationStatus?.documents?.selfie || null)}
                     className="relative group p-3 rounded-lg bg-white border border-slate-200 hover:border-[#D4A843] transition-all text-left"
                   >
                     <div className="aspect-square rounded-md overflow-hidden bg-slate-100 mb-2">
@@ -516,6 +516,28 @@ export default function Profile() {
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteModal(false)}
       />
+
+      {/* Lightbox pour afficher les images en grand */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button
+            type="button"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={previewImage}
+            alt="Document en grand"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -61,26 +61,24 @@ import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
 import ProprietaireLocatairePage from "./pages/locataire/Proprietaire";
 import OwnerForgotPassword from "./pages/owner/ForgotPassword";
 import OwnerResetPassword from "./pages/owner/ResetPassword";
-import StatsVues from "./pages/owner/StatsVues";
 import AdminSignalements from "./pages/admin/Signalements";
 import AdminSignalementDetail from "./pages/admin/SignalementDetail";
 import AdminTransactions from "./pages/admin/TransactionsAdmin";
 import AdminPromotions from "./pages/admin/PromotionsAdmin";
 import AdminFormulesPremium from "./pages/admin/FormulesPremium";
-import AdminStatsRevenus from "./pages/admin/StatsRevenus";
 import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
 
 const queryClient = new QueryClient();
 
 // Layout pour les pages publiques avec Navbar + Footer
 const PublicLayout = () => (
-  <>
+  <div className="overflow-x-clip">
     <Navbar />
     <main className="min-h-screen">
       <Outlet />
     </main>
     <Footer />
-  </>
+  </div>
 );
 
 const App = () => (
@@ -128,7 +126,6 @@ const App = () => (
                     <Route path="/owner/locataires" element={<LocatairesList />} />
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
-                    <Route path="/owner/stats/vues" element={<StatsVues />} />
                   </Route>
                 </Route>
 
@@ -178,7 +175,6 @@ const App = () => (
                     <Route path="transactions"            element={<AdminTransactions />} />
                     <Route path="premium/historique"      element={<AdminPromotions />} />
                     <Route path="premium/formules"        element={<AdminFormulesPremium />} />
-                    <Route path="stats/revenus"           element={<AdminStatsRevenus />} />
                     <Route path="locataires/:id/documents" element={<AdminLocataireDocuments />} />
                   </Route>
                 </Route>

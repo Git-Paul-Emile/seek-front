@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, FileText, User, Home, ExternalLink } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, FileText, User, Home, ExternalLink, X } from "lucide-react";
 import { useLocataireAvecDocuments } from "@/hooks/useSuspension";
+import { useState } from "react";
 
 const TYPE_DOC_LABELS: Record<string, string> = {
   CNI_RECTO: "CNI Recto",
@@ -20,6 +21,7 @@ export default function LocataireDocuments() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { data: result, isLoading } = useLocataireAvecDocuments(id);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const locataire = result?.data;
 
@@ -115,29 +117,50 @@ export default function LocataireDocuments() {
               <p className="text-sm text-slate-400">Aucun document</p>
             ) : (
               <div className="grid gap-3">
-                {locataire.verification.documents.map((doc) => (
-                  <a
-                    key={doc.id}
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-[#D4A843]/30 hover:bg-[#D4A843]/5 transition-colors group"
-                  >
-                    <FileText className="w-5 h-5 text-slate-400 group-hover:text-[#D4A843] shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-700 group-hover:text-[#0C1A35]">
-                        {TYPE_DOC_LABELS[doc.type] ?? doc.type}
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(doc.createdAt).toLocaleDateString("fr-FR")}
-                      </p>
+                {locataire.verification.documents.map((doc) => {
+                  const isImage = doc.url.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+                  return (
+                    <div
+                      key={doc.id}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:border-[#D4A843]/30 hover:bg-[#D4A843]/5 transition-colors group"
+                    >
+                      {isImage ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImage(doc.url)}
+                          className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-slate-200"
+                        >
+                          <img
+                            src={doc.url}
+                            alt={TYPE_DOC_LABELS[doc.type] ?? doc.type}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ) : (
+                        <FileText className="w-5 h-5 text-slate-400 group-hover:text-[#D4A843] shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-700 group-hover:text-[#0C1A35]">
+                          {TYPE_DOC_LABELS[doc.type] ?? doc.type}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(doc.createdAt).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-lg text-xs font-medium ${STATUT_COLORS[doc.statut] ?? "bg-slate-100 text-slate-500"}`}>
+                        {doc.statut}
+                      </span>
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#D4A843]" />
+                      </a>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-lg text-xs font-medium ${STATUT_COLORS[doc.statut] ?? "bg-slate-100 text-slate-500"}`}>
-                      {doc.statut}
-                    </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#D4A843]" />
-                  </a>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -174,6 +197,28 @@ export default function LocataireDocuments() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Modal pour afficher les images en grand */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            type="button"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            onClick={() => setSelectedImage(null)}
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={selectedImage}
+            alt="Document en grand"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

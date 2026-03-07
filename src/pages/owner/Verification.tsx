@@ -35,6 +35,7 @@ export default function OwnerVerification() {
   const { data: status, isLoading } = useVerificationStatus();
   const submitMutation = useSubmitVerification();
   const cancelMutation = useCancelVerification();
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const [typePiece, setTypePiece] = useState("CNI");
   const [pieceIdentiteRecto, setPieceIdentiteRecto] = useState<PhotoPreview | null>(null);
@@ -53,8 +54,13 @@ export default function OwnerVerification() {
   const pieceIdentiteVersoInputRef = useRef<HTMLInputElement>(null);
   const selfieInputRef = useRef<HTMLInputElement>(null);
 
-  // Si déjà vérifié, afficher un message de succès
+  // Si déjà vérifié, afficher les documents vérifiés
   if (!isLoading && status?.statut === "VERIFIED") {
+    const docs = status.documents;
+    const TYPE_LABEL: Record<string, string> = {
+      CNI: "Carte Nationale d'Identité",
+      PASSEPORT: "Passeport",
+    };
     return (
       <div className="space-y-6">
         {/* Breadcrumb */}
@@ -66,14 +72,87 @@ export default function OwnerVerification() {
           <span className="text-[#D4A843] font-medium">Vérification d'identité</span>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-emerald-600" />
+        {/* Badge vérifié */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex items-center gap-4">
+          <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+            <Shield className="w-7 h-7 text-emerald-600" />
           </div>
-          <h2 className="text-xl font-bold text-[#0C1A35] mb-2">Compte vérifié</h2>
-          <p className="text-slate-500 mb-6">
-            Votre identité a été vérifiée avec succès. Votre compte bénéficie du badge de confiance.
-          </p>
+          <div>
+            <h2 className="text-lg font-bold text-emerald-800">Compte vérifié</h2>
+            <p className="text-sm text-emerald-700 mt-0.5">
+              Votre identité a été vérifiée avec succès. Votre compte bénéficie du badge de confiance.
+            </p>
+            {status.verifiedAt && (
+              <p className="text-xs text-emerald-600 mt-1">
+                Vérifié le {new Date(status.verifiedAt).toLocaleDateString("fr-FR")}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Documents soumis */}
+        {docs && (
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
+            <h2 className="font-semibold text-[#0C1A35]">Documents soumis</h2>
+            <p className="text-sm text-slate-500">
+              Type de pièce : <span className="font-medium text-[#0C1A35]">{TYPE_LABEL[docs.typePiece] ?? docs.typePiece}</span>
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {docs.pieceIdentiteRecto && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    {docs.typePiece === "CNI" ? "CNI — Recto" : "Passeport — Page identité"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxImage(docs.pieceIdentiteRecto)}
+                    className="w-full block"
+                  >
+                    <img
+                      src={docs.pieceIdentiteRecto}
+                      alt="Pièce d'identité recto"
+                      className="w-full aspect-[4/3] object-cover rounded-xl border-2 border-emerald-200 hover:opacity-90 transition-opacity cursor-pointer"
+                    />
+                  </button>
+                </div>
+              )}
+              {docs.pieceIdentiteVerso && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">CNI — Verso</p>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxImage(docs.pieceIdentiteVerso)}
+                    className="w-full block"
+                  >
+                    <img
+                      src={docs.pieceIdentiteVerso}
+                      alt="Pièce d'identité verso"
+                      className="w-full aspect-[4/3] object-cover rounded-xl border-2 border-emerald-200 hover:opacity-90 transition-opacity cursor-pointer"
+                    />
+                  </button>
+                </div>
+              )}
+              {docs.selfie && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Selfie</p>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxImage(docs.selfie)}
+                    className="w-full block"
+                  >
+                    <img
+                      src={docs.selfie}
+                      alt="Selfie"
+                      className="w-full aspect-square object-cover rounded-xl border-2 border-emerald-200 hover:opacity-90 transition-opacity cursor-pointer max-w-[200px]"
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end">
           <Link
             to="/owner/dashboard"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D4A843] hover:bg-[#D4A843]/90 text-white rounded-xl text-sm font-semibold transition-colors"
@@ -81,6 +160,28 @@ export default function OwnerVerification() {
             Retour au dashboard
           </Link>
         </div>
+
+        {/* Lightbox pour afficher les images en grand */}
+        {lightboxImage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={() => setLightboxImage(null)}
+          >
+            <button
+              type="button"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              onClick={() => setLightboxImage(null)}
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={lightboxImage}
+              alt="Document en grand"
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
       </div>
     );
   }

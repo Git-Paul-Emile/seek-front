@@ -17,6 +17,7 @@ import {
   mettreEnRenouvellementApi,
   archiverBailApi,
   getBailAArchiverApi,
+  getHistoriqueBailsApi,
   prolongerEcheancesAnneeApi,
   type CreateBailPayload,
   type PayerEcheancePayload,
@@ -199,6 +200,14 @@ export const usePayerMoisMultiples = () => {
 };
 
 // ─── Fin de bail ──────────────────────────────────────────────────────────────
+
+export const useHistoriqueBails = (bienId: string) =>
+  useQuery({
+    queryKey: [QK + "_historique", bienId],
+    queryFn: () => getHistoriqueBailsApi(bienId),
+    enabled: !!bienId,
+    staleTime: 2 * 60 * 1000,
+  });
 
 export const useBailAArchiver = (bienId: string) =>
   useQuery({

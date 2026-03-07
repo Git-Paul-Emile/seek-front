@@ -21,13 +21,13 @@ const CategoriesSection = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex gap-4">
+          <div className="flex gap-4 overflow-x-hidden">
             {Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="flex-shrink-0 w-36 h-44 rounded-2xl bg-slate-200 animate-pulse" />
             ))}
           </div>
         ) : (
-          <Carousel opts={{ align: "start" }} className="w-full">
+          <Carousel opts={{ align: "start" }} className="w-full overflow-x-clip">
             <CarouselContent className="-ml-4">
               {types.map((type) => (
                 <CarouselItem key={type.id} className="pl-4 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-[14.285%]">
@@ -35,8 +35,8 @@ const CategoriesSection = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-0 -translate-x-1/2" />
-            <CarouselNext className="right-0 translate-x-1/2" />
+            <CarouselPrevious className="left-2" />
+            <CarouselNext className="right-2" />
           </Carousel>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -33,9 +33,16 @@ const PropertiesSection = () => {
   // Filtrer les dernières annonces pour exclure celles qui sont mises en avant
   const miseEnAvantIds = new Set(annoncesMiseEnAvant.map(b => b.id));
   const annoncesNormales = dernieresAnnonces.filter(b => !miseEnAvantIds.has(b.id));
-  
-  // Toutes les dernières annonces (pour le fallback)
-  const toutesAnnonces = dernieresAnnonces;
+
+  // Tri côté client sur les annonces à afficher dans la grille
+  const sortedBiens = useMemo(() => {
+    const base = hasPremium ? annoncesNormales : dernieresAnnonces;
+    const arr = [...base];
+    if (sort === "oldest")     return arr.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    if (sort === "price-asc")  return arr.sort((a, b) => (a.prix ?? 0) - (b.prix ?? 0));
+    if (sort === "price-desc") return arr.sort((a, b) => (b.prix ?? 0) - (a.prix ?? 0));
+    return arr; // "recent" — ordre API par défaut (déjà trié par date desc)
+  }, [hasPremium, annoncesNormales, dernieresAnnonces, sort]);
 
   return (
     <section className="py-16 bg-white">
@@ -139,11 +146,11 @@ const PropertiesSection = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {toutesAnnonces.map((property) => (
-                <PropertyCard 
-                  key={property.id} 
-                  property={property} 
-                  isApiData={true} 
+              {sortedBiens.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  isApiData={true}
                 />
               ))}
             </div>

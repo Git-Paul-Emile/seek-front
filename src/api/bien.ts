@@ -134,6 +134,8 @@ export interface Bien {
   nombreAnnoncesProprietaire?: number;
   // Vues
   nbVues?: number;
+  // Distance calculée (mode recherche par proximité)
+  distance?: number;
 }
 
 // ─── Payloads ─────────────────────────────────────────────────────────────────
@@ -369,6 +371,10 @@ export interface RechercheParams {
   sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
+  // Recherche par proximité
+  lat?: number;
+  lng?: number;
+  radius?: number; // km (1 | 3 | 5 | 10)
 }
 
 export interface RechercheResult {

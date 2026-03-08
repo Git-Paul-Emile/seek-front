@@ -3,7 +3,7 @@ import type { Category } from "@/data/home";
 
 const CategoryCard = ({ category }: { category: Category }) => (
   <Link
-    to={`/search?type=${category.id}`}
+    to={`/annonces?typeLogement=${category.id}`}
     className="group flex flex-col overflow-hidden bg-white rounded-2xl border border-slate-100 hover:border-[#0C1A35]/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
   >
     <div className="h-28 overflow-hidden">

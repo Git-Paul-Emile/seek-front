@@ -162,6 +162,13 @@ const RecherchePage = () => {
   const sp = searchParams;
   const sortParams = sortToParams((sp.get("sort") as SortKey) ?? "recent");
 
+  // Mode proximité
+  const proximityLat    = sp.get("lat")        ? Number(sp.get("lat"))  : undefined;
+  const proximityLng    = sp.get("lng")        ? Number(sp.get("lng"))  : undefined;
+  const proximityLabel  = sp.get("pointLabel") ?? undefined;
+  const proximityRadius = sp.get("radius")     ? Number(sp.get("radius")) : 5;
+  const isProximityMode = proximityLat !== undefined && proximityLng !== undefined;
+
   const activeParams = {
     quartier:        sp.get("quartier")        || undefined,
     typeLogement:    sp.get("typeLogement")    || undefined,
@@ -173,10 +180,13 @@ const RecherchePage = () => {
     surfaceMax: sp.get("surfaceMax") ? Number(sp.get("surfaceMax")) : undefined,
     meuble:     sp.get("meuble")  === "1" ? "1" as const : undefined,
     parking:    sp.get("parking") === "1" ? "1" as const : undefined,
-    sortBy:    sortParams.sortBy,
-    sortOrder: sortParams.sortOrder,
+    sortBy:    isProximityMode ? undefined : sortParams.sortBy,
+    sortOrder: isProximityMode ? undefined : sortParams.sortOrder,
     page:  parseInt(sp.get("page") ?? "1"),
     limit: 12,
+    lat:    proximityLat,
+    lng:    proximityLng,
+    radius: isProximityMode ? proximityRadius : undefined,
   };
 
   const { data, isLoading, isFetching } = useRecherchePublique(activeParams);
@@ -202,20 +212,34 @@ const RecherchePage = () => {
     setParking(searchParams.get("parking") === "1");
   }, [searchParams]);
 
-  const buildParams = (overridePage?: number, overrideSort?: SortKey) => {
-    const s = overrideSort ?? sort;
+  const buildParams = (
+    overridePage?: number,
+    overrideSort?: SortKey,
+    overrides?: { quartier?: string; typeLogement?: string; typeTransaction?: string }
+  ) => {
+    const s  = overrideSort ?? sort;
+    const q  = overrides?.quartier        !== undefined ? overrides.quartier        : quartier;
+    const tl = overrides?.typeLogement    !== undefined ? overrides.typeLogement    : typeLogement;
+    const tt = overrides?.typeTransaction !== undefined ? overrides.typeTransaction : typeTransaction;
     const next = new URLSearchParams();
-    if (quartier)        next.set("quartier",        quartier);
-    if (typeLogement)    next.set("typeLogement",    typeLogement);
-    if (typeTransaction) next.set("typeTransaction", typeTransaction);
-    if (prixMin)         next.set("prixMin",         prixMin);
-    if (prixMax)         next.set("prixMax",         prixMax);
-    if (chambres)        next.set("chambres",        chambres);
-    if (surfaceMin)      next.set("surfaceMin",      surfaceMin);
-    if (surfaceMax)      next.set("surfaceMax",      surfaceMax);
-    if (meuble)          next.set("meuble",          "1");
-    if (parking)         next.set("parking",         "1");
-    if (s !== "recent")  next.set("sort",            s);
+    if (q)              next.set("quartier",        q);
+    if (tl)             next.set("typeLogement",    tl);
+    if (tt)             next.set("typeTransaction", tt);
+    if (prixMin)        next.set("prixMin",         prixMin);
+    if (prixMax)        next.set("prixMax",         prixMax);
+    if (chambres)       next.set("chambres",        chambres);
+    if (surfaceMin)     next.set("surfaceMin",      surfaceMin);
+    if (surfaceMax)     next.set("surfaceMax",      surfaceMax);
+    if (meuble)         next.set("meuble",          "1");
+    if (parking)        next.set("parking",         "1");
+    if (s !== "recent") next.set("sort",            s);
+    // Conserver les params de proximité s'ils sont actifs
+    if (isProximityMode) {
+      if (proximityLat)    next.set("lat",        String(proximityLat));
+      if (proximityLng)    next.set("lng",        String(proximityLng));
+      if (proximityLabel)  next.set("pointLabel", proximityLabel);
+      next.set("radius", String(proximityRadius));
+    }
     next.set("page", String(overridePage ?? 1));
     return next;
   };
@@ -231,7 +255,7 @@ const RecherchePage = () => {
     setQuartier(""); setTypeLogement(""); setTypeTransaction(""); setSort("recent");
     setPrixMin(""); setPrixMax(""); setChambres(""); setSurfaceMin(""); setSurfaceMax("");
     setMeuble(false); setParking(false);
-    setSearchParams({ page: "1" });
+    setSearchParams({ page: "1" }); // supprime aussi lat/lng/pointLabel
   };
 
   const removeFilter = (key: string) => {
@@ -252,6 +276,21 @@ const RecherchePage = () => {
   // ── Chips ──
   interface Chip { label: string; onRemove: () => void }
   const chips: Chip[] = [];
+
+  // Chip mode proximité
+  if (isProximityMode) {
+    const shortLabel = proximityLabel ? proximityLabel.split(",")[0] : "Point sélectionné";
+    chips.push({
+      label: `Proximité : ${shortLabel} (${proximityRadius} km)`,
+      onRemove: () => {
+        const next = new URLSearchParams(searchParams);
+        next.delete("lat"); next.delete("lng"); next.delete("pointLabel");
+        next.set("page", "1");
+        setSearchParams(next);
+      },
+    });
+  }
+
   if (sp.get("quartier"))
     chips.push({ label: sp.get("quartier")!, onRemove: () => removeFilter("quartier") });
   if (sp.get("typeLogement"))
@@ -302,7 +341,10 @@ const RecherchePage = () => {
             <div className="flex-1 min-w-48">
               <SearchableSelect
                 value={quartier}
-                onChange={setQuartier}
+                onChange={(val) => {
+                  setQuartier(val);
+                  setSearchParams(buildParams(1, undefined, { quartier: val }));
+                }}
                 options={lieuOptions}
                 placeholder="Quartier ou ville…"
                 searchPlaceholder="Rechercher un lieu…"
@@ -313,7 +355,10 @@ const RecherchePage = () => {
             <div className="w-full sm:w-48">
               <SearchableSelect
                 value={typeLogement}
-                onChange={setTypeLogement}
+                onChange={(val) => {
+                  setTypeLogement(val);
+                  setSearchParams(buildParams(1, undefined, { typeLogement: val }));
+                }}
                 options={typeLogementOptions}
                 placeholder="Tous les types"
                 searchPlaceholder="Rechercher un type…"
@@ -324,7 +369,10 @@ const RecherchePage = () => {
             <div className="w-full sm:w-40">
               <SearchableSelect
                 value={typeTransaction}
-                onChange={setTypeTransaction}
+                onChange={(val) => {
+                  setTypeTransaction(val);
+                  setSearchParams(buildParams(1, undefined, { typeTransaction: val }));
+                }}
                 options={typeTransactionOptions}
                 placeholder="Vente & Location"
                 searchPlaceholder="Rechercher…"
@@ -332,20 +380,46 @@ const RecherchePage = () => {
               />
             </div>
 
-            <div className="relative w-full sm:w-44">
-              <select
-                value={sort}
-                onChange={(e) => applySort(e.target.value as SortKey)}
-                className="w-full h-11 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-8 focus:outline-none focus:border-white/40 cursor-pointer"
-              >
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value} className="bg-[#0C1A35] text-white">
-                    {o.label}
-                  </option>
+            {!isProximityMode && (
+              <div className="relative w-full sm:w-44">
+                <select
+                  value={sort}
+                  onChange={(e) => applySort(e.target.value as SortKey)}
+                  className="w-full h-11 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-8 focus:outline-none focus:border-white/40 cursor-pointer"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} className="bg-[#0C1A35] text-white">
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+              </div>
+            )}
+            {isProximityMode && (
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <span className="text-xs text-white/50 hidden sm:block">Rayon :</span>
+                {[1, 3, 5, 10].map((km) => (
+                  <button
+                    key={km}
+                    type="button"
+                    onClick={() => {
+                      const next = new URLSearchParams(searchParams);
+                      next.set("radius", String(km));
+                      next.set("page", "1");
+                      setSearchParams(next);
+                    }}
+                    className={`h-9 px-2.5 rounded-lg text-xs font-medium border transition-colors flex-shrink-0 ${
+                      proximityRadius === km
+                        ? "bg-[#D4A843] border-[#D4A843] text-white"
+                        : "bg-white/10 border-white/20 text-white/70 hover:bg-white/20 hover:text-white"
+                    }`}
+                  >
+                    {km} km
+                  </button>
                 ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
-            </div>
+              </div>
+            )}
 
             <button
               onClick={() => setShowAdvanced(prev => !prev)}
@@ -486,9 +560,11 @@ const RecherchePage = () => {
                 <>
                   <span className="text-[#D4A843]">{total}</span>{" "}
                   {total === 1 ? "annonce" : "annonces"}
-                  {sp.get("quartier") && (
+                  {isProximityMode && proximityLabel ? (
+                    <span className="font-normal text-slate-500"> proches de {proximityLabel.split(",")[0]}</span>
+                  ) : sp.get("quartier") ? (
                     <span className="font-normal text-slate-500"> à {sp.get("quartier")}</span>
-                  )}
+                  ) : null}
                 </>
               )}
             </h1>
@@ -579,7 +655,17 @@ const RecherchePage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {items.map((bien) => (
-              <PropertyCard key={bien.id} property={bien} isApiData />
+              <div key={bien.id} className="relative">
+                {isProximityMode && bien.distance !== undefined && (
+                  <div className="absolute top-2 left-2 z-10 bg-[#0C1A35]/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow">
+                    <MapPin className="w-3 h-3 text-[#D4A843]" />
+                    {bien.distance < 1
+                      ? `${Math.round(bien.distance * 1000)} m`
+                      : `${bien.distance.toFixed(1)} km`}
+                  </div>
+                )}
+                <PropertyCard property={bien} isApiData />
+              </div>
             ))}
           </div>
         )}

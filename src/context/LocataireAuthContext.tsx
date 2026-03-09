@@ -26,6 +26,14 @@ interface LocataireAuthContextValue extends LocataireAuthState {
   logout: () => Promise<void>;
 }
 
+// ─── Constantes ───────────────────────────────────────────────────────────────
+
+// Pages publiques : pas d'appel /me (évite l'interférence avec le flow login)
+const PUBLIC_LOCATAIRE_PATHS = ["/locataire/login", "/locataire/activer"];
+
+const isPublicLocatairePage = (pathname: string) =>
+  PUBLIC_LOCATAIRE_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+
 // ─── Contexte ─────────────────────────────────────────────────────────────────
 
 const LocataireAuthContext = createContext<LocataireAuthContextValue | null>(null);
@@ -37,9 +45,9 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { pathname } = useLocation();
 
-  // Restaurer la session au montage
+  // Restaurer la session au montage / changement de route
   useEffect(() => {
-    if (!pathname.startsWith("/locataire")) {
+    if (!pathname.startsWith("/locataire") || isPublicLocatairePage(pathname)) {
       setLocataire(null);
       setIsLoading(false);
       return;

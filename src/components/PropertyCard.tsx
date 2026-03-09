@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, BadgeCheck, Star, TrendingDown } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
@@ -117,7 +117,6 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           {/* Badge Nouveau */}
           {displayProperty.isNew && (
             <div className="bg-[#D4A843] text-[#0C1A35] text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
-              <Star className="w-3 h-3" />
               Nouveau
             </div>
           )}
@@ -125,7 +124,6 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           {/* Badge Mis en avant / Premium */}
           {(isApiData && estMisEnAvant) ? (
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
-              <Star className="w-3 h-3" />
               Coup de cœur
             </div>
           ) : null}
@@ -169,7 +167,6 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         {isApiData && isProprietaireVerified && (
           <div className="flex items-center gap-2 mb-3">
             <div className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1">
-              <BadgeCheck className="w-3 h-3" />
               Vérifié
             </div>
           </div>

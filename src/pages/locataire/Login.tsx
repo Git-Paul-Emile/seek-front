@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Building2, Phone, Lock, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
-import { loginLocataireApi, meLocataireApi } from "@/api/locataireAuth";
+import { loginLocataireApi } from "@/api/locataireAuth";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 // ─── Helpers UI ────────────────────────────────────────────────────────────────
@@ -30,8 +30,7 @@ export default function LocataireLogin() {
     }
     setIsSubmitting(true);
     try {
-      await loginLocataireApi(form);
-      const locataire = await meLocataireApi();
+      const { locataire } = await loginLocataireApi(form);
       setLocataire(locataire);
       navigate("/locataire/dashboard");
     } catch (err: unknown) {
@@ -128,6 +127,16 @@ export default function LocataireLogin() {
                   <p className="text-sm text-red-300 leading-snug">{error}</p>
                 </div>
               )}
+
+              {/* Mot de passe oublié */}
+              <div className="flex justify-end -mt-1">
+                <Link
+                  to="/locataire/forgot-password"
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
 
               {/* Submit */}
               <div className="pt-1">

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { TypePieceIdentite } from "./locataire";
+import type { TypePieceIdentite, Locataire } from "./locataire";
 import type { Echeance } from "./bail";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -121,14 +121,14 @@ export interface UpdateProfilLocatairePayload {
 
 export const activerLocataireApi = async (
   payload: ActiverPayload
-): Promise<{ locataire: LocataireInfo }> => {
+): Promise<{ locataire: Locataire }> => {
   const { data } = await api.post("/activer", payload);
   return data.data;
 };
 
 export const loginLocataireApi = async (
   payload: LoginLocatairePayload
-): Promise<{ locataire: LocataireInfo }> => {
+): Promise<{ locataire: Locataire }> => {
   const { data } = await api.post("/login", payload);
   return data.data;
 };
@@ -308,4 +308,14 @@ export interface ProprietaireLocataireData {
 export const getProprietaireLocataireApi = async (): Promise<ProprietaireLocataireData | null> => {
   const { data } = await api.get("/proprietaire");
   return data.data;
+};
+
+// ─── Mot de passe oublié / réinitialisation ───────────────────────────────────
+
+export const forgotPasswordLocataireApi = async (identifiant: string): Promise<void> => {
+  await api.post("/forgot-password", { identifiant });
+};
+
+export const resetPasswordLocataireApi = async (token: string, password: string): Promise<void> => {
+  await api.post("/reset-password", { token, password });
 };

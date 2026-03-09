@@ -55,6 +55,8 @@ import AddLocataire from "./pages/owner/locataires/AddLocataire";
 import LocataireDetail from "./pages/owner/locataires/LocataireDetail";
 import LocataireActivate from "./pages/locataire/Activate";
 import LocataireLogin from "./pages/locataire/Login";
+import LocataireForgotPassword from "./pages/locataire/ForgotPassword";
+import LocataireResetPassword from "./pages/locataire/ResetPassword";
 import LocataireDashboard from "./pages/locataire/Dashboard";
 import LocataireProfil from "./pages/locataire/Profil";
 import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
@@ -129,12 +131,14 @@ const App = () => (
                   </Route>
                 </Route>
 
-                {/* Locataire — activation (publique, token dans URL) */}
+                {/* Locataire — pages publiques */}
                 <Route path="/locataire/activer" element={<LocataireActivate />} />
+                <Route path="/locataire/reset-password" element={<LocataireResetPassword />} />
 
                 {/* Locataire — inaccessible si déjà connecté */}
                 <Route element={<LocataireGuestRoute />}>
                   <Route path="/locataire/login" element={<LocataireLogin />} />
+                  <Route path="/locataire/forgot-password" element={<LocataireForgotPassword />} />
                 </Route>
 
                 {/* Locataire — protégées */}

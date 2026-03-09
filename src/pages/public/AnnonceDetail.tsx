@@ -46,12 +46,17 @@ import {
   Search,
   Home,
   TrendingDown,
+  Bell,
+  Send,
+  MessageCircle,
+  Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PropertyCard from "@/components/PropertyCard";
 import CarteBienDetail from "@/components/carte/CarteBienDetail";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -301,13 +306,221 @@ function ReportModal({
   );
 }
 
+// ─── Formulaire inline du panneau génie ──────────────────────────────────────
+
+function AlertPanelForm({ bienId, onClose }: { bienId: string; onClose: () => void }) {
+  const [motif, setMotif] = useState("");
+  const [description, setDescription] = useState("");
+  const queryClient = useQueryClient();
+
+  const reportMutation = useMutation({
+    mutationFn: (payload: SignalerAnnoncePayload) => signalerAnnonce(bienId, payload),
+    onSuccess: () => {
+      toast.success("Signalement enregistré. Merci de votre vigilance.");
+      queryClient.invalidateQueries({ queryKey: ["annonce-publie", bienId] });
+      onClose();
+    },
+    onError: () => {
+      toast.error("Erreur lors du signalement. Veuillez réessayer.");
+    },
+  });
+
+  return (
+    <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+      <p className="text-xs text-slate-500">
+        Notre équipe examinera votre signalement dans les plus brefs délais.
+      </p>
+
+      <div className="space-y-1.5">
+        {MOTIFS_SIGNALEMENT.map((m) => (
+          <label
+            key={m.value}
+            className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
+              motif === m.value
+                ? "border-[#D4A843] bg-[#D4A843]/5"
+                : "border-slate-200 hover:border-slate-300"
+            }`}
+          >
+            <input
+              type="radio"
+              name="motif-panel"
+              value={m.value}
+              checked={motif === m.value}
+              onChange={(e) => setMotif(e.target.value)}
+              className="sr-only"
+            />
+            <div
+              className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                motif === m.value ? "border-[#D4A843]" : "border-slate-300"
+              }`}
+            >
+              {motif === m.value && <div className="w-1.5 h-1.5 rounded-full bg-[#D4A843]" />}
+            </div>
+            <span className="text-xs text-[#0C1A35]">{m.label}</span>
+          </label>
+        ))}
+      </div>
+
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={2}
+        placeholder="Décrivez le problème (facultatif)…"
+        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition resize-none"
+      />
+
+      <button
+        onClick={() => {
+          if (!motif) { toast.error("Sélectionnez un motif"); return; }
+          reportMutation.mutate({ motif, description });
+        }}
+        disabled={reportMutation.isPending || !motif}
+        className="w-full h-9 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {reportMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+        Envoyer le signalement
+      </button>
+    </div>
+  );
+}
+
+// ─── Modal Demande de visite ──────────────────────────────────────────────────
+
+function DemandeVisiteModal({
+  bien,
+  onClose,
+}: {
+  bien: { titre?: string; proprietaire?: { email?: string | null; telephone?: string | null } | null };
+  onClose: () => void;
+}) {
+  const [nom, setNom] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState(
+    "Bonjour, je suis intéressé(e) par ce bien. Est-il possible de programmer une visite ? Merci."
+  );
+
+  const handleSubmit = () => {
+    if (!nom.trim() || !telephone.trim()) {
+      toast.error("Veuillez remplir le nom et le numéro de téléphone");
+      return;
+    }
+    if (bien.proprietaire?.email) {
+      const subject = encodeURIComponent(`Demande de visite - ${bien.titre ?? "bien"}`);
+      const body = encodeURIComponent(
+        `Nom : ${nom}\nTéléphone : ${telephone}${email ? `\nEmail : ${email}` : ""}\n\n${message}`
+      );
+      window.open(`mailto:${bien.proprietaire.email}?subject=${subject}&body=${body}`, "_blank");
+    }
+    toast.success("Votre demande de visite a été envoyée !");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[#0C1A35]/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold text-[#0C1A35] flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-[#D4A843]" />
+            Email
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium text-slate-500">
+              Nom complet <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              placeholder="Votre nom"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500">
+              Téléphone <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value)}
+              placeholder="+221 XX XXX XX XX"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="votre@email.com"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500">Message</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={4}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={onClose}
+            className="flex-1 h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="flex-1 h-10 rounded-xl bg-[#D4A843] hover:bg-[#C49830] text-white text-sm font-semibold shadow-sm transition-all flex items-center justify-center gap-2"
+          >
+            <Send className="w-4 h-4" />
+            Envoyer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page principale ─────────────────────────────────────────────────────────
 
 export default function AnnonceDetail() {
   const { id } = useParams<{ id: string }>();
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showVisiteModal, setShowVisiteModal] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [showAlertPanel, setShowAlertPanel] = useState(false);
+  const [alertClosing, setAlertClosing] = useState(false);
+
+  const openAlertPanel = () => {
+    setAlertClosing(false);
+    setShowAlertPanel(true);
+  };
+  const closeAlertPanel = () => {
+    setAlertClosing(true);
+    setTimeout(() => {
+      setShowAlertPanel(false);
+      setAlertClosing(false);
+    }, 350);
+  };
 
   // Smooth scroll vers le haut au montage
   useEffect(() => {
@@ -414,13 +627,7 @@ export default function AnnonceDetail() {
       <div className="bg-white border-b border-slate-100 sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link
-              to="/"
-              className="flex items-center gap-2 text-slate-600 hover:text-[#0C1A35] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm font-medium">Retour</span>
-            </Link>
+            <div />
             <div className="flex items-center gap-2">
               </div>
           </div>
@@ -679,7 +886,6 @@ export default function AnnonceDetail() {
                           key={e.equipementId}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700"
                         >
-                          <BadgeCheck className="w-4 h-4 text-slate-400" />
                           {e.equipement.nom}
                         </span>
                       ))}
@@ -699,7 +905,6 @@ export default function AnnonceDetail() {
                           key={m.meubleId}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700"
                         >
-                          <Sofa className="w-4 h-4 text-slate-400" />
                           {m.meuble.nom} × {m.quantite}
                         </span>
                       ))}
@@ -789,7 +994,6 @@ export default function AnnonceDetail() {
                 {/* Nombre d'annonces du propriétaire */}
                 {bien.nombreAnnoncesProprietaire !== undefined && bien.nombreAnnoncesProprietaire > 0 && (
                   <div className="flex items-center gap-2 mb-5 px-3 py-2 rounded-lg bg-slate-50">
-                    <Building2 className="w-4 h-4 text-[#D4A843]" />
                     <span className="text-sm text-slate-600">
                       <span className="font-semibold text-[#0C1A35]">{bien.nombreAnnoncesProprietaire}</span> {bien.nombreAnnoncesProprietaire === 1 ? 'annonce' : 'annonces'} {bien.nombreAnnoncesProprietaire === 1 ? 'publiée' : 'publiées'} sur Seek
                     </span>
@@ -807,16 +1011,29 @@ export default function AnnonceDetail() {
                   </a>
                 )}
 
-                {/* Email */}
-                {bien.proprietaire?.email && (
+                {/* WhatsApp */}
+                {bien.proprietaire?.telephone && (
                   <a
-                    href={`mailto:${bien.proprietaire.email}`}
-                    className="flex items-center justify-center gap-2 w-full h-12 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+                    href={`https://wa.me/${bien.proprietaire.telephone.replace(/\D/g, "")}?text=${encodeURIComponent(`Bonjour, je vous contacte pour l'annonce "${bien.titre}". Est-il possible d'organiser une visite ?`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-[#25D366] text-white font-medium hover:bg-[#1EBE57] transition-colors mb-3"
                   >
-                    <Mail className="w-4 h-4" />
-                    Envoyer un email
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    WhatsApp
                   </a>
                 )}
+
+                {/* Demander une visite */}
+                <button
+                  onClick={() => setShowVisiteModal(true)}
+                  className="flex items-center justify-center gap-2 w-full h-12 rounded-xl border-2 border-[#D4A843] text-[#D4A843] font-medium hover:bg-[#D4A843]/5 transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  Email
+                </button>
               </div>
 
               {/* Pricing Details */}
@@ -871,14 +1088,6 @@ export default function AnnonceDetail() {
                 </div>
               </div>
 
-              {/* Report Button */}
-              <button
-                onClick={() => setShowReportModal(true)}
-                className="flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors"
-              >
-                <Flag className="w-4 h-4" />
-                Signaler cette annonce
-              </button>
             </div>
           </div>
         </div>
@@ -929,6 +1138,11 @@ export default function AnnonceDetail() {
         <ReportModal bienId={bien.id} onClose={() => setShowReportModal(false)} />
       )}
 
+      {/* Demande de visite Modal */}
+      {showVisiteModal && bien && (
+        <DemandeVisiteModal bien={bien} onClose={() => setShowVisiteModal(false)} />
+      )}
+
       {/* Similar Announcements Section */}
       {similaires && similaires.length > 0 && (
         <div className="container mx-auto px-4 py-8">
@@ -944,6 +1158,66 @@ export default function AnnonceDetail() {
           </div>
         </div>
       )}
+
+      {/* Scroll to top button */}
+      <ScrollToTop />
+
+      {/* ── Floating Alert Button (Lampe du génie) ─────────────────────────── */}
+      <style>{`
+        @keyframes genieOut {
+          0%   { transform: scale(0.05) translate(40px, 40px); opacity: 0; }
+          45%  { transform: scale(1.04) translate(-3px, -3px); opacity: 1; }
+          65%  { transform: scale(0.97) translate(1px, 1px); }
+          80%  { transform: scale(1.01) translate(-1px, -1px); }
+          100% { transform: scale(1) translate(0, 0); opacity: 1; }
+        }
+        @keyframes genieIn {
+          0%   { transform: scale(1) translate(0, 0); opacity: 1; }
+          100% { transform: scale(0.05) translate(40px, 40px); opacity: 0; }
+        }
+        @keyframes lampPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+          50%       { box-shadow: 0 0 0 12px rgba(239,68,68,0); }
+        }
+        .genie-panel-open  { animation: genieOut 0.45s cubic-bezier(0.34, 1.3, 0.64, 1) forwards; transform-origin: bottom right; }
+        .genie-panel-close { animation: genieIn  0.32s cubic-bezier(0.36, 0, 0.66, 0) forwards; transform-origin: bottom right; }
+        .lamp-btn { animation: lampPulse 2.4s ease-in-out infinite; }
+      `}</style>
+
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        {/* Panel génie */}
+        {showAlertPanel && (
+          <div
+            className={`w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden ${alertClosing ? "genie-panel-close" : "genie-panel-open"}`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-[#0C1A35] to-[#1A2942]">
+              <h2 className="font-display text-sm font-bold text-white flex items-center gap-2">
+                <Flag className="w-4 h-4 text-[#D4A843]" />
+                Signaler cette annonce
+              </h2>
+              <button
+                onClick={closeAlertPanel}
+                className="p-1.5 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <AlertPanelForm bienId={bien.id} onClose={closeAlertPanel} />
+          </div>
+        )}
+
+        {/* Bouton lampe */}
+        <button
+          onClick={showAlertPanel ? closeAlertPanel : openAlertPanel}
+          title="Signaler cette annonce"
+          className={`lamp-btn w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform duration-150 ${showAlertPanel ? "rotate-12 bg-red-600" : "bg-red-500"}`}
+        >
+          <Megaphone className="w-6 h-6 text-white" />
+        </button>
+      </div>
 
       {/* No Similar Announcements Message */}
       {(!similaires || similaires.length === 0) && (

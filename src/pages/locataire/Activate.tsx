@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Building2, KeyRound, CheckCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { activerLocataireApi, meLocataireApi } from "@/api/locataireAuth";
+import { activerLocataireApi } from "@/api/locataireAuth";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { toast } from "sonner";
 import type { TypePieceIdentite } from "@/api/locataire";
@@ -128,7 +128,7 @@ export default function LocataireActivate() {
 
     setIsSubmitting(true);
     try {
-      await activerLocataireApi({
+      const { locataire } = await activerLocataireApi({
         token,
         password: form.password,
         dateNaissance: form.dateNaissance || null,
@@ -142,7 +142,6 @@ export default function LocataireActivate() {
         autoriteDelivrance: form.autoriteDelivrance || null,
         situationProfessionnelle: form.situationProfessionnelle || null,
       });
-      const locataire = await meLocataireApi();
       setLocataire(locataire);
       setSuccess(true);
     } catch (err: unknown) {

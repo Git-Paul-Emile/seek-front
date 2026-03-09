@@ -310,6 +310,56 @@ export const getProprietaireLocataireApi = async (): Promise<ProprietaireLocatai
   return data.data;
 };
 
+// ─── Historique logements ─────────────────────────────────────────────────────
+
+export interface BailHistorique {
+  id: string;
+  statut: string;
+  dateDebutBail: string;
+  dateFinBail: string | null;
+  montantLoyer: number;
+  montantCaution: number | null;
+  cautionVersee: boolean;
+  bien: {
+    id: string;
+    titre: string | null;
+    adresse: string | null;
+    ville: string | null;
+    region: string | null;
+    pays: string | null;
+    photos: string[];
+    typeLogement: { nom: string } | null;
+    typeTransaction: { nom: string; slug: string } | null;
+  };
+  stats: {
+    total: number;
+    payes: number;
+    montantTotal: number;
+    montantPaye: number;
+  };
+}
+
+export const getLocataireHistoriqueApi = async (): Promise<BailHistorique[]> => {
+  const { data } = await api.get("/historique");
+  return data.data;
+};
+
+// ─── Documents du bien ────────────────────────────────────────────────────────
+
+export interface DocumentBienLocataire {
+  id: string;
+  nom: string;
+  type: string;
+  url: string;
+  taille: number | null;
+  createdAt: string;
+}
+
+export const getLocataireDocumentsBienApi = async (): Promise<DocumentBienLocataire[]> => {
+  const { data } = await api.get("/documents");
+  return data.data;
+};
+
 // ─── Mot de passe oublié / réinitialisation ───────────────────────────────────
 
 export const forgotPasswordLocataireApi = async (identifiant: string): Promise<void> => {

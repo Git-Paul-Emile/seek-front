@@ -63,6 +63,8 @@ import LocataireDashboard from "./pages/locataire/Dashboard";
 import LocataireProfil from "./pages/locataire/Profil";
 import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
 import ProprietaireLocatairePage from "./pages/locataire/Proprietaire";
+import HistoriqueLogement from "./pages/locataire/HistoriqueLogement";
+import DocumentsBien from "./pages/locataire/DocumentsBien";
 import OwnerForgotPassword from "./pages/owner/ForgotPassword";
 import OwnerResetPassword from "./pages/owner/ResetPassword";
 import AdminSignalements from "./pages/admin/Signalements";
@@ -158,6 +160,8 @@ const App = () => (
                     <Route path="/locataire/profil" element={<LocataireProfil />} />
                     <Route path="/locataire/paiements" element={<PaiementsLocatairePage />} />
                     <Route path="/locataire/proprietaire" element={<ProprietaireLocatairePage />} />
+                    <Route path="/locataire/historique" element={<HistoriqueLogement />} />
+                    <Route path="/locataire/documents" element={<DocumentsBien />} />
                   </Route>
                 </Route>
 

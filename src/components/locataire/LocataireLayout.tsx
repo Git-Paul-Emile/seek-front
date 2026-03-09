@@ -9,15 +9,19 @@ import {
   Search,
   TrendingUp,
   UserCog,
+  History,
+  FileText,
 } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { to: "/locataire/dashboard", label: "Mon espace", icon: LayoutDashboard },
-  { to: "/locataire/paiements", label: "Mes paiements", icon: TrendingUp },
-  { to: "/locataire/proprietaire", label: "Mon propriétaire", icon: UserCog },
+  { to: "/locataire/dashboard",   label: "Mon espace",        icon: LayoutDashboard },
+  { to: "/locataire/paiements",   label: "Mes paiements",     icon: TrendingUp },
+  { to: "/locataire/historique",  label: "Mes logements",     icon: History },
+  { to: "/locataire/documents",   label: "Documents",         icon: FileText },
+  { to: "/locataire/proprietaire",label: "Mon propriétaire",  icon: UserCog },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { Flag, Search, Eye, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { useSignalementsAdmin } from "@/hooks/useSignalement";
 
@@ -41,6 +42,7 @@ export default function Signalements() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Signalements" }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0C1A35]">Signalements</h1>

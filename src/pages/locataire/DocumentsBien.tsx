@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, FileText, Download, Loader2, FolderOpen } from "lucide-react";
 import { getLocataireDocumentsBienApi, type DocumentBienLocataire } from "@/api/locataireAuth";
@@ -62,6 +63,7 @@ export default function DocumentsBien() {
 
   return (
     <div className="space-y-5 max-w-2xl">
+      <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Documents" }]} />
       {/* En-tête */}
       <div className="flex items-center gap-3">
         <Link

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { 
   Users, 
   Building2, 
@@ -285,6 +286,7 @@ export default function ProprietairesStats() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Statistiques propriétaires" }]} />
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>

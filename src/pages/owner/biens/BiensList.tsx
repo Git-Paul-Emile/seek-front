@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { Link } from "react-router-dom";
 import {
   Building2,
@@ -114,6 +115,7 @@ export default function BiensList() {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Mes biens" }]} />
       {/* Alerte de vérification */}
       <div className="mb-4">
         <VerificationAlert variant="banner" />

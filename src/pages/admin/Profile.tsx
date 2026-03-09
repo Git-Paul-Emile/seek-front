@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { updateProfileApi, meApi, changePasswordApi } from "@/api/auth";
 import { Loader2, Save, Mail, Lock, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
@@ -179,6 +180,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Mon profil" }]} />
       <div>
         <h1 className="text-2xl font-bold text-[#0C1A35]">Mon Profil</h1>
         <p className="text-slate-500 mt-1">

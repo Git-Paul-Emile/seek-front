@@ -1,18 +1,17 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
   Shield,
   Upload,
   Camera,
   Check,
   Loader2,
   AlertCircle,
-  ChevronRight,
   X,
   CreditCard,
   BookOpen,
 } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useVerificationStatus, useSubmitVerification, useCancelVerification } from "@/hooks/useVerification";
 import { uploadVerificationImageApi } from "@/api/ownerAuth";
 import { toast } from "sonner";
@@ -63,14 +62,7 @@ export default function OwnerVerification() {
     };
     return (
       <div className="space-y-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
-          <Link to="/owner/dashboard" className="flex items-center gap-1 hover:text-slate-600 transition-colors">
-            <LayoutDashboard className="w-3 h-3" /> Dashboard
-          </Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-[#D4A843] font-medium">Vérification d'identité</span>
-        </div>
+        <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Vérification d'identité" }]} />
 
         {/* Badge vérifié */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex items-center gap-4">
@@ -190,14 +182,7 @@ export default function OwnerVerification() {
   if (!isLoading && status?.statut === "PENDING") {
     return (
       <div className="space-y-6">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
-          <Link to="/owner/dashboard" className="flex items-center gap-1 hover:text-slate-600 transition-colors">
-            <LayoutDashboard className="w-3 h-3" /> Dashboard
-          </Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-[#D4A843] font-medium">Vérification d'identité</span>
-        </div>
+        <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Vérification d'identité" }]} />
 
         <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
           <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -340,14 +325,7 @@ export default function OwnerVerification() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
-        <Link to="/owner/dashboard" className="flex items-center gap-1 hover:text-slate-600 transition-colors">
-          <LayoutDashboard className="w-3 h-3" /> Dashboard
-        </Link>
-        <ChevronRight className="w-3 h-3" />
-        <span className="text-[#D4A843] font-medium">Vérification d'identité</span>
-      </div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Vérification d'identité" }]} />
 
       {/* Header */}
       <div className="mb-6">

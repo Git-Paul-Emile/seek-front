@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   UserX,
   UserCheck,
@@ -482,6 +483,7 @@ export default function UtilisateursPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Utilisateurs" }]} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

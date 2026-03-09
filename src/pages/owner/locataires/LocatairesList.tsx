@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { Link } from "react-router-dom";
 import {
   Users,
@@ -96,6 +97,7 @@ export default function LocatairesList() {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Locataires" }]} />
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

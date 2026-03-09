@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   ArrowLeft,
   Building2,
@@ -473,6 +474,7 @@ export default function AnnonceDetail() {
 
   return (
     <div className="space-y-5">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Annonces", to: "/admin/annonces" }, { label: "Détail" }]} />
       {/* En-tête */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">

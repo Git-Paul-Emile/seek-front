@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Loader2, Star, Check, X } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { toast } from "sonner";
 import {
   useAdminFormules,
@@ -188,6 +189,7 @@ export default function FormulesPremium() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Formules premium" }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0C1A35]">Formules Premium</h1>

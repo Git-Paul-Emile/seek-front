@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { Navigation, Plus, Pencil, Trash2, X, AlertCircle, Loader2, ChevronDown, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -303,6 +304,7 @@ export default function QuartiersPage() {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Géographie" }, { label: "Quartiers" }]} />
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

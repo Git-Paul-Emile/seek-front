@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   User,
   Phone,
@@ -335,6 +336,7 @@ export default function LocataireProfil() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mon profil" }]} />
       {/* En-tête */}
       <div>
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">

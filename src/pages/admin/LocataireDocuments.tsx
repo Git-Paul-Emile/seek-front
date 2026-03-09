@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { ArrowLeft, Loader2, AlertTriangle, FileText, User, Home, ExternalLink, X } from "lucide-react";
 import { useLocataireAvecDocuments } from "@/hooks/useSuspension";
 import { useState } from "react";
@@ -44,6 +45,7 @@ export default function LocataireDocuments() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Utilisateurs", to: "/admin/utilisateurs/locataires" }, { label: "Documents locataire" }]} />
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#0C1A35] transition-colors"

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Star, Loader2, TrendingUp } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useAdminHistoriquePromotions, useAdminStatsPromotions } from "@/hooks/usePremium";
 
 const STATUT_COLORS: Record<string, string> = {
@@ -29,6 +30,7 @@ export default function PromotionsAdmin() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Promotions" }]} />
       <div>
         <h1 className="text-2xl font-bold text-[#0C1A35]">Mises en avant premium</h1>
         <p className="text-sm text-slate-500 mt-0.5">Historique des promotions payantes</p>

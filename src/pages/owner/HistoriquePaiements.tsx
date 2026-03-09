@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { 
   Receipt, 
   Clock, 
@@ -137,6 +138,7 @@ export default function HistoriquePaiements() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Historique des paiements" }]} />
       {/* En-tête */}
       <div className="flex items-center gap-4">
         <div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { ArrowLeft, Flag, Loader2, AlertTriangle, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useSignalementDetail, useTraiterSignalement } from "@/hooks/useSignalement";
@@ -65,6 +66,7 @@ export default function SignalementDetail() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Signalements", to: "/admin/signalements" }, { label: "Détail" }]} />
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#0C1A35] transition-colors"

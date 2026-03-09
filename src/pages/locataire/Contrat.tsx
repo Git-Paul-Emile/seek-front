@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { FileText, Building2, Calendar, Banknote, User, Clock, CheckCircle, AlertCircle, Printer, Download } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { getLocataireContratApi, type ContratLocataireData } from "@/api/locataireAuth";
@@ -116,6 +117,7 @@ export default function LocataireContrat() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mon contrat" }]} />
       {/* En-tête */}
       <div>
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">

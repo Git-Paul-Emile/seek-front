@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   FileSearch,
   Building2,
@@ -292,6 +293,7 @@ export default function Annonces() {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Annonces" }]} />
       {/* En-tête */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">

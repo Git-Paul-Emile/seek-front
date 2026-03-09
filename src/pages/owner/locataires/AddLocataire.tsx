@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { UserPlus, ArrowLeft } from "lucide-react";
 import { useCreateLocataire } from "@/hooks/useLocataire";
 import { toast } from "sonner";
@@ -77,6 +78,7 @@ export default function AddLocataire() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Locataires", to: "/owner/locataires" }, { label: "Ajouter un locataire" }]} />
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button

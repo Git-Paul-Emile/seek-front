@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   UserX,
   UserCheck,
@@ -406,6 +407,7 @@ export default function SuspensionsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Suspensions" }]} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

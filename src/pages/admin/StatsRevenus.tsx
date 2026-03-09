@@ -1,4 +1,5 @@
 import { TrendingUp, Loader2, DollarSign, Calendar } from "lucide-react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useRevenusStats } from "@/hooks/useStats";
 
 function fmtMontant(n: number) {
@@ -18,6 +19,7 @@ export default function StatsRevenus() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Statistiques revenus" }]} />
       <div>
         <h1 className="text-2xl font-bold text-[#0C1A35]">Statistiques des revenus</h1>
         <p className="text-sm text-slate-500 mt-0.5">Vue globale des revenus de la plateforme</p>

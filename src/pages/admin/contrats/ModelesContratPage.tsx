@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   Plus, Pencil, Trash2, X, FileText, Copy, Check,
   ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
@@ -306,6 +307,7 @@ export default function ModelesContratPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Contrats" }, { label: "Modèles" }]} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

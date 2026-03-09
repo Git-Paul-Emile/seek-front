@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { Globe, Plus, Pencil, Trash2, X, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAllPaysAdmin, useCreatePays, useUpdatePays, useDeletePays } from "@/hooks/useGeo";
@@ -148,6 +149,7 @@ export default function PaysPage() {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Géographie" }, { label: "Pays" }]} />
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

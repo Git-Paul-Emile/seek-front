@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { ArrowLeft, Phone, Mail, Home, User, Loader2 } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useProprietaireLocataire } from "@/hooks/useProprietaireLocataire";
@@ -34,6 +35,7 @@ export default function ProprietaireLocatairePage() {
 
   return (
     <div className="space-y-5">
+      <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mon propriétaire" }]} />
       {/* En-tête */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">

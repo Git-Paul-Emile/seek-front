@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  LayoutDashboard, Building2, Home, BedDouble, MapPin,
+  Building2, Home, BedDouble, MapPin,
   Briefcase, Layers, Ruler, Zap, DollarSign, ImageIcon,
   Plus, X, ChevronRight, Info, Upload, Loader2, AlertCircle,
   ArrowLeftRight, CircleDot, Check, ChevronLeft, ChevronDown,
@@ -602,16 +603,7 @@ export default function AddBien() {
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
-        <Link to="/owner/dashboard" className="flex items-center gap-1 hover:text-slate-600 transition-colors">
-          <LayoutDashboard className="w-3 h-3" /> Dashboard
-        </Link>
-        <ChevronRight className="w-3 h-3" />
-        <Link to="/owner/biens" className="hover:text-slate-600 transition-colors">Mes biens</Link>
-        <ChevronRight className="w-3 h-3" />
-        <span className="text-[#D4A843] font-medium">{editId ? "Modifier le bien" : "Ajouter un bien"}</span>
-      </div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Mes biens", to: "/owner/biens" }, { label: editId ? "Modifier le bien" : "Ajouter un bien" }]} />
 
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">

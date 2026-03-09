@@ -24,6 +24,8 @@ import {
   CreditCard,
   Star,
   TrendingUp,
+  DollarSign,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -67,6 +69,15 @@ const NAV_GROUPS = [
       { to: "/admin/premium/formules",    label: "Formules premium",  icon: Star },
       { to: "/admin/premium/historique",  label: "Mises en avant",    icon: TrendingUp },
       { to: "/admin/transactions",        label: "Transactions",      icon: CreditCard },
+      { to: "/admin/stats/revenus",       label: "Stats revenus",     icon: DollarSign },
+    ],
+  },
+  {
+    label: "Contrats",
+    icon: FileText,
+    basePath: "/admin/contrats",
+    children: [
+      { to: "/admin/contrats/modeles", label: "Modèles de contrat", icon: FileText },
     ],
   },
 ];

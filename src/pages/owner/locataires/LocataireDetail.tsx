@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -241,6 +242,7 @@ export default function LocataireDetail() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Locataires", to: "/owner/locataires" }, { label: locataire ? `${locataire.prenom} ${locataire.nom}` : "Détail" }]} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

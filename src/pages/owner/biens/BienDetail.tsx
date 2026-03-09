@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -70,6 +71,7 @@ import {
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
 import PremiumPayment from "@/components/owner/PremiumPayment";
+import EtatDesLieuxSection from "@/components/owner/EtatDesLieuxSection";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
 import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
@@ -325,6 +327,7 @@ export default function BienDetail() {
 
   return (
     <div className="space-y-5">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Mes biens", to: "/owner/biens" }, { label: bien?.titre ?? "Bien" }]} />
       {/* En-tête */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -810,6 +813,12 @@ export default function BienDetail() {
           )}
 
           {/* Section Bail à archiver — bail terminé ou résilié en attente d'archivage */}
+          {isLocation && (bail || bailAArchiver) && (
+            <Section title="Etat des lieux">
+              <EtatDesLieuxSection bienId={id ?? ""} bailId={(bail?.id ?? bailAArchiver?.id ?? "")} />
+            </Section>
+          )}
+
           {isLocation && !bail && bailAArchiver && (
             <Section title="Bail en attente d'archivage">
               <div className="space-y-3">

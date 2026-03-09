@@ -65,6 +65,7 @@ import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
 import ProprietaireLocatairePage from "./pages/locataire/Proprietaire";
 import HistoriqueLogement from "./pages/locataire/HistoriqueLogement";
 import DocumentsBien from "./pages/locataire/DocumentsBien";
+import EtatsDesLieux from "./pages/locataire/EtatsDesLieux";
 import OwnerForgotPassword from "./pages/owner/ForgotPassword";
 import OwnerResetPassword from "./pages/owner/ResetPassword";
 import AdminSignalements from "./pages/admin/Signalements";
@@ -73,6 +74,10 @@ import AdminTransactions from "./pages/admin/TransactionsAdmin";
 import AdminPromotions from "./pages/admin/PromotionsAdmin";
 import AdminFormulesPremium from "./pages/admin/FormulesPremium";
 import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
+import AdminStatsRevenus from "./pages/admin/StatsRevenus";
+import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
+import StatsVues from "./pages/owner/StatsVues";
+import ContratLocataire from "./pages/locataire/Contrat";
 import FavorisPage from "./pages/public/Favoris";
 
 const queryClient = new QueryClient();
@@ -140,6 +145,7 @@ const App = () => (
                     <Route path="/owner/locataires" element={<LocatairesList />} />
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
+                    <Route path="/owner/stats/vues" element={<StatsVues />} />
                   </Route>
                 </Route>
 
@@ -162,6 +168,8 @@ const App = () => (
                     <Route path="/locataire/proprietaire" element={<ProprietaireLocatairePage />} />
                     <Route path="/locataire/historique" element={<HistoriqueLogement />} />
                     <Route path="/locataire/documents" element={<DocumentsBien />} />
+                    <Route path="/locataire/etat-des-lieux" element={<EtatsDesLieux />} />
+                    <Route path="/locataire/contrat" element={<ContratLocataire />} />
                   </Route>
                 </Route>
 
@@ -194,6 +202,8 @@ const App = () => (
                     <Route path="premium/historique"      element={<AdminPromotions />} />
                     <Route path="premium/formules"        element={<AdminFormulesPremium />} />
                     <Route path="locataires/:id/documents" element={<AdminLocataireDocuments />} />
+                    <Route path="stats/revenus"            element={<AdminStatsRevenus />} />
+                    <Route path="contrats/modeles"         element={<ModelesContratPage />} />
                   </Route>
                 </Route>
               </Routes>

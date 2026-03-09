@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -213,6 +214,7 @@ export default function StatutsBien() {
 
   return (
     <div>
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Catalogue" }, { label: "Statuts de bien" }]} />
       {/* En-tête */}
       <div className="flex items-start justify-between mb-6">
         <div>

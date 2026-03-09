@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useQuery } from "@tanstack/react-query";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { updateProfileApi, deleteProfileApi, meOwnerApi, getOwnScoreApi } from "@/api/ownerAuth";
@@ -148,6 +149,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Mon profil" }]} />
       <div>
         <h1 className="text-2xl font-bold text-[#0C1A35]">Mon Profil</h1>
         <p className="text-slate-500 mt-1">

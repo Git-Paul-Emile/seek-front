@@ -604,7 +604,7 @@ export default function AnnonceDetail() {
             </Link>
             <ChevronRight className="w-4 h-4 text-slate-300" />
             <Link
-              to="/#properties"
+              to="/annonces"
               className="text-slate-500 hover:text-[#0C1A35] transition-colors"
             >
               Annonces
@@ -613,7 +613,7 @@ export default function AnnonceDetail() {
             {bien.typeLogement && (
               <>
                 <Link
-                  to={`/biens?type=${bien.typeLogement.slug}`}
+                  to={`/annonces?typeLogement=${bien.typeLogement.slug}`}
                   className="text-slate-500 hover:text-[#0C1A35] transition-colors"
                 >
                   {bien.typeLogement.nom}

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Home, MapPin, Calendar, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
 import { getLocataireHistoriqueApi, type BailHistorique } from "@/api/locataireAuth";
@@ -107,6 +108,7 @@ export default function HistoriqueLogement() {
 
   return (
     <div className="space-y-5 max-w-3xl">
+      <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mes logements" }]} />
       {/* En-tête */}
       <div className="flex items-center gap-3">
         <Link

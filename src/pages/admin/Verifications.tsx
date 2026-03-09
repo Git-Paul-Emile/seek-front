@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 import {
   Shield,
   User,
@@ -87,6 +88,7 @@ export default function AdminVerificationsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Vérifications" }]} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">

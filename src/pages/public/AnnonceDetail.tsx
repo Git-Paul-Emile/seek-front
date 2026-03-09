@@ -59,6 +59,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PropertyCard from "@/components/PropertyCard";
 import CarteBienDetail from "@/components/carte/CarteBienDetail";
 import ScrollToTop from "@/components/ui/ScrollToTop";
+import TrustScoreCompact, { TrustScoreFull } from "@/components/ui/TrustScoreBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1027,7 +1028,7 @@ export default function AnnonceDetail() {
                 
                 {/* Owner Info */}
                 {bien.proprietaire && (
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-full bg-[#0C1A35] flex items-center justify-center shrink-0">
                       <span className="text-white text-lg font-bold">
                         {bien.proprietaire.prenom?.[0]?.toUpperCase() ?? "P"}
@@ -1039,6 +1040,13 @@ export default function AnnonceDetail() {
                       </p>
                       <p className="text-xs text-slate-400">Propriétaire</p>
                     </div>
+                  </div>
+                )}
+
+                {/* Score de confiance */}
+                {bien.scoreProprietaire && (
+                  <div className="mb-4">
+                    <TrustScoreFull score={bien.scoreProprietaire} />
                   </div>
                 )}
 

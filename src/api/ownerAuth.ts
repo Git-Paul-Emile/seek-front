@@ -130,6 +130,26 @@ export const cancelVerificationApi = () =>
     "/verification"
   );
 
+export interface OwnerTrustScore {
+  total: number;
+  details: {
+    base: number;
+    identiteVerifiee: number;
+    annoncesPubliees: number;
+    anciennete: number;
+    bailsActifs: number;
+    penalitesSignalements: number;
+  };
+  badges: ("identite_verifiee" | "hote_actif" | "anciennete_1an")[];
+  nbAnnonces: number;
+  nbBailsActifs: number;
+  moisAnciennete: number;
+  nbSignalementsNegatifs: number;
+}
+
+export const getOwnScoreApi = () =>
+  verificationApi.get<{ status: string; data: { score: OwnerTrustScore } }>("/score");
+
 export const forgotPasswordApi = (identifiant: string) =>
   ownerAuthApi.post<{ status: string; message: string }>("/forgot-password", { identifiant });
 

@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
-import { updateProfileApi, deleteProfileApi, meOwnerApi } from "@/api/ownerAuth";
+import { updateProfileApi, deleteProfileApi, meOwnerApi, getOwnScoreApi } from "@/api/ownerAuth";
 import { useVerificationStatus } from "@/hooks/useVerification";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { TrustScoreFull } from "@/components/ui/TrustScoreBadge";
 import { toast } from "sonner";
 import { Loader2, Save, Trash2, User, Mail, Phone, Lock, ChevronDown, Shield, Check, AlertCircle, Clock, Eye, CreditCard, X } from "lucide-react";
 
@@ -30,6 +32,12 @@ export default function Profile() {
   
   // Vérification d'identité
   const { data: verificationStatus, isLoading: isVerificationLoading } = useVerificationStatus();
+
+  // Score de confiance
+  const { data: scoreData } = useQuery({
+    queryKey: ["owner-trust-score"],
+    queryFn: () => getOwnScoreApi().then((r) => r.data.data.score),
+  });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -315,6 +323,16 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Score de confiance */}
+      {scoreData && (
+        <div>
+          <TrustScoreFull score={scoreData} />
+          <p className="text-xs text-slate-400 mt-2 px-1">
+            Ce score est visible par les visiteurs qui consultent vos annonces. Vérifiez votre identité pour l'améliorer.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 p-6">
         <h2 className="text-lg font-semibold text-[#0C1A35] mb-4">

@@ -132,6 +132,14 @@ export interface Bien {
   proprietaire?: { id: string; prenom: string; nom: string; telephone: string; email: string | null; statutVerification?: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED" };
   // Nombre d'annonces du propriétaire (pour affichage public)
   nombreAnnoncesProprietaire?: number;
+  // Score de confiance du propriétaire
+  scoreProprietaire?: {
+    total: number;
+    badges: ("identite_verifiee" | "hote_actif" | "anciennete_1an")[];
+    nbAnnonces: number;
+    moisAnciennete: number;
+    nbSignalementsNegatifs: number;
+  } | null;
   // Vues
   nbVues?: number;
   // Distance calculée (mode recherche par proximité)

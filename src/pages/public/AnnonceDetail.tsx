@@ -53,6 +53,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
+import { useFavoris } from "@/hooks/useFavoris";
+import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PropertyCard from "@/components/PropertyCard";
 import CarteBienDetail from "@/components/carte/CarteBienDetail";
@@ -509,6 +511,8 @@ export default function AnnonceDetail() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [showAlertPanel, setShowAlertPanel] = useState(false);
   const [alertClosing, setAlertClosing] = useState(false);
+  const { isFavori, toggleFavori, isAuthenticated } = useFavoris();
+  const { openModal } = useFavorisAuthModal();
 
   const openAlertPanel = () => {
     setAlertClosing(false);
@@ -627,9 +631,54 @@ export default function AnnonceDetail() {
       <div className="bg-white border-b border-slate-100 sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div />
+            <p className="text-sm font-semibold text-[#0C1A35] truncate max-w-xs hidden sm:block">
+              {bien.titre || "Détail de l'annonce"}
+            </p>
             <div className="flex items-center gap-2">
-              </div>
+              {/* Partager */}
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: bien.titre ?? "Annonce", url: window.location.href });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Lien copié !");
+                  }
+                }}
+                title="Partager"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35] transition-colors border border-slate-100"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Partager</span>
+              </button>
+
+              {/* Favori */}
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    openModal(() => toggleFavori(bien.id));
+                    return;
+                  }
+                  const wasFavori = isFavori(bien.id);
+                  toggleFavori(bien.id);
+                  toast(wasFavori ? "Retiré des favoris" : "Ajouté aux favoris !");
+                }}
+                title={isFavori(bien.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-colors border ${
+                  isFavori(bien.id)
+                    ? "bg-red-50 text-red-500 border-red-200 hover:bg-red-100"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-red-500 border-slate-100"
+                }`}
+              >
+                <Heart
+                  className="w-4 h-4"
+                  fill={isFavori(bien.id) ? "currentColor" : "none"}
+                />
+                <span className="hidden sm:inline">
+                  {isFavori(bien.id) ? "Favori" : "Favoris"}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -753,13 +802,15 @@ export default function AnnonceDetail() {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-slate-500">
-                <MapPin className="w-4 h-4 text-[#D4A843]" />
-                <span className="text-sm">
-                  {[bien.adresse, bien.quartier, bien.ville, bien.region, bien.pays]
-                    .filter(Boolean)
-                    .join(", ")}
-                </span>
+              <div className="flex items-start gap-2 text-slate-500">
+                <MapPin className="w-4 h-4 text-[#D4A843] mt-0.5 shrink-0" />
+                <div className="flex flex-col gap-0.5">
+                  {bien.adresse && <span className="text-sm">{bien.adresse}</span>}
+                  {bien.quartier && <span className="text-sm font-medium text-[#0C1A35]">{bien.quartier}</span>}
+                  <span className="text-sm">
+                    {[bien.ville, bien.region, bien.pays].filter(Boolean).join(", ")}
+                  </span>
+                </div>
               </div>
               {/* Date de publication */}
               {bien.createdAt && (

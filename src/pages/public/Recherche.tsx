@@ -144,6 +144,7 @@ const ListCard = ({ bien }: { bien: Bien }) => {
 const RecherchePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [ville,           setVille]           = useState(searchParams.get("ville") ?? "");
   const [quartier,        setQuartier]        = useState(searchParams.get("quartier") ?? "");
   const [typeLogement,    setTypeLogement]    = useState(searchParams.get("typeLogement") ?? "");
   const [typeTransaction, setTypeTransaction] = useState(searchParams.get("typeTransaction") ?? "");
@@ -170,6 +171,7 @@ const RecherchePage = () => {
   const isProximityMode = proximityLat !== undefined && proximityLng !== undefined;
 
   const activeParams = {
+    ville:           sp.get("ville")           || undefined,
     quartier:        sp.get("quartier")        || undefined,
     typeLogement:    sp.get("typeLogement")    || undefined,
     typeTransaction: sp.get("typeTransaction") || undefined,
@@ -199,6 +201,7 @@ const RecherchePage = () => {
   const totalPages = data?.totalPages ?? 1;
 
   useEffect(() => {
+    setVille(searchParams.get("ville") ?? "");
     setQuartier(searchParams.get("quartier") ?? "");
     setTypeLogement(searchParams.get("typeLogement") ?? "");
     setTypeTransaction(searchParams.get("typeTransaction") ?? "");
@@ -215,13 +218,15 @@ const RecherchePage = () => {
   const buildParams = (
     overridePage?: number,
     overrideSort?: SortKey,
-    overrides?: { quartier?: string; typeLogement?: string; typeTransaction?: string }
+    overrides?: { ville?: string; quartier?: string; typeLogement?: string; typeTransaction?: string }
   ) => {
     const s  = overrideSort ?? sort;
+    const v  = overrides?.ville           !== undefined ? overrides.ville           : ville;
     const q  = overrides?.quartier        !== undefined ? overrides.quartier        : quartier;
     const tl = overrides?.typeLogement    !== undefined ? overrides.typeLogement    : typeLogement;
     const tt = overrides?.typeTransaction !== undefined ? overrides.typeTransaction : typeTransaction;
     const next = new URLSearchParams();
+    if (v)              next.set("ville",           v);
     if (q)              next.set("quartier",        q);
     if (tl)             next.set("typeLogement",    tl);
     if (tt)             next.set("typeTransaction", tt);
@@ -252,7 +257,7 @@ const RecherchePage = () => {
   };
 
   const clearFilters = () => {
-    setQuartier(""); setTypeLogement(""); setTypeTransaction(""); setSort("recent");
+    setVille(""); setQuartier(""); setTypeLogement(""); setTypeTransaction(""); setSort("recent");
     setPrixMin(""); setPrixMax(""); setChambres(""); setSurfaceMin(""); setSurfaceMax("");
     setMeuble(false); setParking(false);
     setSearchParams({ page: "1" }); // supprime aussi lat/lng/pointLabel
@@ -266,10 +271,8 @@ const RecherchePage = () => {
   };
 
   // ── Options ──
-  const lieuOptions = [
-    ...(lieux?.quartiers ?? []).map((q) => ({ value: q, label: q, group: "Quartiers" })),
-    ...(lieux?.villes    ?? []).map((v) => ({ value: v, label: v, group: "Villes"   })),
-  ];
+  const villeOptions    = (lieux?.villes    ?? []).map((v) => ({ value: v, label: v }));
+  const quartierOptions = (lieux?.quartiers ?? []).map((q) => ({ value: q, label: q }));
   const typeLogementOptions    = typesLogement.map((t) => ({ value: t.slug, label: t.nom }));
   const typeTransactionOptions = typesTransaction.map((t) => ({ value: t.slug, label: t.nom }));
 
@@ -291,6 +294,8 @@ const RecherchePage = () => {
     });
   }
 
+  if (sp.get("ville"))
+    chips.push({ label: sp.get("ville")!, onRemove: () => removeFilter("ville") });
   if (sp.get("quartier"))
     chips.push({ label: sp.get("quartier")!, onRemove: () => removeFilter("quartier") });
   if (sp.get("typeLogement"))
@@ -338,16 +343,30 @@ const RecherchePage = () => {
         <div className="container mx-auto py-4 px-4">
           <div className="flex flex-wrap gap-2.5 items-center">
 
-            <div className="flex-1 min-w-48">
+            <div className="flex-1 min-w-36">
+              <SearchableSelect
+                value={ville}
+                onChange={(val) => {
+                  setVille(val);
+                  setSearchParams(buildParams(1, undefined, { ville: val }));
+                }}
+                options={villeOptions}
+                placeholder="Ville / Région…"
+                searchPlaceholder="Rechercher une ville…"
+                dark
+              />
+            </div>
+
+            <div className="flex-1 min-w-36">
               <SearchableSelect
                 value={quartier}
                 onChange={(val) => {
                   setQuartier(val);
                   setSearchParams(buildParams(1, undefined, { quartier: val }));
                 }}
-                options={lieuOptions}
-                placeholder="Quartier ou ville…"
-                searchPlaceholder="Rechercher un lieu…"
+                options={quartierOptions}
+                placeholder="Quartier…"
+                searchPlaceholder="Rechercher un quartier…"
                 dark
               />
             </div>

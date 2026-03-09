@@ -70,8 +70,8 @@ const HeroSection = () => {
       params.set("pointLabel", selectedPoint.label);
       params.set("radius",     String(radius));
     } else {
-      const lieu = searchQuartier || searchVille;
-      if (lieu) params.set("quartier", lieu);
+      if (searchVille)    params.set("ville",    searchVille);
+      if (searchQuartier) params.set("quartier", searchQuartier);
     }
 
     if (propertyType) params.set("typeLogement", propertyType);

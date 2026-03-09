@@ -356,6 +356,7 @@ export const fetchAnnoncesSimilaires = (id: string, limit: number = 4): Promise<
 // ─── Public API: recherche avec filtres ──────────────────────────────────────
 
 export interface RechercheParams {
+  ville?: string;
   quartier?: string;
   typeLogement?: string;
   typeTransaction?: string;

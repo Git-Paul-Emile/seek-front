@@ -4,12 +4,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 import { OwnerAuthProvider } from "@/context/OwnerAuthContext";
 import { LocataireAuthProvider } from "@/context/LocataireAuthContext";
+import { ComptePublicAuthProvider } from "@/context/ComptePublicAuthContext";
+import { FavorisAuthModalProvider } from "@/context/FavorisAuthModalContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import GuestRoute from "@/components/admin/GuestRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -69,19 +71,24 @@ import AdminTransactions from "./pages/admin/TransactionsAdmin";
 import AdminPromotions from "./pages/admin/PromotionsAdmin";
 import AdminFormulesPremium from "./pages/admin/FormulesPremium";
 import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
+import FavorisPage from "./pages/public/Favoris";
 
 const queryClient = new QueryClient();
 
 // Layout pour les pages publiques avec Navbar + Footer
-const PublicLayout = () => (
-  <div className="overflow-x-clip">
-    <Navbar />
-    <main className="min-h-screen">
-      <Outlet />
-    </main>
-    <Footer />
-  </div>
-);
+const PublicLayout = () => {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  return (
+    <div className="overflow-x-clip">
+      <Navbar />
+      <main className={`min-h-screen ${isHome ? "" : "pt-16"}`}>
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -90,6 +97,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ComptePublicAuthProvider>
+          <FavorisAuthModalProvider>
           <OwnerAuthProvider>
             <LocataireAuthProvider>
               <Routes>
@@ -99,6 +108,7 @@ const App = () => (
                   <Route path="/annonces" element={<RecherchePage />} />
                   <Route path="/recherche" element={<RecherchePage />} />
                   <Route path="/annonce/:id" element={<PublicAnnonceDetail />} />
+                  <Route path="/favoris" element={<FavorisPage />} />
                 </Route>
 
                 {/* Espace propriétaires — landing */}
@@ -185,6 +195,8 @@ const App = () => (
               </Routes>
             </LocataireAuthProvider>
           </OwnerAuthProvider>
+          </FavorisAuthModalProvider>
+          </ComptePublicAuthProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

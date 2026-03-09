@@ -1,6 +1,9 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, TrendingDown } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, TrendingDown, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useFavoris } from "@/hooks/useFavoris";
+import { toast } from "sonner";
+import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
 import {
   Carousel,
   CarouselContent,
@@ -38,8 +41,8 @@ const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => ({
   type: bien.typeLogement?.nom || "Bien",
   title: bien.titre || "Annonce",
   price: bien.prix || 0,
-  location: bien.region && bien.quartier ? `${bien.region}, ${bien.quartier}` : bien.region || bien.pays || "",
-  city: bien.region || bien.pays || "",
+  location: bien.quartier || "",
+  city: [bien.ville, bien.region, bien.pays].filter(Boolean).join(", ") || "",
   surface: bien.surface || 0,
   bedrooms: bien.nbChambres || 0,
   bathrooms: bien.nbSdb || 0,
@@ -66,9 +69,13 @@ interface ProprietaireWithVerification {
 const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
   // Si les données viennent de l'API, les transformer
   const displayProperty = isApiData ? transformBienToProperty(property as BienAvecIsNew) : (property as Property);
-  
+
   // Extraire les informations supplémentaires de l'API si disponibles
   const bienData = isApiData ? (property as BienAvecIsNew) : null;
+  const bienId = bienData?.id ?? "";
+
+  const { isFavori, toggleFavori, isAuthenticated } = useFavoris();
+  const { openModal } = useFavorisAuthModal();
   const proprietaire = bienData?.proprietaire as ProprietaireWithVerification | undefined;
   const isProprietaireVerified = proprietaire?.statutVerification === "VERIFIED";
   const estMisEnAvant = bienData?.estMisEnAvant ?? false;
@@ -111,6 +118,31 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           <CarouselPrevious className="left-2 h-7 w-7 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity border-0 shadow-md" />
           <CarouselNext className="right-2 h-7 w-7 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity border-0 shadow-md" />
         </Carousel>
+
+        {/* Bouton Favori - coin supérieur gauche */}
+        {isApiData && bienId && (
+          <>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                if (!isAuthenticated) {
+                  openModal(() => toggleFavori(bienId));
+                  return;
+                }
+                const wasFavori = isFavori(bienId);
+                toggleFavori(bienId);
+                toast(wasFavori ? "Retiré des favoris" : "Ajouté aux favoris !");
+              }}
+              title={isFavori(bienId) ? "Retirer des favoris" : "Ajouter aux favoris"}
+              className="absolute top-3 left-3 z-10 w-8 h-8 flex items-center justify-center transition-colors"
+            >
+              <Heart
+                className={`w-5 h-5 transition-colors drop-shadow ${isFavori(bienId) ? "fill-red-500 text-red-500" : "text-white/80 hover:text-red-400"}`}
+                fill={isFavori(bienId) ? "currentColor" : "none"}
+              />
+            </button>
+          </>
+        )}
 
         {/* Zone des badges - coin supérieur droit */}
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
@@ -174,7 +206,9 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
 
         <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-400 mb-2 sm:mb-3">
           <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-[#D4A843]" />
-          {displayProperty.location}, {displayProperty.city}
+          {displayProperty.location && <span>{displayProperty.location}</span>}
+          {displayProperty.location && displayProperty.city && <span>, </span>}
+          {displayProperty.city && <span>{displayProperty.city}</span>}
         </div>
 
         <div className="flex items-center gap-2 mb-3 sm:mb-4">

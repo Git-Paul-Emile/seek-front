@@ -149,7 +149,9 @@ function ClusteredMarkers({ items }: { items: BienWithCoords[] }) {
                   )}
                   {(bien.quartier || bien.ville) && (
                     <p className="text-xs text-slate-400 mb-2">
-                      {[bien.quartier, bien.ville].filter(Boolean).join(", ")}
+                      {bien.quartier && <span>{bien.quartier}</span>}
+                      {bien.quartier && bien.ville && <span>, </span>}
+                      {[bien.ville, bien.region, bien.pays].filter(Boolean).join(", ")}
                     </p>
                   )}
                   <Link

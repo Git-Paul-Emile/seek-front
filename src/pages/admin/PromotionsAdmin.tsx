@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Star, Loader2, TrendingUp } from "lucide-react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useAdminHistoriquePromotions, useAdminStatsPromotions } from "@/hooks/usePremium";
+import { SkTableRows } from "@/components/ui/Skeleton";
 
 const STATUT_COLORS: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
@@ -89,9 +90,7 @@ export default function PromotionsAdmin() {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
-          </div>
+          <SkTableRows rows={8} />
         ) : promotions.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-slate-400">
             <Star className="w-10 h-10 mb-3 opacity-30" />

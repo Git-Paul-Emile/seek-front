@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Home, MapPin, Calendar, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Home, MapPin, Calendar, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { getLocataireHistoriqueApi, type BailHistorique } from "@/api/locataireAuth";
+import { SkPropertyCards } from "@/components/ui/Skeleton";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -128,9 +129,7 @@ export default function HistoriqueLogement() {
       </div>
 
       {isLoading && (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
-        </div>
+        <SkPropertyCards count={4} />
       )}
 
       {!isLoading && (!bails || bails.length === 0) && (

@@ -16,7 +16,7 @@ const CategoriesSection = () => {
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">Explorer</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-[#1A2942] mb-1">Parcourir par catégorie</h2>
+          <h2 className="font-bold text-[#1A2942] mb-1" style={{ fontSize: '1.8rem' }}>Parcourir par catégorie</h2>
           <p className="text-slate-400 text-sm">Trouvez le type de bien qui vous correspond</p>
         </div>
 

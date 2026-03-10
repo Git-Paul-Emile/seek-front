@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { SkDetailSections } from "@/components/ui/Skeleton";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
@@ -76,9 +77,6 @@ import { generateQuittancePDF } from "@/lib/generateQuittance";
 import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useDocumentsBien, useUploadDocumentBien, useDeleteDocumentBien } from "@/hooks/useDocumentBien";
-import { useDemanderMiseEnAvant } from "@/hooks/useMonetisation";
-import type { FormulePremium } from "@/api/premium";
-import { getFormulesPremium } from "@/api/premium";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -121,166 +119,6 @@ function InfoRow({ label, value }: { label: string; value?: string | number | nu
     <div className="flex items-start gap-3 py-2.5 border-b border-slate-50 last:border-0">
       <span className="text-xs font-medium text-slate-400 w-36 shrink-0 mt-0.5">{label}</span>
       <span className="text-sm text-[#0C1A35]">{value}</span>
-    </div>
-  );
-}
-
-// ─── Modal Mise En Avant (nouveau flux monétisation) ─────────────────────────
-
-function MiseEnAvantModal({
-  bienId,
-  bienTitre,
-  onClose,
-}: {
-  bienId: string;
-  bienTitre: string;
-  onClose: () => void;
-}) {
-  const { data: premiumData, isLoading: loadingFormules } = useQuery({
-    queryKey: ["formules-premium"],
-    queryFn: getFormulesPremium,
-  });
-  const formules: FormulePremium[] = premiumData?.formules ?? [];
-  const demanderMEA = useDemanderMiseEnAvant();
-  const [selectedFormule, setSelectedFormule] = useState<FormulePremium | null>(null);
-  const [modePaiement, setModePaiement] = useState("Orange Money");
-  const [reference, setReference] = useState("");
-  const [note, setNote] = useState("");
-
-  const fmtMontant = (n: number) =>
-    new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
-
-  const handleSubmit = () => {
-    if (!selectedFormule) { toast.error("Veuillez sélectionner une formule"); return; }
-    if (!reference.trim()) { toast.error("La référence de paiement est requise"); return; }
-    demanderMEA.mutate(
-      {
-        bienId,
-        data: {
-          formuleId: selectedFormule.id,
-          modePaiement,
-          reference,
-          note: note || undefined,
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Demande de mise en avant envoyée ! En attente de confirmation.");
-          onClose();
-        },
-        onError: (err: unknown) =>
-          toast.error((err as any)?.response?.data?.message ?? "Erreur"),
-      }
-    );
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="font-bold text-[#0C1A35] text-base flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[#D4A843]" />
-              Mettre en avant
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">{bienTitre}</p>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {loadingFormules ? (
-          <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-slate-300" /></div>
-        ) : formules.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-6">Aucune formule disponible.</p>
-        ) : (
-          <div className="space-y-2 mb-4">
-            <p className="text-xs font-medium text-slate-500 mb-2">Choisissez une formule</p>
-            {formules.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setSelectedFormule(f)}
-                className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${
-                  selectedFormule?.id === f.id
-                    ? "border-[#D4A843] bg-[#D4A843]/5"
-                    : "border-slate-100 hover:border-[#D4A843]/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-sm text-[#0C1A35]">{f.nom}</span>
-                  <span className="text-sm font-bold text-[#D4A843]">
-                    {new Intl.NumberFormat("fr-FR").format(f.prix)} FCFA
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 mt-0.5">{f.dureeJours} jours · {f.accroche}</p>
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Mode de paiement</label>
-            <div className="flex gap-2">
-              {["Orange Money", "Wave"].map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setModePaiement(m)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-xl border transition-colors ${
-                    modePaiement === m
-                      ? "border-[#D4A843] bg-[#D4A843]/10 text-[#D4A843]"
-                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Référence de paiement *</label>
-            <input
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              placeholder="Ex: OM-1234567890"
-              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm
-                text-slate-700 outline-none focus:border-[#D4A843]/60 focus:bg-white transition-all"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Note (optionnel)</label>
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Informations complémentaires…"
-              className="w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm
-                text-slate-700 outline-none focus:border-[#D4A843]/60 focus:bg-white transition-all"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 mt-5">
-          <button
-            onClick={handleSubmit}
-            disabled={demanderMEA.isPending || !selectedFormule}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#D4A843] text-white
-              text-sm font-semibold rounded-xl hover:bg-[#c49a36] transition-colors disabled:opacity-50"
-          >
-            {demanderMEA.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-            Soumettre la demande
-          </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 rounded-xl
-              hover:bg-slate-200 transition-colors"
-          >
-            Annuler
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -418,7 +256,6 @@ export default function BienDetail() {
   const [retourOpen, setRetourOpen] = useState(false);
   const [annulerOpen, setAnnulerOpen] = useState(false);
   const [showBailForm, setShowBailForm] = useState(false);
-  const [showMiseEnAvantModal, setShowMiseEnAvantModal] = useState(false);
   const [showNote, setShowNote] = useState(true);
   React.useEffect(() => {
     const t = setTimeout(() => setShowNote(false), 8000);
@@ -443,8 +280,9 @@ export default function BienDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
+      <div className="space-y-5">
+        <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Mes biens", to: "/owner/biens" }, { label: "Chargement..." }]} />
+        <SkDetailSections sections={5} />
       </div>
     );
   }
@@ -1328,29 +1166,7 @@ export default function BienDetail() {
 
           {/* Promotion - uniquement pour les annonces publiées */}
           {statut === "PUBLIE" && (
-            <>
-              <PremiumPayment bienId={bien.id} bienTitre={bien.titre || "Annonce"} />
-              <Section title="Mise en avant (nouveau flux)">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-600">
-                      Boostez votre annonce avec une formule premium.
-                    </p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Paiement Mobile Money · Confirmation admin requise
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowMiseEnAvantModal(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-[#D4A843] text-white text-sm
-                      font-semibold rounded-xl hover:bg-[#c49a36] transition-colors shadow-sm"
-                  >
-                    <TrendingUp className="w-4 h-4" />
-                    Mettre en avant
-                  </button>
-                </div>
-              </Section>
-            </>
+            <PremiumPayment bienId={bien.id} bienTitre={bien.titre || "Annonce"} />
           )}
 
           {/* Tarifs */}
@@ -1714,15 +1530,6 @@ export default function BienDetail() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Mise en avant modal */}
-      {showMiseEnAvantModal && (
-        <MiseEnAvantModal
-          bienId={bien.id}
-          bienTitre={bien.titre || "Annonce"}
-          onClose={() => setShowMiseEnAvantModal(false)}
-        />
       )}
 
       {/* BailForm modal */}

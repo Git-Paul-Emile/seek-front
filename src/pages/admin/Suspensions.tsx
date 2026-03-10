@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { SkTableRows } from "@/components/ui/Skeleton";
 import {
   UserX,
   UserCheck,
@@ -484,8 +485,8 @@ export default function SuspensionsPage() {
       {activeTab === "proprietaires" ? (
         <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
           {loadingProprietaires ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
+            <div className="p-4">
+              <SkTableRows rows={5} />
             </div>
           ) : (
             <table className="w-full">
@@ -507,8 +508,8 @@ export default function SuspensionsPage() {
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
           {loadingLocataires ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
+            <div className="p-4">
+              <SkTableRows rows={5} />
             </div>
           ) : (
             <table className="w-full">

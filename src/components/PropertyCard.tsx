@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, TrendingDown, Heart } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, TrendingDown, Heart, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useFavoris } from "@/hooks/useFavoris";
@@ -95,8 +95,8 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
 
   return (
     <div 
-      className="group bg-white overflow-hidden hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1.5 border border-slate-100"
-      style={{ borderRadius: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+      className="group bg-white overflow-hidden hover:shadow-[0_16px_40px_rgba(0,0,0,0.16),0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2 border border-slate-100"
+      style={{ borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.05)' }}
     >
       <div className="relative h-40 sm:h-44 md:h-48">
         <Carousel className="w-full h-full">
@@ -134,7 +134,8 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
                 toast(wasFavori ? "Retiré des favoris" : "Ajouté aux favoris !");
               }}
               title={isFavori(bienId) ? "Retirer des favoris" : "Ajouter aux favoris"}
-              className="absolute top-3 left-3 z-10 w-8 h-8 flex items-center justify-center transition-colors"
+              className="absolute top-3 left-3 z-10 w-8 h-8 flex items-center justify-center transition-colors rounded-full"
+              style={!isFavori(bienId) ? { background: 'rgba(0,0,0,0.5)' } : undefined}
             >
               <Heart
                 className={`w-5 h-5 transition-colors drop-shadow ${isFavori(bienId) ? "fill-red-500 text-red-500" : "text-white/80 hover:text-red-400"}`}
@@ -155,7 +156,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
 
           {/* Badge Mis en avant / Premium */}
           {(isApiData && estMisEnAvant) ? (
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+            <div className="bg-white/70 text-black text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg">
               Coup de cœur
             </div>
           ) : null}
@@ -169,7 +170,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
                 {formatPrice(bienData.prixAncien)}
               </span>
             )}
-            <span className="text-white font-bold text-base sm:text-lg drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+            <span className="text-white font-bold text-base sm:text-lg drop-shadow-md" style={{ textShadow: '0 1px 5px #000' }}>
               {formatPrice(displayProperty.price)}
             </span>
           </div>
@@ -185,24 +186,24 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
       <div className="p-3 sm:p-4">
         <h3 className="font-semibold text-[#1A2942] text-sm sm:text-base mb-1 line-clamp-1 flex items-center gap-2">
           {isApiData && bienData?.statutBien && (
-            <span 
+            <span
               className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ 
+              style={{
                 backgroundColor: bienData.statutBien.slug === 'libre' ? '#2a7e3b' : bienData.statutBien.slug === 'loue' ? '#dc2626' : '#f97316'
               }}
             />
           )}
-          {displayProperty.title}
+          <span className="min-w-0 truncate">{displayProperty.title}</span>
+          {isApiData && isProprietaireVerified && (
+            <span title="Propriétaire vérifié" className="flex-shrink-0 relative group/verified">
+              <BadgeCheck className="w-4 h-4 text-blue-600" />
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#0C1A35] text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover/verified:opacity-100 transition-opacity pointer-events-none z-20">
+                Vérifié
+                <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0C1A35]" />
+              </span>
+            </span>
+          )}
         </h3>
-
-        {/* Badge Vérifié */}
-        {isApiData && isProprietaireVerified && (
-          <div className="flex items-center gap-2 mb-3">
-            <div className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1">
-              Vérifié
-            </div>
-          </div>
-        )}
 
         <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-400 mb-2 sm:mb-3">
           <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-[#D4A843]" />

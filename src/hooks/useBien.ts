@@ -9,6 +9,9 @@ import {
   retourBrouillon,
   annulerAnnonce,
   soumettreRevision as soumettreRevisionApi,
+  fetchStatsVuesBien,
+  fetchStatsVuesOwner,
+  fetchAdminStatsVues,
   type CreateBienPayload,
 } from "@/api/bien";
 
@@ -93,3 +96,26 @@ export const useSoumettreRevision = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });
 };
+
+
+export const useStatsVuesBien = (bienId: string | undefined) =>
+  useQuery({
+    queryKey: ["stats-vues-bien", bienId],
+    queryFn: () => fetchStatsVuesBien(bienId!),
+    enabled: !!bienId,
+    staleTime: 60 * 1000,
+  });
+
+export const useStatsVuesOwner = () =>
+  useQuery({
+    queryKey: ["stats-vues-owner"],
+    queryFn: fetchStatsVuesOwner,
+    staleTime: 60 * 1000,
+  });
+
+export const useAdminStatsVues = () =>
+  useQuery({
+    queryKey: ["admin-stats-vues"],
+    queryFn: fetchAdminStatsVues,
+    staleTime: 60 * 1000,
+  });

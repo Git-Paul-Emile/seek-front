@@ -10,6 +10,7 @@ import {
   ArrowRight,
   RefreshCw,
 } from "lucide-react";
+import { SkKpiCards, SkChartBlock } from "@/components/ui/Skeleton";
 import {
   PieChart,
   Pie,
@@ -125,8 +126,19 @@ export default function AdminDashboard() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <SkKpiCards />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <SkChartBlock />
+            <SkChartBlock />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <SkChartBlock />
+            <SkChartBlock />
+          </div>
+          <SkChartBlock />
         </div>
       ) : (
         <>

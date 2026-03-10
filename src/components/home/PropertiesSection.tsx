@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +19,7 @@ import PropertyCard from "@/components/PropertyCard";
 import { SORT_OPTIONS } from "@/data/home";
 import { useDernieresAnnonces } from "@/hooks/useDernieresAnnonces";
 import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
+import { SkPropertyCards } from "@/components/ui/Skeleton";
 
 const PropertiesSection = () => {
   const [sort, setSort] = useState("recent");
@@ -58,23 +58,17 @@ const PropertiesSection = () => {
                 <p className="text-amber-600 font-bold text-sm uppercase tracking-wider">
                   Exclusivité
                 </p>
-                <h2 className="text-3xl md:text-4xl font-bold text-[#1A2942]">
+                <h2 className="font-bold text-[#1A2942]" style={{ fontSize: '1.8rem' }}>
                   À la une
                 </h2>
               </div>
-              <div className="flex items-center gap-3 self-start md:self-auto">
-                <Link to="/annonces?filter=premium">
-                  <Button variant="outline" className="h-9 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm">
-                    Toutes les annonces
-                  </Button>
-                </Link>
-              </div>
+              <div className="flex items-center gap-3 self-start md:self-auto" />
             </div>
 
             {/* Slider horizontal des annonces premium */}
             {isLoadingPremium ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <SkPropertyCards count={4} />
               </div>
             ) : (
               <div className="relative">
@@ -114,7 +108,7 @@ const PropertiesSection = () => {
               <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">
                 {hasPremium ? "Suite" : "À découvrir"}
               </p>
-              <h2 className="text-3xl md:text-4xl font-bold text-[#1A2942]">
+              <h2 className="font-bold text-[#1A2942]" style={{ fontSize: '1.8rem' }}>
                 Dernières annonces
               </h2>
               <p className="text-slate-400 mt-1.5 text-sm">
@@ -141,9 +135,7 @@ const PropertiesSection = () => {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
-            </div>
+            <SkPropertyCards count={8} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {sortedBiens.map((property) => (

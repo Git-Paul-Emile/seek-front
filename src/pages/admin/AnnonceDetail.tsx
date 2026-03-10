@@ -39,6 +39,7 @@ import { useBienById } from "@/hooks/useBien";
 import { useValiderAnnonce, useDeleteAnnonceAdmin } from "@/hooks/useAnnonces";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { StatutAnnonce, Bien, BienPendingRevision } from "@/api/bien";
+import { SkDetailSections } from "@/components/ui/Skeleton";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -425,8 +426,9 @@ export default function AnnonceDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
+      <div className="space-y-5">
+        <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Annonces", to: "/admin/annonces" }, { label: "Détail" }]} />
+        <SkDetailSections sections={4} />
       </div>
     );
   }

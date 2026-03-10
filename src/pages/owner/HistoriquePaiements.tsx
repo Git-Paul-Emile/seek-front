@@ -9,7 +9,6 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   ArrowUpCircle,
   ArrowDownCircle,
   Wallet,
@@ -19,6 +18,7 @@ import {
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useHistoriqueTransactions } from "@/hooks/usePremium";
 import type { Transaction } from "@/api/transaction";
+import { SkTableRows } from "@/components/ui/Skeleton";
 
 export default function HistoriquePaiements() {
   const { owner } = useOwnerAuth();
@@ -157,8 +157,8 @@ export default function HistoriquePaiements() {
 
       {/* Contenu */}
       {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
+        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <SkTableRows rows={5} />
         </div>
       ) : error ? (
         <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">

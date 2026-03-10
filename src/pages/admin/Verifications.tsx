@@ -22,6 +22,7 @@ import {
 import type { PendingVerification } from "@/api/ownerAuth";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { SkListItems } from "@/components/ui/Skeleton";
 
 // Motifs de rejet standards
 const REJECTION_MOTIFS = [
@@ -80,8 +81,9 @@ export default function AdminVerificationsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
+      <div className="space-y-6">
+        <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Vérifications" }]} />
+        <SkListItems items={5} itemHeight="h-24" />
       </div>
     );
   }

@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import { ArrowLeft, Phone, Mail, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, Mail, User } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useProprietaireLocataire } from "@/hooks/useProprietaireLocataire";
+import { SkDetailSections } from "@/components/ui/Skeleton";
 
 export default function ProprietaireLocatairePage() {
   const { locataire } = useLocataireAuth();
@@ -11,8 +12,9 @@ export default function ProprietaireLocatairePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
+      <div className="space-y-5">
+        <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mon propriétaire" }]} />
+        <SkDetailSections sections={2} />
       </div>
     );
   }

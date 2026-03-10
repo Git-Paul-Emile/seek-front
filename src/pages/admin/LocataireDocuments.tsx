@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { SkDetailSections } from "@/components/ui/Skeleton";
 import { ArrowLeft, Loader2, AlertTriangle, FileText, User, Home, ExternalLink, X } from "lucide-react";
 import { useLocataireAvecDocuments } from "@/hooks/useSuspension";
 import { useState } from "react";
@@ -28,8 +29,9 @@ export default function LocataireDocuments() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
+      <div className="space-y-6 max-w-3xl">
+        <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Utilisateurs", to: "/admin/utilisateurs/locataires" }, { label: "Documents locataire" }]} />
+        <SkDetailSections sections={3} />
       </div>
     );
   }

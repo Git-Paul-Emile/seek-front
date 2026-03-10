@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { SkForm } from "@/components/ui/Skeleton";
 import { updateProfileApi, meApi, changePasswordApi } from "@/api/auth";
 import { Loader2, Save, Mail, Lock, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
@@ -172,8 +173,9 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Mon profil" }]} />
+        <SkForm />
       </div>
     );
   }

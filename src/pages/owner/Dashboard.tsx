@@ -28,6 +28,7 @@ import {
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
 import { VerificationAlert } from "@/components/owner/VerificationAlert";
+import { SkKpiCards, SkChartBlock, SkListItems } from "@/components/ui/Skeleton";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -143,9 +144,13 @@ export default function OwnerDashboard() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
-        </div>
+        <>
+          <SkKpiCards count={5} cols="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <SkChartBlock height="h-56" />
+            <SkListItems items={5} itemHeight="h-16" />
+          </div>
+        </>
       ) : stats?.totalBiens === 0 ? (
         /* État vide */
         <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center space-y-3">

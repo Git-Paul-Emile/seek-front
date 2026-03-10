@@ -9,6 +9,7 @@ import {
   useAdminDeleteFormule,
   type FormulePremiumFull,
 } from "@/hooks/usePremium";
+import { SkPropertyCards } from "@/components/ui/Skeleton";
 
 const EMPTY: Partial<FormulePremiumFull> = {
   code: "",
@@ -205,9 +206,7 @@ export default function FormulesPremium() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
-        </div>
+        <SkPropertyCards count={6} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {formules.map((f) => (

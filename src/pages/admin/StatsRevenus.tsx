@@ -1,5 +1,6 @@
 import { TrendingUp, Loader2, DollarSign, Calendar } from "lucide-react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { SkKpiCards } from "@/components/ui/Skeleton";
 import { useRevenusStats } from "@/hooks/useStats";
 
 function fmtMontant(n: number) {
@@ -12,7 +13,7 @@ export default function StatsRevenus() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
+        <SkKpiCards count={4} />
       </div>
     );
   }

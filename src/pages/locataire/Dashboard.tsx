@@ -33,6 +33,7 @@ import { useLocataireEcheancier } from "@/hooks/useLocataireEcheancier";
 import { useQuittancesLocataire } from "@/hooks/useQuittance";
 import type { StatutPaiement } from "@/api/bail";
 import { getLocataireContratApi, type ContratLocataireData } from "@/api/locataireAuth";
+import { SkListItems } from "@/components/ui/Skeleton";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -398,9 +399,7 @@ export default function LocataireDashboard() {
                 Mes quittances
               </h2>
               {quittancesLoading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-slate-300" />
-                </div>
+                <SkListItems items={3} itemHeight="h-16" />
               ) : quittances.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-4">
                   Aucune quittance disponible.<br />

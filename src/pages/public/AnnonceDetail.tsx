@@ -1,6 +1,16 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload, type Bien } from "@/api/bien";
+import { useFavoris } from "@/hooks/useFavoris";
+import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PropertyCard from "@/components/PropertyCard";
+import CarteBienDetail from "@/components/carte/CarteBienDetail";
+import ScrollToTop from "@/components/ui/ScrollToTop";
+import TrustScoreCompact, { TrustScoreFull } from "@/components/ui/TrustScoreBadge";
+import { SkDetailSections } from "@/components/ui/Skeleton";
 import {
   ArrowLeft,
   Loader2,
@@ -23,6 +33,7 @@ import {
   Phone,
   Mail,
   Share2,
+  Copy,
   Heart,
   Flag,
   X,
@@ -50,16 +61,9 @@ import {
   Send,
   MessageCircle,
   Megaphone,
+  Eye,
+  Flame,
 } from "lucide-react";
-import { toast } from "sonner";
-import { fetchAnnoncePublique, signalerAnnonce, fetchAnnoncesSimilaires, type SignalerAnnoncePayload } from "@/api/bien";
-import { useFavoris } from "@/hooks/useFavoris";
-import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PropertyCard from "@/components/PropertyCard";
-import CarteBienDetail from "@/components/carte/CarteBienDetail";
-import ScrollToTop from "@/components/ui/ScrollToTop";
-import TrustScoreCompact, { TrustScoreFull } from "@/components/ui/TrustScoreBadge";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -116,6 +120,57 @@ const isPriceDropRecent = (dateModification: string | null): boolean => {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   return new Date(dateModification) >= thirtyDaysAgo;
 };
+
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
+/** URL backend avec les balises OG — lue par WhatsApp/Facebook puis redirige vers le frontend */
+function getOgUrl(bienId: string) {
+  return `${API_URL}/og/annonces/${bienId}`;
+}
+
+/** Texte formaté sans URL — l'URL est passée séparément pour éviter les doublons */
+function buildShareText(bien: Bien): string {
+  const lines: string[] = [];
+
+  lines.push(bien.titre ?? "Annonce immobilière");
+
+  const localisation = [bien.quartier, bien.ville, bien.pays].filter(Boolean).join(", ");
+  if (localisation) lines.push(localisation);
+
+  if (bien.prix) {
+    const prixFormate = new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(bien.prix);
+    const freq =
+      bien.typeTransaction?.slug === "location"
+        ? bien.frequencePaiement === "MENSUEL"
+          ? "/mois"
+          : bien.frequencePaiement === "ANNUEL"
+          ? "/an"
+          : ""
+        : "";
+    lines.push(`Prix : ${prixFormate}${freq}`);
+  }
+
+  const caract: string[] = [];
+  if (bien.nbChambres) caract.push(`${bien.nbChambres} chambre(s)`);
+  if (bien.nbSdb) caract.push(`${bien.nbSdb} salle(s) de bain`);
+  if (bien.surface) caract.push(`${bien.surface} m²`);
+  if (caract.length) lines.push(caract.join(" · "));
+
+  return lines.join("\n");
+}
+
+async function partagerWhatsApp(bien: Bien) {
+  const text = buildShareText(bien);
+  const ogUrl = getOgUrl(bien.id);
+  const title = bien.titre ?? "Annonce immobilière";
+
+  // navigator.share ajoute l'URL automatiquement — le texte ne doit pas la contenir
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url: ogUrl }); return; } catch { /* fallback */ }
+  }
+  // Fallback desktop : texte + URL en une seule chaîne
+  window.open(`https://wa.me/?text=${encodeURIComponent(`${text}\n\n${ogUrl}`)}`, "_blank");
+}
 
 function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
   if (!value && value !== 0) return null;
@@ -507,6 +562,8 @@ function DemandeVisiteModal({
 export default function AnnonceDetail() {
   const { id } = useParams<{ id: string }>();
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showVisiteModal, setShowVisiteModal] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -532,6 +589,18 @@ export default function AnnonceDetail() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
 
+  // Fermer le menu de partage au clic extérieur
+  useEffect(() => {
+    if (!showShareMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showShareMenu]);
+
   const { data: bien, isLoading, isError } = useQuery({
     queryKey: ["annonce-publie", id],
     queryFn: () => fetchAnnoncePublique(id!),
@@ -549,8 +618,10 @@ export default function AnnonceDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
+      <div className="min-h-screen bg-slate-50 py-8">
+        <div className="container mx-auto px-4">
+          <SkDetailSections sections={5} />
+        </div>
       </div>
     );
   }
@@ -637,21 +708,58 @@ export default function AnnonceDetail() {
             </p>
             <div className="flex items-center gap-2">
               {/* Partager */}
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({ title: bien.titre ?? "Annonce", url: window.location.href });
-                  } else {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Lien copié !");
-                  }
-                }}
-                title="Partager"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35] transition-colors border border-slate-100"
-              >
-                <Share2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Partager</span>
-              </button>
+              <div className="relative" ref={shareMenuRef}>
+                <button
+                  onClick={() => setShowShareMenu((v) => !v)}
+                  title="Partager"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35] transition-colors border border-slate-100"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Partager</span>
+                </button>
+
+                {showShareMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50">
+                    {/* WhatsApp */}
+                    <button
+                      onClick={() => { setShowShareMenu(false); partagerWhatsApp(bien); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="#25D366">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.107 1.528 5.83L.057 23.999l6.305-1.655A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.006-1.369l-.36-.214-3.737.98 1-3.647-.234-.374A9.818 9.818 0 1112 21.818z"/>
+                      </svg>
+                      WhatsApp
+                    </button>
+                    {/* Facebook */}
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getOgUrl(bien.id))}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                      onClick={() => setShowShareMenu(false)}
+                    >
+                      <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="#1877F2">
+                        <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.887v2.268h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+                      </svg>
+                      Facebook
+                    </a>
+                    <hr className="my-1 border-slate-100" />
+                    {/* Copier le lien */}
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(window.location.href);
+                        toast.success("Lien copié !");
+                        setShowShareMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      <Copy className="w-4 h-4 text-slate-400" />
+                      Copier le lien
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Favori */}
               <button
@@ -665,19 +773,12 @@ export default function AnnonceDetail() {
                   toast(wasFavori ? "Retiré des favoris" : "Ajouté aux favoris !");
                 }}
                 title={isFavori(bien.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-colors border ${
-                  isFavori(bien.id)
-                    ? "bg-red-50 text-red-500 border-red-200 hover:bg-red-100"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-red-500 border-slate-100"
-                }`}
+                className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors"
               >
                 <Heart
-                  className="w-4 h-4"
+                  className={`w-5 h-5 transition-colors ${isFavori(bien.id) ? "fill-red-500 text-red-500" : "text-slate-400 hover:text-red-400"}`}
                   fill={isFavori(bien.id) ? "currentColor" : "none"}
                 />
-                <span className="hidden sm:inline">
-                  {isFavori(bien.id) ? "Favori" : "Favoris"}
-                </span>
               </button>
             </div>
           </div>
@@ -755,7 +856,7 @@ export default function AnnonceDetail() {
                   {/* Statut du bien - Badge visible et coloré */}
                   {bien.statutBien && (
                     <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold">
-                      {bien.statutBien.nom.toLowerCase().includes('disponible') && (
+                      {(bien.statutBien.nom.toLowerCase().includes('disponible') || bien.statutBien.nom.toLowerCase().includes('libre')) && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                           {bien.statutBien.nom}
@@ -780,6 +881,7 @@ export default function AnnonceDetail() {
                         </span>
                       )}
                       {!bien.statutBien.nom.toLowerCase().includes('disponible') && 
+                       !bien.statutBien.nom.toLowerCase().includes('libre') &&
                        !bien.statutBien.nom.toLowerCase().includes('offre') && 
                        !bien.statutBien.nom.toLowerCase().includes('vendu') && 
                        !bien.statutBien.nom.toLowerCase().includes('loué') &&
@@ -813,15 +915,27 @@ export default function AnnonceDetail() {
                   </span>
                 </div>
               </div>
-              {/* Date de publication */}
-              {bien.createdAt && (
-                <div className="flex items-center gap-2 text-slate-400 text-xs mt-2">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>
-                    Publiée {getTimeAgo(bien.createdAt)}
+              {/* Date de publication + vues */}
+              <div className="flex flex-wrap items-center gap-3 mt-2">
+                {bien.createdAt && (
+                  <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Publiée {getTimeAgo(bien.createdAt)}</span>
+                  </div>
+                )}
+                {(bien.nbVues ?? 0) > 0 && (
+                  <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{(bien.nbVues ?? 0).toLocaleString("fr-FR")} vue{(bien.nbVues ?? 0) > 1 ? "s" : ""}</span>
+                  </div>
+                )}
+                {(bien.nbVues ?? 0) >= 50 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-600 border border-orange-200">
+                    <Flame className="w-3 h-3" />
+                    Annonce populaire
                   </span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Description */}

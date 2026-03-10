@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CreditCard, TrendingUp, Loader2 } from "lucide-react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useAdminHistoriqueTransactions, useAdminStatsTransactions } from "@/hooks/usePremium";
+import { SkTableRows } from "@/components/ui/Skeleton";
 
 const TYPE_LABELS: Record<string, string> = {
   LOYER: "Loyer",
@@ -88,9 +89,7 @@ export default function TransactionsAdmin() {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
-          </div>
+          <SkTableRows rows={8} />
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-slate-400">
             <CreditCard className="w-10 h-10 mb-3 opacity-30" />

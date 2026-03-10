@@ -9,7 +9,6 @@ import {
   CircleDashed,
   TrendingUp,
   Smartphone,
-  Loader2,
   ChevronDown,
   ChevronUp,
   Wallet,
@@ -23,6 +22,7 @@ import { useProprietaireLocataire } from "@/hooks/useProprietaireLocataire";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
 import type { Echeance, StatutPaiement } from "@/api/bail";
 import LocatairePayModal from "@/components/locataire/LocatairePayModal";
+import { SkDetailSections } from "@/components/ui/Skeleton";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -137,8 +137,9 @@ export default function PaiementsLocatairePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
+      <div className="space-y-5">
+        <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mes paiements" }]} />
+        <SkDetailSections sections={3} />
       </div>
     );
   }

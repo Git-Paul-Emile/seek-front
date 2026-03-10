@@ -408,3 +408,44 @@ export interface LieuxData {
 
 export const fetchLieux = (): Promise<LieuxData> =>
   api.get<{ data: LieuxData }>("/public/lieux").then((r) => r.data.data);
+
+// ─── Stats vues ───────────────────────────────────────────────────────────────
+
+export interface StatsVuesBien {
+  vuesTotales: number;
+  vuesAujourdhui: number;
+  vuesCetteSemaine: number;
+  evolution: { date: string; count: number }[];
+}
+
+export interface StatsVuesOwner {
+  vuesTotales: number;
+  vuesAujourdhui: number;
+  vuesCetteSemaine: number;
+  topAnnonces: {
+    id: string;
+    titre: string | null;
+    ville: string | null;
+    nbVues: number;
+    vuesAujourdhui: number;
+    vuesCetteSemaine: number;
+  }[];
+}
+
+export interface AdminStatsVues {
+  totalVuesPlateforme: number;
+  vuesAujourdhui: number;
+  vuesCetteSemaine: number;
+  topAnnonces: { id: string; titre: string | null; ville: string | null; nbVues: number }[];
+  vuesParVille: { ville: string; count: number }[];
+  vuesParTypeLogement: { typeLogement: string; count: number }[];
+}
+
+export const fetchStatsVuesBien = (bienId: string): Promise<StatsVuesBien> =>
+  api.get<{ data: StatsVuesBien }>(`/${bienId}/stats-vues`).then((r) => r.data.data);
+
+export const fetchStatsVuesOwner = (): Promise<StatsVuesOwner> =>
+  api.get<{ data: StatsVuesOwner }>("/stats/vues").then((r) => r.data.data);
+
+export const fetchAdminStatsVues = (): Promise<AdminStatsVues> =>
+  api.get<{ data: AdminStatsVues }>("/stats/vues/admin").then((r) => r.data.data);

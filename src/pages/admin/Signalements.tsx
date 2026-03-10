@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { Flag, Search, Eye, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { useSignalementsAdmin } from "@/hooks/useSignalement";
+import { SkTableRows } from "@/components/ui/Skeleton";
 
 const TYPE_LABELS: Record<string, string> = {
   ANNONCE: "Annonce",
@@ -79,9 +80,7 @@ export default function Signalements() {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
-          </div>
+          <SkTableRows rows={8} />
         ) : signalements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <Flag className="w-10 h-10 mb-3 opacity-30" />

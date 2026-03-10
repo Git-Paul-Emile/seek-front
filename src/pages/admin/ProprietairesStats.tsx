@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { SkKpiCards, SkListItems } from "@/components/ui/Skeleton";
 import { 
   Users, 
   Building2, 
@@ -86,8 +87,8 @@ function RecentProprietaires({
 }) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 text-[#D4A843] animate-spin" />
+      <div className="space-y-3">
+        <SkListItems items={5} />
       </div>
     );
   }
@@ -129,8 +130,8 @@ function RecentProprietaires({
 function TopProprietaires({ proprietaires, loading }: { proprietaires: any[]; loading: boolean }) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 text-[#D4A843] animate-spin" />
+      <div className="space-y-3">
+        <SkListItems items={5} />
       </div>
     );
   }
@@ -341,8 +342,8 @@ export default function ProprietairesStats() {
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <h2 className="text-lg font-semibold text-[#0C1A35] mb-4">Répartition par statut</h2>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 text-[#D4A843] animate-spin" />
+            <div className="space-y-3">
+              <SkListItems items={4} />
             </div>
           ) : (
             <StatutChart data={stats?.byStatutVerification || []} />
@@ -353,8 +354,8 @@ export default function ProprietairesStats() {
         <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
           <h2 className="text-lg font-semibold text-[#0C1A35] mb-4">Top Villes</h2>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 text-[#D4A843] animate-spin" />
+            <div className="space-y-3">
+              <SkListItems items={5} />
             </div>
           ) : stats?.byVille && stats.byVille.length > 0 ? (
             <VilleChart data={stats.byVille} />

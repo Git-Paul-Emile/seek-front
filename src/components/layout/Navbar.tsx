@@ -43,11 +43,12 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-[box-shadow,border-color] duration-300 ${
         transparent
           ? "bg-transparent border-b border-white/10"
-          : "bg-white shadow-sm border-b border-slate-100"
+          : "shadow-sm border-b border-slate-100"
       }`}
+      style={!transparent ? { backgroundColor: '#ffffff' } : undefined}
     >
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         {/* Logo */}

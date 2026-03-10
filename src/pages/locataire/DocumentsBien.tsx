@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, FileText, Download, Loader2, FolderOpen } from "lucide-react";
+import { ArrowLeft, FileText, Download, FolderOpen } from "lucide-react";
 import { getLocataireDocumentsBienApi, type DocumentBienLocataire } from "@/api/locataireAuth";
+import { SkListItems } from "@/components/ui/Skeleton";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -83,9 +84,7 @@ export default function DocumentsBien() {
       </div>
 
       {isLoading && (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="w-7 h-7 animate-spin text-[#D4A843]" />
-        </div>
+        <SkListItems items={4} itemHeight="h-20" />
       )}
 
       {!isLoading && (!documents || documents.length === 0) && (

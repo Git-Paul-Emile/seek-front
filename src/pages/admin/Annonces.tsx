@@ -1,19 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import {
-  FileSearch,
-  Building2,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  Phone,
-  User,
-  Eye,
-} from "lucide-react";
+import { FileSearch, Building2, CheckCircle, XCircle, Clock, Loader2, ChevronLeft, ChevronRight, Phone, User, Eye } from "lucide-react";
+import { SkTableRows } from "@/components/ui/Skeleton";
 import { toast } from "sonner";
 import { useAnnoncesAdmin, useValiderAnnonce, useAnnoncesStatusCounts } from "@/hooks/useAnnonces";
 import type { Bien, StatutAnnonce } from "@/api/bien";
@@ -344,9 +333,7 @@ export default function Annonces() {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {isLoading ? (
-          <div className="p-12 flex justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
-          </div>
+          <SkTableRows rows={10} />
         ) : items.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">

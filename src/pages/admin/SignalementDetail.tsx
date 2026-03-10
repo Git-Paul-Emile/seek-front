@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { ArrowLeft, Flag, Loader2, AlertTriangle, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { SkDetailSections } from "@/components/ui/Skeleton";
 import { useSignalementDetail, useTraiterSignalement } from "@/hooks/useSignalement";
 
 const STATUT_COLORS: Record<string, string> = {
@@ -49,8 +50,8 @@ export default function SignalementDetail() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-[#D4A843]" />
+      <div className="py-20">
+        <SkDetailSections sections={2} />
       </div>
     );
   }

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import { ArrowLeft, Phone, Mail, Home, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Phone, Mail, User, Loader2 } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useProprietaireLocataire } from "@/hooks/useProprietaireLocataire";
 
@@ -31,7 +31,7 @@ export default function ProprietaireLocatairePage() {
     );
   }
 
-  const { proprietaire, bien } = proprietaireData;
+  const { proprietaire } = proprietaireData;
 
   return (
     <div className="space-y-5">
@@ -94,58 +94,6 @@ export default function ProprietaireLocatairePage() {
                   {proprietaire.email}
                 </p>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Informations du bien */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-[#0C1A35]/10 flex items-center justify-center">
-            <Home className="w-6 h-6 text-[#0C1A35]" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-[#0C1A35]">Mon logement</h2>
-            <p className="text-sm text-slate-500">Informations du bien</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {bien.titre && (
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Titre</span>
-              <span className="text-sm font-semibold text-[#0C1A35]">{bien.titre}</span>
-            </div>
-          )}
-          {bien.adresse && (
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Adresse</span>
-              <span className="text-sm font-semibold text-[#0C1A35]">{bien.adresse}</span>
-            </div>
-          )}
-          {bien.quartier && (
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Quartier</span>
-              <span className="text-sm font-semibold text-[#0C1A35]">{bien.quartier}</span>
-            </div>
-          )}
-          {bien.ville && (
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Ville</span>
-              <span className="text-sm font-semibold text-[#0C1A35]">{bien.ville}</span>
-            </div>
-          )}
-          {bien.region && (
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-sm text-slate-500">Région</span>
-              <span className="text-sm font-semibold text-[#0C1A35]">{bien.region}</span>
-            </div>
-          )}
-          {bien.pays && (
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm text-slate-500">Pays</span>
-              <span className="text-sm font-semibold text-[#0C1A35]">{bien.pays}</span>
             </div>
           )}
         </div>

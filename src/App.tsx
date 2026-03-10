@@ -77,7 +77,6 @@ import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
 import AdminStatsRevenus from "./pages/admin/StatsRevenus";
 import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
 import StatsVues from "./pages/owner/StatsVues";
-import ContratLocataire from "./pages/locataire/Contrat";
 import FavorisPage from "./pages/public/Favoris";
 
 const queryClient = new QueryClient();
@@ -169,7 +168,6 @@ const App = () => (
                     <Route path="/locataire/historique" element={<HistoriqueLogement />} />
                     <Route path="/locataire/documents" element={<DocumentsBien />} />
                     <Route path="/locataire/etat-des-lieux" element={<EtatsDesLieux />} />
-                    <Route path="/locataire/contrat" element={<ContratLocataire />} />
                   </Route>
                 </Route>
 

@@ -12,7 +12,6 @@ import {
   History,
   FileText,
   FileCheck,
-  Scroll,
 } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
@@ -24,7 +23,6 @@ const NAV_ITEMS = [
   { to: "/locataire/historique",  label: "Mes logements",     icon: History },
   { to: "/locataire/documents",   label: "Documents",         icon: FileText },
   { to: "/locataire/etat-des-lieux", label: "Etats des lieux", icon: FileCheck },
-  { to: "/locataire/contrat",        label: "Mon contrat",      icon: Scroll },
   { to: "/locataire/proprietaire",   label: "Mon propriétaire", icon: UserCog },
 ];
 

@@ -1,12 +1,9 @@
 import { useState } from "react";
 import {
   X,
-  Smartphone,
   Loader2,
   CheckCircle2,
   Layers,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Echeance } from "@/api/bail";
@@ -16,14 +13,9 @@ import { usePayerEcheancesLocataire } from "@/hooks/useLocataireEcheancier";
 
 const PROVIDERS = ["Orange Money", "Wave", "Autre"];
 
-const PROVIDER_INFO: Record<string, string> = {
-  "Orange Money": "Composez *144# puis suivez les instructions pour envoyer le montant.",
-  "Wave": "Ouvrez l'application Wave et effectuez un envoi d'argent.",
-  "Autre": "Conservez votre référence de transaction pour la saisir ci-dessous.",
-};
-
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 const todayIso = () => new Date().toISOString().split("T")[0];
+const generateRef = () => `TXN-${Date.now().toString(36).toUpperCase()}`;
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -44,9 +36,8 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
   const [nombreMois, setNombreMois] = useState(1);
   const [datePaiement, setDatePaiement] = useState(todayIso());
   const [modePaiement, setModePaiement] = useState(PROVIDERS[0]);
-  const [reference, setReference] = useState("");
+  const [reference] = useState(generateRef());
   const [note, setNote] = useState("");
-  const [showProviderInfo, setShowProviderInfo] = useState(false);
 
   const { mutate, isPending } = usePayerEcheancesLocataire();
 
@@ -195,18 +186,10 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
             </select>
           </div>
 
-          {/* Référence transaction */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
-              Référence de transaction <span className="text-slate-400">(optionnel)</span>
-            </label>
-            <input
-              type="text"
-              value={reference}
-              onChange={e => setReference(e.target.value)}
-              placeholder="Ex : TXN-123456"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50"
-            />
+          {/* Référence transaction (auto-générée) */}
+          <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+            <span className="text-xs text-slate-500">Référence</span>
+            <span className="text-xs font-mono font-semibold text-[#0C1A35]">{reference}</span>
           </div>
 
           {/* Note */}
@@ -221,33 +204,6 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
               placeholder="Remarque éventuelle"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50"
             />
-          </div>
-
-          {/* Instructions Mobile Money (collapsible) */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowProviderInfo(v => !v)}
-              className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 hover:bg-slate-100 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-medium text-slate-600">
-                  Comment payer via {modePaiement}
-                </span>
-              </div>
-              {showProviderInfo
-                ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
-                : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              }
-            </button>
-            {showProviderInfo && (
-              <div className="px-4 py-3 bg-white">
-                <p className="text-xs text-slate-500">
-                  {PROVIDER_INFO[modePaiement] ?? "Effectuez votre paiement et notez la référence."}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Actions */}

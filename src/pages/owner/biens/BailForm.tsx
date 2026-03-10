@@ -33,6 +33,7 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
     renouvellement: false,
     cautionVersee: "" as "" | "oui" | "non",
     jourLimitePaiement: "",
+    delaiGrace: "5",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -49,6 +50,11 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
       const j = Number(form.jourLimitePaiement);
       if (!Number.isInteger(j) || j < 1 || j > 28)
         errs.jourLimitePaiement = "Le jour doit être entre 1 et 28";
+    }
+    if (form.delaiGrace !== "") {
+      const d = Number(form.delaiGrace);
+      if (!Number.isInteger(d) || d < 0 || d > 30)
+        errs.delaiGrace = "Le délai doit être entre 0 et 30 jours";
     }
     return errs;
   };
@@ -75,6 +81,7 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
           montantCaution: bien.caution ?? null,
           cautionVersee: form.cautionVersee === "oui",
           jourLimitePaiement: form.jourLimitePaiement ? Number(form.jourLimitePaiement) : null,
+          delaiGrace: form.delaiGrace !== "" ? Number(form.delaiGrace) : 5,
           frequencePaiement: bien.frequencePaiement ?? null,
         },
       });
@@ -287,6 +294,31 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
               </p>
               {errors.jourLimitePaiement && (
                 <p className="text-xs text-red-500 mt-1">{errors.jourLimitePaiement}</p>
+              )}
+            </div>
+
+            {/* Délai de grâce */}
+            <div>
+              <label className="block text-xs font-medium text-blue-700 mb-1">
+                Délai de grâce{" "}
+                <span className="font-normal text-blue-500">(jours, défaut : 5)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="30"
+                placeholder="ex : 5"
+                value={form.delaiGrace}
+                onChange={(e) => set("delaiGrace", e.target.value)}
+                className={`w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                  errors.delaiGrace ? "border-red-400" : "border-blue-200"
+                }`}
+              />
+              <p className="text-[11px] text-blue-500 mt-1">
+                Nombre de jours après l'échéance avant de passer en retard (0 = aucune tolérance).
+              </p>
+              {errors.delaiGrace && (
+                <p className="text-xs text-red-500 mt-1">{errors.delaiGrace}</p>
               )}
             </div>
           </div>

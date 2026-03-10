@@ -19,6 +19,7 @@ import {
   getBailAArchiverApi,
   getHistoriqueBailsApi,
   prolongerEcheancesAnneeApi,
+  confirmerReceptionApi,
   type CreateBailPayload,
   type PayerEcheancePayload,
   type PayerMoisMultiplesPayload,
@@ -247,6 +248,17 @@ export const useProlongerEcheancesAnnee = () => {
     onSuccess: (_data, { bailId }) => {
       qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
       qc.invalidateQueries({ queryKey: ["solde", bailId] });
+    },
+  });
+};
+
+export const useConfirmerReception = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bienId, bailId, echeanceId }: { bienId: string; bailId: string; echeanceId: string }) =>
+      confirmerReceptionApi(bienId, bailId, echeanceId),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
     },
   });
 };

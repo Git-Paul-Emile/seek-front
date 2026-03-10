@@ -186,7 +186,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         <h3 className="font-semibold text-[#1A2942] text-sm sm:text-base mb-1 line-clamp-1 flex items-center gap-2">
           {isApiData && bienData?.statutBien && (
             <span 
-              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+              className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ 
                 backgroundColor: bienData.statutBien.slug === 'libre' ? '#2a7e3b' : bienData.statutBien.slug === 'loue' ? '#dc2626' : '#f97316'
               }}

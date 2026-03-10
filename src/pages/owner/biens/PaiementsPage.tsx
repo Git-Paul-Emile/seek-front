@@ -17,6 +17,7 @@ import {
   Bell,
   FileText,
   CalendarPlus,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -26,6 +27,7 @@ import {
   useSolde,
   useMobileMoney,
   useProlongerEcheancesAnnee,
+  useConfirmerReception,
 } from "@/hooks/useBail";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
@@ -101,6 +103,44 @@ function RappelButton({
         <Bell className="w-3 h-3" />
       )}
       Rappel
+    </button>
+  );
+}
+
+// ─── Bouton confirmation de réception ────────────────────────────────────────
+
+function ConfirmerButton({
+  bienId,
+  bailId,
+  echeanceId,
+}: {
+  bienId: string;
+  bailId: string;
+  echeanceId: string;
+}) {
+  const { mutate, isPending } = useConfirmerReception();
+  return (
+    <button
+      onClick={() =>
+        mutate(
+          { bienId, bailId, echeanceId },
+          {
+            onSuccess: () => toast.success("Réception du paiement confirmée"),
+            onError: () => toast.error("Erreur lors de la confirmation"),
+          }
+        )
+      }
+      disabled={isPending}
+      title="Confirmer la réception du paiement"
+      className="flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-800
+        px-2.5 py-1.5 rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors disabled:opacity-60"
+    >
+      {isPending ? (
+        <Loader2 className="w-3 h-3 animate-spin" />
+      ) : (
+        <ShieldCheck className="w-3 h-3" />
+      )}
+      Confirmer
     </button>
   );
 }
@@ -496,10 +536,24 @@ export default function PaiementsPage() {
                           {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
                         </span>
                       )}
+                      {ech.confirmeParProprietaire && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 flex items-center gap-0.5">
+                          <ShieldCheck className="w-2.5 h-2.5" />
+                          Confirmé
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {fmt(total)} FCFA
                     </p>
+                    {/* Paiement partiel : montant payé + reste */}
+                    {ech.statut === "PARTIEL" && ech.montantPaye != null && (
+                      <p className="text-xs mt-0.5">
+                        <span className="text-orange-600 font-semibold">{fmt(ech.montantPaye)} FCFA payés</span>
+                        <span className="text-slate-400"> · reste </span>
+                        <span className="text-red-500 font-semibold">{fmt(ech.montant - ech.montantPaye)} FCFA</span>
+                      </p>
+                    )}
                     {ech.statut === "EN_RETARD" && (
                       <p className="text-xs text-red-500 font-semibold mt-0.5">
                         {joursRetard(ech.dateEcheance)} jours de retard
@@ -511,6 +565,11 @@ export default function PaiementsPage() {
                         {new Date(ech.datePaiement).toLocaleDateString("fr-FR")}
                         {ech.modePaiement ? ` · ${ech.modePaiement}` : ""}
                         {ech.reference ? ` · Réf: ${ech.reference}` : ""}
+                      </p>
+                    )}
+                    {ech.confirmeParProprietaire && ech.dateConfirmation && (
+                      <p className="text-xs text-teal-600 mt-0.5">
+                        Réception confirmée le {new Date(ech.dateConfirmation).toLocaleDateString("fr-FR")}
                       </p>
                     )}
                     {ech.note && (
@@ -558,6 +617,17 @@ export default function PaiementsPage() {
                         echeanceId={ech.id}
                       />
                     )}
+                    {/* Confirmer réception quand le locataire a enregistré le paiement */}
+                    {canDownload(ech.statut) &&
+                      ech.sourceEnregistrement === "LOCATAIRE" &&
+                      !ech.confirmeParProprietaire &&
+                      bail && (
+                        <ConfirmerButton
+                          bienId={id!}
+                          bailId={bail.id}
+                          echeanceId={ech.id}
+                        />
+                      )}
                     {canDownload(ech.statut) && ech.datePaiement && (
                       <button
                         onClick={() => handleDownload(ech)}

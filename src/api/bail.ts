@@ -35,6 +35,7 @@ export interface Bail {
   montantCaution?: number | null;
   cautionVersee: boolean;
   jourLimitePaiement?: number | null;
+  delaiGrace: number;
   frequencePaiement?: string | null;
   statut: StatutBail;
   createdAt: string;
@@ -62,6 +63,7 @@ export interface CreateBailPayload {
   montantCaution?: number | null;
   cautionVersee?: boolean;
   jourLimitePaiement?: number | null;
+  delaiGrace?: number;
   frequencePaiement?: string | null;
 }
 
@@ -130,6 +132,9 @@ export interface Echeance {
   reference?: string | null;
   note?: string | null;
   sourceEnregistrement?: "LOCATAIRE" | "PROPRIETAIRE" | null;
+  montantPaye?: number | null;
+  confirmeParProprietaire: boolean;
+  dateConfirmation?: string | null;
 }
 
 export interface PayerEcheancePayload {
@@ -273,5 +278,16 @@ export const getBailAArchiverApi = async (bienId: string): Promise<Bail | null> 
 
 export const getHistoriqueBailsApi = async (bienId: string): Promise<Bail[]> => {
   const { data } = await api.get(`/${bienId}/bail/historique`);
+  return data.data;
+};
+
+// ─── Confirmation de réception (propriétaire) ─────────────────────────────────
+
+export const confirmerReceptionApi = async (
+  bienId: string,
+  bailId: string,
+  echeanceId: string
+): Promise<Echeance> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/echeancier/${echeanceId}/confirmer`);
   return data.data;
 };

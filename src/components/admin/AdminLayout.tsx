@@ -26,6 +26,8 @@ import {
   TrendingUp,
   DollarSign,
   FileText,
+  Settings2,
+  Crown,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -70,6 +72,17 @@ const NAV_GROUPS = [
       { to: "/admin/premium/historique",  label: "Mises en avant",    icon: TrendingUp },
       { to: "/admin/transactions",        label: "Transactions",      icon: CreditCard },
       { to: "/admin/stats/revenus",       label: "Stats revenus",     icon: DollarSign },
+    ],
+  },
+  {
+    label: "Monétisation",
+    icon: DollarSign,
+    basePath: "/admin/monetisation",
+    children: [
+      { to: "/admin/monetisation/config",         label: "Configuration",       icon: Settings2 },
+      { to: "/admin/monetisation/plans",          label: "Plans d'abonnement",  icon: Crown },
+      { to: "/admin/monetisation/abonnements",    label: "Abonnements",         icon: Users },
+      { to: "/admin/monetisation/mises-en-avant", label: "Mises en avant",      icon: TrendingUp },
     ],
   },
   {

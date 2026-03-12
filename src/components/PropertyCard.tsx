@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, TrendingDown, Heart, BadgeCheck } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, Heart, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useFavoris } from "@/hooks/useFavoris";
@@ -36,20 +36,38 @@ const isPriceDropRecent = (dateModification: string | null): boolean => {
 };
 
 // Transformer les données de l'API en format PropertyCard
-const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => ({
-  id: parseInt(bien.id.replace(/\D/g, ""), 10) || Math.random(),
-  type: bien.typeLogement?.nom || "Bien",
-  title: bien.titre || "Annonce",
-  price: bien.prix || 0,
-  location: bien.quartier || "",
-  city: [bien.ville, bien.region, bien.pays].filter(Boolean).join(", ") || "",
-  surface: bien.surface || 0,
-  bedrooms: bien.nbChambres || 0,
-  bathrooms: bien.nbSdb || 0,
-  images: bien.photos && bien.photos.length > 0 ? bien.photos : ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-  features: { parking: bien.parking || false, generator: false, citerne: false },
-  isNew: (bien as BienAvecIsNew).isNew ?? false,
-});
+const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => {
+  // Collecter les caractéristiques (max 5)
+  const features: string[] = [];
+  
+  // Ajouter parking et ascenseur si présents
+  if (bien.parking) features.push("Parking");
+  if (bien.ascenseur) features.push("Ascenseur");
+  
+  // Ajouter les équipements de l'API (jusqu'à max 5 total)
+  if (bien.equipements && bien.equipements.length > 0) {
+    bien.equipements.forEach((eq) => {
+      if (features.length < 5) {
+        features.push(eq.equipement.nom);
+      }
+    });
+  }
+  
+  return {
+    id: parseInt(bien.id.replace(/\D/g, ""), 10) || Math.random(),
+    type: bien.typeLogement?.nom || "Bien",
+    title: bien.titre || "Annonce",
+    price: bien.prix || 0,
+    location: bien.quartier || "",
+    city: [bien.ville, bien.region, bien.pays].filter(Boolean).join(", ") || "",
+    surface: bien.surface || 0,
+    bedrooms: bien.nbChambres || 0,
+    bathrooms: bien.nbSdb || 0,
+    images: bien.photos && bien.photos.length > 0 ? bien.photos : ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    features: features,
+    isNew: (bien as BienAvecIsNew).isNew ?? false,
+  };
+};
 
 interface PropertyCardProps {
   property: Property | Bien | BienAvecIsNew;
@@ -214,11 +232,15 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
 
         <div className="flex items-center gap-2 mb-3 sm:mb-4">
           {[
-            { icon: Maximize2, label: `${displayProperty.surface} m²` },
+            ...(displayProperty.surface > 0
+              ? [{ icon: Maximize2, label: `${displayProperty.surface} m²` }]
+              : []),
             ...(displayProperty.bedrooms > 0
               ? [{ icon: BedDouble, label: `${displayProperty.bedrooms} chambre${displayProperty.bedrooms > 1 ? "s" : ""}` }]
               : []),
-            { icon: ShowerHead, label: `${displayProperty.bathrooms} salle${displayProperty.bathrooms > 1 ? "s" : ""} de bain` },
+            ...(displayProperty.bathrooms > 0
+              ? [{ icon: ShowerHead, label: `${displayProperty.bathrooms} salle${displayProperty.bathrooms > 1 ? "s" : ""} de bain` }]
+              : []),
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="relative group/spec">
               <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-slate-50 border border-slate-100 rounded-full cursor-default hover:border-slate-300 hover:bg-slate-100 transition-colors">
@@ -231,6 +253,8 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
             </div>
           ))}
         </div>
+
+        {/* Caractéristiques - affichage avec icônes et tooltip (max 5) */}
 
         <div className="flex justify-end pt-2 sm:pt-3 border-t border-slate-50">
           {isApiData ? (

@@ -159,7 +159,7 @@ export default function FavorisPage() {
 
         {/* Grille */}
         {isAuthenticated && apiFavoris && apiFavoris.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {apiFavoris.map((item) => (
               <FavoriCard key={item.id} item={item} />
             ))}
@@ -168,7 +168,7 @@ export default function FavorisPage() {
 
         {/* Loading */}
         {isAuthenticated && isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-pulse">
                 <div className="h-52 bg-slate-100" />

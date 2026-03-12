@@ -40,7 +40,7 @@ export type Property = {
   bedrooms: number;
   bathrooms: number;
   images: string[];
-  features: { parking: boolean; generator: boolean; citerne: boolean };
+  features: string[]; // Tableau de caractéristiques (ex: "Parking", "Ascenseur", "Climatisation", etc.)
   isNew: boolean;
 };
 
@@ -56,7 +56,7 @@ export const MOCK_PROPERTIES: Property[] = [
     bedrooms: 3,
     bathrooms: 2,
     images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-    features: { parking: true, generator: true, citerne: true },
+    features: ["Parking", "Climatisation", "WiFi"],
     isNew: true,
   },
   {
@@ -70,7 +70,7 @@ export const MOCK_PROPERTIES: Property[] = [
     bedrooms: 4,
     bathrooms: 3,
     images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-    features: { parking: true, generator: true, citerne: true },
+    features: ["Parking", "Piscine", "Gardien"],
     isNew: false,
   },
   {
@@ -84,7 +84,7 @@ export const MOCK_PROPERTIES: Property[] = [
     bedrooms: 1,
     bathrooms: 1,
     images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-    features: { parking: false, generator: true, citerne: false },
+    features: ["Meublé", "WiFi"],
     isNew: true,
   },
   {
@@ -98,7 +98,7 @@ export const MOCK_PROPERTIES: Property[] = [
     bedrooms: 0,
     bathrooms: 2,
     images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-    features: { parking: true, generator: false, citerne: true },
+    features: ["Parking"],
     isNew: false,
   },
 ];

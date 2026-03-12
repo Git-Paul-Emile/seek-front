@@ -929,12 +929,6 @@ export default function AnnonceDetail() {
                     <span>{(bien.nbVues ?? 0).toLocaleString("fr-FR")} vue{(bien.nbVues ?? 0) > 1 ? "s" : ""}</span>
                   </div>
                 )}
-                {(bien.nbVues ?? 0) >= 50 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-600 border border-orange-200">
-                    <Flame className="w-3 h-3" />
-                    Annonce populaire
-                  </span>
-                )}
               </div>
             </div>
 
@@ -1323,7 +1317,7 @@ export default function AnnonceDetail() {
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">
               Annonces similaires
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {similaires.map((item) => (
                 <PropertyCard key={item.id} property={item} isApiData={true} />
               ))}

@@ -2,8 +2,8 @@
 
 // ─── Base ──────────────────────────────────────────────────────────────────────
 
-export function Sk({ className = "" }: { className?: string }) {
-  return <div className={`bg-slate-200 animate-pulse rounded-lg ${className}`} />;
+export function Sk({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return <div className={`bg-slate-200 animate-pulse rounded-lg ${className}`} style={style} />;
 }
 
 // ─── Lignes de tableau ─────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ export function SkListItems({
 
 export function SkPropertyCards({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="bg-white rounded-2xl overflow-hidden border border-slate-100">
           <Sk className="h-48 w-full rounded-none" />

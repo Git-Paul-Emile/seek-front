@@ -23,7 +23,7 @@ import { SkPropertyCards } from "@/components/ui/Skeleton";
 
 const PropertiesSection = () => {
   const [sort, setSort] = useState("recent");
-  const { data: dernieresAnnonces = [], isLoading } = useDernieresAnnonces(8);
+  const { data: dernieresAnnonces = [], isLoading } = useDernieresAnnonces(10);
   const { data: miseEnAvantData, isLoading: isLoadingPremium } = useAnnoncesMiseEnAvant(6);
 
   // Extraire les annonces mises en avant
@@ -67,7 +67,7 @@ const PropertiesSection = () => {
 
             {/* Slider horizontal des annonces premium */}
             {isLoadingPremium ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                 <SkPropertyCards count={4} />
               </div>
             ) : (
@@ -80,7 +80,7 @@ const PropertiesSection = () => {
                     {annoncesMiseEnAvant.map((property) => (
                       <CarouselItem 
                         key={property.id} 
-                        className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                        className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/5"
                       >
                         <div className="relative group">
                           <PropertyCard 
@@ -135,9 +135,9 @@ const PropertiesSection = () => {
           </div>
 
           {isLoading ? (
-            <SkPropertyCards count={8} />
+            <SkPropertyCards count={10} />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {sortedBiens.map((property) => (
                 <PropertyCard
                   key={property.id}

@@ -69,6 +69,20 @@ const formatPrice = (price: number) =>
 
 const ListCard = ({ bien }: { bien: Bien }) => {
   const img = bien.photos?.[0] ?? "/placeholder.svg";
+  
+  // Collecter les caractéristiques (max 5)
+  const features: string[] = [];
+  if (bien.parking) features.push("Parking");
+  if (bien.ascenseur) features.push("Ascenseur");
+  if (bien.meuble) features.push("Meublé");
+  if (bien.equipements && bien.equipements.length > 0) {
+    bien.equipements.forEach((eq) => {
+      if (features.length < 5) {
+        features.push(eq.equipement.nom);
+      }
+    });
+  }
+  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 flex overflow-hidden hover:shadow-md transition-shadow group">
       <div className="w-44 sm:w-56 flex-shrink-0 relative overflow-hidden">
@@ -95,7 +109,7 @@ const ListCard = ({ bien }: { bien: Bien }) => {
             {[bien.quartier, bien.region].filter(Boolean).join(", ") || bien.pays}
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-            {bien.surface && (
+            {bien.surface && bien.surface > 0 && (
               <span className="flex items-center gap-1">
                 <Maximize2 className="w-3.5 h-3.5" />{bien.surface} m²
               </span>
@@ -111,17 +125,20 @@ const ListCard = ({ bien }: { bien: Bien }) => {
                 <ShowerHead className="w-3.5 h-3.5" />{bien.nbSdb} sdb
               </span>
             )}
-            {bien.parking && (
-              <span className="flex items-center gap-1">
-                <Car className="w-3.5 h-3.5" />Parking
-              </span>
-            )}
-            {bien.meuble && (
-              <span className="flex items-center gap-1">
-                <Armchair className="w-3.5 h-3.5" />Meublé
-              </span>
-            )}
           </div>
+          {/* Caractéristiques - affichage conditionnel (max 5) */}
+          {features.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {features.slice(0, 5).map((feature, idx) => (
+                <span
+                  key={idx}
+                  className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full border border-amber-100 font-medium"
+                >
+                  {feature}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
           <span className="text-xs text-slate-300">
@@ -185,7 +202,7 @@ const RecherchePage = () => {
     sortBy:    isProximityMode ? undefined : sortParams.sortBy,
     sortOrder: isProximityMode ? undefined : sortParams.sortOrder,
     page:  parseInt(sp.get("page") ?? "1"),
-    limit: 12,
+    limit: 10, // Pagination à 10 annonces par page
     lat:    proximityLat,
     lng:    proximityLng,
     radius: isProximityMode ? proximityRadius : undefined,
@@ -644,7 +661,7 @@ const RecherchePage = () => {
 
         {/* ── Résultats ── */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : items.length === 0 ? (
@@ -672,7 +689,7 @@ const RecherchePage = () => {
             <CarteAnnonces items={items} />
           </Suspense>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {items.map((bien) => (
               <div key={bien.id} className="relative">
                 {isProximityMode && bien.distance !== undefined && (

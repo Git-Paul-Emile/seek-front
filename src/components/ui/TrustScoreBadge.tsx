@@ -71,7 +71,7 @@ export function TrustScoreFull({ score }: { score: TrustScore }) {
       {/* Badges */}
       {score.badges.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {score.badges.map((b) => {
+          {score.badges.filter(b => b !== 'hote_actif').map((b) => {
             const meta = BADGE_META[b];
             const Icon = meta.icon;
             return (

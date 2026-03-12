@@ -28,6 +28,8 @@ import {
   FileText,
   Settings2,
   Crown,
+  PanelLeft,
+  PanelLeftClose,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
@@ -162,7 +164,7 @@ function NavGroup({
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar() {
+function Sidebar({ isOpen }: { isOpen: boolean }) {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -182,28 +184,36 @@ function Sidebar() {
   };
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-60 bg-white border-r border-slate-100
-      flex flex-col z-40">
+    <aside className={`fixed top-0 left-0 h-screen bg-white border-r border-slate-100
+      flex flex-col z-40 transition-all duration-300 ${
+        isOpen ? "w-60" : "w-16"
+      }`}>
 
       {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-slate-100 flex-shrink-0">
-        <Link to="/admin/dashboard" className="flex items-center gap-2.5">
+      <div className={`h-16 flex items-center border-b border-slate-100 flex-shrink-0 ${
+        isOpen ? "px-5" : "px-3 justify-center"
+      }`}>
+        <Link to="/admin/dashboard" className={`flex items-center gap-2.5 ${
+          isOpen ? "" : "justify-center"
+        }`}>
           <div className="w-8 h-8 rounded-lg bg-[#D4A843] flex items-center justify-center flex-shrink-0">
             <House className="w-4 h-4 text-white" />
           </div>
-          <div>
-            <span className="font-display font-bold text-[#0C1A35] text-base tracking-wide leading-none">
-              Seek
-            </span>
-            <span className="block text-[10px] text-slate-400 leading-none mt-0.5 font-medium tracking-wide">
-              Administration
-            </span>
-          </div>
+          {isOpen && (
+            <div>
+              <span className="font-display font-bold text-[#0C1A35] text-base tracking-wide leading-none">
+                Seek
+              </span>
+              <span className="block text-[10px] text-slate-400 leading-none mt-0.5 font-medium tracking-wide">
+                Administration
+              </span>
+            </div>
+          )}
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
+      <nav className={`flex-1 overflow-y-auto py-4 ${isOpen ? "px-3" : "px-1"}`}>
         <ul className="space-y-0.5">
           {/* Items directs */}
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
@@ -221,7 +231,7 @@ function Sidebar() {
                 {({ isActive }) => (
                   <>
                     <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="flex-1">{label}</span>
+                    {isOpen && <span className="flex-1">{label}</span>}
                   </>
                 )}
               </NavLink>
@@ -240,12 +250,16 @@ function Sidebar() {
                 }`}
             >
               <Users className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1 text-left">Utilisateurs</span>
-              <ChevronDown
-                className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${usersOpen ? "rotate-180" : ""}`}
-              />
+              {isOpen && (
+                <>
+                  <span className="flex-1 text-left">Utilisateurs</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${usersOpen ? "rotate-180" : ""}`}
+                  />
+                </>
+              )}
             </button>
-            {usersOpen && (
+            {usersOpen && isOpen && (
               <ul className="mt-0.5 ml-3 pl-4 border-l border-slate-100 space-y-0.5">
                 <li>
                   <NavLink
@@ -296,17 +310,21 @@ function Sidebar() {
               {({ isActive }) => (
                 <>
                   <FileSearch className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">Annonces</span>
-                  {pendingCount > 0 && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                        isActive
-                          ? "bg-white/25 text-white"
-                          : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {pendingCount > 99 ? "99+" : pendingCount}
-                    </span>
+                  {isOpen && (
+                    <>
+                      <span className="flex-1">Annonces</span>
+                      {pendingCount > 0 && (
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                            isActive
+                              ? "bg-white/25 text-white"
+                              : "bg-red-500 text-white"
+                          }`}
+                        >
+                          {pendingCount > 99 ? "99+" : pendingCount}
+                        </span>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -328,17 +346,21 @@ function Sidebar() {
               {({ isActive }) => (
                 <>
                   <Flag className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">Signalements</span>
-                  {signalementCount > 0 && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                        isActive
-                          ? "bg-white/25 text-white"
-                          : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {signalementCount > 99 ? "99+" : signalementCount}
-                    </span>
+                  {isOpen && (
+                    <>
+                      <span className="flex-1">Signalements</span>
+                      {signalementCount > 0 && (
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                            isActive
+                              ? "bg-white/25 text-white"
+                              : "bg-red-500 text-white"
+                          }`}
+                        >
+                          {signalementCount > 99 ? "99+" : signalementCount}
+                        </span>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -346,39 +368,49 @@ function Sidebar() {
           </li>
 
           {/* Séparateur */}
-          <li className="pt-3 pb-1">
-            <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-300">
-              Catalogue
-            </span>
-          </li>
+          {isOpen && (
+            <li className="pt-3 pb-1">
+              <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                Catalogue
+              </span>
+            </li>
+          )}
 
           {/* Groupes avec dropdown */}
-          {NAV_GROUPS.map((group) => (
+          {isOpen && NAV_GROUPS.map((group) => (
             <NavGroup key={group.basePath} group={group} />
           ))}
         </ul>
       </nav>
 
       {/* Profil + déconnexion */}
-      <div className="border-t border-slate-100 p-4 flex-shrink-0">
-        <div className="flex items-center gap-3 mb-3">
+      <div className={`border-t border-slate-100 p-4 flex-shrink-0 ${
+        isOpen ? "" : "p-2"
+      }`}>
+        <div className={`flex items-center gap-3 mb-3 ${
+          isOpen ? "" : "justify-center"
+        }`}>
           <div className="w-8 h-8 rounded-full bg-[#0C1A35] flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-semibold">
               {admin?.email?.[0]?.toUpperCase() ?? "A"}
             </span>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-[#0C1A35] truncate">{admin?.email}</p>
-            <p className="text-[10px] text-slate-400 font-medium">Administrateur</p>
-          </div>
+          {isOpen && (
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-[#0C1A35] truncate">{admin?.email}</p>
+              <p className="text-[10px] text-slate-400 font-medium">Administrateur</p>
+            </div>
+          )}
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium
-            text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium
+            text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors ${
+              isOpen ? "" : "justify-center px-2"
+            }`}
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          Déconnexion
+          {isOpen && "Déconnexion"}
         </button>
       </div>
     </aside>
@@ -387,19 +419,34 @@ function Sidebar() {
 
 // ─── Topbar ───────────────────────────────────────────────────────────────────
 
-function Topbar() {
+function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
   return (
-    <header className="fixed top-0 left-60 right-0 h-16 bg-white border-b border-slate-100
-      flex items-center justify-between px-6 z-30">
-      <div className="relative w-80">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Rechercher..."
-          className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 border border-slate-200
-            text-sm text-slate-700 placeholder:text-slate-300 outline-none
-            focus:border-slate-300 focus:bg-white transition-all"
-        />
+    <header className={`fixed top-0 h-16 bg-white border-b border-slate-100
+      flex items-center justify-between px-6 z-30 transition-all duration-300 ${
+        sidebarOpen ? "left-60" : "left-16"
+      } right-0`}>
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-[#0C1A35] transition-colors"
+          aria-label={sidebarOpen ? "Masquer le sidebar" : "Afficher le sidebar"}
+        >
+          {sidebarOpen ? (
+            <PanelLeftClose className="w-5 h-5" />
+          ) : (
+            <PanelLeft className="w-5 h-5" />
+          )}
+        </button>
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 border border-slate-200
+              text-sm text-slate-700 placeholder:text-slate-300 outline-none
+              focus:border-slate-300 focus:bg-white transition-all"
+          />
+        </div>
       </div>
       <Link
         to="/"
@@ -416,11 +463,15 @@ function Topbar() {
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
 export default function AdminLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">
-      <Sidebar />
-      <Topbar />
-      <div className="ml-60 pt-16 overflow-x-clip">
+      <Sidebar isOpen={sidebarOpen} />
+      <Topbar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      <div className={`pt-16 overflow-x-clip transition-all duration-300 ${
+        sidebarOpen ? "ml-60" : "ml-16"
+      }`}>
         <main className="p-6 overflow-x-clip">
           <Outlet />
         </main>

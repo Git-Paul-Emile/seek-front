@@ -449,3 +449,25 @@ export const fetchStatsVuesOwner = (): Promise<StatsVuesOwner> =>
 
 export const fetchAdminStatsVues = (): Promise<AdminStatsVues> =>
   api.get<{ data: AdminStatsVues }>("/stats/vues/admin").then((r) => r.data.data);
+
+// ─── Stats favoris ───────────────────────────────────────────────────────────────
+
+export interface StatsFavorisOwner {
+  favorisTotaux: number;
+  topAnnonces: {
+    id: string;
+    titre: string | null;
+    ville: string | null;
+    nbFavoris: number;
+  }[];
+}
+
+export interface StatsFavorisBien {
+  favorisTotaux: number;
+}
+
+export const fetchStatsFavorisOwner = (): Promise<StatsFavorisOwner> =>
+  api.get<{ data: StatsFavorisOwner }>("/stats/favoris").then((r) => r.data.data);
+
+export const fetchStatsFavorisBien = (bienId: string): Promise<StatsFavorisBien> =>
+  api.get<{ data: StatsFavorisBien }>(`/${bienId}/stats-favoris`).then((r) => r.data.data);

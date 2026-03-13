@@ -12,6 +12,8 @@ import {
   fetchStatsVuesBien,
   fetchStatsVuesOwner,
   fetchAdminStatsVues,
+  fetchStatsFavorisOwner,
+  fetchStatsFavorisBien,
   type CreateBienPayload,
 } from "@/api/bien";
 
@@ -117,5 +119,20 @@ export const useAdminStatsVues = () =>
   useQuery({
     queryKey: ["admin-stats-vues"],
     queryFn: fetchAdminStatsVues,
+    staleTime: 60 * 1000,
+  });
+
+export const useStatsFavorisOwner = () =>
+  useQuery({
+    queryKey: ["stats-favoris-owner"],
+    queryFn: fetchStatsFavorisOwner,
+    staleTime: 60 * 1000,
+  });
+
+export const useStatsFavorisBien = (bienId: string | undefined) =>
+  useQuery({
+    queryKey: ["stats-favoris-bien", bienId],
+    queryFn: () => fetchStatsFavorisBien(bienId!),
+    enabled: !!bienId,
     staleTime: 60 * 1000,
   });

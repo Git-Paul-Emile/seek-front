@@ -16,6 +16,7 @@ import {
   Crown,
   PanelLeft,
   PanelLeftClose,
+  Heart,
 } from "lucide-react";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { to: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/owner/paiements", label: "Paiements", icon: Wallet },
   { to: "/owner/stats/vues", label: "Stats de vues", icon: TrendingUp },
+  { to: "/owner/stats/favoris", label: "Stats de favoris", icon: Heart },
   { to: "/owner/abonnement", label: "Mon abonnement", icon: Crown },
   { to: "/owner/profile", label: "Mon Profil", icon: User },
 ];

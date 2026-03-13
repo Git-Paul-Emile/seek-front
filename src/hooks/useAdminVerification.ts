@@ -6,9 +6,13 @@ import {
   rejectVerificationApi,
   type PendingVerification,
 } from "@/api/ownerAuth";
+import { useEffect } from "react";
+import { socketService, EVENTS } from "@/services/socketService";
 
 export function usePendingVerificationsCount() {
-  return useQuery<number, Error>({
+  const queryClient = useQueryClient();
+
+  const query = useQuery<number, Error>({
     queryKey: ["adminPendingVerificationsCount"],
     queryFn: async () => {
       const { data } = await getPendingVerificationsCountApi();
@@ -16,23 +20,59 @@ export function usePendingVerificationsCount() {
       return data.data.count;
     },
     staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
   });
+
+  // Écouter les mises à jour en temps réel du compteur
+  useEffect(() => {
+    // Se connecter au socket et rejoindre la room admin
+    socketService.connect();
+    socketService.joinAdmin();
+
+    // Souscrire aux mises à jour du compteur
+    const unsubCount = socketService.onVerificationCountUpdate((data: { count: number }) => {
+      queryClient.setQueryData(["adminPendingVerificationsCount"], data.count);
+    });
+
+    // Souscrire aux nouvelles vérifications
+    const unsubNew = socketService.onVerificationSubmitted(() => {
+      // Rafraîchir les données quand une nouvelle vérification est soumise
+      queryClient.invalidateQueries({ queryKey: ["adminPendingVerificationsCount"] });
+      queryClient.invalidateQueries({ queryKey: ["adminPendingVerifications"] });
+    });
+
+    return () => {
+      unsubCount();
+      unsubNew();
+    };
+  }, [queryClient]);
+
+  return query;
 }
 
 export function usePendingVerifications(): UseQueryResult<PendingVerification[], Error> {
   const queryClient = useQueryClient();
-  return useQuery<PendingVerification[], Error>({
+  
+  const query = useQuery<PendingVerification[], Error>({
     queryKey: ["adminPendingVerifications"],
     queryFn: async () => {
       const { data } = await getPendingVerificationsApi();
       return data.data;
     },
-    onSuccess: (data) => {
-      // whenever we fetch the list we also want to update the badge count
-      queryClient.setQueryData<number>(["adminPendingVerificationsCount"], data.length);
-    },
   });
+
+  // Écouter les mises à jour en temps réel
+  useEffect(() => {
+    // Souscrire aux nouvelles vérifications - rafraichir automatiquement
+    const unsubNew = socketService.onVerificationSubmitted(() => {
+      queryClient.invalidateQueries({ queryKey: ["adminPendingVerifications"] });
+    });
+
+    return () => {
+      unsubNew();
+    };
+  }, [queryClient]);
+
+  return query;
 }
 
 export function useApproveVerification() {

@@ -32,6 +32,8 @@ export const EVENTS = {
   PAYMENT_FAILED: "payment:failed",
   STATS_UPDATE: "stats:update",
   NEW_PROPERTY_ALERT: "property:new",
+  VERIFICATION_SUBMITTED: "verification:submitted",
+  VERIFICATION_COUNT_UPDATE: "verification:count",
 };
 
 class SocketService {
@@ -168,6 +170,20 @@ class SocketService {
     return this.addListener(EVENTS.NEW_PROPERTY_ALERT, callback);
   }
 
+  /**
+   * S'abonner aux nouvelles vérifications soumises (admin)
+   */
+  onVerificationSubmitted(callback) {
+    return this.addListener(EVENTS.VERIFICATION_SUBMITTED, callback);
+  }
+
+  /**
+   * S'abonner aux mises à jour du compteur de vérifications (admin)
+   */
+  onVerificationCountUpdate(callback) {
+    return this.addListener(EVENTS.VERIFICATION_COUNT_UPDATE, callback);
+  }
+
   // ============= Méthodes privées =============
 
   /**
@@ -208,6 +224,8 @@ class SocketService {
       EVENTS.PAYMENT_FAILED,
       EVENTS.STATS_UPDATE,
       EVENTS.NEW_PROPERTY_ALERT,
+      EVENTS.VERIFICATION_SUBMITTED,
+      EVENTS.VERIFICATION_COUNT_UPDATE,
     ];
 
     events.forEach(event => {

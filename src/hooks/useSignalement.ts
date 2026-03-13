@@ -23,6 +23,7 @@ export function useSignalementCount() {
     queryKey: ["signalement-count"],
     queryFn: getSignalementCount,
     staleTime: 60_000,
+    refetchInterval: 10 * 1000,
   });
 }
 

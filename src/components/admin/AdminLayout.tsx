@@ -35,9 +35,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
 import { usePendingVerificationsCount } from "@/hooks/useAdminVerification";
 import { useSignalementCount } from "@/hooks/useSignalement";
-import { useEffect } from "react";
-import { socketService, EVENTS } from "@/services/socketService";
-import { toast } from "sonner";
 
 // ─── Structure de navigation ──────────────────────────────────────────────────
 
@@ -180,27 +177,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   const [usersOpen, setUsersOpen] = useState(
     location.pathname.startsWith("/admin/utilisateurs")
   );
-
-  // Écouter les nouvelles vérifications et afficher une notification
-  useEffect(() => {
-    socketService.connect();
-    socketService.joinAdmin();
-
-    const unsub = socketService.onVerificationSubmitted((data) => {
-      toast.info(`🔔 Nouvelle demande de vérification de ${data.prenom} ${data.nom}`, {
-        description: "Cliquez pour examiner la demande",
-        duration: 10000,
-        action: {
-          label: "Voir",
-          onClick: () => navigate("/admin/verifications"),
-        },
-      });
-    });
-
-    return () => {
-      unsub();
-    };
-  }, [navigate]);
 
   const handleLogout = async () => {
     await logout();

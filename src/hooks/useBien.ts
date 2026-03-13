@@ -27,6 +27,7 @@ export const useOwnerStats = () =>
     queryKey: [QK, "stats"],
     queryFn: fetchOwnerStats,
     staleTime: 2 * 60 * 1000,
+    refetchInterval: 10 * 1000,
   });
 
 export const useBienById = (id: string) =>

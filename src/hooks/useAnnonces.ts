@@ -17,7 +17,7 @@ export const useAnnoncesPendingCount = () =>
     queryKey: [QK_COUNT],
     queryFn: fetchAnnoncesPendingCount,
     staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    refetchInterval: 10 * 1000,
   });
 
 export const useAnnoncesStatusCounts = () =>

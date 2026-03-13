@@ -21,7 +21,15 @@
 import { io } from "socket.io-client";
 
 // URL du serveur (à configurer selon l'environnement)
-const SOCKET_URL = import.meta?.env?.VITE_API_URL || "http://localhost:8000";
+// Utilise la même URL que l'API
+const SOCKET_URL = (() => {
+  const apiUrl = import.meta?.env?.VITE_API_URL;
+  if (apiUrl) {
+    // Remplacer http/https par ws/wss pour le WebSocket
+    return apiUrl.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+  }
+  return "http://localhost:8000";
+})();
 
 // Types d'événements (doivent correspondre au backend)
 export const EVENTS = {

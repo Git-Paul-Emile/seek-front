@@ -77,7 +77,6 @@ import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
 import AdminStatsRevenus from "./pages/admin/StatsRevenus";
 import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
 import StatsVues from "./pages/owner/StatsVues";
-import StatsFavoris from "./pages/owner/StatsFavoris";
 import FavorisPage from "./pages/public/Favoris";
 import ConfigMonetisationPage from "./pages/admin/monetisation/ConfigMonetisationPage";
 import PlansAbonnementPage from "./pages/admin/monetisation/PlansAbonnementPage";
@@ -151,7 +150,6 @@ const App = () => (
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
                     <Route path="/owner/stats/vues" element={<StatsVues />} />
-                    <Route path="/owner/stats/favoris" element={<StatsFavoris />} />
                     <Route path="/owner/abonnement" element={<AbonnementPage />} />
                   </Route>
                 </Route>

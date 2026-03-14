@@ -15,7 +15,6 @@ import {
   Users,
   TrendingUp,
   AlertTriangle,
-  Sparkles,
 } from "lucide-react";
 import {
   PieChart,
@@ -209,16 +208,6 @@ export default function OwnerDashboard() {
                 <p className="text-xs font-medium text-red-500">Loyers en retard</p>
               </div>
             </div>
-            <Link
-              to="/owner/paiements"
-              className="rounded-2xl border border-slate-100 p-4 flex items-center gap-3 bg-amber-50 hover:bg-amber-100 transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-5 h-5 shrink-0 text-[#D4A843]" />
-              <div>
-                <p className="text-xl font-bold text-[#0C1A35]">Historique</p>
-                <p className="text-xs font-medium text-[#D4A843]">Paiements premium</p>
-              </div>
-            </Link>
           </div>
 
           {/* Donut + biens récents */}

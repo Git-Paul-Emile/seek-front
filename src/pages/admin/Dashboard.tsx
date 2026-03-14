@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import {
   LayoutDashboard,
-  Building2,
   Clock,
   CheckCircle,
   Users,
@@ -143,11 +142,10 @@ export default function AdminDashboard() {
       ) : (
         <>
           {/* KPI cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KpiCard icon={CheckCircle}  label="Annonces publiées"  value={totalPublie}                   color="bg-green-500" />
-            <KpiCard icon={Clock}        label="En attente"         value={totalEnAttente}                color="bg-yellow-500" />
-            <KpiCard icon={Users}        label="Propriétaires"      value={stats?.totalProprietaires}     color="bg-[#0C1A35]" />
-            <KpiCard icon={Building2}    label="Annonces (hors brouillon)"  value={stats?.totalBiens}  color="bg-[#D4A843]" />
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <KpiCard icon={CheckCircle}  label="Annonces publiées"  value={totalPublie}               color="bg-green-500" />
+            <KpiCard icon={Clock}        label="En attente"         value={totalEnAttente}            color="bg-yellow-500" />
+            <KpiCard icon={Users}        label="Propriétaires"      value={stats?.totalProprietaires} color="bg-[#0C1A35]" />
           </div>
 
           {/* Ligne 2 : donut + bar type logement */}

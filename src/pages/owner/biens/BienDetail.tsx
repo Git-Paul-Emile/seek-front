@@ -55,6 +55,8 @@ import {
   Send,
   UploadCloud,
   ExternalLink,
+  Eye,
+  Heart,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
@@ -77,6 +79,7 @@ import { generateQuittancePDF } from "@/lib/generateQuittance";
 import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useDocumentsBien, useUploadDocumentBien, useDeleteDocumentBien } from "@/hooks/useDocumentBien";
+import { useStatsFavorisBien } from "@/hooks/useBien";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -250,6 +253,7 @@ export default function BienDetail() {
   const restituerCaution = useRestituerCaution();
   const { owner } = useOwnerAuth();
   const queryClient = useQueryClient();
+  const { data: statsFavoris } = useStatsFavorisBien(id);
 
   const [photoIndex, setPhotoIndex] = useState(0);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -266,8 +270,9 @@ export default function BienDetail() {
   const [isContratCreationFlow, setIsContratCreationFlow] = useState(false);
   const [terminerOpen, setTerminerOpen] = useState(false);
   const [resilierOpen, setResilierOpen] = useState(false);
+  const [resilierMotif, setResilierMotif] = useState("");
   const [prolongerOpen, setProlongerOpen] = useState(false);
-  const [newDateFin, setNewDateFin] = useState("");
+  const [prolongerDuree, setProlongerDuree] = useState<6 | 12 | null>(null);
   const [restituerOpen, setRestituerOpen] = useState(false);
   const [restituerMontant, setRestituerMontant] = useState("");
   const [restituerMotif, setRestituerMotif] = useState("");
@@ -452,6 +457,22 @@ export default function BienDetail() {
           <button onClick={() => setShowNote(false)} className="p-1 hover:bg-red-100 rounded">
             <X className="w-4 h-4" />
           </button>
+        </div>
+      )}
+
+      {/* Stats vues & favoris */}
+      {statut === "PUBLIE" && (
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-100">
+            <Eye className="w-4 h-4 text-slate-400 shrink-0" />
+            <span className="text-sm font-bold text-[#0C1A35]">{(bien.nbVues ?? 0).toLocaleString("fr-FR")}</span>
+            <span className="text-xs text-slate-400">vue{(bien.nbVues ?? 0) > 1 ? "s" : ""}</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-100">
+            <Heart className="w-4 h-4 text-rose-400 shrink-0" />
+            <span className="text-sm font-bold text-[#0C1A35]">{(statsFavoris?.favorisTotaux ?? 0).toLocaleString("fr-FR")}</span>
+            <span className="text-xs text-slate-400">favori{(statsFavoris?.favorisTotaux ?? 0) > 1 ? "s" : ""}</span>
+          </div>
         </div>
       )}
 
@@ -676,7 +697,7 @@ export default function BienDetail() {
                         <span>
                           Bail en période de préavis.
                           {bail.dateFinBail && ` Fin prévue le ${new Date(bail.dateFinBail).toLocaleDateString("fr-FR")}.`}
-                          {" "}Choisissez de renouveler ou de terminer.
+                          {" "}Vous pouvez prolonger pour annuler le préavis, ou résilier pour mettre fin au contrat.
                         </span>
                       </div>
                     )}
@@ -717,6 +738,7 @@ export default function BienDetail() {
 
                     {/* Actions bail — selon statut */}
                     <div className="flex flex-col gap-2 pt-1">
+                      {/* Voir le contrat — toujours disponible */}
                       <button
                         onClick={() => { setActiveBailForContrat(bail); setIsContratCreationFlow(false); setShowContratModal(true); }}
                         className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
@@ -725,17 +747,19 @@ export default function BienDetail() {
                         Voir le contrat
                       </button>
 
-                      {/* Prolonger / Confirmer renouvellement */}
-                      <button
-                        onClick={() => setProlongerOpen(true)}
-                        className="flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors"
-                      >
-                        <CalendarPlus className="w-3.5 h-3.5" />
-                        {statut === "EN_RENOUVELLEMENT" ? "Confirmer la nouvelle date" : "Prolonger le bail"}
-                      </button>
+                      {/* Prolonger — disponible si ACTIF ou EN_RENOUVELLEMENT */}
+                      {(statut === "ACTIF" || statut === "EN_RENOUVELLEMENT") && (
+                        <button
+                          onClick={() => { setProlongerDuree(null); setProlongerOpen(true); }}
+                          className="flex items-center justify-center gap-2 px-3 py-2 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors"
+                        >
+                          <CalendarPlus className="w-3.5 h-3.5" />
+                          {statut === "EN_RENOUVELLEMENT" ? "Confirmer le renouvellement" : "Prolonger le bail"}
+                        </button>
+                      )}
 
-                      {/* Mettre en préavis — ACTIF uniquement, si dateFinBail renseignée */}
-                      {statut === "ACTIF" && bail.dateFinBail && (
+                      {/* Mettre en préavis — ACTIF uniquement */}
+                      {statut === "ACTIF" && (
                         <button
                           onClick={() => setPreavisOpen(true)}
                           className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
@@ -745,29 +769,18 @@ export default function BienDetail() {
                         </button>
                       )}
 
-                      {/* Mettre en renouvellement — EN_PREAVIS uniquement */}
-                      {statut === "EN_PREAVIS" && (
-                        <button
-                          onClick={() => setRenouvellementOpen(true)}
-                          className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
-                        >
-                          <RefreshCcw className="w-3.5 h-3.5" />
-                          Mettre en renouvellement
-                        </button>
-                      )}
-
-                      {/* Résilier / Terminer — logique conditionnelle sur dateFinBail */}
-                      {/* Bail AVEC date de fin → "Résilier" seulement (résiliation anticipée) */}
-                      {/* Bail SANS date de fin → "Résilier" + "Terminer" (bail indéterminé) */}
+                      {/* Résilier — ACTIF ou EN_PREAVIS */}
                       {(statut === "ACTIF" || statut === "EN_PREAVIS") && (
                         <button
-                          onClick={() => setResilierOpen(true)}
+                          onClick={() => { setResilierMotif(""); setResilierOpen(true); }}
                           className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
                         >
                           <AlertTriangle className="w-3.5 h-3.5" />
                           Résilier le bail
                         </button>
                       )}
+
+                      {/* Terminer — bail sans date de fin, pour les baux indéterminés */}
                       {(statut === "ACTIF" || statut === "EN_PREAVIS" || statut === "EN_RENOUVELLEMENT") && !bail.dateFinBail && (
                         <button
                           onClick={() => setTerminerOpen(true)}
@@ -1284,44 +1297,104 @@ export default function BienDetail() {
       />
 
       {/* Modal résilier bail */}
-      <ConfirmModal
-        open={resilierOpen}
-        title="Résilier le bail"
-        message="Le bail sera résilié et le bien reviendra au statut Libre. Cette action indique une rupture anticipée du contrat."
-        confirmLabel="Résilier le bail"
-        cancelLabel="Annuler"
-        variant="danger"
-        isPending={resilier.isPending}
-        onConfirm={() =>
-          resilier.mutate(
-            { bienId: bien.id, bailId: bail!.id },
-            {
-              onSuccess: () => {
-                toast.success("Bail résilié — le bien est Libre");
-                setResilierOpen(false);
-                refetchBail();
-              },
-              onError: () => { toast.error("Erreur"); setResilierOpen(false); },
-            }
-          )
-        }
-        onCancel={() => setResilierOpen(false)}
-      />
+      {resilierOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="font-semibold text-gray-900 mb-1">Résilier le bail</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Le bail sera résilié et le bien reviendra au statut <strong>Libre</strong>.
+              Cette action indique une rupture anticipée du contrat.
+            </p>
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Motif de résiliation (propriétaire)
+              </label>
+              <select
+                value={resilierMotif}
+                onChange={e => setResilierMotif(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+              >
+                <option value="">-- Sélectionner un motif --</option>
+                <option value="Impayés de loyer">Impayés de loyer</option>
+                <option value="Violation des conditions du contrat">Violation des conditions du contrat</option>
+                <option value="Usage illégal du logement">Usage illégal du logement</option>
+                <option value="Dégradations importantes">Dégradations importantes</option>
+                <option value="Vente du bien">Vente du bien</option>
+                <option value="Reprise pour usage personnel">Reprise pour usage personnel</option>
+                <option value="Travaux importants">Travaux importants</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setResilierOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                disabled={!resilierMotif || resilier.isPending}
+                onClick={() =>
+                  resilier.mutate(
+                    { bienId: bien.id, bailId: bail!.id, motif: resilierMotif },
+                    {
+                      onSuccess: () => {
+                        toast.success("Bail résilié — le bien est Libre");
+                        setResilierOpen(false);
+                        setResilierMotif("");
+                        refetchBail();
+                      },
+                      onError: () => { toast.error("Erreur"); setResilierOpen(false); },
+                    }
+                  )
+                }
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-60"
+              >
+                {resilier.isPending ? "Résiliation..." : "Résilier le bail"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal prolonger bail */}
       {prolongerOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="font-semibold text-gray-900 mb-4">Prolonger le bail</h3>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nouvelle date de fin
-            </label>
-            <input
-              type="date"
-              value={newDateFin}
-              onChange={(e) => setNewDateFin(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <h3 className="font-semibold text-gray-900 mb-1">
+              {bail?.statut === "EN_RENOUVELLEMENT" ? "Confirmer le renouvellement" : "Prolonger le bail"}
+            </h3>
+            {bail?.dateFinBail && (
+              <p className="text-xs text-gray-500 mb-3">
+                Date de fin actuelle : <strong>{new Date(bail.dateFinBail).toLocaleDateString("fr-FR")}</strong>
+              </p>
+            )}
+            <p className="text-xs text-gray-600 mb-3 font-medium">Choisir la durée de prolongation :</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {([6, 12] as const).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setProlongerDuree(d)}
+                  className={`px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-colors ${
+                    prolongerDuree === d
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50/50"
+                  }`}
+                >
+                  {d} mois
+                  {d === 12 && <span className="block text-[10px] font-normal text-gray-400">(1 an)</span>}
+                </button>
+              ))}
+            </div>
+            {prolongerDuree && bail?.dateFinBail && (() => {
+              const base = new Date(bail.dateFinBail);
+              base.setMonth(base.getMonth() + prolongerDuree);
+              return (
+                <p className="text-xs text-blue-600 mb-3 bg-blue-50 px-3 py-2 rounded-lg">
+                  Nouvelle date de fin : <strong>{base.toLocaleDateString("fr-FR")}</strong>
+                </p>
+              );
+            })()}
             <div className="flex gap-3">
               <button
                 onClick={() => setProlongerOpen(false)}
@@ -1331,21 +1404,21 @@ export default function BienDetail() {
               </button>
               <button
                 onClick={() => {
-                  if (!newDateFin) { toast.error("Date requise"); return; }
+                  if (!prolongerDuree) { toast.error("Choisissez une durée"); return; }
                   prolonger.mutate(
-                    { bienId: bien.id, bailId: bail!.id, dateFinBail: newDateFin },
+                    { bienId: bien.id, bailId: bail!.id, duree: prolongerDuree },
                     {
                       onSuccess: () => {
                         toast.success("Bail prolongé");
                         setProlongerOpen(false);
-                        setNewDateFin("");
+                        setProlongerDuree(null);
                         refetchBail();
                       },
                       onError: () => toast.error("Erreur lors de la prolongation"),
                     }
                   );
                 }}
-                disabled={prolonger.isPending}
+                disabled={!prolongerDuree || prolonger.isPending}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
               >
                 {prolonger.isPending ? "Enregistrement..." : "Confirmer"}
@@ -1417,8 +1490,8 @@ export default function BienDetail() {
       <ConfirmModal
         open={preavisOpen}
         title="Mettre le bail en préavis"
-        message={`Le bail passera en statut "En préavis". Vous pourrez ensuite choisir de le renouveler ou de le terminer à la date prévue.`}
-        confirmLabel="Confirmer le préavis"
+        message={`Le bail passera en statut "En préavis" avec un délai de 3 mois. La date de fin sera automatiquement définie dans 3 mois si aucune date n'est fixée.`}
+        confirmLabel="Confirmer le préavis (3 mois)"
         cancelLabel="Annuler"
         variant="warning"
         isPending={mettreEnPreavis.isPending}
@@ -1426,7 +1499,7 @@ export default function BienDetail() {
           mettreEnPreavis.mutate(
             { bienId: bien.id, bailId: bail!.id },
             {
-              onSuccess: () => { toast.success("Bail en préavis"); setPreavisOpen(false); refetchBail(); },
+              onSuccess: () => { toast.success("Bail en préavis — fin dans 3 mois"); setPreavisOpen(false); refetchBail(); },
               onError: () => { toast.error("Erreur"); setPreavisOpen(false); },
             }
           )

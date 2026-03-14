@@ -429,3 +429,13 @@ export const resetPasswordLocataireApi = async (token: string, password: string)
   await api.post("/reset-password", { token, password });
 };
 
+// ─── Actions bail (côté locataire) ───────────────────────────────────────────
+
+export const mettreEnPreavisLocataireApi = async (motif?: string): Promise<void> => {
+  await api.patch("/bail/preavis", motif ? { motif } : {});
+};
+
+export const resilierBailLocataireApi = async (motif?: string): Promise<void> => {
+  await api.patch("/bail/resilier", motif ? { motif } : {});
+};
+

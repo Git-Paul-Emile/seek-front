@@ -22,6 +22,8 @@ import {
   Download,
   ArrowRight,
   Send,
+  Bell,
+  AlertTriangle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import LocatairePayModal from "@/components/locataire/LocatairePayModal";
@@ -34,6 +36,7 @@ import { useQuittancesLocataire } from "@/hooks/useQuittance";
 import type { StatutPaiement } from "@/api/bail";
 import { getLocataireContratApi, type ContratLocataireData } from "@/api/locataireAuth";
 import { SkListItems } from "@/components/ui/Skeleton";
+import { useMettreEnPreavisLocataire, useResilierBailLocataire } from "@/hooks/useBail";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -54,7 +57,7 @@ const fmtMontant = (n?: number | null) =>
 export default function LocataireDashboard() {
   const { locataire } = useLocataireAuth();
 
-  const hasBailActif = locataire?.bails?.some((b) => b.statut === "ACTIF") ?? false;
+  const hasBailActif = locataire?.bails?.some((b) => b.statut === "ACTIF" || b.statut === "EN_PREAVIS") ?? false;
 
   const [echeancierExpanded, setEcheancierExpanded] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
@@ -68,6 +71,13 @@ export default function LocataireDashboard() {
   const [contratData, setContratData] = useState<ContratLocataireData | null>(null);
   const [loadingContrat, setLoadingContrat] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  // Bail actions (locataire)
+  const [preavisOpen, setPreavisOpen] = useState(false);
+  const [resilierOpen, setResilierOpen] = useState(false);
+  const [resilierMotif, setResilierMotif] = useState("");
+  const mettreEnPreavis = useMettreEnPreavisLocataire();
+  const resilierBail = useResilierBailLocataire();
 
   const handleVoirContrat = async () => {
     setShowContratModal(true);
@@ -110,7 +120,7 @@ export default function LocataireDashboard() {
 
   if (!locataire) return null;
 
-  const bailActif = locataire.bails?.find((b) => b.statut === "ACTIF");
+  const bailActif = locataire.bails?.find((b) => b.statut === "ACTIF" || b.statut === "EN_PREAVIS");
 
   return (
     <div className="space-y-6">
@@ -153,10 +163,29 @@ export default function LocataireDashboard() {
         <div className="lg:col-span-2 space-y-5">
           {bailActif ? (
             <div className="bg-white rounded-2xl border border-slate-100 p-6">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-5 flex items-center gap-2">
-                <Home className="w-3.5 h-3.5" />
-                Mon logement actuel
-              </h2>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] flex items-center gap-2">
+                  <Home className="w-3.5 h-3.5" />
+                  Mon logement actuel
+                </h2>
+                {bailActif.statut === "EN_PREAVIS" && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                    En préavis
+                  </span>
+                )}
+              </div>
+
+              {/* Alerte préavis */}
+              {bailActif.statut === "EN_PREAVIS" && (
+                <div className="flex items-start gap-2 p-2.5 bg-orange-50 border border-orange-100 rounded-lg text-xs text-orange-700 mb-4">
+                  <Bell className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <span>
+                    Bail en période de préavis.
+                    {bailActif.dateFinBail && ` Fin prévue le ${fmt(bailActif.dateFinBail)}.`}
+                    {" "}Contactez votre propriétaire pour toute question.
+                  </span>
+                </div>
+              )}
 
               {/* Bien */}
               <div className="bg-[#0C1A35] rounded-xl p-4 mb-5 flex items-center gap-3">
@@ -194,14 +223,39 @@ export default function LocataireDashboard() {
                 )}
               </div>
 
-              {/* Bouton voir le contrat */}
-              <button
-                onClick={handleVoirContrat}
-                className="flex items-center justify-center gap-2 w-full mt-4 px-3 py-2.5 border border-blue-200 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                Voir le contrat
-              </button>
+              {/* Actions bail */}
+              <div className="flex flex-col gap-2 mt-4">
+                {/* Voir le contrat — toujours disponible */}
+                <button
+                  onClick={handleVoirContrat}
+                  className="flex items-center justify-center gap-2 w-full px-3 py-2.5 border border-blue-200 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  Voir le contrat
+                </button>
+
+                {/* Mettre en préavis — ACTIF uniquement */}
+                {bailActif.statut === "ACTIF" && (
+                  <button
+                    onClick={() => setPreavisOpen(true)}
+                    className="flex items-center justify-center gap-2 w-full px-3 py-2.5 border border-orange-200 text-orange-700 rounded-xl text-sm font-medium hover:bg-orange-50 transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    Donner mon préavis (3 mois)
+                  </button>
+                )}
+
+                {/* Résilier — ACTIF ou EN_PREAVIS */}
+                {(bailActif.statut === "ACTIF" || bailActif.statut === "EN_PREAVIS") && (
+                  <button
+                    onClick={() => { setResilierMotif(""); setResilierOpen(true); }}
+                    className="flex items-center justify-center gap-2 w-full px-3 py-2.5 border border-red-200 text-red-700 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    Résilier le bail
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
@@ -525,6 +579,102 @@ export default function LocataireDashboard() {
                   />
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal préavis locataire */}
+      {preavisOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="font-semibold text-gray-900 mb-1">Donner mon préavis</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Votre bail passera en statut <strong>En préavis</strong> avec un délai de <strong>3 mois</strong>.
+              Vous resterez redevable du loyer pendant toute cette période.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPreavisOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                disabled={mettreEnPreavis.isPending}
+                onClick={() =>
+                  mettreEnPreavis.mutate(
+                    {},
+                    {
+                      onSuccess: () => {
+                        toast.success("Préavis enregistré — fin dans 3 mois");
+                        setPreavisOpen(false);
+                      },
+                      onError: () => toast.error("Erreur lors de l'enregistrement du préavis"),
+                    }
+                  )
+                }
+                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-60"
+              >
+                {mettreEnPreavis.isPending ? "Enregistrement..." : "Confirmer le préavis"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal résilier bail locataire */}
+      {resilierOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="font-semibold text-gray-900 mb-1">Résilier le bail</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              Le bail sera résilié. Cette action met fin au contrat de location.
+            </p>
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Motif de résiliation (locataire)
+              </label>
+              <select
+                value={resilierMotif}
+                onChange={e => setResilierMotif(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+              >
+                <option value="">-- Sélectionner un motif --</option>
+                <option value="Logement insalubre">Logement insalubre</option>
+                <option value="Manquement du propriétaire à ses obligations">Manquement du propriétaire à ses obligations</option>
+                <option value="Mutation professionnelle">Mutation professionnelle</option>
+                <option value="Problème de sécurité">Problème de sécurité</option>
+                <option value="Raisons personnelles urgentes">Raisons personnelles urgentes</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setResilierOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+              >
+                Annuler
+              </button>
+              <button
+                disabled={!resilierMotif || resilierBail.isPending}
+                onClick={() =>
+                  resilierBail.mutate(
+                    { motif: resilierMotif },
+                    {
+                      onSuccess: () => {
+                        toast.success("Bail résilié");
+                        setResilierOpen(false);
+                        setResilierMotif("");
+                      },
+                      onError: () => toast.error("Erreur lors de la résiliation"),
+                    }
+                  )
+                }
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-60"
+              >
+                {resilierBail.isPending ? "Résiliation..." : "Résilier le bail"}
+              </button>
             </div>
           </div>
         </div>

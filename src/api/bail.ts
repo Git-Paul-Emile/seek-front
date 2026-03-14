@@ -92,9 +92,10 @@ export const terminerBailApi = async (
 
 export const resilierBailApi = async (
   bienId: string,
-  bailId: string
+  bailId: string,
+  motif?: string
 ): Promise<Bail> => {
-  const { data } = await api.patch(`/${bienId}/bail/${bailId}/resilier`);
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/resilier`, motif ? { motif } : {});
   return data.data;
 };
 
@@ -108,11 +109,9 @@ export const annulerBailApi = async (
 export const prolongerBailApi = async (
   bienId: string,
   bailId: string,
-  dateFinBail: string
+  duree: 6 | 12
 ): Promise<Bail> => {
-  const { data } = await api.patch(`/${bienId}/bail/${bailId}/prolonger`, {
-    dateFinBail,
-  });
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/prolonger`, { duree });
   return data.data;
 };
 

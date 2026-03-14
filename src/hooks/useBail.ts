@@ -24,6 +24,10 @@ import {
   type PayerEcheancePayload,
   type PayerMoisMultiplesPayload,
 } from "@/api/bail";
+import {
+  mettreEnPreavisLocataireApi,
+  resilierBailLocataireApi,
+} from "@/api/locataireAuth";
 
 const QK = "bail";
 const QK_BIENS = "biens";
@@ -78,8 +82,8 @@ export const useTerminerBail = () => {
 export const useResilierBail = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ bienId, bailId }: { bienId: string; bailId: string }) =>
-      resilierBailApi(bienId, bailId),
+    mutationFn: ({ bienId, bailId, motif }: { bienId: string; bailId: string; motif?: string }) =>
+      resilierBailApi(bienId, bailId, motif),
     onSuccess: (_data, { bienId }) => {
       qc.invalidateQueries({ queryKey: [QK, bienId] });
       qc.invalidateQueries({ queryKey: [QK_BIENS, bienId] });
@@ -94,12 +98,12 @@ export const useProlongerBail = () => {
     mutationFn: ({
       bienId,
       bailId,
-      dateFinBail,
+      duree,
     }: {
       bienId: string;
       bailId: string;
-      dateFinBail: string;
-    }) => prolongerBailApi(bienId, bailId, dateFinBail),
+      duree: 6 | 12;
+    }) => prolongerBailApi(bienId, bailId, duree),
     onSuccess: (_data, { bienId }) => {
       qc.invalidateQueries({ queryKey: [QK, bienId] });
     },
@@ -276,3 +280,15 @@ export const useArchiverBail = () => {
     },
   });
 };
+
+// ─── Actions bail côté locataire ──────────────────────────────────────────────
+
+export const useMettreEnPreavisLocataire = () =>
+  useMutation({
+    mutationFn: ({ motif }: { motif?: string }) => mettreEnPreavisLocataireApi(motif),
+  });
+
+export const useResilierBailLocataire = () =>
+  useMutation({
+    mutationFn: ({ motif }: { motif?: string }) => resilierBailLocataireApi(motif),
+  });

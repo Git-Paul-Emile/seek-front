@@ -136,6 +136,14 @@ const PropertiesSection = () => {
 
           {isLoading ? (
             <SkPropertyCards count={10} />
+          ) : sortedBiens.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <svg className="w-16 h-16 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H15v-6H9v6H3.75A.75.75 0 013 21V9.75z" />
+              </svg>
+              <p className="text-[#1A2942] font-semibold text-lg">Aucune annonce disponible</p>
+              <p className="text-slate-400 text-sm mt-1">Revenez bientôt, de nouvelles annonces arrivent régulièrement.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {sortedBiens.map((property) => (

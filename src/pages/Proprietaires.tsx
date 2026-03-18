@@ -360,13 +360,13 @@ const HowItWorks = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: i * 0.1 }}
-            className="relative"
+            className="relative flex flex-col"
           >
             {/* Connector line */}
             {i < STEPS.length - 1 && (
               <div className="hidden lg:block absolute top-10 left-[calc(50%+44px)] right-[-50%] h-px bg-[#D4A843]/20 z-0" />
             )}
-            <div className="bg-white rounded-2xl p-7 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative z-10">
+            <div className="bg-white rounded-2xl p-7 border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative z-10 flex flex-col h-full">
               <div className="flex items-start justify-between mb-5">
                 <div className="w-12 h-12 rounded-xl bg-[#D4A843]/10 flex items-center justify-center">
                   <Icon className="w-6 h-6 text-[#D4A843]" />

@@ -235,7 +235,9 @@ const ProprietairesNavbar = () => {
 
 // ─── Hero ──────────────────────────────────────────────────────────────────
 
-const Hero = () => (
+const Hero = () => {
+  const { isAuthenticated: isOwnerAuth } = useOwnerAuth();
+  return (
   <section
     id="accueil"
     className="relative min-h-screen flex items-center overflow-hidden"
@@ -266,6 +268,7 @@ const Hero = () => (
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">
+          {!isOwnerAuth && (
           <Link to="/owner/register">
             <Button
               size="lg"
@@ -275,6 +278,18 @@ const Hero = () => (
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
+          )}
+          {isOwnerAuth && (
+          <Link to="/owner/dashboard">
+            <Button
+              size="lg"
+              className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-10 py-6 text-base shadow-2xl shadow-[#D4A843]/20 transition-all hover:scale-[1.03]"
+            >
+              <LayoutDashboard className="w-5 h-5 mr-2" />
+              Mon Dashboard
+            </Button>
+          </Link>
+          )}
           <button
             onClick={() =>
               document
@@ -290,7 +305,8 @@ const Hero = () => (
       </motion.div>
     </div>
   </section>
-);
+  );
+};
 
 // ─── Comment ça marche ─────────────────────────────────────────────────────
 
@@ -404,7 +420,9 @@ const FEATURES = [
   },
 ];
 
-const SeekSolution = () => (
+const SeekSolution = () => {
+  const { isAuthenticated: isOwnerAuth } = useOwnerAuth();
+  return (
   <section id="pourquoi-nous" className="py-24 bg-[#0C1A35]">
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -436,12 +454,21 @@ const SeekSolution = () => (
               </div>
             ))}
           </div>
-          <Link to="/owner/register">
-            <Button className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-8 py-5 transition-all hover:scale-[1.03]">
-              Rejoindre SEEK gratuitement
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
+          {isOwnerAuth ? (
+            <Link to="/owner/dashboard">
+              <Button className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-8 py-5 transition-all hover:scale-[1.03]">
+                <LayoutDashboard className="w-4 h-4 mr-2" />
+                Mon Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/owner/register">
+              <Button className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-8 py-5 transition-all hover:scale-[1.03]">
+                Rejoindre SEEK gratuitement
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Right — Feature grid */}
@@ -466,11 +493,14 @@ const SeekSolution = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 // ─── CTA final ─────────────────────────────────────────────────────────────
 
-const FinalCTA = () => (
+const FinalCTA = () => {
+  const { isAuthenticated: isOwnerAuth } = useOwnerAuth();
+  return (
   <section className="relative py-24 bg-[#F8F5EE] overflow-clip">
     <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#D4A843] opacity-[0.06] blur-3xl -translate-y-1/3 pointer-events-none" />
     <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-500 opacity-[0.04] blur-3xl translate-y-1/3 pointer-events-none" />
@@ -493,29 +523,44 @@ const FinalCTA = () => (
           pour gérer leur patrimoine immobilier au Sénégal.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/owner/register">
-            <Button
-              size="lg"
-              className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-10 py-6 text-base shadow-xl shadow-[#D4A843]/15 transition-all hover:scale-[1.03]"
-            >
-              Créer mon compte gratuitement
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
-          <Link to="/owner/login">
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-[#0C1A35]/15 text-[#0C1A35] hover:bg-[#0C1A35]/5 px-10 py-6 text-base transition-all"
-            >
-              J'ai déjà un compte
-            </Button>
-          </Link>
+          {isOwnerAuth ? (
+            <Link to="/owner/dashboard">
+              <Button
+                size="lg"
+                className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-10 py-6 text-base shadow-xl shadow-[#D4A843]/15 transition-all hover:scale-[1.03]"
+              >
+                <LayoutDashboard className="w-5 h-5 mr-2" />
+                Mon Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link to="/owner/register">
+                <Button
+                  size="lg"
+                  className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-10 py-6 text-base shadow-xl shadow-[#D4A843]/15 transition-all hover:scale-[1.03]"
+                >
+                  Créer mon compte gratuitement
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Link to="/owner/login">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-[#0C1A35]/15 text-[#0C1A35] hover:bg-[#0C1A35]/5 px-10 py-6 text-base transition-all"
+                >
+                  J'ai déjà un compte
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </motion.div>
     </div>
   </section>
-);
+  );
+};
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 

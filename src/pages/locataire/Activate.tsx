@@ -114,8 +114,16 @@ export default function LocataireActivate() {
   // ── Validation step 2 ───────────────────────────────────────────────────────
   const validateStep2 = () => {
     const errs: Record<string, string> = {};
+    if (!form.dateNaissance) errs.dateNaissance = "Champ obligatoire";
+    if (!form.lieuNaissance.trim()) errs.lieuNaissance = "Champ obligatoire";
+    if (!form.nationalite.trim()) errs.nationalite = "Champ obligatoire";
+    if (!form.sexe) errs.sexe = "Champ obligatoire";
     if (!form.typePiece) errs.typePiece = "Champ obligatoire";
     if (!form.numPieceIdentite.trim()) errs.numPieceIdentite = "Champ obligatoire";
+    if (!form.dateDelivrance) errs.dateDelivrance = "Champ obligatoire";
+    if (!form.dateExpirationPiece) errs.dateExpirationPiece = "Champ obligatoire";
+    if (!form.autoriteDelivrance.trim()) errs.autoriteDelivrance = "Champ obligatoire";
+    if (!form.situationProfessionnelle) errs.situationProfessionnelle = "Champ obligatoire";
     return errs;
   };
 
@@ -276,47 +284,45 @@ export default function LocataireActivate() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-xs text-white/40 bg-white/5 rounded-xl p-3 border border-white/10">
-                    Les champs marqués <span className="text-red-400">*</span> sont obligatoires pour la vérification d'identité. Les autres peuvent être complétés plus tard.
-                  </p>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-white/50 mb-1.5">Date de naissance</label>
+                      <label className="block text-xs font-medium text-white/50 mb-1.5">Date de naissance <span className="text-red-400">*</span></label>
                       <input type="date" value={form.dateNaissance}
-                        onChange={(e) => set("dateNaissance", e.target.value)}
-                        className={inputCls()} />
+                        onChange={(e) => { set("dateNaissance", e.target.value); setErrors((p) => ({ ...p, dateNaissance: "" })); }}
+                        className={inputCls(!!errors.dateNaissance)} />
+                      {errors.dateNaissance && <p className="text-xs text-red-400 mt-1">{errors.dateNaissance}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-white/50 mb-1.5">Lieu de naissance</label>
+                      <label className="block text-xs font-medium text-white/50 mb-1.5">Lieu de naissance <span className="text-red-400">*</span></label>
                       <input type="text" value={form.lieuNaissance}
-                        onChange={(e) => set("lieuNaissance", e.target.value)}
-                        placeholder="Ex: Dakar" className={inputCls()} />
+                        onChange={(e) => { set("lieuNaissance", e.target.value); setErrors((p) => ({ ...p, lieuNaissance: "" })); }}
+                        placeholder="Ex: Dakar" className={inputCls(!!errors.lieuNaissance)} />
+                      {errors.lieuNaissance && <p className="text-xs text-red-400 mt-1">{errors.lieuNaissance}</p>}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-white/50 mb-1.5">Nationalité</label>
+                      <label className="block text-xs font-medium text-white/50 mb-1.5">Nationalité <span className="text-red-400">*</span></label>
                       <input type="text" value={form.nationalite}
-                        onChange={(e) => set("nationalite", e.target.value)}
-                        placeholder="Ex: Sénégalaise" className={inputCls()} />
+                        onChange={(e) => { set("nationalite", e.target.value); setErrors((p) => ({ ...p, nationalite: "" })); }}
+                        placeholder="Ex: Sénégalaise" className={inputCls(!!errors.nationalite)} />
+                      {errors.nationalite && <p className="text-xs text-red-400 mt-1">{errors.nationalite}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-white/50 mb-1.5">Sexe</label>
-                      <select value={form.sexe} onChange={(e) => set("sexe", e.target.value)}
-                        className={selectCls}>
+                      <label className="block text-xs font-medium text-white/50 mb-1.5">Sexe <span className="text-red-400">*</span></label>
+                      <select value={form.sexe} onChange={(e) => { set("sexe", e.target.value); setErrors((p) => ({ ...p, sexe: "" })); }}
+                        className={`${selectCls} ${errors.sexe ? "border-red-400" : ""}`}>
                         <option value="">--</option>
                         <option value="M">Masculin</option>
                         <option value="F">Féminin</option>
                       </select>
+                      {errors.sexe && <p className="text-xs text-red-400 mt-1">{errors.sexe}</p>}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">
-                      Type de pièce d'identité <span className="text-red-400">*</span>
-                    </label>
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">Type de pièce d'identité <span className="text-red-400">*</span></label>
                     <select value={form.typePiece} onChange={(e) => { set("typePiece", e.target.value); setErrors((p) => ({ ...p, typePiece: "" })); }}
                       className={`${selectCls} ${errors.typePiece ? "border-red-400" : ""}`}>
                       <option value="">-- Sélectionner --</option>
@@ -328,9 +334,7 @@ export default function LocataireActivate() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">
-                      Numéro de pièce d'identité <span className="text-red-400">*</span>
-                    </label>
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">Numéro de pièce d'identité <span className="text-red-400">*</span></label>
                     <input type="text" value={form.numPieceIdentite}
                       onChange={(e) => { set("numPieceIdentite", e.target.value); setErrors((p) => ({ ...p, numPieceIdentite: "" })); }}
                       className={inputCls(!!errors.numPieceIdentite)} />
@@ -339,31 +343,34 @@ export default function LocataireActivate() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-white/50 mb-1.5">Date de délivrance</label>
+                      <label className="block text-xs font-medium text-white/50 mb-1.5">Date de délivrance <span className="text-red-400">*</span></label>
                       <input type="date" value={form.dateDelivrance}
-                        onChange={(e) => set("dateDelivrance", e.target.value)}
-                        className={inputCls()} />
+                        onChange={(e) => { set("dateDelivrance", e.target.value); setErrors((p) => ({ ...p, dateDelivrance: "" })); }}
+                        className={inputCls(!!errors.dateDelivrance)} />
+                      {errors.dateDelivrance && <p className="text-xs text-red-400 mt-1">{errors.dateDelivrance}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-white/50 mb-1.5">Date d'expiration</label>
+                      <label className="block text-xs font-medium text-white/50 mb-1.5">Date d'expiration <span className="text-red-400">*</span></label>
                       <input type="date" value={form.dateExpirationPiece}
-                        onChange={(e) => set("dateExpirationPiece", e.target.value)}
-                        className={inputCls()} />
+                        onChange={(e) => { set("dateExpirationPiece", e.target.value); setErrors((p) => ({ ...p, dateExpirationPiece: "" })); }}
+                        className={inputCls(!!errors.dateExpirationPiece)} />
+                      {errors.dateExpirationPiece && <p className="text-xs text-red-400 mt-1">{errors.dateExpirationPiece}</p>}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Autorité de délivrance</label>
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">Autorité de délivrance <span className="text-red-400">*</span></label>
                     <input type="text" value={form.autoriteDelivrance}
-                      onChange={(e) => set("autoriteDelivrance", e.target.value)}
-                      placeholder="Ex: Préfecture de Dakar" className={inputCls()} />
+                      onChange={(e) => { set("autoriteDelivrance", e.target.value); setErrors((p) => ({ ...p, autoriteDelivrance: "" })); }}
+                      placeholder="Ex: Préfecture de Dakar" className={inputCls(!!errors.autoriteDelivrance)} />
+                    {errors.autoriteDelivrance && <p className="text-xs text-red-400 mt-1">{errors.autoriteDelivrance}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Situation professionnelle</label>
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">Situation professionnelle <span className="text-red-400">*</span></label>
                     <select value={form.situationProfessionnelle}
-                      onChange={(e) => set("situationProfessionnelle", e.target.value)}
-                      className={selectCls}>
+                      onChange={(e) => { set("situationProfessionnelle", e.target.value); setErrors((p) => ({ ...p, situationProfessionnelle: "" })); }}
+                      className={`${selectCls} ${errors.situationProfessionnelle ? "border-red-400" : ""}`}>
                       <option value="">-- Sélectionner --</option>
                       <option value="Employé">Employé</option>
                       <option value="Indépendant">Indépendant / Freelance</option>
@@ -373,6 +380,7 @@ export default function LocataireActivate() {
                       <option value="Retraité">Retraité</option>
                       <option value="Autre">Autre</option>
                     </select>
+                    {errors.situationProfessionnelle && <p className="text-xs text-red-400 mt-1">{errors.situationProfessionnelle}</p>}
                   </div>
 
                   <div className="flex gap-3 pt-1">

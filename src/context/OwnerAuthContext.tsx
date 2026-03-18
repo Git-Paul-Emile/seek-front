@@ -40,8 +40,7 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
 
   // Restaurer la session au montage
   useEffect(() => {
-    if (!pathname.startsWith("/owner")) {
-      setOwner(null);
+    if (!pathname.startsWith("/owner") && !pathname.startsWith("/proprietaires")) {
       setIsLoading(false);
       return;
     }

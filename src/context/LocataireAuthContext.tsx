@@ -48,7 +48,6 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
   // Restaurer la session au montage / changement de route
   useEffect(() => {
     if (!pathname.startsWith("/locataire") || isPublicLocatairePage(pathname)) {
-      setLocataire(null);
       setIsLoading(false);
       return;
     }

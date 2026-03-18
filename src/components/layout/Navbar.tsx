@@ -6,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useFavoris } from "@/hooks/useFavoris";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
+import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 const STATIC_NAV_LINKS = [
   { to: "/", label: "Accueil" },
@@ -27,6 +29,8 @@ const Navbar = () => {
   const { count: favCount } = useFavoris();
   const { compte: comptePublic, isAuthenticated: isPublicAuth, logout: logoutPublic } = useComptePublicAuth();
   const { openModal } = useFavorisAuthModal();
+  const { isAuthenticated: isOwnerAuth } = useOwnerAuth();
+  const { isAuthenticated: isLocataireAuth } = useLocataireAuth();
 
   // Recalcule la position à chaque changement de route (scrolled persiste entre navigations)
   useEffect(() => {
@@ -130,7 +134,7 @@ const Navbar = () => {
             </AnimatePresence>
           </div>
           <Link
-            to="/locataire/login"
+            to={isLocataireAuth ? "/locataire/dashboard" : "/locataire/login"}
             className={`text-sm font-medium transition-colors duration-200 ${
               location.pathname.startsWith("/locataire")
                 ? transparent
@@ -186,9 +190,9 @@ const Navbar = () => {
             </button>
           )}
           <Link
-            to="/proprietaires"
+            to={isOwnerAuth ? "/owner/dashboard" : "/proprietaires"}
             className={`text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
-              location.pathname === "/proprietaires"
+              location.pathname === "/proprietaires" || location.pathname.startsWith("/owner")
                 ? "border-[#D4A843] text-[#D4A843] bg-[#D4A843]/10"
                 : transparent
                 ? "border-white/30 text-white/80 hover:border-[#D4A843] hover:text-[#D4A843]"
@@ -264,7 +268,7 @@ const Navbar = () => {
                 </div>
               )}
               <Link
-                to="/locataire/login"
+                to={isLocataireAuth ? "/locataire/dashboard" : "/locataire/login"}
                 onClick={() => setOpen(false)}
                 className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
                   location.pathname.startsWith("/locataire")
@@ -291,10 +295,10 @@ const Navbar = () => {
                 )}
               </Link>
               <Link
-                to="/proprietaires"
+                to={isOwnerAuth ? "/owner/dashboard" : "/proprietaires"}
                 onClick={() => setOpen(false)}
                 className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
-                  location.pathname === "/proprietaires"
+                  location.pathname === "/proprietaires" || location.pathname.startsWith("/owner")
                     ? "text-[#D4A843] bg-white/5"
                     : "text-[#D4A843]/70 hover:text-[#D4A843] hover:bg-white/5"
                 }`}

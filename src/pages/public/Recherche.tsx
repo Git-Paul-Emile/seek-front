@@ -1,10 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
   Search, MapPin, X, Loader2, Building2,
   BedDouble, Maximize2, ShowerHead,
   ArrowRight, Car, Armchair, ChevronDown, SlidersHorizontal,
-  LayoutGrid, Map,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchableSelect from "@/components/ui/SearchableSelect";
@@ -14,8 +13,6 @@ import { useRecherchePublique, useLieux } from "@/hooks/useRecherche";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import type { Bien } from "@/api/bien";
-
-const CarteAnnonces = lazy(() => import("@/components/carte/CarteAnnonces"));
 
 // ─── Tri ──────────────────────────────────────────────────────────────────────
 
@@ -350,8 +347,6 @@ const RecherchePage = () => {
 
   const hasFilters = chips.length > 0;
 
-  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
-
   return (
     <div className="min-h-screen bg-[#F8F5EE]">
 
@@ -636,26 +631,6 @@ const RecherchePage = () => {
             {isFetching && !isLoading && (
               <Loader2 className="w-4 h-4 animate-spin text-[#D4A843]" />
             )}
-            <div className="flex rounded-lg border border-slate-200 overflow-hidden">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`h-8 w-8 flex items-center justify-center transition-colors ${
-                  viewMode === "grid" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-400 hover:text-slate-600"
-                }`}
-                title="Vue grille"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("map")}
-                className={`h-8 w-8 flex items-center justify-center transition-colors border-l border-slate-200 ${
-                  viewMode === "map" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-400 hover:text-slate-600"
-                }`}
-                title="Vue carte"
-              >
-                <Map className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -684,14 +659,10 @@ const RecherchePage = () => {
               </Button>
             )}
           </div>
-        ) : viewMode === "map" ? (
-          <Suspense fallback={<div className="h-[520px] bg-slate-100 rounded-2xl animate-pulse" />}>
-            <CarteAnnonces items={items} />
-          </Suspense>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {items.map((bien) => (
-              <div key={bien.id} className="relative">
+              <div key={bien.id} className="relative h-full">
                 {isProximityMode && bien.distance !== undefined && (
                   <div className="absolute top-2 left-2 z-10 bg-[#0C1A35]/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow">
                     <MapPin className="w-3 h-3 text-[#D4A843]" />

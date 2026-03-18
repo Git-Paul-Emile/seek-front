@@ -34,7 +34,7 @@ const TestimonialsSection = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {temoignages.map((temoignage) => (
+          {temoignages.slice(0, 3).map((temoignage) => (
             <div
               key={temoignage.id}
               className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 relative"

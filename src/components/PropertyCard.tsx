@@ -1,4 +1,4 @@
-import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, Heart, BadgeCheck } from "lucide-react";
+import { MapPin, Maximize2, BedDouble, ShowerHead, ArrowRight, Heart, BadgeCheck, UtensilsCrossed, Sofa } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useFavoris } from "@/hooks/useFavoris";
@@ -44,10 +44,10 @@ const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => {
   if (bien.parking) features.push("Parking");
   if (bien.ascenseur) features.push("Ascenseur");
   
-  // Ajouter les équipements de l'API (jusqu'à max 5 total)
+  // Ajouter les équipements de l'API (jusqu'à max 4 total)
   if (bien.equipements && bien.equipements.length > 0) {
     bien.equipements.forEach((eq) => {
-      if (features.length < 5) {
+      if (features.length < 4) {
         features.push(eq.equipement.nom);
       }
     });
@@ -59,7 +59,7 @@ const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => {
     title: bien.titre || "Annonce",
     price: bien.prix || 0,
     location: bien.quartier || "",
-    city: [bien.ville, bien.region, bien.pays].filter(Boolean).join(", ") || "",
+    city: [bien.region, bien.pays].filter(Boolean).join(", ") || "",
     surface: bien.surface || 0,
     bedrooms: bien.nbChambres || 0,
     bathrooms: bien.nbSdb || 0,
@@ -112,8 +112,8 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
   const afficherBaisseDePrix = pourcentageBaisse !== null && baisseRecente;
 
   return (
-    <div 
-      className="group bg-white overflow-hidden hover:shadow-[0_16px_40px_rgba(0,0,0,0.16),0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2 border border-slate-100"
+    <div
+      className="group bg-white overflow-hidden hover:shadow-[0_16px_40px_rgba(0,0,0,0.16),0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2 border border-slate-100 flex flex-col h-full"
       style={{ borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.05)' }}
     >
       <div className="relative h-40 sm:h-44 md:h-48">
@@ -201,7 +201,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         </div>
       </div>
 
-      <div className="p-3 sm:p-4">
+      <div className="p-3 sm:p-4 flex flex-col flex-1">
         <h3 className="font-semibold text-[#1A2942] text-sm sm:text-base mb-1 line-clamp-1 flex items-center gap-2">
           {isApiData && bienData?.statutBien && (
             <span
@@ -223,14 +223,14 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           )}
         </h3>
 
-        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-400 mb-2 sm:mb-3">
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-400 mb-2 sm:mb-3 line-clamp-1">
           <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-[#D4A843]" />
           {displayProperty.location && <span>{displayProperty.location}</span>}
           {displayProperty.location && displayProperty.city && <span>, </span>}
           {displayProperty.city && <span>{displayProperty.city}</span>}
         </div>
 
-        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4 min-h-[2rem]">
           {[
             ...(displayProperty.surface > 0
               ? [{ icon: Maximize2, label: `${displayProperty.surface} m²` }]
@@ -240,6 +240,12 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
               : []),
             ...(displayProperty.bathrooms > 0
               ? [{ icon: ShowerHead, label: `${displayProperty.bathrooms} salle${displayProperty.bathrooms > 1 ? "s" : ""} de bain` }]
+              : []),
+            ...((bienData?.nbCuisines ?? 0) > 0
+              ? [{ icon: UtensilsCrossed, label: `${bienData!.nbCuisines} cuisine${(bienData!.nbCuisines ?? 0) > 1 ? "s" : ""}` }]
+              : []),
+            ...((bienData?.nbSalons ?? 0) > 0
+              ? [{ icon: Sofa, label: `${bienData!.nbSalons} salon${(bienData!.nbSalons ?? 0) > 1 ? "s" : ""}` }]
               : []),
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="relative group/spec">
@@ -254,9 +260,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
           ))}
         </div>
 
-        {/* Caractéristiques - affichage avec icônes et tooltip (max 5) */}
-
-        <div className="flex justify-end pt-2 sm:pt-3 border-t border-slate-50">
+        <div className="flex justify-end pt-2 sm:pt-3 border-t border-slate-50 mt-auto">
           {isApiData ? (
             <Link
               to={`/annonce/${(property as BienAvecIsNew).id}`}

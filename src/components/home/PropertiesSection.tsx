@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,34 +15,52 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import type { CarouselApi } from "@/components/ui/carousel";
 import PropertyCard from "@/components/PropertyCard";
 import { SORT_OPTIONS } from "@/data/home";
 import { useDernieresAnnonces } from "@/hooks/useDernieresAnnonces";
 import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import { SkPropertyCards } from "@/components/ui/Skeleton";
 
+const ROTATION_INTERVAL = 4000; // ms entre chaque glissement auto
+const MAX_VISIBLE = 5;
+
 const PropertiesSection = () => {
   const [sort, setSort] = useState("recent");
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { data: dernieresAnnonces = [], isLoading } = useDernieresAnnonces(10);
-  const { data: miseEnAvantData, isLoading: isLoadingPremium } = useAnnoncesMiseEnAvant(6);
+  const { data: miseEnAvantData, isLoading: isLoadingPremium } = useAnnoncesMiseEnAvant(20);
 
-  // Extraire les annonces mises en avant
+  // Extraire les annonces mises en avant (max MAX_VISIBLE si ≤ 5, sinon toutes pour la rotation)
   const annoncesMiseEnAvant = miseEnAvantData?.annonces ?? [];
   const hasPremium = annoncesMiseEnAvant.length > 0;
+  const needsRotation = annoncesMiseEnAvant.length > MAX_VISIBLE;
 
-  // Filtrer les dernières annonces pour exclure celles qui sont mises en avant
-  const miseEnAvantIds = new Set(annoncesMiseEnAvant.map(b => b.id));
-  const annoncesNormales = dernieresAnnonces.filter(b => !miseEnAvantIds.has(b.id));
+  // Auto-rotation quand > 5 annonces
+  useEffect(() => {
+    if (!carouselApi || !needsRotation) return;
+    autoPlayRef.current = setInterval(() => {
+      if (carouselApi.canScrollNext()) {
+        carouselApi.scrollNext();
+      } else {
+        carouselApi.scrollTo(0);
+      }
+    }, ROTATION_INTERVAL);
+    return () => {
+      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    };
+  }, [carouselApi, needsRotation]);
 
-  // Tri côté client sur les annonces à afficher dans la grille
+  // Tri côté client sur les 10 dernières annonces
   const sortedBiens = useMemo(() => {
-    const base = hasPremium ? annoncesNormales : dernieresAnnonces;
+    const base = [...dernieresAnnonces];
     const arr = [...base];
-    if (sort === "oldest")     return arr.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    if (sort === "price-asc")  return arr.sort((a, b) => (a.prix ?? 0) - (b.prix ?? 0));
-    if (sort === "price-desc") return arr.sort((a, b) => (b.prix ?? 0) - (a.prix ?? 0));
-    return arr; // "recent" — ordre API par défaut (déjà trié par date desc)
-  }, [hasPremium, annoncesNormales, dernieresAnnonces, sort]);
+    if (sort === "oldest")     return base.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    if (sort === "price-asc")  return base.sort((a, b) => (a.prix ?? 0) - (b.prix ?? 0));
+    if (sort === "price-desc") return base.sort((a, b) => (b.prix ?? 0) - (a.prix ?? 0));
+    return base; // "recent" — ordre API par défaut
+  }, [dernieresAnnonces, sort]);
 
   return (
     <section className="py-16 bg-white">
@@ -71,21 +89,32 @@ const PropertiesSection = () => {
                 <SkPropertyCards count={4} />
               </div>
             ) : (
-              <div className="relative">
-                <Carousel 
-                  opts={{ align: "start", loop: true }} 
+              <div
+                className="relative px-2 py-3"
+                onMouseEnter={() => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); }}
+                onMouseLeave={() => {
+                  if (!needsRotation || !carouselApi) return;
+                  autoPlayRef.current = setInterval(() => {
+                    if (carouselApi.canScrollNext()) carouselApi.scrollNext();
+                    else carouselApi.scrollTo(0);
+                  }, ROTATION_INTERVAL);
+                }}
+              >
+                <Carousel
+                  setApi={setCarouselApi}
+                  opts={{ align: "start", loop: true, slidesToScroll: "auto" }}
                   className="w-full overflow-x-clip"
                 >
                   <CarouselContent className="-ml-4">
                     {annoncesMiseEnAvant.map((property) => (
-                      <CarouselItem 
-                        key={property.id} 
-                        className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/5"
+                      <CarouselItem
+                        key={property.id}
+                        className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/5"
                       >
-                        <div className="relative group">
-                          <PropertyCard 
-                            property={property as any} 
-                            isApiData={true} 
+                        <div className="relative group h-full">
+                          <PropertyCard
+                            property={property as any}
+                            isApiData={true}
                           />
                         </div>
                       </CarouselItem>
@@ -126,11 +155,6 @@ const PropertiesSection = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Link to="/annonces">
-                <Button variant="outline" className="h-9 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm">
-                  Toutes les annonces
-                </Button>
-              </Link>
             </div>
           </div>
 
@@ -146,7 +170,7 @@ const PropertiesSection = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {sortedBiens.map((property) => (
+              {sortedBiens.slice(0, 10).map((property) => (
                 <PropertyCard
                   key={property.id}
                   property={property}
@@ -155,6 +179,13 @@ const PropertiesSection = () => {
               ))}
             </div>
           )}
+          <div className="flex justify-center mt-10">
+            <Link to="/annonces">
+              <Button variant="outline" className="h-10 px-8 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm">
+                Toutes les annonces
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

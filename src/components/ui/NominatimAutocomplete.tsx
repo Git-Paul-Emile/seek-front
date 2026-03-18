@@ -131,7 +131,7 @@ const NominatimAutocomplete = ({ onSelect, placeholder = "Ex: Avenue Bourguiba, 
 
   return (
     <div ref={containerRef} className="relative">
-      <Navigation className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${selected ? (dark ? "text-green-400/80" : "text-green-500") : (dark ? "text-white/35" : "text-slate-400")}`} />
+      <Navigation className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${dark ? "text-white/35" : "text-slate-400"}`} />
 
       <input
         type="text"
@@ -173,11 +173,6 @@ const NominatimAutocomplete = ({ onSelect, placeholder = "Ex: Avenue Bourguiba, 
         </div>
       )}
 
-      {selected && (
-        <p className={`mt-1 text-xs ${dark ? "text-green-400/70" : "text-green-600"}`}>
-          Point sélectionné — recherche par proximité activée
-        </p>
-      )}
     </div>
   );
 };

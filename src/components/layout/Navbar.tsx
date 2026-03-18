@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useFavoris } from "@/hooks/useFavoris";
@@ -8,13 +8,20 @@ import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
 
 const STATIC_NAV_LINKS = [
-  { to: "/",          label: "Accueil"   },
-  { to: "/annonces",  label: "Annonces"  },
+  { to: "/", label: "Accueil" },
+];
+
+const ANNONCES_DROPDOWN = [
+  { to: "/annonces",                            label: "Toutes les annonces" },
+  { to: "/annonces?typeTransaction=location",   label: "Location"            },
+  { to: "/annonces?typeTransaction=vente",      label: "Vente"               },
 ];
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [annoncesOpen, setAnnoncesOpen] = useState(false);
+  const [mobileAnnoncesOpen, setMobileAnnoncesOpen] = useState(false);
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   const { count: favCount } = useFavoris();
@@ -81,6 +88,47 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+
+          {/* Dropdown Annonces */}
+          <div
+            className="relative"
+            onMouseEnter={() => setAnnoncesOpen(true)}
+            onMouseLeave={() => setAnnoncesOpen(false)}
+          >
+            <button
+              className={`flex items-center gap-1 text-sm font-medium transition-colors duration-200 ${
+                location.pathname === "/annonces"
+                  ? transparent ? "text-[#D4A843]" : "text-[#0C1A35] font-semibold"
+                  : transparent ? "text-white/65 hover:text-white" : "text-slate-500 hover:text-[#0C1A35]"
+              }`}
+            >
+              Annonces
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            <AnimatePresence>
+              {annoncesOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50"
+                >
+                  <div className="bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 min-w-[180px]">
+                    {ANNONCES_DROPDOWN.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#0C1A35] transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <Link
             to="/locataire/login"
             className={`text-sm font-medium transition-colors duration-200 ${
@@ -188,6 +236,33 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
+
+              {/* Annonces mobile */}
+              <button
+                onClick={() => setMobileAnnoncesOpen((v) => !v)}
+                className={`flex items-center justify-between text-sm font-medium py-2.5 px-3 rounded-xl transition-colors w-full ${
+                  location.pathname === "/annonces"
+                    ? "text-[#D4A843] bg-white/5"
+                    : "text-white/65 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                Annonces
+                <ChevronDown className={`w-4 h-4 transition-transform ${mobileAnnoncesOpen ? "rotate-180" : ""}`} />
+              </button>
+              {mobileAnnoncesOpen && (
+                <div className="flex flex-col gap-0.5 pl-4">
+                  {ANNONCES_DROPDOWN.map((item) => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => { setOpen(false); setMobileAnnoncesOpen(false); }}
+                      className="text-sm font-medium py-2 px-3 rounded-xl transition-colors text-white/50 hover:text-white hover:bg-white/5"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
               <Link
                 to="/locataire/login"
                 onClick={() => setOpen(false)}

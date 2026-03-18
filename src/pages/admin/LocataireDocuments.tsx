@@ -10,13 +10,18 @@ const TYPE_DOC_LABELS: Record<string, string> = {
   CNI_VERSO: "CNI Verso",
   PASSEPORT: "Passeport",
   PERMIS: "Permis de conduire",
+  SELFIE: "Selfie",
   AUTRE: "Autre",
 };
 
 const STATUT_COLORS: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-700",
   EN_ATTENTE: "bg-yellow-100 text-yellow-700",
+  VERIFIED: "bg-green-100 text-green-700",
   VALIDE: "bg-green-100 text-green-700",
+  REJECTED: "bg-red-100 text-red-600",
   REJETE: "bg-red-100 text-red-600",
+  NOT_VERIFIED: "bg-slate-100 text-slate-500",
 };
 
 export default function LocataireDocuments() {

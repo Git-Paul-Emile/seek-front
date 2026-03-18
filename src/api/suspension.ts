@@ -294,6 +294,8 @@ export interface VerificationDocument {
 export interface LocataireVerification {
   id: string;
   statut: string;
+  typePiece: string;
+  motifRejet: string | null;
   verifiedAt: string | null;
   documents: VerificationDocument[];
 }

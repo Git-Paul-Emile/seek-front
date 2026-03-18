@@ -13,6 +13,7 @@ import { LocataireAuthProvider } from "@/context/LocataireAuthContext";
 import { ComptePublicAuthProvider } from "@/context/ComptePublicAuthContext";
 import { FavorisAuthModalProvider } from "@/context/FavorisAuthModalContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
+import PageTitle from "@/components/PageTitle";
 import GuestRoute from "@/components/admin/GuestRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
 import OwnerGuestRoute from "@/components/owner/OwnerGuestRoute";
@@ -112,6 +113,7 @@ const App = () => (
           <FavorisAuthModalProvider>
           <OwnerAuthProvider>
             <LocataireAuthProvider>
+              <PageTitle />
               <Routes>
                 {/* Routes publiques */}
                 <Route element={<PublicLayout />}>

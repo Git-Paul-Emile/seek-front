@@ -111,6 +111,14 @@ export default function LocataireActivate() {
     return errs;
   };
 
+  // ── Validation step 2 ───────────────────────────────────────────────────────
+  const validateStep2 = () => {
+    const errs: Record<string, string> = {};
+    if (!form.typePiece) errs.typePiece = "Champ obligatoire";
+    if (!form.numPieceIdentite.trim()) errs.numPieceIdentite = "Champ obligatoire";
+    return errs;
+  };
+
   // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +131,12 @@ export default function LocataireActivate() {
       }
       setErrors({});
       setStep(2);
+      return;
+    }
+
+    const step2Errs = validateStep2();
+    if (Object.keys(step2Errs).length > 0) {
+      setErrors(step2Errs);
       return;
     }
 
@@ -188,7 +202,7 @@ export default function LocataireActivate() {
             <p className="text-white/40 text-sm mt-1.5">
               {step === 1
                 ? "Créez votre mot de passe pour accéder à votre espace"
-                : "Complétez votre profil d'identité (optionnel)"}
+                : "Complétez votre profil d'identité"}
             </p>
           </div>
 
@@ -263,7 +277,7 @@ export default function LocataireActivate() {
               ) : (
                 <div className="space-y-4">
                   <p className="text-xs text-white/40 bg-white/5 rounded-xl p-3 border border-white/10">
-                    Ces informations sont optionnelles. Vous pouvez les compléter plus tard depuis votre espace.
+                    Les champs marqués <span className="text-red-400">*</span> sont obligatoires pour la vérification d'identité. Les autres peuvent être complétés plus tard.
                   </p>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -300,21 +314,27 @@ export default function LocataireActivate() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Type de pièce d'identité</label>
-                    <select value={form.typePiece} onChange={(e) => set("typePiece", e.target.value)}
-                      className={selectCls}>
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">
+                      Type de pièce d'identité <span className="text-red-400">*</span>
+                    </label>
+                    <select value={form.typePiece} onChange={(e) => { set("typePiece", e.target.value); setErrors((p) => ({ ...p, typePiece: "" })); }}
+                      className={`${selectCls} ${errors.typePiece ? "border-red-400" : ""}`}>
                       <option value="">-- Sélectionner --</option>
                       {TYPES_PIECE.map((t) => (
                         <option key={t.value} value={t.value}>{t.label}</option>
                       ))}
                     </select>
+                    {errors.typePiece && <p className="text-xs text-red-400 mt-1">{errors.typePiece}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Numéro de pièce d'identité</label>
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">
+                      Numéro de pièce d'identité <span className="text-red-400">*</span>
+                    </label>
                     <input type="text" value={form.numPieceIdentite}
-                      onChange={(e) => set("numPieceIdentite", e.target.value)}
-                      className={inputCls()} />
+                      onChange={(e) => { set("numPieceIdentite", e.target.value); setErrors((p) => ({ ...p, numPieceIdentite: "" })); }}
+                      className={inputCls(!!errors.numPieceIdentite)} />
+                    {errors.numPieceIdentite && <p className="text-xs text-red-400 mt-1">{errors.numPieceIdentite}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

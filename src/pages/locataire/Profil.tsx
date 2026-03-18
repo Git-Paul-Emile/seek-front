@@ -312,11 +312,11 @@ export default function LocataireProfil() {
       // Le hook va invalider les queries et le composant va se re-rendre avec le nouveau statut
     } catch (error: unknown) {
       console.error("Erreur upload:", error);
-      
+
       // Extraire le code d'erreur
       const axiosError = error as { response?: { status?: number } };
       const status = axiosError.response?.status;
-      
+
       if (status === 401) {
         toast.error("Session expirée. Veuillez vous reconnecter.");
       } else if (status === 413) {

@@ -38,8 +38,8 @@ export default function Signalements() {
     limit: 20,
   });
 
-  const signalements = data?.data ?? [];
-  const pagination = data?.pagination;
+  const signalements = data?.items ?? [];
+  const pagination = data?.meta;
 
   return (
     <div className="space-y-6">

@@ -419,8 +419,8 @@ export default function LocataireDashboard() {
                 {locataire.typePiece && (
                   <Row label="Pièce" value={`${locataire.typePiece}${locataire.numPieceIdentite ? ` — ${locataire.numPieceIdentite}` : ""}`} />
                 )}
-                {locataire.dateExpiration && (
-                  <Row label="Expire le" value={fmt(locataire.dateExpiration)} />
+                {locataire.dateExpirationPiece && (
+                  <Row label="Expire le" value={fmt(locataire.dateExpirationPiece)} />
                 )}
               </div>
             </div>

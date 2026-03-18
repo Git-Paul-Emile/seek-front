@@ -49,8 +49,8 @@ export interface Signalement {
 }
 
 export interface SignalementListResponse {
-  data: Signalement[];
-  pagination: {
+  items: Signalement[];
+  meta: {
     page: number;
     limit: number;
     total: number;

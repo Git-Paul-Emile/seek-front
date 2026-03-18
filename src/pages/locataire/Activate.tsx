@@ -48,7 +48,7 @@ export default function LocataireActivate() {
     numPieceIdentite: "",
     typePiece: "" as TypePieceIdentite | "",
     dateDelivrance: "",
-    dateExpiration: "",
+    dateExpirationPiece: "",
     autoriteDelivrance: "",
     situationProfessionnelle: "",
   });
@@ -138,7 +138,7 @@ export default function LocataireActivate() {
         numPieceIdentite: form.numPieceIdentite || null,
         typePiece: (form.typePiece as TypePieceIdentite) || null,
         dateDelivrance: form.dateDelivrance || null,
-        dateExpiration: form.dateExpiration || null,
+        dateExpirationPiece: form.dateExpirationPiece || null,
         autoriteDelivrance: form.autoriteDelivrance || null,
         situationProfessionnelle: form.situationProfessionnelle || null,
       });
@@ -326,8 +326,8 @@ export default function LocataireActivate() {
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-white/50 mb-1.5">Date d'expiration</label>
-                      <input type="date" value={form.dateExpiration}
-                        onChange={(e) => set("dateExpiration", e.target.value)}
+                      <input type="date" value={form.dateExpirationPiece}
+                        onChange={(e) => set("dateExpirationPiece", e.target.value)}
                         className={inputCls()} />
                     </div>
                   </div>

@@ -94,7 +94,7 @@ export interface ActiverPayload {
   numPieceIdentite?: string | null;
   typePiece?: TypePieceIdentite | null;
   dateDelivrance?: string | null;
-  dateExpiration?: string | null; // Date d'expiration de la pièce
+  dateExpirationPiece?: string | null; // Date d'expiration de la pièce
   autoriteDelivrance?: string | null;
   situationProfessionnelle?: string | null;
 }
@@ -112,7 +112,7 @@ export interface UpdateProfilLocatairePayload {
   numPieceIdentite?: string | null;
   typePiece?: TypePieceIdentite | null;
   dateDelivrance?: string | null;
-  dateExpiration?: string | null; // Date d'expiration de la pièce
+  dateExpirationPiece?: string | null; // Date d'expiration de la pièce
   autoriteDelivrance?: string | null;
   situationProfessionnelle?: string | null;
 }

@@ -59,7 +59,7 @@ export interface Locataire {
   typePiece?: TypePieceIdentite | null;
   dateDelivrance?: string | null;
   autoriteDelivrance?: string | null;
-  dateExpiration?: string | null;
+  dateExpirationPiece?: string | null;
   situationProfessionnelle?: string | null;
   statut: StatutLocataire;
   activationToken?: string | null;

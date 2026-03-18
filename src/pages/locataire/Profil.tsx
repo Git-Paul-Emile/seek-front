@@ -108,7 +108,7 @@ interface FormData {
   numPieceIdentite: string;
   typePiece: string;
   dateDelivrance: string;
-  dateExpiration: string;
+  dateExpirationPiece: string;
   autoriteDelivrance: string;
   situationProfessionnelle: string;
 }
@@ -155,7 +155,7 @@ export default function LocataireProfil() {
     numPieceIdentite: locData?.numPieceIdentite ?? "",
     typePiece: locData?.typePiece ?? "CNI",
     dateDelivrance: locData?.dateDelivrance ?? "",
-    dateExpiration: locData?.dateExpiration ?? "",
+    dateExpirationPiece: locData?.dateExpirationPiece ?? "",
     autoriteDelivrance: locData?.autoriteDelivrance ?? "",
     situationProfessionnelle: locData?.situationProfessionnelle ?? "",
   });
@@ -184,7 +184,7 @@ export default function LocataireProfil() {
         numPieceIdentite: formData.numPieceIdentite || null,
         typePiece: (formData.typePiece || null) as TypePieceIdentite | null,
         dateDelivrance: formData.dateDelivrance || null,
-        dateExpiration: formData.dateExpiration || null,
+        dateExpirationPiece: formData.dateExpirationPiece || null,
         autoriteDelivrance: formData.autoriteDelivrance || null,
         situationProfessionnelle: formData.situationProfessionnelle || null,
       };
@@ -484,8 +484,8 @@ export default function LocataireProfil() {
                     <FormField
                       label="Date d'expiration"
                       type="date"
-                      value={formData.dateExpiration}
-                      onChange={(v) => handleInputChange("dateExpiration", v)}
+                      value={formData.dateExpirationPiece}
+                      onChange={(v) => handleInputChange("dateExpirationPiece", v)}
                     />
                     <FormField
                       label="Autorité de délivrance"
@@ -529,7 +529,7 @@ export default function LocataireProfil() {
                     value={locData?.typePiece ? `${locData.typePiece} — ${locData.numPieceIdentite ?? "—"}` : "—"} 
                   />
                   <InfoField label="Délivrée le" value={fmt(locData?.dateDelivrance)} />
-                  <InfoField label="Expire le" value={fmt(locData?.dateExpiration)} />
+                  <InfoField label="Expire le" value={fmt(locData?.dateExpirationPiece)} />
                   <InfoField label="Autorité de délivrance" value={locData?.autoriteDelivrance ?? "—"} />
                   <InfoField label="Situation professionnelle" value={locData?.situationProfessionnelle ?? "—"} />
                 </div>

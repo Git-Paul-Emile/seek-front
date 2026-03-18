@@ -388,7 +388,7 @@ export default function LocataireDetail() {
                 }
               />
               <Row label="Délivrée le" value={fmt(locataire.dateDelivrance)} />
-              <Row label="Expire le" value={fmt(locataire.dateExpiration)} />
+              <Row label="Expire le" value={fmt(locataire.dateExpirationPiece)} />
               <Row label="Autorité de délivrance" value={locataire.autoriteDelivrance} />
               <Row label="Situation professionnelle" value={locataire.situationProfessionnelle} />
             </div>

@@ -144,6 +144,11 @@ function DocumentsBienSection({ bienId }: { bienId: string }) {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Seuls les fichiers PDF sont acceptés");
+      e.target.value = "";
+      return;
+    }
     upload.mutate(
       { file, type: docType },
       {
@@ -199,7 +204,7 @@ function DocumentsBienSection({ bienId }: { bienId: string }) {
             ))}
           </select>
           <label className="flex-1 cursor-pointer">
-            <input type="file" accept="image/*,.pdf" onChange={handleFile} className="hidden" disabled={upload.isPending} />
+            <input type="file" accept="application/pdf" onChange={handleFile} className="hidden" disabled={upload.isPending} />
             <div className="flex items-center justify-center gap-2 h-9 px-4 rounded-xl border border-dashed border-[#D4A843]/50 bg-[#D4A843]/5
               text-xs font-medium text-[#D4A843] hover:bg-[#D4A843]/10 transition-colors">
               {upload.isPending

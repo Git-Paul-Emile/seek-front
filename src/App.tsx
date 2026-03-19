@@ -77,6 +77,7 @@ import AdminStatsRevenus from "./pages/admin/StatsRevenus";
 import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
 import StatsVues from "./pages/owner/StatsVues";
 import FavorisPage from "./pages/public/Favoris";
+import MonComptePage from "./pages/public/MonCompte";
 import ConfigMonetisationPage from "./pages/admin/monetisation/ConfigMonetisationPage";
 import PlansAbonnementPage from "./pages/admin/monetisation/PlansAbonnementPage";
 import AbonnementsAdminPage from "./pages/admin/monetisation/AbonnementsAdminPage";
@@ -120,6 +121,7 @@ const App = () => (
                   <Route path="/recherche" element={<RecherchePage />} />
                   <Route path="/annonce/:id" element={<PublicAnnonceDetail />} />
                   <Route path="/favoris" element={<FavorisPage />} />
+                  <Route path="/mon-compte" element={<MonComptePage />} />
                 </Route>
 
                 {/* Espace propriétaires — landing */}

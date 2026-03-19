@@ -174,10 +174,13 @@ const Navbar = () => {
           {/* Compte public */}
           {isPublicAuth && comptePublic ? (
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-medium ${transparent ? "text-white/80" : "text-slate-600"}`}>
-                <User className="w-3.5 h-3.5 inline mr-1" />
+              <Link
+                to="/mon-compte"
+                className={`text-sm font-medium flex items-center gap-1 transition-colors ${transparent ? "text-white/80 hover:text-white" : "text-slate-600 hover:text-[#0C1A35]"}`}
+              >
+                <User className="w-3.5 h-3.5" />
                 {comptePublic.prenom}
-              </span>
+              </Link>
               <button
                 onClick={() => logoutPublic()}
                 title="Se déconnecter"
@@ -287,6 +290,20 @@ const Navbar = () => {
                   }`}
                 >
                   Espace locataire
+                </Link>
+              )}
+              {isPublicAuth && comptePublic && (
+                <Link
+                  to="/mon-compte"
+                  onClick={() => setOpen(false)}
+                  className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors flex items-center gap-2 ${
+                    location.pathname === "/mon-compte"
+                      ? "text-[#D4A843] bg-white/5"
+                      : "text-white/65 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Mon compte
                 </Link>
               )}
               <Link

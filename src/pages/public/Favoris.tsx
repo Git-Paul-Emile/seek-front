@@ -17,22 +17,14 @@ function FavoriCard({ item }: { item: FavoriItem }) {
   const removeMutation = useRemoveFavori();
   const syncMutation = useSyncSnapshot();
   const { changements, bien } = item;
-  const hasChanges = changements.prixChange || changements.statutChange || changements.bienSuppr;
+  const isUnavailable = changements.bienSuppr;
+  const hasChanges = changements.prixChange || changements.statutChange;
 
   return (
     <div className="relative flex flex-col gap-0 h-full">
       {hasChanges && (
-        <div className={`rounded-t-2xl px-3 py-2 text-xs font-medium flex items-center gap-2 ${
-          changements.bienSuppr
-            ? "bg-slate-100 text-slate-500"
-            : "bg-amber-50 text-amber-700 border border-amber-200 border-b-0"
-        }`}>
-          {changements.bienSuppr ? (
-            <>
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-              Annonce retirée ou non disponible
-            </>
-          ) : changements.prixChange ? (
+        <div className="rounded-t-2xl px-3 py-2 text-xs font-medium flex items-center gap-2 bg-amber-50 text-amber-700 border border-amber-200 border-b-0">
+          {changements.prixChange ? (
             <>
               <TrendingDown className="w-3.5 h-3.5 flex-shrink-0 text-green-600" />
               Prix modifié
@@ -60,9 +52,21 @@ function FavoriCard({ item }: { item: FavoriItem }) {
           )}
         </div>
       )}
-      <div className={hasChanges && !changements.bienSuppr ? "ring-2 ring-amber-300 rounded-b-2xl" : ""}>
-        <PropertyCard property={bien} isApiData />
+
+      {/* Carte — grisée + overlay hover si indisponible */}
+      <div className={`relative group ${hasChanges ? "ring-2 ring-amber-300 rounded-b-2xl" : ""}`}>
+        <div className={isUnavailable ? "grayscale opacity-50 pointer-events-none select-none" : ""}>
+          <PropertyCard property={bien} isApiData />
+        </div>
+        {isUnavailable && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900/30 rounded-2xl">
+            <span className="text-white text-sm font-semibold text-center px-4 leading-snug">
+              Annonce retirée ou non disponible
+            </span>
+          </div>
+        )}
       </div>
+
       <button
         onClick={() => removeMutation.mutate(item.bienId)}
         title="Retirer des favoris"

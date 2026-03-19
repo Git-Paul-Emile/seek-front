@@ -60,7 +60,6 @@ import {
   Bell,
   Send,
   MessageCircle,
-  Megaphone,
   Eye,
   Flame,
 } from "lucide-react";
@@ -364,84 +363,6 @@ function ReportModal({
   );
 }
 
-// ─── Formulaire inline du panneau génie ──────────────────────────────────────
-
-function AlertPanelForm({ bienId, onClose }: { bienId: string; onClose: () => void }) {
-  const [motif, setMotif] = useState("");
-  const [description, setDescription] = useState("");
-  const queryClient = useQueryClient();
-
-  const reportMutation = useMutation({
-    mutationFn: (payload: SignalerAnnoncePayload) => signalerAnnonce(bienId, payload),
-    onSuccess: () => {
-      toast.success("Signalement enregistré. Merci de votre vigilance.");
-      queryClient.invalidateQueries({ queryKey: ["annonce-publie", bienId] });
-      onClose();
-    },
-    onError: () => {
-      toast.error("Erreur lors du signalement. Veuillez réessayer.");
-    },
-  });
-
-  return (
-    <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-      <p className="text-xs text-slate-500">
-        Notre équipe examinera votre signalement dans les plus brefs délais.
-      </p>
-
-      <div className="space-y-1.5">
-        {MOTIFS_SIGNALEMENT.map((m) => (
-          <label
-            key={m.value}
-            className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all ${
-              motif === m.value
-                ? "border-[#D4A843] bg-[#D4A843]/5"
-                : "border-slate-200 hover:border-slate-300"
-            }`}
-          >
-            <input
-              type="radio"
-              name="motif-panel"
-              value={m.value}
-              checked={motif === m.value}
-              onChange={(e) => setMotif(e.target.value)}
-              className="sr-only"
-            />
-            <div
-              className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                motif === m.value ? "border-[#D4A843]" : "border-slate-300"
-              }`}
-            >
-              {motif === m.value && <div className="w-1.5 h-1.5 rounded-full bg-[#D4A843]" />}
-            </div>
-            <span className="text-xs text-[#0C1A35]">{m.label}</span>
-          </label>
-        ))}
-      </div>
-
-      <textarea
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={2}
-        placeholder="Décrivez le problème (facultatif)…"
-        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition resize-none"
-      />
-
-      <button
-        onClick={() => {
-          if (!motif) { toast.error("Sélectionnez un motif"); return; }
-          reportMutation.mutate({ motif, description });
-        }}
-        disabled={reportMutation.isPending || !motif}
-        className="w-full h-9 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-      >
-        {reportMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-        Envoyer le signalement
-      </button>
-    </div>
-  );
-}
-
 // ─── Modal Demande de visite ──────────────────────────────────────────────────
 
 function DemandeVisiteModal({
@@ -567,22 +488,8 @@ export default function AnnonceDetail() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showVisiteModal, setShowVisiteModal] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [showAlertPanel, setShowAlertPanel] = useState(false);
-  const [alertClosing, setAlertClosing] = useState(false);
   const { isFavori, toggleFavori, isAuthenticated } = useFavoris();
   const { openModal } = useFavorisAuthModal();
-
-  const openAlertPanel = () => {
-    setAlertClosing(false);
-    setShowAlertPanel(true);
-  };
-  const closeAlertPanel = () => {
-    setAlertClosing(true);
-    setTimeout(() => {
-      setShowAlertPanel(false);
-      setAlertClosing(false);
-    }, 350);
-  };
 
   // Smooth scroll vers le haut au montage
   useEffect(() => {
@@ -1201,6 +1108,15 @@ export default function AnnonceDetail() {
                   <Mail className="w-4 h-4" />
                   Email
                 </button>
+
+                {/* Signaler */}
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-red-200 text-red-500 bg-red-50 text-sm font-medium hover:bg-red-100 hover:border-red-300 transition-colors mt-3"
+                >
+                  <Flag className="w-4 h-4" />
+                  Signaler cette annonce
+                </button>
               </div>
 
               {/* Pricing Details */}
@@ -1329,62 +1245,6 @@ export default function AnnonceDetail() {
       {/* Scroll to top button */}
       <ScrollToTop />
 
-      {/* ── Floating Alert Button (Lampe du génie) ─────────────────────────── */}
-      <style>{`
-        @keyframes genieOut {
-          0%   { transform: scale(0.05) translate(40px, 40px); opacity: 0; }
-          45%  { transform: scale(1.04) translate(-3px, -3px); opacity: 1; }
-          65%  { transform: scale(0.97) translate(1px, 1px); }
-          80%  { transform: scale(1.01) translate(-1px, -1px); }
-          100% { transform: scale(1) translate(0, 0); opacity: 1; }
-        }
-        @keyframes genieIn {
-          0%   { transform: scale(1) translate(0, 0); opacity: 1; }
-          100% { transform: scale(0.05) translate(40px, 40px); opacity: 0; }
-        }
-        @keyframes lampPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-          50%       { box-shadow: 0 0 0 12px rgba(239,68,68,0); }
-        }
-        .genie-panel-open  { animation: genieOut 0.45s cubic-bezier(0.34, 1.3, 0.64, 1) forwards; transform-origin: bottom right; }
-        .genie-panel-close { animation: genieIn  0.32s cubic-bezier(0.36, 0, 0.66, 0) forwards; transform-origin: bottom right; }
-        .lamp-btn { animation: lampPulse 2.4s ease-in-out infinite; }
-      `}</style>
-
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-        {/* Panel génie */}
-        {showAlertPanel && (
-          <div
-            className={`w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden ${alertClosing ? "genie-panel-close" : "genie-panel-open"}`}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-[#0C1A35] to-[#1A2942]">
-              <h2 className="font-display text-sm font-bold text-white flex items-center gap-2">
-                <Flag className="w-4 h-4 text-[#D4A843]" />
-                Signaler cette annonce
-              </h2>
-              <button
-                onClick={closeAlertPanel}
-                className="p-1.5 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Form */}
-            <AlertPanelForm bienId={bien.id} onClose={closeAlertPanel} />
-          </div>
-        )}
-
-        {/* Bouton lampe */}
-        <button
-          onClick={showAlertPanel ? closeAlertPanel : openAlertPanel}
-          title="Signaler cette annonce"
-          className={`lamp-btn w-14 h-14 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform duration-150 ${showAlertPanel ? "rotate-12 bg-red-600" : "bg-red-500"}`}
-        >
-          <Megaphone className="w-6 h-6 text-white" />
-        </button>
-      </div>
 
       {/* No Similar Announcements Message */}
       {(!similaires || similaires.length === 0) && (

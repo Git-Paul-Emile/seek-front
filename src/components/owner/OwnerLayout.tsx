@@ -104,7 +104,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
                   }`}
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
-                {isOpen && label}
+                {isOpen && <span className="flex-1">{label}</span>}
               </NavLink>
             </li>
           ))}

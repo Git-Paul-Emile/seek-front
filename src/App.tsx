@@ -203,7 +203,7 @@ const App = () => (
                     <Route path="geo/villes"              element={<VillesPage />} />
                     <Route path="geo/quartiers"           element={<QuartiersPage />} />
                     <Route path="signalements"            element={<AdminSignalements />} />
-                    <Route path="signalements/:id"        element={<AdminSignalementDetail />} />
+                    <Route path="signalements/:bienId"   element={<AdminSignalementDetail />} />
                     <Route path="transactions"            element={<AdminTransactions />} />
                     <Route path="premium/historique"      element={<AdminPromotions />} />
                     <Route path="premium/formules"        element={<AdminFormulesPremium />} />

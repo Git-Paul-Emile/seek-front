@@ -47,6 +47,14 @@ export interface OwnerInfo {
   sexe?: string;
   statutVerification: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
   verifiedAt?: string | null;
+  nbAvertissements?: number;
+  nbAvertissementsNonLus?: number;
+  estRestreint?: boolean;
+  estSuspendu?: boolean;
+  estBanni?: boolean;
+  dateFinRestriction?: string | null;
+  dateFinSuspension?: string | null;
+  dateBannissement?: string | null;
 }
 
 export interface VerificationStatus {

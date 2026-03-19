@@ -1,171 +1,185 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import { Flag, Search, Eye, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
-import { useSignalementsAdmin } from "@/hooks/useSignalement";
-import { SkTableRows } from "@/components/ui/Skeleton";
+import {
+  Flag, Eye, Loader2, AlertTriangle, RefreshCw, ChevronLeft, ChevronRight,
+} from "lucide-react";
+import { useBiensSignales } from "@/hooks/useSignalement";
+import type { PrioriteSignalement, BienSignale } from "@/api/signalement";
 
-const TYPE_LABELS: Record<string, string> = {
-  ANNONCE: "Annonce",
-  PROPRIETAIRE: "Propriétaire",
-  LOCATAIRE: "Locataire",
+const MOTIF_LABELS: Record<string, string> = {
+  ARNAQUE_SUSPECTEE:     "Arnaque suspectée",
+  PHOTOS_NON_CONFORMES:  "Photos non conformes",
+  LOGEMENT_INSALUBRE:    "Logement insalubre",
+  INFORMATIONS_ERRONEES: "Informations erronées",
+  PRIX_INCORRECT:        "Prix incorrect",
+  DOUBLON:               "Doublon",
+  AUTRE:                 "Autre",
 };
 
-const STATUT_LABELS: Record<string, string> = {
-  EN_ATTENTE: "En attente",
-  EN_COURS: "En cours",
-  TRAITE: "Traité",
-  REJETE: "Rejeté",
-};
-
-const STATUT_COLORS: Record<string, string> = {
-  EN_ATTENTE: "bg-yellow-100 text-yellow-700",
-  EN_COURS: "bg-blue-100 text-blue-700",
-  TRAITE: "bg-green-100 text-green-700",
-  REJETE: "bg-slate-100 text-slate-500",
-};
-
-export default function Signalements() {
+export default function AdminSignalements() {
   const navigate = useNavigate();
-  const [statutFilter, setStatutFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
+  const [priorite, setPriorite] = useState<PrioriteSignalement | "">("");
 
-  const { data, isLoading } = useSignalementsAdmin({
-    statut: statutFilter || undefined,
-    type: typeFilter || undefined,
+  const { data, isLoading, isError, refetch } = useBiensSignales({
     page,
     limit: 20,
+    priorite: priorite || undefined,
   });
 
-  const signalements = data?.items ?? [];
-  const pagination = data?.meta;
+  const items: BienSignale[] = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / 20);
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Signalements" }]} />
+      <Breadcrumb items={[{ label: "Signalements" }]} />
+
+      {/* En-tête */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[#0C1A35]">Signalements</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Modération des signalements utilisateurs</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-100 rounded-xl">
+            <Flag className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-[#0C1A35]">Signalements</h1>
+            <p className="text-sm text-slate-500">{total} annonce{total > 1 ? "s" : ""} signalée{total > 1 ? "s" : ""} en attente</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Filtre priorité */}
+          <select
+            value={priorite}
+            onChange={(e) => { setPriorite(e.target.value as any); setPage(1); }}
+            className="text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#D4A843]/40"
+          >
+            <option value="">Toutes priorités</option>
+            <option value="HAUTE">Haute priorité</option>
+            <option value="BASSE">Basse priorité</option>
+          </select>
+          <button
+            onClick={() => refetch()}
+            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Filtres */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 flex gap-3 flex-wrap">
-        <select
-          value={typeFilter}
-          onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-          className="h-9 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 outline-none focus:border-[#D4A843]"
-        >
-          <option value="">Tous les types</option>
-          <option value="ANNONCE">Annonce</option>
-          <option value="PROPRIETAIRE">Propriétaire</option>
-          <option value="LOCATAIRE">Locataire</option>
-        </select>
-
-        <select
-          value={statutFilter}
-          onChange={(e) => { setStatutFilter(e.target.value); setPage(1); }}
-          className="h-9 px-3 rounded-xl border border-slate-200 text-sm text-slate-700 bg-slate-50 outline-none focus:border-[#D4A843]"
-        >
-          <option value="">Tous les statuts</option>
-          <option value="EN_ATTENTE">En attente</option>
-          <option value="EN_COURS">En cours</option>
-          <option value="TRAITE">Traité</option>
-          <option value="REJETE">Rejeté</option>
-        </select>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        {isLoading ? (
-          <SkTableRows rows={8} />
-        ) : signalements.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <Flag className="w-10 h-10 mb-3 opacity-30" />
-            <p className="text-sm font-medium">Aucun signalement trouvé</p>
-          </div>
-        ) : (
+      {/* Contenu */}
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center py-20 gap-3 text-slate-500">
+          <AlertTriangle className="w-8 h-8 text-red-400" />
+          <p>Erreur lors du chargement.</p>
+          <button onClick={() => refetch()} className="text-sm text-[#D4A843] hover:underline">Réessayer</button>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="flex flex-col items-center py-20 gap-3 text-slate-500">
+          <Flag className="w-8 h-8 text-slate-300" />
+          <p className="font-medium">Aucun signalement en attente</p>
+          <p className="text-sm">La plateforme est propre !</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="border-b border-slate-100">
-              <tr>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Type</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Motif</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Signalé par</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Statut</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Date</th>
-                <th className="px-5 py-3"></th>
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="text-left px-4 py-3 font-semibold text-slate-600">Annonce</th>
+                <th className="text-left px-4 py-3 font-semibold text-slate-600">Propriétaire</th>
+                <th className="text-center px-4 py-3 font-semibold text-slate-600">Signalements</th>
+                <th className="text-left px-4 py-3 font-semibold text-slate-600">Dernier motif</th>
+                <th className="text-center px-4 py-3 font-semibold text-slate-600">Priorité</th>
+                <th className="text-center px-4 py-3 font-semibold text-slate-600">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
-              {signalements.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-5 py-3.5">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-medium">
-                      <Flag className="w-3 h-3" />
-                      {TYPE_LABELS[s.type] ?? s.type}
+            <tbody className="divide-y divide-slate-100">
+              {items.map((bien) => (
+                <tr
+                  key={bien.id}
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/admin/signalements/${bien.id}`)}
+                >
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-[#0C1A35] truncate max-w-[180px]">
+                      {bien.titre ?? "Sans titre"}
+                    </p>
+                    <p className="text-xs text-slate-400">{bien.ville}{bien.quartier ? ` · ${bien.quartier}` : ""}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-[#0C1A35]">
+                      {bien.proprietaire.prenom} {bien.proprietaire.nom}
+                    </p>
+                    {bien.proprietaire.nbAvertissements > 0 && (
+                      <p className="text-xs text-orange-500 font-medium">
+                        {bien.proprietaire.nbAvertissements} avertissement{bien.proprietaire.nbAvertissements > 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold text-sm">
+                      {bien.reportCount}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-slate-700 font-medium max-w-xs truncate">{s.motif}</td>
-                  <td className="px-5 py-3.5 text-slate-500 text-xs">
-                    <div>{s.signaleParNom ?? s.signalePar ?? "—"}</div>
-                    {s.signaleParTel && <div className="text-slate-400">{s.signaleParTel}</div>}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${STATUT_COLORS[s.statut] ?? ""}`}>
-                      {STATUT_LABELS[s.statut] ?? s.statut}
+                  <td className="px-4 py-3">
+                    <span className="text-slate-600">
+                      {bien.dernierMotif ? MOTIF_LABELS[bien.dernierMotif] ?? bien.dernierMotif : "—"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-slate-400 text-xs">
-                    {new Date(s.createdAt).toLocaleDateString("fr-FR")}
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <button
-                      onClick={() => navigate(`/admin/signalements/${s.id}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium
-                        text-slate-600 hover:bg-slate-100 transition-colors"
+                  <td className="px-4 py-3 text-center">
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        bien.priorite === "HAUTE"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      Voir
+                      {bien.priorite === "HAUTE" ? "🔴 Haute" : "🟡 Basse"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/signalements/${bien.id}`); }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:bg-[#D4A843]/10 hover:text-[#D4A843] transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
 
-        {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100">
-            <span className="text-xs text-slate-400">
-              {pagination.total} signalement{pagination.total !== 1 ? "s" : ""}
-            </span>
-            <div className="flex gap-1.5">
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100
-                  disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Précédent
-              </button>
-              <span className="px-3 py-1.5 text-xs text-slate-500">
-                {page} / {pagination.totalPages}
-              </span>
-              <button
-                disabled={page >= pagination.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100
-                  disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Suivant
-              </button>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200">
+              <p className="text-sm text-slate-500">
+                Page {page} / {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => p - 1)}
+                  className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                  className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

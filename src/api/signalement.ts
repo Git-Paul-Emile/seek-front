@@ -3,117 +3,135 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 const api = axios.create({
-  baseURL: `${API_URL}/api/signalements`,
+  baseURL: `${API_URL}/api`,
   withCredentials: true,
 });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type TypeSignalement = "ANNONCE" | "PROPRIETAIRE" | "LOCATAIRE";
-export type StatutSignalement = "EN_ATTENTE" | "EN_COURS" | "TRAITE" | "REJETE";
+export type MotifSignalement =
+  | "ARNAQUE_SUSPECTEE"
+  | "PHOTOS_NON_CONFORMES"
+  | "LOGEMENT_INSALUBRE"
+  | "INFORMATIONS_ERRONEES"
+  | "PRIX_INCORRECT"
+  | "DOUBLON"
+  | "AUTRE";
 
-export interface Signalement {
-  id: string;
-  type: TypeSignalement;
-  motif: string;
-  description: string | null;
-  statut: StatutSignalement;
-  signalePar: string;
-  signaleParType: string | null;
-  signaleParNom: string | null;
+export type StatutSignalement = "ACTIF" | "TRAITE";
+export type PrioriteSignalement = "HAUTE" | "BASSE";
+
+export interface SignalementItem {
+  id:              string;
+  motif:           MotifSignalement;
+  justification:   string | null;
+  signaleParNom:   string | null;
+  signaleParTel:   string;
   signaleParEmail: string | null;
-  signaleParTel: string | null;
-  signaleParProprietaireId: string | null;
-  signaleParLocataireId: string | null;
-  bienId: string | null;
-  proprietaireSignaleId: string | null;
-  locataireSignaleId: string | null;
-  noteAdmin: string | null;
-  createdAt: string;
-  updatedAt: string;
-  bien?: {
-    id: string;
-    titre: string | null;
-    description: string | null;
-    photos: string[];
-    pays: string | null;
-    ville: string | null;
-    quartier: string | null;
-    adresse: string | null;
-    pointRepere: string | null;
-    prix: number | null;
-    frequencePaiement: string | null;
-    surface: number | null;
-    nbChambres: number | null;
-    nbSdb: number | null;
-    nbPieces: number | null;
-    meuble: boolean;
-    actif: boolean;
-    statutAnnonce: string;
-    nbVues: number;
-    createdAt: string;
-    proprietaireId: string;
-    typeLogement: { nom: string } | null;
-    typeTransaction: { nom: string } | null;
-    statutBien: { nom: string } | null;
-    proprietaire: { id: string; prenom: string; nom: string; telephone: string; email: string | null } | null;
-  } | null;
-  proprietaireSignale?: {
-    id: string;
-    prenom: string;
-    nom: string;
-    telephone: string;
-    email: string | null;
-  } | null;
-  locataireSignale?: {
-    id: string;
-    prenom: string;
-    nom: string;
-    telephone: string;
-  } | null;
+  statut:          StatutSignalement;
+  createdAt:       string;
 }
 
-export interface SignalementListResponse {
-  items: Signalement[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+export interface BienSignale {
+  id:                  string;
+  titre:               string | null;
+  ville:               string | null;
+  quartier:            string | null;
+  reportCount:         number;
+  statutAnnonce:       string;
+  actif:               boolean;
+  priorite:            PrioriteSignalement;
+  dernierMotif:        MotifSignalement | null;
+  dernierSignalementAt: string | null;
+  proprietaire: {
+    id:               string;
+    prenom:           string;
+    nom:              string;
+    telephone:        string;
+    email:            string | null;
+    nbAvertissements: number;
   };
 }
 
-export interface SignalementDetail extends Signalement {
-  historique?: Signalement[];
+export interface BienSignaleDetail {
+  id:                  string;
+  titre:               string | null;
+  ville:               string | null;
+  quartier:            string | null;
+  photos:              string[];
+  reportCount:         number;
+  statutAnnonce:       string;
+  actif:               boolean;
+  proprietaire: {
+    id:               string;
+    prenom:           string;
+    nom:              string;
+    telephone:        string;
+    email:            string | null;
+    nbAvertissements: number;
+    estRestreint:     boolean;
+    estSuspendu:      boolean;
+  };
+  signalements:        SignalementItem[];
+  adminAvertissements: { message: string; createdAt: string }[];
 }
 
-// ─── API ──────────────────────────────────────────────────────────────────────
+export interface BiensSignalesResponse {
+  data:  BienSignale[];
+  total: number;
+  page:  number;
+  limit: number;
+}
 
-export const getSignalementsAdmin = (params?: {
-  statut?: string;
-  type?: string;
-  page?: number;
-  limit?: number;
-}): Promise<SignalementListResponse> =>
+export interface CreateSignalementPayload {
+  motif:           MotifSignalement;
+  justification?:  string;
+  signaleParNom?:  string;
+  signaleParTel:   string;
+  signaleParEmail?: string;
+}
+
+// ─── API calls ────────────────────────────────────────────────────────────────
+
+// Public — signaler une annonce
+export const createSignalementApi = (
+  bienId: string,
+  payload: CreateSignalementPayload
+): Promise<void> =>
   api
-    .get<{ data: SignalementListResponse }>("/admin", { params })
-    .then((r) => r.data.data);
+    .post(`/signalements/annonce/${bienId}`, payload)
+    .then(() => undefined);
 
+// Admin — badge count
 export const getSignalementCount = (): Promise<number> =>
   api
-    .get<{ data: { count: number } }>("/admin/count")
+    .get<{ data: { count: number } }>("/signalements/admin/count")
     .then((r) => r.data.data.count);
 
-export const getSignalementDetail = (id: string): Promise<SignalementDetail> =>
+// Admin — liste biens signalés
+export const getBiensSignalesAdmin = (params?: {
+  page?:     number;
+  limit?:    number;
+  priorite?: PrioriteSignalement;
+}): Promise<BiensSignalesResponse> =>
   api
-    .get<{ data: SignalementDetail }>(`/admin/${id}`)
+    .get<{ data: BiensSignalesResponse }>("/signalements/admin", { params })
     .then((r) => r.data.data);
 
-export const traiterSignalement = (
-  id: string,
-  action: string,
-  note?: string
-): Promise<Signalement> =>
+// Admin — détail d'un bien signalé
+export const getBienSignaleDetail = (bienId: string): Promise<BienSignaleDetail> =>
   api
-    .patch<{ data: Signalement }>(`/admin/${id}/traiter`, { action, note })
+    .get<{ data: BienSignaleDetail }>(`/signalements/admin/${bienId}`)
     .then((r) => r.data.data);
+
+// Admin — rejeter (abusif, reset compteur)
+export const rejeterSignalementsApi = (bienId: string): Promise<void> =>
+  api.post(`/signalements/admin/${bienId}/rejeter`).then(() => undefined);
+
+// Admin — avertir le propriétaire
+export const avertirProprietaireApi = (bienId: string, message: string): Promise<void> =>
+  api.post(`/signalements/admin/${bienId}/avertir`, { message }).then(() => undefined);
+
+// Admin — sanctionner (suppression définitive)
+export const sanctionnerAnnonceApi = (bienId: string): Promise<void> =>
+  api.post(`/signalements/admin/${bienId}/sanctionner`).then(() => undefined);

@@ -13,7 +13,6 @@ import {
   Trash2,
   Eye,
   RotateCcw,
-  RefreshCw,
   UserCheck,
   Send,
   Search,
@@ -33,11 +32,12 @@ const STATUT_CONFIG: Record<
   EN_ATTENTE: { color: "bg-yellow-100", textColor: "text-yellow-700", icon: Clock,       label: "En attente" },
   PUBLIE:     { color: "bg-green-100",  textColor: "text-green-700",  icon: CheckCircle, label: "Publié" },
   REJETE:     { color: "bg-red-100",    textColor: "text-red-700",    icon: XCircle,     label: "Rejeté" },
-  ANNULE:     { color: "bg-gray-100",   textColor: "text-gray-600",   icon: XCircle,     label: "Annulé" },
+  ANNULE:     { color: "bg-gray-100",   textColor: "text-gray-600",   icon: XCircle,  label: "Annulé" },
 };
 
 function StatutBadge({ statut }: { statut: StatutAnnonce }) {
-  const { color, textColor, icon: Icon, label } = STATUT_CONFIG[statut];
+  const config = STATUT_CONFIG[statut] ?? { color: "bg-gray-100", textColor: "text-gray-600", icon: AlertCircle, label: statut };
+  const { color, textColor, icon: Icon, label } = config;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${color} ${textColor}`}>
       <Icon className="w-3 h-3" />
@@ -311,12 +311,6 @@ export default function BiensList() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">
                           <StatutBadge statut={bien.statutAnnonce} />
-                          {bien.hasPendingRevision && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">
-                              <RefreshCw className="w-2.5 h-2.5" />
-                              Révision en attente
-                            </span>
-                          )}
                           {bien.estMisEnAvant && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-600">
                               En avant
@@ -389,19 +383,13 @@ export default function BiensList() {
                           {/* PUBLIE */}
                           {bien.statutAnnonce === "PUBLIE" && (
                             <>
-                              {bien.hasPendingRevision ? (
-                                <span className="text-xs text-blue-500 px-2.5 py-1.5">
-                                  Révision en cours…
-                                </span>
-                              ) : (
-                                <Link
-                                  to={`/owner/biens/ajouter?edit=${bien.id}`}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                  Modifier
-                                </Link>
-                              )}
+                              <Link
+                                to={`/owner/biens/ajouter?edit=${bien.id}`}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                                Modifier
+                              </Link>
                               <button
                                 onClick={() => setRetourTargetId(bien.id)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"

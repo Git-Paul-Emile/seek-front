@@ -8,7 +8,7 @@ const TestimonialsSection = () => {
   if (isLoading) {
     return (
       <section className="py-16 bg-[#0C1A35]">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8">
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#D4A843]" />
           </div>
@@ -23,7 +23,7 @@ const TestimonialsSection = () => {
 
   return (
     <section className="py-16 bg-[#0C1A35]">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-8">
         <div className="text-center mb-12">
           <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">
             Témoignages

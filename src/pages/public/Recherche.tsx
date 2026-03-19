@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
   Search, MapPin, X, Loader2, Building2,
   BedDouble, Maximize2, ShowerHead,
-  ArrowRight, Car, Armchair, ChevronDown, SlidersHorizontal,
+  ArrowRight, Car, Armchair, ChevronDown, SlidersHorizontal, ArrowUpDown,
+  PawPrint, Cigarette, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchableSelect from "@/components/ui/SearchableSelect";
@@ -12,6 +13,7 @@ import Pagination from "@/components/ui/Pagination";
 import { useRecherchePublique, useLieux } from "@/hooks/useRecherche";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
+import { useEquipements } from "@/hooks/useEquipements";
 import type { Bien } from "@/api/bien";
 
 // ─── Tri ──────────────────────────────────────────────────────────────────────
@@ -173,6 +175,42 @@ const RecherchePage = () => {
   const [surfaceMax,   setSurfaceMax]   = useState(searchParams.get("surfaceMax") ?? "");
   const [meuble,       setMeuble]       = useState(searchParams.get("meuble") === "1");
   const [parking,      setParking]      = useState(searchParams.get("parking") === "1");
+  const [ascenseur,    setAscenseur]    = useState(searchParams.get("ascenseur") === "1");
+  const [fumeurs,      setFumeurs]      = useState(searchParams.get("fumeurs") === "1");
+  const [animaux,      setAnimaux]      = useState(searchParams.get("animaux") === "1");
+  const [selectedEquipements, setSelectedEquipements] = useState<string[]>(
+    () => searchParams.get("equipementIds")?.split(",").filter(Boolean) ?? []
+  );
+  const [caracOpen,    setCaracOpen]    = useState(false);
+  const [caracSearch,  setCaracSearch]  = useState("");
+  const caracRef        = useRef<HTMLDivElement>(null);
+  const autoFilterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fermer le dropdown caractéristiques au clic extérieur
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (caracRef.current && !caracRef.current.contains(e.target as Node))
+        setCaracOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Auto-application des filtres avancés (debounce 400ms)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (autoFilterTimer.current) clearTimeout(autoFilterTimer.current);
+    autoFilterTimer.current = setTimeout(() => {
+      const next = buildParams(1);
+      if (next.toString() !== searchParams.toString()) setSearchParams(next);
+    }, 400);
+    return () => { if (autoFilterTimer.current) clearTimeout(autoFilterTimer.current); };
+  // selectedEquipements.join() évite la comparaison de référence sur le tableau
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prixMin, prixMax, chambres, surfaceMin, surfaceMax,
+      meuble, parking, ascenseur, fumeurs, animaux,
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      selectedEquipements.join(",")]);
 
   const sp = searchParams;
   const sortParams = sortToParams((sp.get("sort") as SortKey) ?? "recent");
@@ -194,8 +232,12 @@ const RecherchePage = () => {
     chambres:   sp.get("chambres")   ? Number(sp.get("chambres"))   : undefined,
     surfaceMin: sp.get("surfaceMin") ? Number(sp.get("surfaceMin")) : undefined,
     surfaceMax: sp.get("surfaceMax") ? Number(sp.get("surfaceMax")) : undefined,
-    meuble:     sp.get("meuble")  === "1" ? "1" as const : undefined,
-    parking:    sp.get("parking") === "1" ? "1" as const : undefined,
+    meuble:     sp.get("meuble")    === "1" ? "1" as const : undefined,
+    parking:    sp.get("parking")   === "1" ? "1" as const : undefined,
+    ascenseur:  sp.get("ascenseur") === "1" ? "1" as const : undefined,
+    fumeurs:    sp.get("fumeurs")   === "1" ? "1" as const : undefined,
+    animaux:    sp.get("animaux")   === "1" ? "1" as const : undefined,
+    equipementIds: sp.get("equipementIds") || undefined,
     sortBy:    isProximityMode ? undefined : sortParams.sortBy,
     sortOrder: isProximityMode ? undefined : sortParams.sortOrder,
     page:  parseInt(sp.get("page") ?? "1"),
@@ -209,6 +251,7 @@ const RecherchePage = () => {
   const { data: typesLogement = [] }    = useTypeLogements();
   const { data: typesTransaction = [] } = useTypeTransactions();
   const { data: lieux }                 = useLieux();
+  const { data: equipements = [] }      = useEquipements();
 
   const items      = data?.items      ?? [];
   const total      = data?.total      ?? 0;
@@ -227,6 +270,10 @@ const RecherchePage = () => {
     setSurfaceMax(searchParams.get("surfaceMax") ?? "");
     setMeuble(searchParams.get("meuble") === "1");
     setParking(searchParams.get("parking") === "1");
+    setAscenseur(searchParams.get("ascenseur") === "1");
+    setFumeurs(searchParams.get("fumeurs") === "1");
+    setAnimaux(searchParams.get("animaux") === "1");
+    setSelectedEquipements(searchParams.get("equipementIds")?.split(",").filter(Boolean) ?? []);
   }, [searchParams]);
 
   const buildParams = (
@@ -249,8 +296,12 @@ const RecherchePage = () => {
     if (chambres)       next.set("chambres",        chambres);
     if (surfaceMin)     next.set("surfaceMin",      surfaceMin);
     if (surfaceMax)     next.set("surfaceMax",      surfaceMax);
-    if (meuble)         next.set("meuble",          "1");
-    if (parking)        next.set("parking",         "1");
+    if (meuble)                         next.set("meuble",         "1");
+    if (parking)                        next.set("parking",        "1");
+    if (ascenseur)                      next.set("ascenseur",      "1");
+    if (fumeurs)                        next.set("fumeurs",        "1");
+    if (animaux)                        next.set("animaux",        "1");
+    if (selectedEquipements.length > 0) next.set("equipementIds", selectedEquipements.join(","));
     if (s !== "recent") next.set("sort",            s);
     // Conserver les params de proximité s'ils sont actifs
     if (isProximityMode) {
@@ -273,7 +324,8 @@ const RecherchePage = () => {
   const clearFilters = () => {
     setVille(""); setQuartier(""); setTypeLogement(""); setTypeTransaction(""); setSort("recent");
     setPrixMin(""); setPrixMax(""); setChambres(""); setSurfaceMin(""); setSurfaceMax("");
-    setMeuble(false); setParking(false);
+    setMeuble(false); setParking(false); setAscenseur(false); setFumeurs(false); setAnimaux(false);
+    setSelectedEquipements([]);
     setSearchParams({ page: "1" }); // supprime aussi lat/lng/pointLabel
   };
 
@@ -289,6 +341,17 @@ const RecherchePage = () => {
   const quartierOptions = (lieux?.quartiers ?? []).map((q) => ({ value: q, label: q }));
   const typeLogementOptions    = typesLogement.map((t) => ({ value: t.slug, label: t.nom }));
   const typeTransactionOptions = typesTransaction.map((t) => ({ value: t.slug, label: t.nom }));
+
+  // ── Groupement équipements par catégorie ──
+  const equipementsGroupes = useMemo(() => {
+    const map = new Map<string, { categorie: string; items: typeof equipements }>();
+    equipements.filter((e) => e.actif).forEach((e) => {
+      const cat = e.categorie.nom;
+      if (!map.has(cat)) map.set(cat, { categorie: cat, items: [] });
+      map.get(cat)!.items.push(e);
+    });
+    return Array.from(map.values());
+  }, [equipements]);
 
   // ── Chips ──
   interface Chip { label: string; onRemove: () => void }
@@ -336,14 +399,33 @@ const RecherchePage = () => {
     const label = min && max ? `${min}–${max} m²` : min ? `≥ ${min} m²` : `≤ ${max} m²`;
     chips.push({ label, onRemove: () => { removeFilter("surfaceMin"); removeFilter("surfaceMax"); } });
   }
-  if (sp.get("meuble") === "1")
-    chips.push({ label: "Meublé", onRemove: () => removeFilter("meuble") });
-  if (sp.get("parking") === "1")
-    chips.push({ label: "Parking", onRemove: () => removeFilter("parking") });
+  if (sp.get("meuble")    === "1") chips.push({ label: "Meublé",    onRemove: () => removeFilter("meuble") });
+  if (sp.get("parking")   === "1") chips.push({ label: "Parking",   onRemove: () => removeFilter("parking") });
+  if (sp.get("ascenseur") === "1") chips.push({ label: "Ascenseur", onRemove: () => removeFilter("ascenseur") });
+  if (sp.get("fumeurs")   === "1") chips.push({ label: "Fumeurs",   onRemove: () => removeFilter("fumeurs") });
+  if (sp.get("animaux")   === "1") chips.push({ label: "Animaux",   onRemove: () => removeFilter("animaux") });
+  const activeEqIds = sp.get("equipementIds")?.split(",").filter(Boolean) ?? [];
+  activeEqIds.forEach((eqId) => {
+    const eq = equipements.find((e) => e.id === eqId);
+    if (eq) chips.push({
+      label: eq.nom,
+      onRemove: () => {
+        const remaining = activeEqIds.filter((id) => id !== eqId);
+        const next = new URLSearchParams(searchParams);
+        if (remaining.length > 0) next.set("equipementIds", remaining.join(","));
+        else next.delete("equipementIds");
+        next.set("page", "1");
+        setSearchParams(next);
+      },
+    });
+  });
 
-  const nbAdvancedActive = [sp.get("prixMin"), sp.get("prixMax"), sp.get("chambres"),
+  const nbAdvancedActive = [
+    sp.get("prixMin"), sp.get("prixMax"), sp.get("chambres"),
     sp.get("surfaceMin"), sp.get("surfaceMax"),
-    sp.get("meuble"), sp.get("parking")].filter(Boolean).length;
+    sp.get("meuble"), sp.get("parking"), sp.get("ascenseur"),
+    sp.get("fumeurs"), sp.get("animaux"),
+  ].filter(Boolean).length + activeEqIds.length;
 
   const hasFilters = chips.length > 0;
 
@@ -490,7 +572,7 @@ const RecherchePage = () => {
                   value={prixMin}
                   onChange={e => setPrixMin(e.target.value)}
                   placeholder="0"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                 />
               </div>
               {/* Prix max */}
@@ -502,7 +584,7 @@ const RecherchePage = () => {
                   value={prixMax}
                   onChange={e => setPrixMax(e.target.value)}
                   placeholder="Illimité"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                 />
               </div>
               {/* Chambres */}
@@ -531,7 +613,7 @@ const RecherchePage = () => {
                   value={surfaceMin}
                   onChange={e => setSurfaceMin(e.target.value)}
                   placeholder="0"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                 />
               </div>
               {/* Surface max */}
@@ -543,41 +625,144 @@ const RecherchePage = () => {
                   value={surfaceMax}
                   onChange={e => setSurfaceMax(e.target.value)}
                   placeholder="Illimitée"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30"
+                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                 />
               </div>
-              {/* Options */}
-              <div className="flex flex-col gap-2 justify-center">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={meuble}
-                    onChange={e => setMeuble(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/30 text-[#D4A843] focus:ring-[#D4A843]"
-                  />
-                  <span className="text-sm text-white/80 flex items-center gap-1">
-                    <Armchair className="w-3.5 h-3.5" /> Meublé
-                  </span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={parking}
-                    onChange={e => setParking(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/30 text-[#D4A843] focus:ring-[#D4A843]"
-                  />
-                  <span className="text-sm text-white/80 flex items-center gap-1">
-                    <Car className="w-3.5 h-3.5" /> Parking
-                  </span>
-                </label>
-              </div>
+              {/* Caractéristiques multi-select */}
+              {(() => {
+                const BOOL_OPTIONS = [
+                  { key: "meuble",    label: "Meublé",           Icon: Armchair,    state: meuble,    set: setMeuble    },
+                  { key: "parking",   label: "Parking",          Icon: Car,         state: parking,   set: setParking   },
+                  { key: "ascenseur", label: "Ascenseur",        Icon: ArrowUpDown, state: ascenseur, set: setAscenseur },
+                  { key: "fumeurs",   label: "Fumeurs acceptés", Icon: Cigarette,   state: fumeurs,   set: setFumeurs   },
+                  { key: "animaux",   label: "Animaux acceptés", Icon: PawPrint,    state: animaux,   set: setAnimaux   },
+                ];
+                const nbBoolSelected = BOOL_OPTIONS.filter(o => o.state).length;
+                const totalSelected  = nbBoolSelected + selectedEquipements.length;
+                const btnLabel = totalSelected === 0 ? "Caractéristiques"
+                  : totalSelected === 1
+                    ? (BOOL_OPTIONS.find(o => o.state)?.label
+                        ?? equipements.find(e => e.id === selectedEquipements[0])?.nom
+                        ?? "1 sélectionné")
+                  : `${totalSelected} sélectionnés`;
+
+                const lowerSearch = caracSearch.toLowerCase();
+                const filteredGroups = equipementsGroupes.map(g => ({
+                  ...g,
+                  items: g.items.filter(e => e.nom.toLowerCase().includes(lowerSearch)),
+                })).filter(g => g.items.length > 0);
+
+                return (
+                  <div ref={caracRef} className="relative col-span-2 sm:col-span-1">
+                    <label className="block text-xs text-white/60 mb-1">Caractéristiques</label>
+                    <button
+                      type="button"
+                      onClick={() => setCaracOpen(p => !p)}
+                      className={`w-full h-9 flex items-center justify-between gap-2 px-3 rounded-lg border text-sm transition-colors ${
+                        totalSelected > 0
+                          ? "bg-[#D4A843]/15 border-[#D4A843]/50 text-[#D4A843]"
+                          : "bg-white/10 border-white/20 text-white/70 hover:bg-white/20 hover:text-white"
+                      }`}
+                    >
+                      <span className="truncate text-left">{btnLabel}</span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {totalSelected > 0 && (
+                          <span className="w-4 h-4 rounded-full bg-[#D4A843] text-white text-[10px] flex items-center justify-center font-bold">
+                            {totalSelected}
+                          </span>
+                        )}
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${caracOpen ? "rotate-180" : ""}`} />
+                      </div>
+                    </button>
+                    {caracOpen && (
+                      <div className="absolute top-full right-0 mt-1 z-50 w-72 bg-[#0C1A35] border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+                        {/* Recherche */}
+                        <div className="p-2 border-b border-white/10">
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                            <input
+                              type="text"
+                              value={caracSearch}
+                              onChange={e => setCaracSearch(e.target.value)}
+                              placeholder="Filtrer…"
+                              className="w-full h-8 bg-white/10 border border-white/15 text-white text-xs rounded-lg pl-8 pr-3 focus:outline-none focus:border-white/30 placeholder:text-white/25"
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto max-h-72">
+                          {/* Section options booléennes (filtrées par search) */}
+                          {BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).length > 0 && (
+                            <div>
+                              <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">Options</div>
+                              {BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).map(({ key, label, Icon, state: val, set }) => (
+                                <label
+                                  key={key}
+                                  className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${
+                                    val ? "bg-[#D4A843]/10" : "hover:bg-white/6"
+                                  }`}
+                                >
+                                  <input type="checkbox" checked={val} onChange={e => set(e.target.checked)} className="sr-only" />
+                                  <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${
+                                    val ? "bg-[#D4A843] border-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,0.4)]" : "bg-transparent border-white/20"
+                                  }`}>
+                                    {val && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                                  </span>
+                                  <Icon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${val ? "text-[#D4A843]/80" : "text-white/35"}`} />
+                                  <span className={`text-sm transition-colors ${val ? "text-white font-medium" : "text-white/70"}`}>{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                          {/* Équipements groupés par catégorie */}
+                          {filteredGroups.map(group => (
+                            <div key={group.categorie}>
+                              <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">{group.categorie}</div>
+                              {group.items.map(eq => {
+                                const isChecked = selectedEquipements.includes(eq.id);
+                                return (
+                                  <label
+                                    key={eq.id}
+                                    className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${
+                                      isChecked ? "bg-[#D4A843]/10" : "hover:bg-white/6"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={e => {
+                                        setSelectedEquipements(prev =>
+                                          e.target.checked ? [...prev, eq.id] : prev.filter(id => id !== eq.id)
+                                        );
+                                      }}
+                                      className="sr-only"
+                                    />
+                                    <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${
+                                      isChecked ? "bg-[#D4A843] border-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,0.4)]" : "bg-transparent border-white/20"
+                                    }`}>
+                                      {isChecked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                                    </span>
+                                    <span className={`text-sm transition-colors ${isChecked ? "text-white font-medium" : "text-white/70"}`}>{eq.nom}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          ))}
+                          {filteredGroups.length === 0 && BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).length === 0 && (
+                            <p className="text-xs text-white/30 text-center py-4">Aucun résultat</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
       </div>
 
       {/* ── Contenu ── */}
-      <div className="container mx-auto px-4 py-7">
+      <div className="container mx-auto px-8 py-7">
 
         {/* En-tête résultats */}
         <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
@@ -636,7 +821,7 @@ const RecherchePage = () => {
 
         {/* ── Résultats ── */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : items.length === 0 ? (
@@ -660,7 +845,7 @@ const RecherchePage = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {items.map((bien) => (
               <div key={bien.id} className="relative h-full">
                 {isProximityMode && bien.distance !== undefined && (

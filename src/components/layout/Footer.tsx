@@ -3,7 +3,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 
 const Footer = () => (
   <footer className="bg-[#0C1A35] text-white pt-16 pb-8">
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-14">
 
         {/* Brand */}

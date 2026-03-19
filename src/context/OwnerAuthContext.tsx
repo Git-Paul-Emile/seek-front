@@ -7,7 +7,6 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { useLocation } from "react-router-dom";
 import {
   meOwnerApi,
   refreshOwnerApi,
@@ -40,7 +39,6 @@ const OwnerAuthContext = createContext<OwnerAuthContextValue | null>(null);
 export function OwnerAuthProvider({ children }: { children: ReactNode }) {
   const [owner, setOwner] = useState<OwnerInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { pathname } = useLocation();
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startRefreshTimer = useCallback(() => {
@@ -63,18 +61,8 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const hasInitialized = useRef(false);
-
-  // Restaurer la session au montage
+  // Restaurer la session au montage uniquement
   useEffect(() => {
-    const isFirstRun = !hasInitialized.current;
-
-    if (isFirstRun) {
-      hasInitialized.current = true;
-    } else if (!pathname.startsWith("/owner") && !pathname.startsWith("/proprietaires")) {
-      return;
-    }
-
     (async () => {
       try {
         const { data } = await meOwnerApi();
@@ -94,7 +82,7 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     })();
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Nettoyer le timer au démontage
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);

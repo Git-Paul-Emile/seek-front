@@ -34,7 +34,6 @@ import {
   RotateCcw,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
   UserPlus,
   User,
   Phone,
@@ -87,11 +86,11 @@ const STATUT_STYLE: Record<
   StatutAnnonce,
   { bg: string; text: string; icon: React.ElementType; label: string }
 > = {
-  BROUILLON:  { bg: "bg-slate-100",  text: "text-slate-700",  icon: FileText,     label: "Brouillon" },
-  EN_ATTENTE: { bg: "bg-yellow-100", text: "text-yellow-700", icon: Clock,        label: "En attente" },
-  PUBLIE:     { bg: "bg-green-100",  text: "text-green-700",  icon: CheckCircle,  label: "Publié" },
-  REJETE:     { bg: "bg-red-100",    text: "text-red-700",    icon: XCircle,      label: "Rejeté" },
-  ANNULE:     { bg: "bg-gray-200",   text: "text-gray-600",   icon: XCircle,      label: "Annulé" },
+  BROUILLON:            { bg: "bg-slate-100",  text: "text-slate-700",  icon: FileText,     label: "Brouillon" },
+  EN_ATTENTE:           { bg: "bg-yellow-100", text: "text-yellow-700", icon: Clock,        label: "En attente" },
+  PUBLIE:               { bg: "bg-green-100",  text: "text-green-700",  icon: CheckCircle,  label: "Publié" },
+  REJETE:               { bg: "bg-red-100",    text: "text-red-700",    icon: XCircle,      label: "Rejeté" },
+  ANNULE:     { bg: "bg-gray-200",   text: "text-gray-600",   icon: XCircle,  label: "Annulé" },
 };
 
 function StatutBadge({ statut }: { statut: StatutAnnonce }) {
@@ -322,12 +321,10 @@ export default function BienDetail() {
   const hasEquipements = bien.equipements && bien.equipements.length > 0;
   const hasMeubles = bien.meubles && bien.meubles.length > 0;
 
-  const isPendingRevision = bien.hasPendingRevision === true;
   // EN_ATTENTE: Annuler la soumission (→ BROUILLON, pas modifier)
-  // PUBLIE: Modifier (si pas de révision en attente) + Dépublier + Supprimer
+  // PUBLIE: Modifier + Dépublier + Supprimer
   // BROUILLON/REJETE: Modifier + Annuler l'annonce (= suppression définitive)
-  const canEdit    = (statut === "BROUILLON" || statut === "REJETE") ||
-                     (statut === "PUBLIE" && !isPendingRevision);
+  const canEdit    = statut === "BROUILLON" || statut === "REJETE" || statut === "PUBLIE";
   const canDelete  = statut === "PUBLIE";
   const canRetour  = statut === "EN_ATTENTE" || statut === "PUBLIE";
   const canAnnuler = statut === "BROUILLON" || statut === "REJETE";
@@ -423,33 +420,6 @@ export default function BienDetail() {
           )}
         </div>
       </div>
-
-      {/* Bannière révision en attente */}
-      {isPendingRevision && (
-        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
-          <RefreshCw className="w-4 h-4 mt-0.5 shrink-0" />
-          <div>
-            <p className="font-semibold mb-0.5">Révision en attente de validation</p>
-            <p className="text-blue-600">
-              Vos modifications ont été soumises à l'administrateur. L'annonce reste visible avec les informations actuelles jusqu'à validation.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Note de rejet de révision */}
-      {showNote && statut === "PUBLIE" && bien.noteAdmin && !isPendingRevision && (
-        <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-100 rounded-xl text-sm text-orange-700">
-          <Info className="w-4 h-4 mt-0.5 shrink-0" />
-          <div className="flex-1">
-            <p className="font-semibold mb-0.5">Révision rejetée :</p>
-            <p>{bien.noteAdmin}</p>
-          </div>
-          <button onClick={() => setShowNote(false)} className="p-1 hover:bg-orange-100 rounded">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
 
       {/* Note de rejet */}
       {showNote && statut === "REJETE" && bien.noteAdmin && (

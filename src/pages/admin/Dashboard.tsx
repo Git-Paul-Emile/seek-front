@@ -7,7 +7,6 @@ import {
   MapPin,
   Loader2,
   ArrowRight,
-  RefreshCw,
 } from "lucide-react";
 import { SkKpiCards, SkChartBlock } from "@/components/ui/Skeleton";
 import {
@@ -275,12 +274,6 @@ export default function AdminDashboard() {
                         <p className="text-sm font-semibold text-[#0C1A35] truncate">
                           {a.titre || "Sans titre"}
                         </p>
-                        {a.hasPendingRevision && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700 shrink-0">
-                            <RefreshCw className="w-2.5 h-2.5" />
-                            Révision
-                          </span>
-                        )}
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {a.proprietaire

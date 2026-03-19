@@ -69,8 +69,6 @@ import DocumentsBien from "./pages/locataire/DocumentsBien";
 import EtatsDesLieux from "./pages/locataire/EtatsDesLieux";
 import OwnerForgotPassword from "./pages/owner/ForgotPassword";
 import OwnerResetPassword from "./pages/owner/ResetPassword";
-import AdminSignalements from "./pages/admin/Signalements";
-import AdminSignalementDetail from "./pages/admin/SignalementDetail";
 import AdminTransactions from "./pages/admin/TransactionsAdmin";
 import AdminPromotions from "./pages/admin/PromotionsAdmin";
 import AdminFormulesPremium from "./pages/admin/FormulesPremium";
@@ -202,8 +200,6 @@ const App = () => (
                     <Route path="geo/pays"                element={<PaysPage />} />
                     <Route path="geo/villes"              element={<VillesPage />} />
                     <Route path="geo/quartiers"           element={<QuartiersPage />} />
-                    <Route path="signalements"            element={<AdminSignalements />} />
-                    <Route path="signalements/:bienId"   element={<AdminSignalementDetail />} />
                     <Route path="transactions"            element={<AdminTransactions />} />
                     <Route path="premium/historique"      element={<AdminPromotions />} />
                     <Route path="premium/formules"        element={<AdminFormulesPremium />} />

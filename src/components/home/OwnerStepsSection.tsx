@@ -2,7 +2,7 @@ import { OWNER_STEPS } from "@/data/home";
 
 const OwnerStepsSection = () => (
   <section className="py-20 bg-white">
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-8">
       <div className="text-center mb-14">
         <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">Propriétaires</p>
         <h2 className="text-3xl md:text-4xl font-bold text-[#1A2942] mb-2">Publiez en quelques étapes</h2>

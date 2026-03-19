@@ -10,10 +10,10 @@ import type { Bien, StatutAnnonce } from "@/api/bien";
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const FILTERS: { label: string; value: StatutAnnonce | "TOUS" }[] = [
-  { label: "En attente", value: "EN_ATTENTE" },
-  { label: "Publiés", value: "PUBLIE" },
-  { label: "Rejetés", value: "REJETE" },
-  { label: "Tous", value: "TOUS" },
+  { label: "En attente",  value: "EN_ATTENTE" },
+  { label: "Publiés",     value: "PUBLIE" },
+  { label: "Rejetés",     value: "REJETE" },
+  { label: "Tous",        value: "TOUS" },
 ];
 
 const LIMIT = 15;
@@ -316,9 +316,9 @@ export default function Annonces() {
                   : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-100"
               }`}
             >
-              {value === "EN_ATTENTE" && <Clock className="w-3.5 h-3.5" />}
-              {value === "PUBLIE" && <CheckCircle className="w-3.5 h-3.5" />}
-              {value === "REJETE" && <XCircle className="w-3.5 h-3.5" />}
+              {value === "EN_ATTENTE"  && <Clock       className="w-3.5 h-3.5" />}
+              {value === "PUBLIE"      && <CheckCircle className="w-3.5 h-3.5" />}
+              {value === "REJETE"      && <XCircle     className="w-3.5 h-3.5" />}
               {label}
               {count !== null && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? "bg-white/20" : "bg-slate-100 text-slate-600"}`}>

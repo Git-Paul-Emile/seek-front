@@ -41,16 +41,17 @@ const setupInterceptors = (axiosInstance: typeof api) => {
     async (error) => {
       const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
       const requestUrl = String(originalRequest?.url ?? "");
-      const isRefreshRequest = requestUrl.includes("/refresh");
+      const isAuthEndpoint = /\/(login|activer|refresh|forgot-password|reset-password)/.test(requestUrl);
       const message = String(error?.response?.data?.message ?? "");
       const isMissingToken = message.toLowerCase().includes("token manquant");
-      
+
       // Si l'erreur est 401 et que ce n'est pas déjà une tentative de rafraîchissement
+      // et que ce n'est pas un endpoint d'authentification (login, activer, etc.)
       if (
         error.response?.status === 401 &&
         originalRequest &&
         !originalRequest._retry &&
-        !isRefreshRequest &&
+        !isAuthEndpoint &&
         !isMissingToken
       ) {
         originalRequest._retry = true;

@@ -13,7 +13,7 @@ import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import { useStatutsBien } from "@/hooks/useStatutsBien";
 import { useEquipements } from "@/hooks/useEquipements";
 import { useMeubles } from "@/hooks/useMeubles";
-import { useCreateBien, useBienById, useSoumettreRevision } from "@/hooks/useBien";
+import { useCreateBien, useBienById } from "@/hooks/useBien";
 import { useBailActif } from "@/hooks/useBail";
 import { usePays, useVilles, useQuartiers } from "@/hooks/useGeo";
 import { VerificationBanner } from "@/components/owner/VerificationAlert";
@@ -168,7 +168,6 @@ export default function AddBien() {
   const { data: equipements = [], isLoading: eqLoading }          = useEquipements();
   const { data: meubles = [], isLoading: mblLoading }             = useMeubles();
   const { mutateAsync: createBien, isPending: submitting }           = useCreateBien();
-  const { mutateAsync: soumettreRevision, isPending: submittingRev } = useSoumettreRevision();
   const isEditingPublished = !!editId && bienToEdit?.statutAnnonce === "PUBLIE";
   const { data: bailActif } = useBailActif(editId || "");
   const isLockedByBail = !!editId && !!bailActif && bailActif.statut === "ACTIF";
@@ -350,7 +349,8 @@ export default function AddBien() {
       !!editId &&
       (bienToEdit?.statutAnnonce === "BROUILLON" ||
         bienToEdit?.statutAnnonce === "REJETE" ||
-        bienToEdit?.statutAnnonce === "PUBLIE");
+        bienToEdit?.statutAnnonce === "PUBLIE" ||
+        false);
     if (!isEditableMode) {
       setIsDirty(false);
       initialComparableRef.current = null;
@@ -535,28 +535,6 @@ export default function AddBien() {
       existingPhotos: existingPhotoUrls,
     };
     return { payload, orderedNewPhotos };
-  };
-
-  // ── Submit révision (annonce publiée) ──
-  const handleSubmitRevision = async () => {
-    const allValid = ["general", "transaction", "medias"].every(validateTab);
-    if (!allValid) {
-      toast.error("Veuillez corriger les erreurs avant de continuer");
-      return;
-    }
-    if (!editId) return;
-    setPendingAction("publish");
-    try {
-      const { payload, orderedNewPhotos } = buildPayload();
-      await soumettreRevision({ id: editId, payload, photos: orderedNewPhotos });
-      toast.success("Modification soumise pour validation. L'annonce reste visible avec les informations actuelles.");
-      navigate(`/owner/biens/${editId}`);
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Une erreur est survenue";
-      toast.error(msg);
-    } finally {
-      setPendingAction(null);
-    }
   };
 
   // ── Submit ──
@@ -1465,43 +1443,27 @@ export default function AddBien() {
           <div className="flex items-center gap-3">
             {isLast ? (
               <>
-                {/* Mode modification d'une annonce publiée : pas de brouillon, seulement "Soumettre les changements" */}
-                {isEditingPublished ? (
+                {canSaveAsDraft && (
                   <button
                     type="button"
-                    onClick={handleSubmitRevision}
-                    disabled={submittingRev || !isDirty}
-                    title={!isDirty ? "Modifiez au moins un élément avant de soumettre" : undefined}
-                    className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={() => handleSubmit(true)}
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
                   >
-                    {submittingRev ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    Soumettre les changements
+                    {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {draftLabel}
                   </button>
-                ) : (
-                  <>
-                    {canSaveAsDraft && (
-                      <button
-                        type="button"
-                        onClick={() => handleSubmit(true)}
-                        disabled={submitting}
-                        className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
-                      >
-                        {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                        {draftLabel}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleSubmit(false)}
-                      disabled={submitting || (!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty)}
-                      title={!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty ? "Modifiez au moins un élément avant de soumettre" : undefined}
-                      className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                      {!editId ? "Soumettre l'annonce" : bienToEdit?.statutAnnonce === "REJETE" ? "Resoumettre l'annonce" : bienToEdit?.statutAnnonce === "BROUILLON" ? "Soumettre l'annonce" : "Mettre à jour l'annonce"}
-                    </button>
-                  </>
                 )}
+                <button
+                  type="button"
+                  onClick={() => handleSubmit(false)}
+                  disabled={submitting || (!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty)}
+                  title={!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty ? "Modifiez au moins un élément avant de resoumettre" : undefined}
+                  className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  {!editId ? "Soumettre l'annonce" : bienToEdit?.statutAnnonce === "REJETE" ? "Resoumettre l'annonce" : bienToEdit?.statutAnnonce === "BROUILLON" ? "Soumettre l'annonce" : "Mettre à jour l'annonce"}
+                </button>
               </>
             ) : (
               <div className="flex items-center gap-3">

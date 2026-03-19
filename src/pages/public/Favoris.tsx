@@ -92,7 +92,7 @@ export default function FavorisPage() {
 
       {/* ── Bandeau header ── */}
       <div className="bg-[#0C1A35]">
-        <div className="container mx-auto px-4 py-7">
+        <div className="container mx-auto px-8 py-7">
           <p className="text-[#D4A843] font-bold text-xs uppercase tracking-wider mb-1">Mon espace</p>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             Mes favoris
@@ -118,7 +118,7 @@ export default function FavorisPage() {
       </div>
 
       {/* ── Contenu ── */}
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto px-8 py-10">
 
         {/* Non connecté */}
         {idsLoaded && !isAuthenticated && (

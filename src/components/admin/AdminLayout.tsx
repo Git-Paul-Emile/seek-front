@@ -20,7 +20,6 @@ import {
   Navigation,
   Users,
   Shield,
-  Flag,
   CreditCard,
   Star,
   TrendingUp,
@@ -34,7 +33,6 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
 import { usePendingVerificationsCount } from "@/hooks/useAdminVerification";
-import { useSignalementCount } from "@/hooks/useSignalement";
 
 // ─── Structure de navigation ──────────────────────────────────────────────────
 
@@ -170,7 +168,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   const location = useLocation();
   const { data: pendingData } = useAnnoncesPendingCount();
   const { data: verificationData } = usePendingVerificationsCount();
-  const { data: signalementCount = 0 } = useSignalementCount();
   const pendingCount = pendingData?.count ?? 0;
   const verificationCount = verificationData ?? 0;
 
@@ -322,42 +319,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
                           }`}
                         >
                           {pendingCount > 99 ? "99+" : pendingCount}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-            </NavLink>
-          </li>
-
-          {/* Signalements avec badge */}
-          <li>
-            <NavLink
-              to="/admin/signalements"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                transition-colors duration-150 ${
-                  isActive
-                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
-                }`}
-            >
-              {({ isActive }) => (
-                <>
-                  <Flag className="w-4 h-4 flex-shrink-0" />
-                  {isOpen && (
-                    <>
-                      <span className="flex-1">Signalements</span>
-                      {signalementCount > 0 && (
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                            isActive
-                              ? "bg-white/25 text-white"
-                              : "bg-red-500 text-white"
-                          }`}
-                        >
-                          {signalementCount > 99 ? "99+" : signalementCount}
                         </span>
                       )}
                     </>

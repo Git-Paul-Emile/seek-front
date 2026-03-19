@@ -3,8 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, fetchAnnoncesSimilaires, type Bien } from "@/api/bien";
-import { useCreateSignalement } from "@/hooks/useSignalement";
-import type { MotifSignalement } from "@/api/signalement";
 import { useFavoris } from "@/hooks/useFavoris";
 import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
@@ -38,7 +36,6 @@ import {
   Phone,
   Mail,
   Heart,
-  Flag,
   X,
   ChevronLeft,
   ChevronRight,
@@ -68,16 +65,6 @@ import {
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-const MOTIFS_SIGNALEMENT: { value: MotifSignalement; label: string; urgent?: boolean }[] = [
-  { value: "ARNAQUE_SUSPECTEE",     label: "Arnaque suspectée",       urgent: true },
-  { value: "PHOTOS_NON_CONFORMES",  label: "Photos non conformes" },
-  { value: "LOGEMENT_INSALUBRE",    label: "Logement insalubre" },
-  { value: "INFORMATIONS_ERRONEES", label: "Informations erronées" },
-  { value: "PRIX_INCORRECT",        label: "Prix incorrect ou abusif" },
-  { value: "DOUBLON",               label: "Annonce en doublon" },
-  { value: "AUTRE",                 label: "Autre raison" },
-];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -188,186 +175,6 @@ function EtablissementIcon({ type }: { type: string }) {
   };
   const Icon = iconMap[type] || Building2;
   return <Icon className="w-4 h-4" />;
-}
-
-// ─── Modal de signalement ───────────────────────────────────────────────────
-
-function ReportModal({
-  bienId,
-  onClose,
-}: {
-  bienId: string;
-  onClose: () => void;
-}) {
-  const { owner } = useOwnerAuth();
-  const { locataire } = useLocataireAuth();
-  const { compte } = useComptePublicAuth();
-
-  const connectedUser = owner ?? locataire ?? compte ?? null;
-  const connectedNom = connectedUser ? `${connectedUser.prenom} ${connectedUser.nom}` : "";
-  const connectedTel = connectedUser?.telephone ?? "";
-  const connectedEmail = connectedUser?.email ?? "";
-  const isConnected = !!connectedUser;
-
-  const [motif, setMotif]               = useState<MotifSignalement | "">("");
-  const [justification, setJustification] = useState("");
-  const [nom, setNom]                   = useState(connectedNom);
-  const [telephone, setTelephone]       = useState(connectedTel);
-  const [email, setEmail]               = useState(connectedEmail);
-
-  const reportMutation = useCreateSignalement(bienId);
-
-  const handleSubmit = () => {
-    if (!motif) { toast.error("Veuillez sélectionner un motif"); return; }
-    if (!telephone.trim()) { toast.error("Votre numéro de téléphone est requis"); return; }
-    reportMutation.mutate(
-      { motif, justification: justification.trim() || undefined, signaleParNom: nom.trim() || undefined, signaleParTel: telephone.trim(), signaleParEmail: email.trim() || undefined },
-      { onSuccess: onClose }
-    );
-  };
-
-  const motifSelectionne = MOTIFS_SIGNALEMENT.find((m) => m.value === motif);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[#0C1A35]/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-[#0C1A35] flex items-center gap-2">
-            <Flag className="w-5 h-5 text-red-500" />
-            Signaler cette annonce
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <p className="text-sm text-slate-500">
-          Vous êtes sur le point de signaler cette annonce. Notre équipe examinera votre signalement dans les plus brefs délais.
-        </p>
-
-        {/* Motif — menu déroulant */}
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-slate-500">
-            Motif du signalement <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={motif}
-            onChange={(e) => setMotif(e.target.value as MotifSignalement)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition text-[#0C1A35]"
-          >
-            <option value="">-- Choisissez un motif --</option>
-            {MOTIFS_SIGNALEMENT.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-          {motifSelectionne?.urgent && (
-            <p className="text-xs text-red-600 font-medium">
-              Ce motif est urgent — l'annonce sera examinée en priorité.
-            </p>
-          )}
-        </div>
-
-        {/* Justification */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-slate-500">
-            Justification {motifSelectionne?.urgent ? <span className="text-red-500">*</span> : "(facultatif)"}
-          </label>
-          <textarea
-            value={justification}
-            onChange={(e) => setJustification(e.target.value)}
-            rows={3}
-            placeholder="Décrivez le problème en détail..."
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition resize-none"
-          />
-        </div>
-
-        {/* Coordonnées du signaleur */}
-        <div className="space-y-3 pt-1 border-t border-slate-100">
-          <p className="text-xs font-semibold text-slate-500 pt-1">Vos coordonnées (pour suivi éventuel)</p>
-
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-500">
-              Nom complet <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              readOnly={isConnected}
-              placeholder="Votre nom"
-              className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition ${
-                isConnected
-                  ? "border-slate-200 bg-slate-100 text-slate-500 cursor-default"
-                  : "border-slate-200 bg-slate-50 focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30"
-              }`}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-500">
-              Téléphone <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              value={telephone}
-              onChange={(e) => setTelephone(e.target.value)}
-              readOnly={isConnected}
-              placeholder="+221 77 000 00 00"
-              className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition ${
-                isConnected
-                  ? "border-slate-200 bg-slate-100 text-slate-500 cursor-default"
-                  : "border-slate-200 bg-slate-50 focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30"
-              }`}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-500">
-              Email (facultatif)
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              readOnly={isConnected}
-              placeholder="votre@email.com"
-              className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition ${
-                isConnected
-                  ? "border-slate-200 bg-slate-100 text-slate-500 cursor-default"
-                  : "border-slate-200 bg-slate-50 focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30"
-              }`}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <button
-            onClick={onClose}
-            disabled={reportMutation.isPending}
-            className="flex-1 h-10 rounded-xl border border-slate-200 text-sm font-medium
-              text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={reportMutation.isPending || !motif || !telephone.trim()}
-            className="flex-1 h-10 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm
-              font-semibold shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {reportMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-            Signaler
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ─── Modal Demande de visite ──────────────────────────────────────────────────
@@ -490,7 +297,6 @@ function DemandeVisiteModal({
 export default function AnnonceDetail() {
   const { id } = useParams<{ id: string }>();
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [showReportModal, setShowReportModal] = useState(false);
   const [showVisiteModal, setShowVisiteModal] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { isFavori, toggleFavori, isAuthenticated } = useFavoris();
@@ -519,7 +325,7 @@ export default function AnnonceDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 py-8">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8">
           <SkDetailSections sections={5} />
         </div>
       </div>
@@ -528,7 +334,7 @@ export default function AnnonceDetail() {
 
   if (isError || !bien) {
     return (
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-8 py-12">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
             <Image className="w-8 h-8 text-slate-300" />
@@ -564,7 +370,7 @@ export default function AnnonceDetail() {
     <div className="min-h-screen bg-slate-50">
       {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-100">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8">
           <nav className="flex items-center gap-1.5 py-3 text-sm">
             <Link
               to="/"
@@ -601,7 +407,7 @@ export default function AnnonceDetail() {
 
       {/* Header */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-40">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-8">
           <div className="flex items-center justify-between h-16">
             <p className="text-sm font-semibold text-[#0C1A35] truncate max-w-xs hidden sm:block">
               {bien.titre || "Détail de l'annonce"}
@@ -633,7 +439,7 @@ export default function AnnonceDetail() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -1049,14 +855,6 @@ export default function AnnonceDetail() {
                   Email
                 </button>
 
-                {/* Signaler */}
-                <button
-                  onClick={() => setShowReportModal(true)}
-                  className="flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-red-200 text-red-500 bg-red-50 text-sm font-medium hover:bg-red-100 hover:border-red-300 transition-colors mt-3"
-                >
-                  <Flag className="w-4 h-4" />
-                  Signaler cette annonce
-                </button>
               </div>
 
               {/* Pricing Details */}
@@ -1156,11 +954,6 @@ export default function AnnonceDetail() {
         </div>
       )}
 
-      {/* Report Modal */}
-      {showReportModal && bien && (
-        <ReportModal bienId={bien.id} onClose={() => setShowReportModal(false)} />
-      )}
-
       {/* Demande de visite Modal */}
       {showVisiteModal && bien && (
         <DemandeVisiteModal bien={bien} onClose={() => setShowVisiteModal(false)} />
@@ -1168,7 +961,7 @@ export default function AnnonceDetail() {
 
       {/* Similar Announcements Section */}
       {similaires && similaires.length > 0 && (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-8 py-8">
           <div className="bg-white rounded-2xl border border-slate-100 p-5">
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">
               Annonces similaires
@@ -1188,7 +981,7 @@ export default function AnnonceDetail() {
 
       {/* No Similar Announcements Message */}
       {(!similaires || similaires.length === 0) && (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-8 py-8">
           <div className="bg-white rounded-2xl border border-slate-100 p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-50 flex items-center justify-center">
               <Building2 className="w-8 h-8 text-slate-300" />

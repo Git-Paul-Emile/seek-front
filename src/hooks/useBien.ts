@@ -8,7 +8,6 @@ import {
   deleteBien,
   retourBrouillon,
   annulerAnnonce,
-  soumettreRevision as soumettreRevisionApi,
   fetchStatsVuesBien,
   fetchStatsVuesOwner,
   fetchAdminStatsVues,
@@ -83,23 +82,6 @@ export const useAnnulerAnnonce = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });
 };
-
-export const useSoumettreRevision = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      id,
-      payload,
-      photos,
-    }: {
-      id: string;
-      payload: CreateBienPayload;
-      photos: File[];
-    }) => soumettreRevisionApi(id, payload, photos),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
-  });
-};
-
 
 export const useStatsVuesBien = (bienId: string | undefined) =>
   useQuery({

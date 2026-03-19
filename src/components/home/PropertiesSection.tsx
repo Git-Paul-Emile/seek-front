@@ -23,7 +23,7 @@ import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import { SkPropertyCards } from "@/components/ui/Skeleton";
 
 const ROTATION_INTERVAL = 4000; // ms entre chaque glissement auto
-const MAX_VISIBLE = 5;
+const MAX_VISIBLE = 4;
 
 const PropertiesSection = () => {
   const [sort, setSort] = useState("recent");
@@ -55,7 +55,6 @@ const PropertiesSection = () => {
   // Tri côté client sur les 10 dernières annonces
   const sortedBiens = useMemo(() => {
     const base = [...dernieresAnnonces];
-    const arr = [...base];
     if (sort === "oldest")     return base.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     if (sort === "price-asc")  return base.sort((a, b) => (a.prix ?? 0) - (b.prix ?? 0));
     if (sort === "price-desc") return base.sort((a, b) => (b.prix ?? 0) - (a.prix ?? 0));
@@ -64,14 +63,14 @@ const PropertiesSection = () => {
 
   return (
     <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-8">
         {/* ───────────────────────────────────────────────────────────────────── */}
         {/* SECTION 1: À LA UNE (Annonces Premium en slider horizontal)         */}
         {/* ───────────────────────────────────────────────────────────────────── */}
         {hasPremium && (
           <div className="mb-16">
             {/* En-tête de section */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 gap-4">
               <div>
                 <p className="text-amber-600 font-bold text-sm uppercase tracking-wider">
                   Exclusivité
@@ -85,12 +84,12 @@ const PropertiesSection = () => {
 
             {/* Slider horizontal des annonces premium */}
             {isLoadingPremium ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <SkPropertyCards count={4} />
               </div>
             ) : (
               <div
-                className="relative px-2 py-3"
+                className="relative px-2"
                 onMouseEnter={() => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); }}
                 onMouseLeave={() => {
                   if (!needsRotation || !carouselApi) return;
@@ -103,15 +102,15 @@ const PropertiesSection = () => {
                 <Carousel
                   setApi={setCarouselApi}
                   opts={{ align: "start", loop: true, slidesToScroll: "auto" }}
-                  className="w-full overflow-x-clip"
+                  className="w-full"
                 >
-                  <CarouselContent className="-ml-4">
+                  <CarouselContent className="-ml-4" wrapperClassName="py-8 -my-6">
                     {annoncesMiseEnAvant.map((property) => (
                       <CarouselItem
                         key={property.id}
-                        className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/5"
+                        className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                       >
-                        <div className="relative group h-full">
+                        <div className="relative group h-full my-6">
                           <PropertyCard
                             property={property as any}
                             isApiData={true}
@@ -169,7 +168,7 @@ const PropertiesSection = () => {
               <p className="text-slate-400 text-sm mt-1">Revenez bientôt, de nouvelles annonces arrivent régulièrement.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {sortedBiens.slice(0, 10).map((property) => (
                 <PropertyCard
                   key={property.id}

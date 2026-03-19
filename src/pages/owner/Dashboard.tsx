@@ -8,7 +8,6 @@ import {
   XCircle,
   ArrowRight,
   Loader2,
-  RefreshCw,
   PlusCircle,
   MapPin,
   Banknote,
@@ -262,21 +261,12 @@ export default function OwnerDashboard() {
                   {stats.recentBiens.map((b) => {
                     const cfg = STATUT_CONFIG[b.statutAnnonce];
                     const Icon = cfg?.icon ?? Building2;
-                    const effectiveStatut =
-                      b.statutAnnonce === "PUBLIE" && b.hasPendingRevision
-                        ? "EN_ATTENTE"
-                        : b.statutAnnonce;
-                    const effectiveCfg = STATUT_CONFIG[effectiveStatut];
 
                     return (
                       <div key={b.id} className="flex items-center justify-between py-3 gap-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${effectiveCfg?.bg ?? cfg?.bg ?? "bg-slate-50"}`}>
-                            {b.hasPendingRevision && b.statutAnnonce === "PUBLIE" ? (
-                              <RefreshCw className="w-3.5 h-3.5 text-blue-500" />
-                            ) : (
-                              <Icon className={`w-3.5 h-3.5 ${effectiveCfg?.text ?? cfg?.text ?? "text-slate-400"}`} />
-                            )}
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg?.bg ?? "bg-slate-50"}`}>
+                            <Icon className={`w-3.5 h-3.5 ${cfg?.text ?? "text-slate-400"}`} />
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-[#0C1A35] truncate">

@@ -16,45 +16,6 @@ const annonceApi = axios.create({
 
 export type StatutAnnonce = "BROUILLON" | "EN_ATTENTE" | "PUBLIE" | "REJETE" | "ANNULE";
 
-export interface BienPendingRevision {
-  titre?: string | null;
-  description?: string | null;
-  typeLogementId?: string | null;
-  typeTransactionId?: string | null;
-  statutBienId?: string | null;
-  photos?: string[];
-  prix?: number | null;
-  frequencePaiement?: string | null;
-  chargesIncluses?: boolean;
-  caution?: number | null;
-  disponibleLe?: string | null;
-  surface?: number | null;
-  nbChambres?: number | null;
-  nbSdb?: number | null;
-  nbSalons?: number | null;
-  nbCuisines?: number | null;
-  nbWc?: number | null;
-  etage?: number | null;
-  nbEtages?: number | null;
-  meuble?: boolean;
-  fumeurs?: boolean;
-  animaux?: boolean;
-  parking?: boolean;
-  ascenseur?: boolean;
-  pays?: string | null;
-  region?: string | null;
-  ville?: string | null;
-  quartier?: string | null;
-  adresse?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  equipementIds?: string[];
-  meubles?: { meubleId: string; quantite: number }[];
-  typeLogement?: { nom: string; slug: string } | null;
-  typeTransaction?: { nom: string; slug: string } | null;
-  statutBien?: { nom: string; slug: string } | null;
-}
-
 export interface BienEquipement {
   equipementId: string;
   equipement: { id: string; nom: string };
@@ -114,9 +75,7 @@ export interface Bien {
   actif: boolean;
   statutAnnonce: StatutAnnonce;
   noteAdmin: string | null;
-  hasPendingRevision: boolean;
   hasBailActif?: boolean;
-  pendingRevision?: BienPendingRevision | null;
   // Champs de promotion
   estMisEnAvant?: boolean;
   dateDebutPromotion?: string | null;
@@ -211,7 +170,6 @@ export interface OwnerStats {
     prix: number | null;
     photos: string[];
     updatedAt: string;
-    hasPendingRevision: boolean;
   }[];
   nbLocatairesActifs: number;
   nbBailsActifs: number;
@@ -271,21 +229,6 @@ export const retourBrouillon = (id: string): Promise<Bien> =>
 export const annulerAnnonce = (id: string): Promise<void> =>
   api.patch(`/${id}/annuler`).then(() => undefined);
 
-export const soumettreRevision = async (
-  id: string,
-  payload: CreateBienPayload,
-  newPhotos: File[]
-): Promise<Bien> => {
-  const formData = new FormData();
-  formData.append("data", JSON.stringify(payload));
-  newPhotos.forEach((f) => formData.append("photos", f));
-  return api
-    .patch<{ data: Bien }>(`/${id}/soumettre-revision`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-    .then((r) => r.data.data);
-};
-
 // ─── Admin API calls ──────────────────────────────────────────────────────────
 
 export const fetchAnnoncesPendingCount = (): Promise<{ count: number }> =>
@@ -313,7 +256,7 @@ export const fetchAnnoncesStatusCounts = (): Promise<AnnoncesCounts> =>
 
 export const validerAnnonce = (
   id: string,
-  action: "APPROUVER" | "REJETER" | "REVISION",
+  action: "APPROUVER" | "REJETER",
   note?: string
 ): Promise<Bien> =>
   annonceApi
@@ -339,24 +282,6 @@ export const fetchDernieresAnnonces = (limit: number = 10): Promise<BienAvecIsNe
 export const fetchAnnoncePublique = (id: string): Promise<Bien> =>
   api.get<{ data: Bien }>(`/public/${id}`).then((r) => r.data.data);
 
-// ─── Public API: report an announcement ──────────────────────────────────────
-
-export interface SignalerAnnoncePayload {
-  motif: string;
-  description?: string;
-  nom: string;
-  telephone: string;
-  email?: string;
-}
-
-export const signalerAnnonce = (
-  id: string,
-  payload: SignalerAnnoncePayload
-): Promise<{ success: boolean; message: string }> =>
-  api
-    .post<{ data: { success: boolean; message: string } }>(`/public/${id}/signaler`, payload)
-    .then((r) => r.data.data);
-
 // ─── Public API: fetch similar announcements ─────────────────────────────────
 
 export const fetchAnnoncesSimilaires = (id: string, limit: number = 4): Promise<Bien[]> =>
@@ -379,6 +304,9 @@ export interface RechercheParams {
   meuble?: "1";
   parking?: "1";
   ascenseur?: "1";
+  fumeurs?: "1";
+  animaux?: "1";
+  equipementIds?: string; // IDs séparés par virgule
   sortBy?: "prix" | "createdAt";
   sortOrder?: "asc" | "desc";
   page?: number;

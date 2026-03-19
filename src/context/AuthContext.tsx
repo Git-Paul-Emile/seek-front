@@ -3,12 +3,15 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useRef,
   useCallback,
   type ReactNode,
 } from "react";
 import axios from "axios";
 import { loginApi, logoutApi, meApi, refreshApi, type AdminInfo } from "@/api/auth";
 import { useLocation } from "react-router-dom";
+
+const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +36,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<AdminInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { pathname } = useLocation();
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startRefreshTimer = useCallback(() => {
+    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    refreshTimerRef.current = setInterval(async () => {
+      try {
+        await refreshApi();
+      } catch {
+        setAdmin(null);
+        if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+      }
+    }, REFRESH_INTERVAL_MS);
+  }, []);
+
+  const stopRefreshTimer = useCallback(() => {
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+  }, []);
 
   // Tenter de restaurer la session via /me au montage
   useEffect(() => {
@@ -46,28 +69,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data } = await meApi();
         setAdmin(data.data);
+        startRefreshTimer();
       } catch {
         // Pas de session active — tenter un refresh silencieux
         try {
           await refreshApi();
           const { data } = await meApi();
           setAdmin(data.data);
+          startRefreshTimer();
         } catch {
           setAdmin(null);
+          stopRefreshTimer();
         }
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [pathname]);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
 
   const login = useCallback(async (email: string, password: string) => {
     await loginApi({ email, password });
     const { data } = await meApi();
     setAdmin(data.data);
-  }, []);
+    startRefreshTimer();
+  }, [startRefreshTimer]);
 
   const logout = useCallback(async () => {
+    stopRefreshTimer();
     try {
       await logoutApi();
     } catch {
@@ -75,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setAdmin(null);
     }
-  }, []);
+  }, [stopRefreshTimer]);
 
   return (
     <AuthContext.Provider

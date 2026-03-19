@@ -3,14 +3,18 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   useCallback,
   type ReactNode,
 } from "react";
 import {
   meComptePublicApi,
+  refreshComptePublicApi,
   logoutComptePublicApi,
   type ComptePublic,
 } from "@/api/comptePublicAuth";
+
+const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
 
 interface State {
   compte: ComptePublic | null;
@@ -29,23 +33,48 @@ const ComptePublicAuthContext = createContext<ContextValue | null>(null);
 export function ComptePublicAuthProvider({ children }: { children: ReactNode }) {
   const [compte, setCompte] = useState<ComptePublic | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startRefreshTimer = useCallback(() => {
+    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    refreshTimerRef.current = setInterval(async () => {
+      try {
+        await refreshComptePublicApi();
+      } catch {
+        setCompte(null);
+        if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+      }
+    }, REFRESH_INTERVAL_MS);
+  }, []);
+
+  const stopRefreshTimer = useCallback(() => {
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+  }, []);
 
   const refreshMe = useCallback(async () => {
     try {
       const data = await meComptePublicApi();
       setCompte(data);
+      startRefreshTimer();
     } catch {
       setCompte(null);
+      stopRefreshTimer();
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [startRefreshTimer, stopRefreshTimer]);
 
   useEffect(() => {
     refreshMe();
   }, [refreshMe]);
 
+  useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
+
   const logout = useCallback(async () => {
+    stopRefreshTimer();
     try {
       await logoutComptePublicApi();
     } catch {
@@ -53,7 +82,7 @@ export function ComptePublicAuthProvider({ children }: { children: ReactNode }) 
     } finally {
       setCompte(null);
     }
-  }, []);
+  }, [stopRefreshTimer]);
 
   return (
     <ComptePublicAuthContext.Provider

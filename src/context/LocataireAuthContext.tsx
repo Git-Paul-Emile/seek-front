@@ -3,15 +3,19 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   useCallback,
   type ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
 import {
   meLocataireApi,
+  refreshLocataireApi,
   logoutLocataireApi,
 } from "@/api/locataireAuth";
 import type { Locataire } from "@/api/locataire";
+
+const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +48,26 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
   const [locataire, setLocataire] = useState<Locataire | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { pathname } = useLocation();
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startRefreshTimer = useCallback(() => {
+    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    refreshTimerRef.current = setInterval(async () => {
+      try {
+        await refreshLocataireApi();
+      } catch {
+        setLocataire(null);
+        if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+      }
+    }, REFRESH_INTERVAL_MS);
+  }, []);
+
+  const stopRefreshTimer = useCallback(() => {
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+  }, []);
 
   // Restaurer la session au montage / changement de route
   useEffect(() => {
@@ -56,15 +80,20 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
       try {
         const data = await meLocataireApi();
         setLocataire(data);
+        startRefreshTimer();
       } catch {
         setLocataire(null);
+        stopRefreshTimer();
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [pathname]);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
 
   const logout = useCallback(async () => {
+    stopRefreshTimer();
     try {
       await logoutLocataireApi();
     } catch {
@@ -72,7 +101,7 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLocataire(null);
     }
-  }, []);
+  }, [stopRefreshTimer]);
 
   return (
     <LocataireAuthContext.Provider

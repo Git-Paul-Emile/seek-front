@@ -1,28 +1,33 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useRef, useCallback, type ReactNode } from "react";
 import FavorisAuthModal from "@/components/FavorisAuthModal";
 
 interface ContextValue {
-  openModal: (onSuccess?: () => void) => void;
+  openModal: (bienId?: string) => void;
+  getPendingBienId: () => string | null;
+  clearPendingBienId: () => void;
 }
 
 const FavorisAuthModalContext = createContext<ContextValue | null>(null);
 
 export function FavorisAuthModalProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [onSuccess, setOnSuccess] = useState<(() => void) | undefined>(undefined);
+  const pendingBienIdRef = useRef<string | null>(null);
 
-  const openModal = useCallback((successCb?: () => void) => {
-    setOnSuccess(() => successCb);
+  const openModal = useCallback((bienId?: string) => {
+    if (bienId) pendingBienIdRef.current = bienId;
     setOpen(true);
   }, []);
 
+  const getPendingBienId = useCallback(() => pendingBienIdRef.current, []);
+  const clearPendingBienId = useCallback(() => { pendingBienIdRef.current = null; }, []);
+
   return (
-    <FavorisAuthModalContext.Provider value={{ openModal }}>
+    <FavorisAuthModalContext.Provider value={{ openModal, getPendingBienId, clearPendingBienId }}>
       {children}
       {open && (
         <FavorisAuthModal
           onClose={() => setOpen(false)}
-          onSuccess={() => { onSuccess?.(); setOpen(false); }}
+          hasPendingBien={pendingBienIdRef.current !== null}
         />
       )}
     </FavorisAuthModalContext.Provider>

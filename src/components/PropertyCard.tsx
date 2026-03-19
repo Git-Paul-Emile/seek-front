@@ -144,7 +144,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
               onClick={(e) => {
                 e.preventDefault();
                 if (!isAuthenticated) {
-                  openModal(() => toggleFavori(bienId));
+                  openModal(bienId);
                   return;
                 }
                 const wasFavori = isFavori(bienId);

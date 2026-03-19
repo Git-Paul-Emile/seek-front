@@ -15,12 +15,12 @@ import {
 
 interface Props {
   onClose: () => void;
-  onSuccess?: () => void; // appelé après connexion (ex: toggleFavori)
+  hasPendingBien?: boolean; // indique qu'un bien sera auto-ajouté aux favoris après connexion
 }
 
 type Tab = "register" | "login";
 
-export default function FavorisAuthModal({ onClose, onSuccess }: Props) {
+export default function FavorisAuthModal({ onClose, hasPendingBien }: Props) {
   const { setCompte } = useComptePublicAuth();
   const [tab, setTab] = useState<Tab>("register");
   const [loading, setLoading] = useState(false);
@@ -55,8 +55,7 @@ export default function FavorisAuthModal({ onClose, onSuccess }: Props) {
         email: form.email || undefined,
       });
       setCompte(compte);
-      toast("Compte créé ! Annonce ajoutée aux favoris.");
-      onSuccess?.();
+      toast(hasPendingBien ? "Compte créé ! Annonce ajoutée aux favoris." : "Compte créé !");
       onClose();
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? "Erreur lors de la création du compte";
@@ -86,8 +85,7 @@ export default function FavorisAuthModal({ onClose, onSuccess }: Props) {
     try {
       const compte = await loginComptePublicApi(loginForm.telephone, loginForm.password);
       setCompte(compte);
-      toast("Connecté ! Annonce ajoutée aux favoris.");
-      onSuccess?.();
+      toast(hasPendingBien ? "Connecté ! Annonce ajoutée aux favoris." : "Connecté !");
       onClose();
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? "Identifiants incorrects";

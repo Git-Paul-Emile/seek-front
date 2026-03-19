@@ -765,7 +765,7 @@ export default function AnnonceDetail() {
               <button
                 onClick={() => {
                   if (!isAuthenticated) {
-                    openModal(() => toggleFavori(bien.id));
+                    openModal(bien.id);
                     return;
                   }
                   const wasFavori = isFavori(bien.id);

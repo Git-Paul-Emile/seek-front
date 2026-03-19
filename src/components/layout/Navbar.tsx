@@ -44,13 +44,18 @@ const Navbar = () => {
   const isHome = location.pathname === "/";
   const transparent = isHome && !scrolled;
 
+  // Visibilité des espaces selon le rôle connecté
+  const showAdminLink = !isOwnerAuth && !isLocataireAuth && !isPublicAuth;
+  const showLocataireLink = !isAuthenticated && !isOwnerAuth && !isPublicAuth;
+  const showProprietaireLink = !isAuthenticated && !isLocataireAuth && !isPublicAuth;
+
   // Lien Admin : dashboard si connecté, sinon login
   const adminLink = {
     to: isAuthenticated ? "/admin/dashboard" : "/admin/login",
     label: "Admin",
   };
 
-  const navLinks = [...STATIC_NAV_LINKS, adminLink];
+  const navLinks = [...STATIC_NAV_LINKS, ...(showAdminLink ? [adminLink] : [])];
 
   return (
     <nav
@@ -133,20 +138,22 @@ const Navbar = () => {
               )}
             </AnimatePresence>
           </div>
-          <Link
-            to={isLocataireAuth ? "/locataire/dashboard" : "/locataire/login"}
-            className={`text-sm font-medium transition-colors duration-200 ${
-              location.pathname.startsWith("/locataire")
-                ? transparent
-                  ? "text-[#D4A843]"
-                  : "text-[#0C1A35] font-semibold"
-                : transparent
-                ? "text-white/65 hover:text-white"
-                : "text-slate-500 hover:text-[#0C1A35]"
-            }`}
-          >
-            Espace locataire
-          </Link>
+          {showLocataireLink && (
+            <Link
+              to={isLocataireAuth ? "/locataire/dashboard" : "/locataire/login"}
+              className={`text-sm font-medium transition-colors duration-200 ${
+                location.pathname.startsWith("/locataire")
+                  ? transparent
+                    ? "text-[#D4A843]"
+                    : "text-[#0C1A35] font-semibold"
+                  : transparent
+                  ? "text-white/65 hover:text-white"
+                  : "text-slate-500 hover:text-[#0C1A35]"
+              }`}
+            >
+              Espace locataire
+            </Link>
+          )}
           {/* Favoris avec badge */}
           <Link
             to="/favoris"
@@ -189,18 +196,20 @@ const Navbar = () => {
               Mon compte
             </button>
           )}
-          <Link
-            to={isOwnerAuth ? "/owner/dashboard" : "/proprietaires"}
-            className={`text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
-              location.pathname === "/proprietaires" || location.pathname.startsWith("/owner")
-                ? "border-[#D4A843] text-[#D4A843] bg-[#D4A843]/10"
-                : transparent
-                ? "border-white/30 text-white/80 hover:border-[#D4A843] hover:text-[#D4A843]"
-                : "border-[#0C1A35]/20 text-[#0C1A35] hover:border-[#D4A843] hover:text-[#D4A843]"
-            }`}
-          >
-            Espace propriétaire
-          </Link>
+          {showProprietaireLink && (
+            <Link
+              to={isOwnerAuth ? "/owner/dashboard" : "/proprietaires"}
+              className={`text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
+                location.pathname === "/proprietaires" || location.pathname.startsWith("/owner")
+                  ? "border-[#D4A843] text-[#D4A843] bg-[#D4A843]/10"
+                  : transparent
+                  ? "border-white/30 text-white/80 hover:border-[#D4A843] hover:text-[#D4A843]"
+                  : "border-[#0C1A35]/20 text-[#0C1A35] hover:border-[#D4A843] hover:text-[#D4A843]"
+              }`}
+            >
+              Espace propriétaire
+            </Link>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -267,17 +276,19 @@ const Navbar = () => {
                   ))}
                 </div>
               )}
-              <Link
-                to={isLocataireAuth ? "/locataire/dashboard" : "/locataire/login"}
-                onClick={() => setOpen(false)}
-                className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
-                  location.pathname.startsWith("/locataire")
-                    ? "text-[#D4A843] bg-white/5"
-                    : "text-white/65 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Espace locataire
-              </Link>
+              {showLocataireLink && (
+                <Link
+                  to={isLocataireAuth ? "/locataire/dashboard" : "/locataire/login"}
+                  onClick={() => setOpen(false)}
+                  className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
+                    location.pathname.startsWith("/locataire")
+                      ? "text-[#D4A843] bg-white/5"
+                      : "text-white/65 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Espace locataire
+                </Link>
+              )}
               <Link
                 to="/favoris"
                 onClick={() => setOpen(false)}
@@ -294,17 +305,19 @@ const Navbar = () => {
                   </span>
                 )}
               </Link>
-              <Link
-                to={isOwnerAuth ? "/owner/dashboard" : "/proprietaires"}
-                onClick={() => setOpen(false)}
-                className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
-                  location.pathname === "/proprietaires" || location.pathname.startsWith("/owner")
-                    ? "text-[#D4A843] bg-white/5"
-                    : "text-[#D4A843]/70 hover:text-[#D4A843] hover:bg-white/5"
-                }`}
-              >
-                Espace propriétaire
-              </Link>
+              {showProprietaireLink && (
+                <Link
+                  to={isOwnerAuth ? "/owner/dashboard" : "/proprietaires"}
+                  onClick={() => setOpen(false)}
+                  className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors ${
+                    location.pathname === "/proprietaires" || location.pathname.startsWith("/owner")
+                      ? "text-[#D4A843] bg-white/5"
+                      : "text-[#D4A843]/70 hover:text-[#D4A843] hover:bg-white/5"
+                  }`}
+                >
+                  Espace propriétaire
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

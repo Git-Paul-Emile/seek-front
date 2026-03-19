@@ -108,7 +108,10 @@ export default function Signalements() {
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-slate-700 font-medium max-w-xs truncate">{s.motif}</td>
-                  <td className="px-5 py-3.5 text-slate-500 text-xs">{s.signalePar}</td>
+                  <td className="px-5 py-3.5 text-slate-500 text-xs">
+                    <div>{s.signaleParNom ?? s.signalePar ?? "—"}</div>
+                    {s.signaleParTel && <div className="text-slate-400">{s.signaleParTel}</div>}
+                  </td>
                   <td className="px-5 py-3.5">
                     <span className={`px-2 py-1 rounded-lg text-xs font-medium ${STATUT_COLORS[s.statut] ?? ""}`}>
                       {STATUT_LABELS[s.statut] ?? s.statut}

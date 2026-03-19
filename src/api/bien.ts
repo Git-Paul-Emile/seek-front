@@ -344,6 +344,9 @@ export const fetchAnnoncePublique = (id: string): Promise<Bien> =>
 export interface SignalerAnnoncePayload {
   motif: string;
   description?: string;
+  nom: string;
+  telephone: string;
+  email?: string;
 }
 
 export const signalerAnnonce = (

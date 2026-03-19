@@ -91,18 +91,44 @@ export default function SignalementDetail() {
             <p className="font-semibold text-slate-700">{signalement.type}</p>
           </div>
           <div>
-            <p className="text-slate-400 text-xs font-medium mb-1">Signalé par</p>
-            <p className="font-medium text-slate-700">{signalement.signalePar}</p>
-          </div>
-          <div>
-            <p className="text-slate-400 text-xs font-medium mb-1">Motif</p>
-            <p className="font-medium text-slate-700">{signalement.motif}</p>
-          </div>
-          <div>
             <p className="text-slate-400 text-xs font-medium mb-1">Date</p>
             <p className="text-slate-500">{new Date(signalement.createdAt).toLocaleString("fr-FR")}</p>
           </div>
+          <div className="col-span-2">
+            <p className="text-slate-400 text-xs font-medium mb-1">Motif</p>
+            <p className="font-medium text-slate-700">{signalement.motif}</p>
+          </div>
         </div>
+
+        {/* Contact du signaleur */}
+        {(signalement.signaleParNom || signalement.signaleParTel) && (
+          <div className="bg-blue-50 rounded-xl p-3 space-y-1">
+            <p className="text-xs font-semibold text-blue-700 mb-2">Contact du signaleur</p>
+            {signalement.signaleParNom && (
+              <p className="text-sm text-slate-700">
+                <span className="text-slate-400 text-xs">Nom :</span>{" "}
+                <span className="font-medium">{signalement.signaleParNom}</span>
+              </p>
+            )}
+            {signalement.signaleParTel && (
+              <p className="text-sm text-slate-700">
+                <span className="text-slate-400 text-xs">Tél :</span>{" "}
+                <a href={`tel:${signalement.signaleParTel}`} className="font-medium text-blue-700 hover:underline">
+                  {signalement.signaleParTel}
+                </a>
+              </p>
+            )}
+            {signalement.signaleParEmail && (
+              <p className="text-sm text-slate-700">
+                <span className="text-slate-400 text-xs">Email :</span>{" "}
+                <a href={`mailto:${signalement.signaleParEmail}`} className="font-medium text-blue-700 hover:underline">
+                  {signalement.signaleParEmail}
+                </a>
+              </p>
+            )}
+          </div>
+        )}
+
         {signalement.description && (
           <div>
             <p className="text-slate-400 text-xs font-medium mb-1">Description</p>

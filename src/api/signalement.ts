@@ -19,6 +19,10 @@ export interface Signalement {
   description: string | null;
   statut: StatutSignalement;
   signalePar: string;
+  signaleParType: string | null;
+  signaleParNom: string | null;
+  signaleParEmail: string | null;
+  signaleParTel: string | null;
   signaleParProprietaireId: string | null;
   signaleParLocataireId: string | null;
   bienId: string | null;

@@ -1,19 +1,23 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 /**
  * Réserve les routes d'authentification aux visiteurs non connectés.
- * Si l'admin est déjà authentifié, il est renvoyé vers le dashboard.
- * Affiche un écran vide pendant la vérification initiale de session
- * pour éviter un flash de la page login.
+ * Bloque l'accès quel que soit le rôle connecté (admin, owner, locataire).
  */
 export default function GuestRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated: isAdmin, isLoading: adminLoading } = useAuth();
+  const { isAuthenticated: isOwner, isLoading: ownerLoading } = useOwnerAuth();
+  const { isAuthenticated: isLocataire, isLoading: locataireLoading } = useLocataireAuth();
 
-  if (isLoading) return null;
+  if (adminLoading || ownerLoading || locataireLoading) return null;
 
-  return isAuthenticated
-    ? <Navigate to="/admin/dashboard" replace />
-    : <Outlet />;
+  if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
+  if (isOwner) return <Navigate to="/owner/dashboard" replace />;
+  if (isLocataire) return <Navigate to="/locataire/dashboard" replace />;
+
+  return <Outlet />;
 }

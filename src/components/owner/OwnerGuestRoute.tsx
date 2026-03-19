@@ -1,15 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useAuth } from "@/context/AuthContext";
+import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
-/** Accessible uniquement si NON connecté — redirige vers dashboard si connecté */
+/** Accessible uniquement si NON connecté — bloque quel que soit le rôle connecté */
 const OwnerGuestRoute = () => {
-  const { isAuthenticated, isLoading } = useOwnerAuth();
+  const { isAuthenticated: isOwner, isLoading: ownerLoading } = useOwnerAuth();
+  const { isAuthenticated: isAdmin, isLoading: adminLoading } = useAuth();
+  const { isAuthenticated: isLocataire, isLoading: locataireLoading } = useLocataireAuth();
 
-  if (isLoading) return null;
+  if (ownerLoading || adminLoading || locataireLoading) return null;
 
-  return isAuthenticated
-    ? <Navigate to="/owner/dashboard" replace />
-    : <Outlet />;
+  if (isOwner) return <Navigate to="/owner/dashboard" replace />;
+  if (isAdmin) return <Navigate to="/admin/dashboard" replace />;
+  if (isLocataire) return <Navigate to="/locataire/dashboard" replace />;
+
+  return <Outlet />;
 };
 
 export default OwnerGuestRoute;

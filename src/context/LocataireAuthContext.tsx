@@ -69,10 +69,15 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const hasInitialized = useRef(false);
+
   // Restaurer la session au montage / changement de route
   useEffect(() => {
-    if (!pathname.startsWith("/locataire") || isPublicLocatairePage(pathname)) {
-      setIsLoading(false);
+    const isFirstRun = !hasInitialized.current;
+
+    if (isFirstRun) {
+      hasInitialized.current = true;
+    } else if (!pathname.startsWith("/locataire") || isPublicLocatairePage(pathname)) {
       return;
     }
 

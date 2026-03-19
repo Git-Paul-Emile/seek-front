@@ -63,10 +63,15 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const hasInitialized = useRef(false);
+
   // Restaurer la session au montage
   useEffect(() => {
-    if (!pathname.startsWith("/owner") && !pathname.startsWith("/proprietaires")) {
-      setIsLoading(false);
+    const isFirstRun = !hasInitialized.current;
+
+    if (isFirstRun) {
+      hasInitialized.current = true;
+    } else if (!pathname.startsWith("/owner") && !pathname.startsWith("/proprietaires")) {
       return;
     }
 

@@ -57,11 +57,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const hasInitialized = useRef(false);
+
   // Tenter de restaurer la session via /me au montage
   useEffect(() => {
-    if (!pathname.startsWith("/admin")) {
-      setAdmin(null);
-      setIsLoading(false);
+    const isFirstRun = !hasInitialized.current;
+
+    if (isFirstRun) {
+      hasInitialized.current = true;
+    } else if (!pathname.startsWith("/admin")) {
+      // Navigations suivantes hors espace admin : ne pas effacer l'état
       return;
     }
 

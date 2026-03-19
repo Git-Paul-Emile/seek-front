@@ -34,8 +34,29 @@ export interface Signalement {
   bien?: {
     id: string;
     titre: string | null;
-    ville: string | null;
+    description: string | null;
     photos: string[];
+    pays: string | null;
+    ville: string | null;
+    quartier: string | null;
+    adresse: string | null;
+    pointRepere: string | null;
+    prix: number | null;
+    frequencePaiement: string | null;
+    surface: number | null;
+    nbChambres: number | null;
+    nbSdb: number | null;
+    nbPieces: number | null;
+    meuble: boolean;
+    actif: boolean;
+    statutAnnonce: string;
+    nbVues: number;
+    createdAt: string;
+    proprietaireId: string;
+    typeLogement: { nom: string } | null;
+    typeTransaction: { nom: string } | null;
+    statutBien: { nom: string } | null;
+    proprietaire: { id: string; prenom: string; nom: string; telephone: string; email: string | null } | null;
   } | null;
   proprietaireSignale?: {
     id: string;

@@ -21,6 +21,7 @@ import {
   prolongerEcheancesAnneeApi,
   confirmerReceptionApi,
   enregistrerPaiementEspecesApi,
+  getBiensAvecBailActifApi,
   type CreateBailPayload,
   type PayerEcheancePayload,
   type PayerMoisMultiplesPayload,
@@ -364,6 +365,13 @@ export const useMarquerMessagesBailLocataireLus = () => {
 };
 
 // ─── Biens avec loyers en retard ──────────────────────────────────────────────
+
+export const useBiensAvecBailActif = () =>
+  useQuery({
+    queryKey: ["biensAvecBailActif"],
+    queryFn: getBiensAvecBailActifApi,
+    staleTime: 2 * 60 * 1000,
+  });
 
 export const useBiensEnRetard = () =>
   useQuery({

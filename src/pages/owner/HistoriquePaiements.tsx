@@ -1,10 +1,10 @@
 import { useState } from "react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import { 
-  Receipt, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Receipt,
+  Clock,
+  CheckCircle,
+  XCircle,
   Building2,
   Calendar,
   ChevronLeft,
@@ -13,8 +13,10 @@ import {
   ArrowDownCircle,
   Wallet,
   Eye,
-  X
+  X,
+  Banknote,
 } from "lucide-react";
+import EnregistrerEspecesModal from "@/components/owner/EnregistrerEspecesModal";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useHistoriqueTransactions } from "@/hooks/usePremium";
 import type { Transaction } from "@/api/transaction";
@@ -24,6 +26,7 @@ export default function HistoriquePaiements() {
   const { owner } = useOwnerAuth();
   const [page, setPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [showEspecesModal, setShowEspecesModal] = useState(false);
   const limit = 10;
 
   const { data, isLoading, error } = useHistoriqueTransactions(
@@ -140,7 +143,7 @@ export default function HistoriquePaiements() {
     <div className="space-y-6">
       <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Historique des paiements" }]} />
       {/* En-tête */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-1">
             <Receipt className="w-3.5 h-3.5" />
@@ -153,6 +156,13 @@ export default function HistoriquePaiements() {
             Historique de tous vos paiements et revenus
           </p>
         </div>
+        <button
+          onClick={() => setShowEspecesModal(true)}
+          className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4A843] text-white text-sm font-semibold hover:bg-[#c49a38] transition-colors"
+        >
+          <Banknote className="w-4 h-4" />
+          Enregistrer un paiement
+        </button>
       </div>
 
       {/* Contenu */}
@@ -380,6 +390,11 @@ export default function HistoriquePaiements() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal enregistrer paiement espèces */}
+      {showEspecesModal && (
+        <EnregistrerEspecesModal onClose={() => setShowEspecesModal(false)} />
       )}
     </div>
   );

@@ -311,6 +311,25 @@ export const confirmerReceptionApi = async (
   return data.data;
 };
 
+// ─── Biens avec bail actif ────────────────────────────────────────────────────
+
+export interface BienAvecBailActif {
+  bailId: string;
+  bienId: string;
+  bienTitre: string | null;
+  bienVille: string | null;
+  locataireId: string;
+  locataireNom: string | null;
+  locataireTelephone: string | null;
+  montantLoyer: number;
+  statutBail: string;
+}
+
+export const getBiensAvecBailActifApi = async (): Promise<BienAvecBailActif[]> => {
+  const { data } = await ownerApi.get("/avec-bail-actif");
+  return data.data;
+};
+
 // ─── Biens avec loyers en retard ──────────────────────────────────────────────
 
 export interface EcheanceRetard {

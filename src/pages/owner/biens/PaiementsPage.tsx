@@ -788,6 +788,8 @@ export default function PaiementsPage() {
           bienId={id!}
           bailId={bail.id}
           echeancier={echeancier}
+          bienTitre={bien?.titre ?? undefined}
+          locataireNom={`${bail.locataire.prenom} ${bail.locataire.nom}`}
           onClose={() => setShowEspecesModal(false)}
         />
       )}

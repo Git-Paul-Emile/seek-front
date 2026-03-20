@@ -20,7 +20,10 @@ import {
   ShieldCheck,
   Archive,
   Eye,
+  Banknote,
+  Hourglass,
 } from "lucide-react";
+import EnregistrerEspecesModal from "@/components/owner/EnregistrerEspecesModal";
 import { toast } from "sonner";
 import { useBienById } from "@/hooks/useBien";
 import {
@@ -40,7 +43,7 @@ import type { Echeance } from "@/api/bail";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "A_VENIR" | "PAYE" | "PARTIEL";
+type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "EN_ATTENTE_CONFIRMATION" | "A_VENIR" | "PAYE" | "PARTIEL";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -51,12 +54,13 @@ const STATUT_CFG: Record<string, {
   iconCls: string;
   badgeCls: string;
 }> = {
-  A_VENIR:    { label: "À venir",             icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-500" },
-  EN_ATTENTE: { label: "En attente",          icon: Clock,         rowCls: "bg-amber-50 border-amber-100",   iconCls: "text-amber-400",  badgeCls: "bg-amber-100 text-amber-700" },
-  EN_RETARD:  { label: "En retard",           icon: AlertCircle,   rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
-  PAYE:       { label: "Payé",                icon: CheckCircle2,  rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
-  PARTIEL:    { label: "Partiellement payé",  icon: CheckCircle2,  rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
-  ANNULE:     { label: "Annulé",              icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
+  A_VENIR:                 { label: "À venir",              icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-500" },
+  EN_ATTENTE:              { label: "En attente",           icon: Clock,         rowCls: "bg-amber-50 border-amber-100",   iconCls: "text-amber-400",  badgeCls: "bg-amber-100 text-amber-700" },
+  EN_RETARD:               { label: "En retard",            icon: AlertCircle,   rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
+  EN_ATTENTE_CONFIRMATION: { label: "Attente confirmation", icon: Hourglass,     rowCls: "bg-purple-50 border-purple-100", iconCls: "text-purple-400", badgeCls: "bg-purple-100 text-purple-700" },
+  PAYE:                    { label: "Payé",                 icon: CheckCircle2,  rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
+  PARTIEL:                 { label: "Partiellement payé",   icon: CheckCircle2,  rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
+  ANNULE:                  { label: "Annulé",               icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
 };
 
 const ORDER: Record<string, number> = {
@@ -164,6 +168,7 @@ export default function PaiementsPage() {
 
   const { mutate: prolongerAnnee, isPending: isProlonging } = useProlongerEcheancesAnnee();
   const [isZipping, setIsZipping] = useState(false);
+  const [showEspecesModal, setShowEspecesModal] = useState(false);
 
   const [filter, setFilter] = useState<StatutFilter>("TOUT");
   const [showAllMM, setShowAllMM] = useState(false);
@@ -317,13 +322,16 @@ export default function PaiementsPage() {
     }
   };
 
+  const nbEnAttenteConfirmation = visibleEcheancier.filter(e => e.statut === "EN_ATTENTE_CONFIRMATION").length;
+
   const FILTER_TABS: { key: StatutFilter; label: string; count?: number }[] = [
-    { key: "TOUT",       label: "Tout",       count: visibleEcheancier.length },
-    { key: "EN_RETARD",  label: "En retard",  count: visibleEcheancier.filter(e => e.statut === "EN_RETARD").length },
-    { key: "EN_ATTENTE", label: "En attente", count: visibleEcheancier.filter(e => e.statut === "EN_ATTENTE").length },
-    { key: "A_VENIR",    label: "À venir",    count: visibleEcheancier.filter(e => e.statut === "A_VENIR").length },
-    { key: "PAYE",       label: "Payés",      count: visibleEcheancier.filter(e => e.statut === "PAYE").length },
-    { key: "PARTIEL",    label: "Partiels",   count: visibleEcheancier.filter(e => e.statut === "PARTIEL").length },
+    { key: "TOUT",                     label: "Tout",                count: visibleEcheancier.length },
+    { key: "EN_RETARD",                label: "En retard",           count: visibleEcheancier.filter(e => e.statut === "EN_RETARD").length },
+    { key: "EN_ATTENTE",               label: "En attente",          count: visibleEcheancier.filter(e => e.statut === "EN_ATTENTE").length },
+    { key: "EN_ATTENTE_CONFIRMATION",  label: "À confirmer",         count: nbEnAttenteConfirmation },
+    { key: "A_VENIR",                  label: "À venir",             count: visibleEcheancier.filter(e => e.statut === "A_VENIR").length },
+    { key: "PAYE",                     label: "Payés",               count: visibleEcheancier.filter(e => e.statut === "PAYE").length },
+    { key: "PARTIEL",                  label: "Partiels",            count: visibleEcheancier.filter(e => e.statut === "PARTIEL").length },
   ];
 
   if (isLoading) {
@@ -389,17 +397,28 @@ export default function PaiementsPage() {
             </p>
           </div>
         </div>
-        {/* Bouton ZIP */}
-        <button
-          onClick={handleDownloadAll}
-          disabled={isZipping}
-          title="Télécharger toutes les quittances en ZIP"
-          className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200
-            text-slate-600 hover:bg-slate-50 hover:text-[#0C1A35] text-xs font-medium transition-colors disabled:opacity-60"
-        >
-          {isZipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
-          Tout en ZIP
-        </button>
+        {/* Boutons actions en-tête */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowEspecesModal(true)}
+            title="Enregistrer un paiement reçu en espèces"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#D4A843] text-white
+              text-xs font-semibold hover:bg-[#c49a38] transition-colors"
+          >
+            <Banknote className="w-3.5 h-3.5" />
+            Espèces
+          </button>
+          <button
+            onClick={handleDownloadAll}
+            disabled={isZipping}
+            title="Télécharger toutes les quittances en ZIP"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200
+              text-slate-600 hover:bg-slate-50 hover:text-[#0C1A35] text-xs font-medium transition-colors disabled:opacity-60"
+          >
+            {isZipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+            ZIP
+          </button>
+        </div>
       </div>
 
       {/* Cartes de solde */}
@@ -633,7 +652,13 @@ export default function PaiementsPage() {
                       {ech.confirmeParProprietaire && (
                         <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 flex items-center gap-0.5">
                           <ShieldCheck className="w-2.5 h-2.5" />
-                          Confirmé
+                          Confirmé prop.
+                        </span>
+                      )}
+                      {ech.confirmeParLocataire && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center gap-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          Confirmé loc.
                         </span>
                       )}
                     </div>
@@ -664,6 +689,11 @@ export default function PaiementsPage() {
                     {ech.confirmeParProprietaire && ech.dateConfirmation && (
                       <p className="text-xs text-teal-600 mt-0.5">
                         Réception confirmée le {new Date(ech.dateConfirmation).toLocaleDateString("fr-FR")}
+                      </p>
+                    )}
+                    {ech.statut === "EN_ATTENTE_CONFIRMATION" && (
+                      <p className="text-xs text-purple-600 mt-0.5 italic">
+                        En attente de confirmation du locataire
                       </p>
                     )}
                     {ech.note && (
@@ -752,6 +782,15 @@ export default function PaiementsPage() {
         )}
       </div>
 
+      {/* Modal paiement espèces */}
+      {showEspecesModal && bail && (
+        <EnregistrerEspecesModal
+          bienId={id!}
+          bailId={bail.id}
+          echeancier={echeancier}
+          onClose={() => setShowEspecesModal(false)}
+        />
+      )}
     </div>
   );
 }

@@ -221,6 +221,11 @@ export const payerEcheancesLocataireApi = async (
   return data.data;
 };
 
+export const confirmerPaiementEspecesApi = async (echeanceId: string): Promise<unknown> => {
+  const { data } = await api.patch(`/paiement/${echeanceId}/confirmer-especes`);
+  return data.data;
+};
+
 // ─── API pour le contrat ─────────────────────────────────────────────────────
 
 export const getLocataireContratApi = async (): Promise<ContratLocataireData | null> => {

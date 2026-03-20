@@ -20,11 +20,14 @@ import {
   getHistoriqueBailsApi,
   prolongerEcheancesAnneeApi,
   confirmerReceptionApi,
+  enregistrerPaiementEspecesApi,
   type CreateBailPayload,
   type PayerEcheancePayload,
   type PayerMoisMultiplesPayload,
+  type EnregistrerEspecesPayload,
   getBiensEnRetardApi,
 } from "@/api/bail";
+import { confirmerPaiementEspecesApi } from "@/api/locataireAuth";
 import {
   mettreEnPreavisLocataireApi,
   resilierBailLocataireApi,
@@ -270,6 +273,32 @@ export const useConfirmerReception = () => {
       confirmerReceptionApi(bienId, bailId, echeanceId),
     onSuccess: (_data, { bailId }) => {
       qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
+    },
+  });
+};
+
+export const useEnregistrerPaiementEspeces = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bienId, bailId, echeanceId, payload,
+    }: { bienId: string; bailId: string; echeanceId: string; payload: EnregistrerEspecesPayload }) =>
+      enregistrerPaiementEspecesApi(bienId, bailId, echeanceId, payload),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
+      qc.invalidateQueries({ queryKey: ["solde", bailId] });
+    },
+  });
+};
+
+export const useConfirmerPaiementEspeces = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ echeanceId, bailId }: { echeanceId: string; bailId: string }) =>
+      confirmerPaiementEspecesApi(echeanceId),
+    onSuccess: (_data, { bailId }) => {
+      qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
+      qc.invalidateQueries({ queryKey: ["locataireEcheancier"] });
     },
   });
 };

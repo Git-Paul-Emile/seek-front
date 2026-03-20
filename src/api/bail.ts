@@ -117,7 +117,7 @@ export const prolongerBailApi = async (
 
 // ─── Échéancier ───────────────────────────────────────────────────────────────
 
-export type StatutPaiement = "A_VENIR" | "EN_ATTENTE" | "EN_RETARD" | "PAYE" | "PARTIEL" | "ANNULE";
+export type StatutPaiement = "A_VENIR" | "EN_ATTENTE" | "EN_RETARD" | "EN_ATTENTE_CONFIRMATION" | "PAYE" | "PARTIEL" | "ANNULE";
 
 export interface Echeance {
   id: string;
@@ -134,6 +134,8 @@ export interface Echeance {
   montantPaye?: number | null;
   confirmeParProprietaire: boolean;
   dateConfirmation?: string | null;
+  confirmeParLocataire: boolean;
+  dateConfirmationLocataire?: string | null;
 }
 
 export interface PayerEcheancePayload {
@@ -173,6 +175,24 @@ export const payerMoisMultiplesApi = async (
   payload: PayerMoisMultiplesPayload
 ): Promise<{ paye: number; ids: string[] }> => {
   const { data } = await api.patch(`/${bienId}/bail/${bailId}/echeancier/payer-multiple`, payload);
+  return data.data;
+};
+
+// ─── Paiement espèces ─────────────────────────────────────────────────────────
+
+export interface EnregistrerEspecesPayload {
+  datePaiement: string;
+  montant?: number;
+  note?: string;
+}
+
+export const enregistrerPaiementEspecesApi = async (
+  bienId: string,
+  bailId: string,
+  echeanceId: string,
+  payload: EnregistrerEspecesPayload
+): Promise<Echeance> => {
+  const { data } = await api.patch(`/${bienId}/bail/${bailId}/echeancier/${echeanceId}/especes`, payload);
   return data.data;
 };
 

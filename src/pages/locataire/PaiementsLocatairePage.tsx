@@ -17,7 +17,11 @@ import {
   Archive,
   Loader2,
   Eye,
+  Hourglass,
+  ThumbsUp,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useConfirmerPaiementEspeces } from "@/hooks/useBail";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useLocataireEcheancier } from "@/hooks/useLocataireEcheancier";
 import { useQuittancesLocataire } from "@/hooks/useQuittance";
@@ -36,23 +40,24 @@ const STATUT_CFG: Record<string, {
   iconCls: string;
   badgeCls: string;
 }> = {
-  A_VENIR:    { label: "À venir",             icon: CircleDashed, rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-500" },
-  EN_ATTENTE: { label: "En attente",          icon: Clock,        rowCls: "bg-amber-50 border-amber-100",   iconCls: "text-amber-400",  badgeCls: "bg-amber-100 text-amber-700" },
-  EN_RETARD:  { label: "En retard",           icon: AlertCircle,  rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
-  PAYE:       { label: "Payé",               icon: CheckCircle2, rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
-  PARTIEL:    { label: "Partiellement payé", icon: CheckCircle2, rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
-  ANNULE:     { label: "Annulé",             icon: CircleDashed, rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
+  A_VENIR:                 { label: "À venir",              icon: CircleDashed, rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-500" },
+  EN_ATTENTE:              { label: "En attente",           icon: Clock,        rowCls: "bg-amber-50 border-amber-100",   iconCls: "text-amber-400",  badgeCls: "bg-amber-100 text-amber-700" },
+  EN_RETARD:               { label: "En retard",            icon: AlertCircle,  rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
+  EN_ATTENTE_CONFIRMATION: { label: "À confirmer",          icon: Hourglass,    rowCls: "bg-purple-50 border-purple-100", iconCls: "text-purple-400", badgeCls: "bg-purple-100 text-purple-700" },
+  PAYE:                    { label: "Payé",                 icon: CheckCircle2, rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
+  PARTIEL:                 { label: "Partiellement payé",   icon: CheckCircle2, rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
+  ANNULE:                  { label: "Annulé",               icon: CircleDashed, rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
 };
 
 const ORDER: Record<string, number> = {
   EN_RETARD: 0, EN_ATTENTE: 1, PARTIEL: 2, A_VENIR: 3, PAYE: 4, ANNULE: 5,
 };
 
-const isUnpaid = (s: string) => s !== "PAYE" && s !== "ANNULE";
+const isUnpaid = (s: string) => s !== "PAYE" && s !== "ANNULE" && s !== "EN_ATTENTE_CONFIRMATION";
 const canDownload = (s: string) => s === "PAYE" || s === "PARTIEL";
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 
-type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "A_VENIR" | "PAYE" | "PARTIEL";
+type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "EN_ATTENTE_CONFIRMATION" | "A_VENIR" | "PAYE" | "PARTIEL";
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
@@ -69,6 +74,8 @@ export default function PaiementsLocatairePage() {
   const [showPayModal, setShowPayModal] = useState(false);
   const [showMM, setShowMM] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
+
+  const { mutate: confirmerEspeces, isPending: isConfirming, variables: confirmingVars } = useConfirmerPaiementEspeces();
 
   // On n'affiche les A_VENIR que pour l'année en cours (masque les futures années pré-générées)
   const currentYear = new Date().getFullYear();
@@ -173,13 +180,16 @@ export default function PaiementsLocatairePage() {
     }
   };
 
+  const nbEnAttenteConfirmation = echeancier.filter(e => e.statut === "EN_ATTENTE_CONFIRMATION").length;
+
   const FILTER_TABS: { key: StatutFilter; label: string; count?: number }[] = [
-    { key: "TOUT",       label: "Tout",         count: echeancier.length },
-    { key: "EN_RETARD",  label: "En retard",    count: nbEnRetard },
-    { key: "EN_ATTENTE", label: "En attente",   count: nbEnAttente },
-    { key: "A_VENIR",    label: "À venir",      count: nbAVenir },
-    { key: "PAYE",       label: "Payés",        count: nbPaye },
-    { key: "PARTIEL",    label: "Partiels",     count: nbPartiel },
+    { key: "TOUT",                    label: "Tout",        count: echeancier.length },
+    { key: "EN_RETARD",               label: "En retard",   count: nbEnRetard },
+    { key: "EN_ATTENTE",              label: "En attente",  count: nbEnAttente },
+    { key: "EN_ATTENTE_CONFIRMATION", label: "À confirmer", count: nbEnAttenteConfirmation },
+    { key: "A_VENIR",                 label: "À venir",     count: nbAVenir },
+    { key: "PAYE",                    label: "Payés",       count: nbPaye },
+    { key: "PARTIEL",                 label: "Partiels",    count: nbPartiel },
   ];
 
   if (isLoading) {
@@ -432,7 +442,12 @@ export default function PaiementsLocatairePage() {
                     <p className="text-xs text-slate-500 mt-0.5">
                       {fmt(ech.montant)} FCFA
                     </p>
-                    {ech.datePaiement && (
+                    {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
+                      <p className="text-xs text-purple-600 mt-0.5 font-medium">
+                        Enregistré par votre propriétaire le {new Date(ech.datePaiement).toLocaleDateString("fr-FR")} · Espèces · Veuillez confirmer
+                      </p>
+                    )}
+                    {ech.statut !== "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
                       <p className="text-xs text-slate-400 mt-0.5">
                         Payé le{" "}
                         {new Date(ech.datePaiement).toLocaleDateString("fr-FR")}
@@ -449,8 +464,35 @@ export default function PaiementsLocatairePage() {
                     <p className="text-sm font-bold text-[#0C1A35] whitespace-nowrap">
                       {fmt(ech.montant)} F
                     </p>
+                    {/* Bouton confirmer paiement espèces */}
+                    {ech.statut === "EN_ATTENTE_CONFIRMATION" && !ech.confirmeParLocataire && (
+                      <button
+                        onClick={() =>
+                          confirmerEspeces(
+                            { echeanceId: ech.id, bailId: bailActif.id },
+                            {
+                              onSuccess: () => toast.success("Paiement confirmé avec succès"),
+                              onError: (err: unknown) => {
+                                const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+                                toast.error(msg ?? "Erreur lors de la confirmation");
+                              },
+                            }
+                          )
+                        }
+                        disabled={isConfirming && confirmingVars?.echeanceId === ech.id}
+                        className="flex items-center gap-1 text-xs font-semibold text-purple-700 hover:text-purple-800
+                          px-2.5 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-50 transition-colors disabled:opacity-60"
+                      >
+                        {isConfirming && confirmingVars?.echeanceId === ech.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <ThumbsUp className="w-3 h-3" />
+                        )}
+                        Confirmer
+                      </button>
+                    )}
                     {/* Bouton initier paiement sur la prochaine échéance */}
-                    {isNext && (
+                    {isNext && ech.statut !== "EN_ATTENTE_CONFIRMATION" && (
                       <button
                         onClick={() => setShowPayModal(true)}
                         className="flex items-center gap-1 text-xs font-semibold text-[#D4A843] hover:text-[#c49a38]

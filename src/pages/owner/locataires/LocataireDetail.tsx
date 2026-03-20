@@ -238,7 +238,7 @@ export default function LocataireDetail() {
     );
   }
 
-  const cfg = STATUT_CONFIG[locataire.statut];
+  const cfg = STATUT_CONFIG[locataire.statut] ?? { label: locataire.statut, color: "bg-slate-100 text-slate-500", icon: null };
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">

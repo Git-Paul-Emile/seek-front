@@ -140,11 +140,35 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
                 }`}
               >
                 <option value="">-- Sélectionner un locataire --</option>
-                {locataires.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.prenom} {loc.nom} - {loc.telephone}
-                  </option>
-                ))}
+                {(() => {
+                  const libres = locataires.filter((l) => !l.bails?.some((b) => b.statut === "ACTIF"));
+                  const associes = locataires.filter((l) => l.bails?.some((b) => b.statut === "ACTIF"));
+                  return (
+                    <>
+                      {libres.length > 0 && (
+                        <optgroup label={`Disponibles (${libres.length})`}>
+                          {libres.map((loc) => (
+                            <option key={loc.id} value={loc.id}>
+                              {loc.prenom} {loc.nom} — {loc.telephone}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {associes.length > 0 && (
+                        <optgroup label={`Déjà associés à un bien (${associes.length})`}>
+                          {associes.map((loc) => {
+                            const bail = loc.bails?.find((b) => b.statut === "ACTIF");
+                            return (
+                              <option key={loc.id} value={loc.id}>
+                                {loc.prenom} {loc.nom} — {bail?.bien?.titre || bail?.bien?.ville || "Bien loué"}
+                              </option>
+                            );
+                          })}
+                        </optgroup>
+                      )}
+                    </>
+                  );
+                })()}
               </select>
             )}
             {errors.locataireId && (

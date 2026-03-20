@@ -47,7 +47,7 @@ function StatutBadge({ statut }: { statut: StatutAnnonce }) {
 }
 
 export default function BiensList() {
-  const [filter, setFilter] = useState<StatutAnnonce | "TOUS" | "ASSOCIE" | "MIS_EN_AVANT">("TOUS");
+  const [filter, setFilter] = useState<StatutAnnonce | "TOUS" | "ASSOCIE" | "NON_ASSOCIE" | "MIS_EN_AVANT">("TOUS");
   const [search, setSearch] = useState("");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [retourTargetId, setRetourTargetId] = useState<string | null>(null);
@@ -75,12 +75,14 @@ export default function BiensList() {
   );
 
   const associeCount = biens.filter((b) => b.hasBailActif).length;
+  const nonAssocieCount = biens.filter((b) => !b.hasBailActif).length;
 
   const miseEnAvantCount = biens.filter((b) => b.estMisEnAvant).length;
 
   const filteredBiens = useMemo(() => {
     let result = filter === "TOUS" ? biens :
       filter === "ASSOCIE" ? biens.filter((b) => b.hasBailActif) :
+      filter === "NON_ASSOCIE" ? biens.filter((b) => !b.hasBailActif) :
       filter === "MIS_EN_AVANT" ? biens.filter((b) => b.estMisEnAvant) :
       biens.filter((b) => b.statutAnnonce === filter);
 
@@ -188,6 +190,19 @@ export default function BiensList() {
         </button>
 
         <button
+          onClick={() => setFilter("NON_ASSOCIE")}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            filter === "NON_ASSOCIE" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+          }`}
+        >
+          <UserCheck className={`w-3.5 h-3.5 ${filter === "NON_ASSOCIE" ? "text-white" : "text-slate-400"}`} />
+          Non associé
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${filter === "NON_ASSOCIE" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+            {nonAssocieCount}
+          </span>
+        </button>
+
+        <button
           onClick={() => setFilter("MIS_EN_AVANT")}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             filter === "MIS_EN_AVANT" ? "bg-[#0C1A35] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
@@ -250,6 +265,8 @@ export default function BiensList() {
               ? "Vous n'avez pas encore de biens."
               : filter === "ASSOCIE"
               ? "Vous n'avez aucun bien avec un locataire actif."
+              : filter === "NON_ASSOCIE"
+              ? "Tous vos biens ont un locataire actif."
               : filter === "MIS_EN_AVANT"
               ? "Vous n'avez aucun bien mis en avant."
               : `Vous n'avez aucun bien avec le statut « ${STATUT_CONFIG[filter as StatutAnnonce].label} ».`}

@@ -45,7 +45,7 @@ const STATUT_CONFIG: Record<
 };
 
 const StatutBadge = ({ statut }: { statut: StatutLocataire }) => {
-  const cfg = STATUT_CONFIG[statut];
+  const cfg = STATUT_CONFIG[statut] ?? { label: statut, color: "bg-slate-100 text-slate-500", icon: <XCircle className="w-3 h-3" /> };
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}

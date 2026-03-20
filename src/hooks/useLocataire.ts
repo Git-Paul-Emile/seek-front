@@ -9,6 +9,7 @@ import {
   approveLocataireVerificationApi,
   rejectLocataireVerificationApi,
   getPendingVerificationsCountApi,
+  searchLocataireByContactApi,
   type CreateLocatairePayload,
   type UpdateLocatairePayload,
 } from "@/api/locataire";
@@ -96,4 +97,14 @@ export const usePendingVerificationsCount = () =>
     queryKey: [QK, "pending-verifications-count"],
     queryFn: getPendingVerificationsCountApi,
     staleTime: 30 * 1000, // 30 secondes
+  });
+
+// ─── Recherche globale par téléphone/email ────────────────────────────────────
+
+export const useSearchLocataire = (params: { telephone?: string; email?: string }) =>
+  useQuery({
+    queryKey: [QK, "search", params.telephone, params.email],
+    queryFn: () => searchLocataireByContactApi(params),
+    enabled: !!(params.telephone?.trim() || params.email?.trim()),
+    staleTime: 30 * 1000,
   });

@@ -40,6 +40,8 @@ import type { StatutPaiement } from "@/api/bail";
 import { getLocataireContratApi, type ContratLocataireData } from "@/api/locataireAuth";
 import { SkListItems } from "@/components/ui/Skeleton";
 import { useMettreEnPreavisLocataire, useResilierBailLocataire, useMessagesBailLocataire, useMarquerMessagesBailLocataireLus } from "@/hooks/useBail";
+import { useLocataireInvitations, useAccepterInvitation, useRefuserInvitation } from "@/hooks/useBailInvitation";
+import type { BailInvitation } from "@/api/bailInvitation";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -88,6 +90,37 @@ export default function LocataireDashboard() {
   // Suppression du compte
   const [supprimerOpen, setSupprimerOpen] = useState(false);
   const supprimerCompte = useSupprimerCompteLocataire();
+
+  // Invitations en attente
+  const { data: invitations = [] } = useLocataireInvitations();
+  const accepterInvitation = useAccepterInvitation();
+  const refuserInvitation = useRefuserInvitation();
+  const [invitationPending, setInvitationPending] = useState<string | null>(null);
+
+  const handleAccepterInvitation = async (inv: BailInvitation) => {
+    setInvitationPending(inv.token);
+    try {
+      await accepterInvitation.mutateAsync(inv.token);
+      toast.success(`Invitation acceptée ! Le bail pour ${inv.bien?.titre || inv.bien?.ville || "le bien"} a été créé.`);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
+      toast.error(msg);
+    } finally {
+      setInvitationPending(null);
+    }
+  };
+
+  const handleRefuserInvitation = async (inv: BailInvitation) => {
+    setInvitationPending(inv.token);
+    try {
+      await refuserInvitation.mutateAsync(inv.token);
+      toast.success("Invitation refusée");
+    } catch {
+      toast.error("Erreur lors du refus");
+    } finally {
+      setInvitationPending(null);
+    }
+  };
 
   const handleVoirContrat = async () => {
     setShowContratModal(true);
@@ -196,6 +229,61 @@ export default function LocataireDashboard() {
                 >
                   <X className="w-3.5 h-3.5 opacity-50" />
                 </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Invitations en attente */}
+      {invitations.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843]">
+            <Send className="w-3.5 h-3.5" />
+            Invitation{invitations.length > 1 ? "s" : ""} en attente ({invitations.length})
+          </div>
+          {invitations.map((inv) => {
+            const bienLabel = inv.bien?.titre || inv.bien?.adresse || inv.bien?.ville || "Bien";
+            const isLoading = invitationPending === inv.token;
+            return (
+              <div key={inv.id} className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+                    <MapPin className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#0C1A35]">{bienLabel}</p>
+                    {inv.bien?.ville && (
+                      <p className="text-xs text-slate-500 mt-0.5">{inv.bien.ville}{inv.bien.quartier ? ` · ${inv.bien.quartier}` : ""}</p>
+                    )}
+                    <p className="text-xs text-amber-700 mt-1">
+                      Propriétaire : {inv.proprietaire?.prenom} {inv.proprietaire?.nom}
+                    </p>
+                    <div className="flex gap-4 mt-1 text-xs text-slate-500">
+                      <span>Loyer : <strong className="text-slate-700">{inv.montantLoyer.toLocaleString("fr-FR")} FCFA</strong></span>
+                      {inv.montantCaution && <span>Caution : {inv.montantCaution.toLocaleString("fr-FR")} FCFA</span>}
+                      <span>Début : {new Date(inv.dateDebutBail).toLocaleDateString("fr-FR")}</span>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => handleAccepterInvitation(inv)}
+                        disabled={isLoading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        {isLoading ? "..." : "Accepter"}
+                      </button>
+                      <button
+                        onClick={() => handleRefuserInvitation(inv)}
+                        disabled={isLoading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        {isLoading ? "..." : "Refuser"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}

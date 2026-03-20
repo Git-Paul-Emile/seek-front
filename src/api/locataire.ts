@@ -155,3 +155,28 @@ export const getPendingVerificationsCountApi = async (): Promise<{ count: number
   const { data } = await api.get("/verifications/pending/count");
   return data.data;
 };
+
+// ─── Recherche globale par téléphone/email ─────────────────────────────────
+
+export interface SearchLocataireResult {
+  found: boolean;
+  locataire: {
+    id: string;
+    nom: string;
+    prenom: string;
+    telephone: string;
+    statut: StatutLocataire;
+    estDansMaListe: boolean;
+  } | null;
+}
+
+export const searchLocataireByContactApi = async (params: {
+  telephone?: string;
+  email?: string;
+}): Promise<SearchLocataireResult> => {
+  const query = new URLSearchParams();
+  if (params.telephone) query.set("telephone", params.telephone);
+  if (params.email) query.set("email", params.email);
+  const { data } = await api.get(`/search?${query.toString()}`);
+  return data.data;
+};

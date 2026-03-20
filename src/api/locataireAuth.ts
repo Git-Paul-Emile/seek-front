@@ -403,3 +403,9 @@ export const marquerMessagesBailLocataireLusApi = async (): Promise<void> => {
   await api.post("/messages-bail/lus");
 };
 
+// ─── Suppression du compte ────────────────────────────────────────────────────
+
+export const supprimerCompteLocataireApi = async (): Promise<void> => {
+  await api.delete("/compte");
+};
+

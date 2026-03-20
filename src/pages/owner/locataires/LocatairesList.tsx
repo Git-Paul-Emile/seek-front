@@ -12,48 +12,64 @@ import {
   Home,
   ChevronRight,
   Trash2,
-  Shield,
   Search,
   X,
+  AlertTriangle,
+  Archive,
 } from "lucide-react";
 import { useLocataires, useDeleteLocataire, usePendingVerificationsCount } from "@/hooks/useLocataire";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { toast } from "sonner";
-import type { StatutLocataire } from "@/api/locataire";
+import type { BailResume } from "@/api/locataire";
+
+// ─── Constantes ───────────────────────────────────────────────────────────────
+
+const STATUTS_BAIL_ACTIFS = ["ACTIF", "EN_PREAVIS", "EN_RENOUVELLEMENT", "EN_ATTENTE"] as const;
+const STATUTS_BAIL_ANCIENS = ["TERMINE", "RESILIE", "ARCHIVE"] as const;
+
+const BAIL_STATUT_CFG: Record<
+  string,
+  { label: string; color: string }
+> = {
+  ACTIF:             { label: "Actif",              color: "bg-green-100 text-green-700" },
+  EN_PREAVIS:        { label: "En préavis",          color: "bg-orange-100 text-orange-700" },
+  EN_RENOUVELLEMENT: { label: "En renouvellement",   color: "bg-blue-100 text-blue-700" },
+  EN_ATTENTE:        { label: "En attente",           color: "bg-amber-100 text-amber-700" },
+  TERMINE:           { label: "Terminé",              color: "bg-slate-100 text-slate-500" },
+  RESILIE:           { label: "Résilié",              color: "bg-red-100 text-red-600" },
+  ARCHIVE:           { label: "Archivé",              color: "bg-slate-100 text-slate-400" },
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUT_CONFIG: Record<
-  StatutLocataire,
-  { label: string; color: string; icon: React.ReactNode }
-> = {
-  INVITE: {
-    label: "En attente",
-    color: "bg-amber-100 text-amber-700",
-    icon: <Clock className="w-3 h-3" />,
-  },
-  ACTIF: {
-    label: "Actif",
-    color: "bg-green-100 text-green-700",
-    icon: <CheckCircle className="w-3 h-3" />,
-  },
-  INACTIF: {
-    label: "Inactif",
-    color: "bg-slate-100 text-slate-500",
-    icon: <XCircle className="w-3 h-3" />,
-  },
-};
+const getBailActif = (bails?: BailResume[]) =>
+  bails?.find((b) => (STATUTS_BAIL_ACTIFS as readonly string[]).includes(b.statut));
 
-const StatutBadge = ({ statut }: { statut: StatutLocataire }) => {
-  const cfg = STATUT_CONFIG[statut] ?? { label: statut, color: "bg-slate-100 text-slate-500", icon: <XCircle className="w-3 h-3" /> };
+const getBailAncien = (bails?: BailResume[]) =>
+  bails?.find((b) => (STATUTS_BAIL_ANCIENS as readonly string[]).includes(b.statut));
+
+const isAncienLocataire = (bails?: BailResume[]) =>
+  !getBailActif(bails) && !!getBailAncien(bails);
+
+const isActifLocataire = (bails?: BailResume[]) =>
+  !!getBailActif(bails);
+
+const BailStatutBadge = ({ statut }: { statut: string }) => {
+  const cfg = BAIL_STATUT_CFG[statut] ?? { label: statut, color: "bg-slate-100 text-slate-500" };
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}
-    >
-      {cfg.icon}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${cfg.color}`}>
+      {statut === "EN_PREAVIS" && <AlertTriangle className="w-2.5 h-2.5" />}
       {cfg.label}
     </span>
   );
+};
+
+type ViewTab = "ACTIFS" | "ANCIENS" | "INVITE" | "TOUS";
+
+const LOCATAIRE_STATUT_ICON: Record<string, React.ReactNode> = {
+  INVITE:  <Clock className="w-3 h-3" />,
+  ACTIF:   <CheckCircle className="w-3 h-3" />,
+  INACTIF: <XCircle className="w-3 h-3" />,
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -65,21 +81,33 @@ export default function LocatairesList() {
   const deleteLocataire = useDeleteLocataire();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filterStatut, setFilterStatut] = useState<StatutLocataire | "TOUS">("TOUS");
+  const [tab, setTab] = useState<ViewTab>("ACTIFS");
+
+  // Dériver les groupes
+  const actifs  = useMemo(() => locataires.filter((l) => isActifLocataire(l.bails)), [locataires]);
+  const anciens  = useMemo(() => locataires.filter((l) => isAncienLocataire(l.bails)), [locataires]);
+  const invites  = useMemo(() => locataires.filter((l) => !isActifLocataire(l.bails) && !isAncienLocataire(l.bails)), [locataires]);
+
+  const baseList = useMemo(() => {
+    switch (tab) {
+      case "ACTIFS":  return actifs;
+      case "ANCIENS": return anciens;
+      case "INVITE":  return invites;
+      default:        return locataires;
+    }
+  }, [tab, actifs, anciens, invites, locataires]);
 
   const filtered = useMemo(() => {
-    let result = filterStatut === "TOUS" ? locataires : locataires.filter((l) => l.statut === filterStatut);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter((l) =>
+    if (!search.trim()) return baseList;
+    const q = search.toLowerCase();
+    return baseList.filter(
+      (l) =>
         l.prenom.toLowerCase().includes(q) ||
         l.nom.toLowerCase().includes(q) ||
         l.telephone.includes(q) ||
         l.email?.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [locataires, filterStatut, search]);
+    );
+  }, [baseList, search]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -95,9 +123,17 @@ export default function LocatairesList() {
     }
   };
 
+  const tabs: { key: ViewTab; label: string; count: number; icon: React.ReactNode }[] = [
+    { key: "ACTIFS",  label: "Actifs",          count: actifs.length,  icon: <CheckCircle className="w-3.5 h-3.5" /> },
+    { key: "INVITE",  label: "Sans bail",        count: invites.length, icon: <Clock className="w-3.5 h-3.5" /> },
+    { key: "ANCIENS", label: "Anciens",          count: anciens.length, icon: <Archive className="w-3.5 h-3.5" /> },
+    { key: "TOUS",    label: "Tous",             count: locataires.length, icon: <Users className="w-3.5 h-3.5" /> },
+  ];
+
   return (
     <div>
       <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Locataires" }]} />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -130,41 +166,44 @@ export default function LocatairesList() {
         </Link>
       </div>
 
-      {/* Barre de recherche + filtres statut */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par nom, téléphone, email…"
-            className="w-full h-10 pl-9 pr-9 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#D4A843] transition-colors"
-          />
-          {search && (
-            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-        <div className="flex gap-2">
-          {(["TOUS", "ACTIF", "INVITE", "INACTIF"] as const).map((s) => {
-            const cfg = s !== "TOUS" ? STATUT_CONFIG[s] : null;
-            return (
-              <button
-                key={s}
-                onClick={() => setFilterStatut(s)}
-                className={`h-10 px-3 rounded-xl text-xs font-medium transition-colors ${
-                  filterStatut === s
-                    ? "bg-[#0C1A35] text-white"
-                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                {s === "TOUS" ? `Tous (${locataires.length})` : `${cfg!.label} (${locataires.filter(l => l.statut === s).length})`}
-              </button>
-            );
-          })}
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-xs font-medium transition-colors ${
+              tab === t.key
+                ? "bg-[#0C1A35] text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {t.icon}
+            {t.label}
+            <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              tab === t.key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+            }`}>
+              {t.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Barre de recherche */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher par nom, téléphone, email…"
+          className="w-full h-10 pl-9 pr-9 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#D4A843] transition-colors"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Liste */}
@@ -179,12 +218,8 @@ export default function LocatairesList() {
           <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-7 h-7 text-slate-400" />
           </div>
-          <h3 className="text-base font-semibold text-[#0C1A35] mb-1">
-            Aucun locataire
-          </h3>
-          <p className="text-sm text-slate-400 mb-5">
-            Ajoutez votre premier locataire pour commencer
-          </p>
+          <h3 className="text-base font-semibold text-[#0C1A35] mb-1">Aucun locataire</h3>
+          <p className="text-sm text-slate-400 mb-5">Ajoutez votre premier locataire pour commencer</p>
           <Link
             to="/owner/locataires/ajouter"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4A843] text-white rounded-xl text-sm font-medium hover:bg-[#c49a3a] transition-colors"
@@ -198,23 +233,37 @@ export default function LocatairesList() {
           <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <Search className="w-7 h-7 text-slate-300" />
           </div>
-          <p className="text-sm text-slate-400">Aucun locataire ne correspond à votre recherche.</p>
-          <button onClick={() => { setSearch(""); setFilterStatut("TOUS"); }} className="mt-3 text-xs text-[#D4A843] underline underline-offset-2">
-            Réinitialiser les filtres
-          </button>
+          <p className="text-sm text-slate-400">
+            {search ? "Aucun locataire ne correspond à votre recherche." : "Aucun locataire dans cette catégorie."}
+          </p>
+          {search && (
+            <button onClick={() => setSearch("")} className="mt-3 text-xs text-[#D4A843] underline underline-offset-2">
+              Effacer la recherche
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          {tab === "ANCIENS" && (
+            <div className="flex items-center gap-2 px-6 py-3 bg-slate-50 border-b border-slate-100 text-xs text-slate-500">
+              <Archive className="w-3.5 h-3.5" />
+              Anciens locataires — bail terminé ou résilié
+            </div>
+          )}
           <div className="divide-y divide-slate-100">
             {filtered.map((loc) => {
-              const bailActif = loc.bails?.find((b) => b.statut === "ACTIF");
+              const bailActif = getBailActif(loc.bails);
+              const bailAncien = !bailActif ? getBailAncien(loc.bails) : undefined;
+              const bailAffiché = bailActif ?? bailAncien;
+              const isAncien = !bailActif && !!bailAncien;
+
               return (
                 <div
                   key={loc.id}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors"
+                  className={`flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors ${isAncien ? "opacity-80" : ""}`}
                 >
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-[#0C1A35] flex items-center justify-center font-semibold text-sm text-white shrink-0">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm text-white shrink-0 ${isAncien ? "bg-slate-400" : "bg-[#0C1A35]"}`}>
                     {loc.prenom[0]}{loc.nom[0]}
                   </div>
 
@@ -224,8 +273,19 @@ export default function LocatairesList() {
                       <span className="font-semibold text-[#0C1A35] text-sm">
                         {loc.prenom} {loc.nom}
                       </span>
-                      <StatutBadge statut={loc.statut} />
+                      {/* Statut compte */}
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        loc.statut === "INVITE" ? "bg-amber-100 text-amber-700" :
+                        loc.statut === "ACTIF"  ? "bg-green-100 text-green-700" :
+                        "bg-slate-100 text-slate-500"
+                      }`}>
+                        {LOCATAIRE_STATUT_ICON[loc.statut]}
+                        {loc.statut === "INVITE" ? "En attente" : loc.statut === "ACTIF" ? "Compte actif" : "Inactif"}
+                      </span>
+                      {/* Statut bail */}
+                      {bailAffiché && <BailStatutBadge statut={bailAffiché.statut} />}
                     </div>
+
                     <div className="flex items-center gap-4 mt-0.5 flex-wrap">
                       <a
                         href={`tel:${loc.telephone}`}
@@ -243,10 +303,10 @@ export default function LocatairesList() {
                           {loc.email}
                         </a>
                       )}
-                      {bailActif && (
-                        <span className="flex items-center gap-1 text-xs text-[#D4A843] font-medium">
+                      {bailAffiché?.bien && (
+                        <span className={`flex items-center gap-1 text-xs font-medium ${isAncien ? "text-slate-400" : "text-[#D4A843]"}`}>
                           <Home className="w-3 h-3" />
-                          {bailActif.bien?.titre || bailActif.bien?.ville || "Bien loué"}
+                          {bailAffiché.bien.titre || bailAffiché.bien.ville || "Bien loué"}
                         </span>
                       )}
                     </div>
@@ -284,9 +344,7 @@ export default function LocatairesList() {
         cancelLabel="Annuler"
         variant="danger"
         isPending={deleteLocataire.isPending}
-        onConfirm={() => {
-          if (confirmId) handleDelete(confirmId);
-        }}
+        onConfirm={() => { if (confirmId) handleDelete(confirmId); }}
         onCancel={() => setConfirmId(null)}
       />
     </div>

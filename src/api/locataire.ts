@@ -29,7 +29,7 @@ export interface LocataireVerification {
 
 export interface BailResume {
   id: string;
-  statut: "ACTIF" | "TERMINE" | "RESILIE";
+  statut: "EN_ATTENTE" | "ACTIF" | "EN_PREAVIS" | "EN_RENOUVELLEMENT" | "TERMINE" | "RESILIE" | "ARCHIVE";
   dateDebutBail: string;
   dateFinBail?: string | null;
   montantLoyer: number;

@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getLocataireEcheancierApi,
   payerEcheancesLocataireApi,
+  getLocataireHistoriqueApi,
+  supprimerCompteLocataireApi,
   type PayerEcheancesLocatairePayload,
 } from "@/api/locataireAuth";
 
@@ -19,6 +21,23 @@ export const usePayerEcheancesLocataire = () => {
       payerEcheancesLocataireApi(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["locataire-echeancier"] });
+    },
+  });
+};
+
+export const useLocataireHistorique = () =>
+  useQuery({
+    queryKey: ["locataire-historique"],
+    queryFn: getLocataireHistoriqueApi,
+    staleTime: 2 * 60 * 1000,
+  });
+
+export const useSupprimerCompteLocataire = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: supprimerCompteLocataireApi,
+    onSuccess: () => {
+      qc.clear();
     },
   });
 };

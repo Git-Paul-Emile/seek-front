@@ -363,65 +363,6 @@ export const getLocataireDocumentsBienApi = async (): Promise<DocumentBienLocata
 
 // ─── Mot de passe oublié / réinitialisation ───────────────────────────────────
 
-// States des lieux
-export type TypeEtatDesLieux = "ENTREE" | "SORTIE";
-export type StatutEtatDesLieux = "BROUILLON" | "VALIDE";
-export type EtatElement = "NEUF" | "BON" | "MOYEN" | "MAUVAIS" | "HS";
-
-export interface EtatDesLieuxLocatairePhoto {
-  id: string;
-  itemId: string;
-  url: string;
-  nom: string | null;
-  taille: number | null;
-  uploadedBy: "PROPRIETAIRE" | "LOCATAIRE";
-  createdAt: string;
-}
-
-export interface EtatDesLieuxLocataireItem {
-  id: string;
-  piece: string;
-  element: string;
-  etat: EtatElement;
-  commentaire: string | null;
-  ordre: number;
-  photos: EtatDesLieuxLocatairePhoto[];
-}
-
-export interface EtatDesLieuxLocataire {
-  id: string;
-  bailId: string;
-  type: TypeEtatDesLieux;
-  statut: StatutEtatDesLieux;
-  dateEtat: string;
-  commentaireGlobal: string | null;
-  signeParProprioAt: string | null;
-  signeParLocataireAt: string | null;
-  items: EtatDesLieuxLocataireItem[];
-  bail: {
-    id: string;
-    statut: string;
-    bien: {
-      id: string;
-      titre: string | null;
-      ville: string | null;
-      quartier: string | null;
-      photos: string[];
-    };
-  };
-}
-
-export const getLocataireEtatsDesLieuxApi = async (): Promise<EtatDesLieuxLocataire[]> => {
-  const { data } = await api.get("/etat-des-lieux");
-  return data.data;
-};
-
-export const signerEtatDesLieuxLocataireApi = async (
-  etatDesLieuxId: string
-): Promise<EtatDesLieuxLocataire> => {
-  const { data } = await api.patch(`/etat-des-lieux/${etatDesLieuxId}/signer`);
-  return data.data;
-};
 export const forgotPasswordLocataireApi = async (identifiant: string): Promise<void> => {
   await api.post("/forgot-password", { identifiant });
 };
@@ -438,5 +379,27 @@ export const mettreEnPreavisLocataireApi = async (motif?: string): Promise<void>
 
 export const resilierBailLocataireApi = async (motif?: string): Promise<void> => {
   await api.patch("/bail/resilier", motif ? { motif } : {});
+};
+
+// ─── Messages bail locataire ──────────────────────────────────────────────────
+
+export interface MessageBailLocataire {
+  id: string;
+  bailId?: string | null;
+  bienId?: string | null;
+  titre: string;
+  corps: string;
+  type: string;
+  lu: boolean;
+  createdAt: string;
+}
+
+export const getMessagesBailLocataireApi = async (): Promise<MessageBailLocataire[]> => {
+  const { data } = await api.get<{ data: MessageBailLocataire[] }>("/messages-bail");
+  return data.data;
+};
+
+export const marquerMessagesBailLocataireLusApi = async (): Promise<void> => {
+  await api.post("/messages-bail/lus");
 };
 

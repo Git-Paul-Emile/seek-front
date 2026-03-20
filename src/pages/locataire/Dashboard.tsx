@@ -36,7 +36,7 @@ import { useQuittancesLocataire } from "@/hooks/useQuittance";
 import type { StatutPaiement } from "@/api/bail";
 import { getLocataireContratApi, type ContratLocataireData } from "@/api/locataireAuth";
 import { SkListItems } from "@/components/ui/Skeleton";
-import { useMettreEnPreavisLocataire, useResilierBailLocataire } from "@/hooks/useBail";
+import { useMettreEnPreavisLocataire, useResilierBailLocataire, useMessagesBailLocataire, useMarquerMessagesBailLocataireLus } from "@/hooks/useBail";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -122,6 +122,23 @@ export default function LocataireDashboard() {
 
   const bailActif = locataire.bails?.find((b) => b.statut === "ACTIF" || b.statut === "EN_PREAVIS");
 
+  const { data: messagesBail = [] } = useMessagesBailLocataire();
+  const marquerLus = useMarquerMessagesBailLocataireLus();
+  const messagesNonLus = messagesBail.filter((m) => !m.lu);
+
+  // Fenêtre de préavis locataire : 1 à 3 mois avant dateFinBail si définie, sinon pas de restriction
+  const preavisLocataireCheck = (() => {
+    const fin = bailActif?.dateFinBail;
+    if (!fin) return { allowed: true, reason: null };
+    const days = Math.ceil((new Date(fin).getTime() - Date.now()) / 86400000);
+    if (days < 30) return { allowed: false, reason: `La date de fin du bail est dans moins d'un mois.` };
+    if (days > 90) {
+      const disponibleLe = new Date(new Date(fin).getTime() - 90 * 86400000).toLocaleDateString("fr-FR");
+      return { allowed: false, reason: `Préavis disponible à partir du ${disponibleLe} (3 mois avant la fin du bail).` };
+    }
+    return { allowed: true, reason: null };
+  })();
+
   return (
     <div className="space-y-6">
 
@@ -141,6 +158,39 @@ export default function LocataireDashboard() {
           Bienvenue dans votre espace locataire
         </p>
       </div>
+
+      {/* Alertes messages bail */}
+      {messagesNonLus.length > 0 && (
+        <div className="space-y-2">
+          {messagesNonLus.map((msg) => {
+            const isResil = msg.type === "RESILIATION";
+            const isFin = msg.type === "FIN_BAIL";
+            const color = isResil
+              ? "bg-red-50 border-red-100 text-red-800"
+              : isFin
+              ? "bg-slate-50 border-slate-200 text-slate-700"
+              : "bg-orange-50 border-orange-100 text-orange-800";
+            const iconColor = isResil ? "text-red-500" : isFin ? "text-slate-400" : "text-orange-500";
+            return (
+              <div key={msg.id} className={`flex items-start gap-3 p-4 rounded-xl border ${color}`}>
+                <Bell className={`w-4 h-4 mt-0.5 shrink-0 ${iconColor}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">{msg.titre}</p>
+                  <p className="text-xs mt-0.5 opacity-80">{msg.corps}</p>
+                  <p className="text-[11px] mt-1 opacity-50">{new Date(msg.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+                </div>
+                <button
+                  onClick={() => marquerLus.mutate()}
+                  className="shrink-0 p-1 rounded hover:bg-black/5 transition-colors"
+                  title="Marquer comme lu"
+                >
+                  <X className="w-3.5 h-3.5 opacity-50" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Statut du compte */}
       <div className="flex items-center gap-2">
@@ -234,19 +284,29 @@ export default function LocataireDashboard() {
                   Voir le contrat
                 </button>
 
-                {/* Mettre en préavis - ACTIF uniquement */}
+                {/* Mettre en préavis - ACTIF uniquement, fenêtre 1-3 mois si dateFinBail définie */}
                 {bailActif.statut === "ACTIF" && (
-                  <button
-                    onClick={() => setPreavisOpen(true)}
-                    className="flex items-center justify-center gap-2 w-full px-3 py-2.5 border border-orange-200 text-orange-700 rounded-xl text-sm font-medium hover:bg-orange-50 transition-colors"
-                  >
-                    <Bell className="w-4 h-4" />
-                    Donner mon préavis (3 mois)
-                  </button>
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => preavisLocataireCheck.allowed && setPreavisOpen(true)}
+                      disabled={!preavisLocataireCheck.allowed}
+                      className={`flex items-center justify-center gap-2 w-full px-3 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
+                        preavisLocataireCheck.allowed
+                          ? "border-orange-200 text-orange-700 hover:bg-orange-50"
+                          : "border-slate-200 text-slate-400 cursor-not-allowed bg-slate-50"
+                      }`}
+                    >
+                      <Bell className="w-4 h-4" />
+                      Donner mon préavis (3 mois)
+                    </button>
+                    {preavisLocataireCheck.reason && (
+                      <p className="text-[11px] text-slate-400 px-1">{preavisLocataireCheck.reason}</p>
+                    )}
+                  </div>
                 )}
 
-                {/* Résilier - ACTIF ou EN_PREAVIS */}
-                {(bailActif.statut === "ACTIF" || bailActif.statut === "EN_PREAVIS") && (
+                {/* Résilier - ACTIF ou EN_PREAVIS, uniquement si date de fin définie */}
+                {(bailActif.statut === "ACTIF" || bailActif.statut === "EN_PREAVIS") && bailActif.dateFinBail && (
                   <button
                     onClick={() => { setResilierMotif(""); setResilierOpen(true); }}
                     className="flex items-center justify-center gap-2 w-full px-3 py-2.5 border border-red-200 text-red-700 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors"
@@ -591,7 +651,8 @@ export default function LocataireDashboard() {
             <h3 className="font-semibold text-gray-900 mb-1">Donner mon préavis</h3>
             <p className="text-xs text-gray-500 mb-4">
               Votre bail passera en statut <strong>En préavis</strong> avec un délai de <strong>3 mois</strong>.
-              Vous resterez redevable du loyer pendant toute cette période.
+              {bailActif?.dateFinBail && ` La date de fin reste fixée au ${new Date(bailActif.dateFinBail).toLocaleDateString("fr-FR")}.`}
+              {" "}Vous resterez redevable du loyer pendant toute cette période.
             </p>
             <div className="flex gap-3">
               <button

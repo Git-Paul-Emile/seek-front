@@ -44,7 +44,6 @@ const ROUTE_TITLES: Array<[RegExp, string]> = [
   [/^\/locataire\/proprietaire$/, "Mon propriétaireSeek"],
   [/^\/locataire\/historique$/, "Historique logementSeek"],
   [/^\/locataire\/documents$/, "Mes documentsSeek"],
-  [/^\/locataire\/etat-des-lieux$/, "État des lieuxSeek"],
 
   // Admin auth
   [/^\/admin\/login$/, "Connexion adminSeek"],

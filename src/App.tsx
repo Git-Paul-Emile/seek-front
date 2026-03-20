@@ -66,7 +66,6 @@ import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
 import ProprietaireLocatairePage from "./pages/locataire/Proprietaire";
 import HistoriqueLogement from "./pages/locataire/HistoriqueLogement";
 import DocumentsBien from "./pages/locataire/DocumentsBien";
-import EtatsDesLieux from "./pages/locataire/EtatsDesLieux";
 import OwnerForgotPassword from "./pages/owner/ForgotPassword";
 import OwnerResetPassword from "./pages/owner/ResetPassword";
 import AdminTransactions from "./pages/admin/TransactionsAdmin";
@@ -75,7 +74,6 @@ import AdminFormulesPremium from "./pages/admin/FormulesPremium";
 import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
 import AdminStatsRevenus from "./pages/admin/StatsRevenus";
 import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
-import StatsVues from "./pages/owner/StatsVues";
 import FavorisPage from "./pages/public/Favoris";
 import MonComptePage from "./pages/public/MonCompte";
 import ConfigMonetisationPage from "./pages/admin/monetisation/ConfigMonetisationPage";
@@ -151,7 +149,6 @@ const App = () => (
                     <Route path="/owner/locataires" element={<LocatairesList />} />
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
-                    <Route path="/owner/stats/vues" element={<StatsVues />} />
                     <Route path="/owner/abonnement" element={<AbonnementPage />} />
                   </Route>
                 </Route>
@@ -175,7 +172,6 @@ const App = () => (
                     <Route path="/locataire/proprietaire" element={<ProprietaireLocatairePage />} />
                     <Route path="/locataire/historique" element={<HistoriqueLogement />} />
                     <Route path="/locataire/documents" element={<DocumentsBien />} />
-                    <Route path="/locataire/etat-des-lieux" element={<EtatsDesLieux />} />
                   </Route>
                 </Route>
 

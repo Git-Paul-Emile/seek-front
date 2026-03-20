@@ -164,6 +164,28 @@ export const forgotPasswordApi = (identifiant: string) =>
 export const resetPasswordApi = (token: string, password: string) =>
   ownerAuthApi.post<{ status: string; message: string }>("/reset-password", { token, password });
 
+// ─── Messages bail owner ──────────────────────────────────────────────────────
+
+export interface MessageBail {
+  id: string;
+  bailId?: string | null;
+  bienId?: string | null;
+  titre: string;
+  corps: string;
+  type: string;
+  lu: boolean;
+  createdAt: string;
+}
+
+export const getMessagesBailOwnerApi = async (): Promise<MessageBail[]> => {
+  const { data } = await ownerAuthApi.get<{ data: MessageBail[] }>("/messages-bail");
+  return data.data;
+};
+
+export const marquerMessagesBailOwnerLusApi = async (): Promise<void> => {
+  await ownerAuthApi.post("/messages-bail/lus");
+};
+
 // Upload d'une image de vérification vers Cloudinary
 export const uploadVerificationImageApi = async (file: File) => {
   const formData = new FormData();

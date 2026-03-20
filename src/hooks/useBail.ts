@@ -27,7 +27,13 @@ import {
 import {
   mettreEnPreavisLocataireApi,
   resilierBailLocataireApi,
+  getMessagesBailLocataireApi,
+  marquerMessagesBailLocataireLusApi,
 } from "@/api/locataireAuth";
+import {
+  getMessagesBailOwnerApi,
+  marquerMessagesBailOwnerLusApi,
+} from "@/api/ownerAuth";
 
 const QK = "bail";
 const QK_BIENS = "biens";
@@ -292,3 +298,37 @@ export const useResilierBailLocataire = () =>
   useMutation({
     mutationFn: ({ motif }: { motif?: string }) => resilierBailLocataireApi(motif),
   });
+
+// ─── Messages bail owner ───────────────────────────────────────────────────────
+
+export const useMessagesBailOwner = () =>
+  useQuery({
+    queryKey: ["messages-bail-owner"],
+    queryFn: getMessagesBailOwnerApi,
+    staleTime: 30 * 1000,
+  });
+
+export const useMarquerMessagesBailOwnerLus = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: marquerMessagesBailOwnerLusApi,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["messages-bail-owner"] }),
+  });
+};
+
+// ─── Messages bail locataire ───────────────────────────────────────────────────
+
+export const useMessagesBailLocataire = () =>
+  useQuery({
+    queryKey: ["messages-bail-locataire"],
+    queryFn: getMessagesBailLocataireApi,
+    staleTime: 30 * 1000,
+  });
+
+export const useMarquerMessagesBailLocataireLus = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: marquerMessagesBailLocataireLusApi,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["messages-bail-locataire"] }),
+  });
+};

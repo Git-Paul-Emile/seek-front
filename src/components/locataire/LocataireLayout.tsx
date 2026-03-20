@@ -12,7 +12,6 @@ import {
   UserCog,
   History,
   FileText,
-  FileCheck,
   PanelLeft,
   PanelLeftClose,
 } from "lucide-react";
@@ -25,7 +24,6 @@ const NAV_ITEMS = [
   { to: "/locataire/paiements",   label: "Mes paiements",     icon: TrendingUp },
   { to: "/locataire/historique",  label: "Mes logements",     icon: History },
   { to: "/locataire/documents",   label: "Documents",         icon: FileText },
-  { to: "/locataire/etat-des-lieux", label: "Etats des lieux", icon: FileCheck },
   { to: "/locataire/proprietaire",   label: "Mon propriétaire", icon: UserCog },
 ];
 

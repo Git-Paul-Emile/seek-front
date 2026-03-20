@@ -68,12 +68,11 @@ import {
   useBailActif, useTerminerBail, useResilierBail, useProlongerBail,
   useEcheancier, useCaution, useRestituerCaution,
   useBailAArchiver, useMettreEnPreavis, useMettreEnRenouvellement, useArchiverBail,
-  useHistoriqueBails,
+  useHistoriqueBails, useMessagesBailOwner, useMarquerMessagesBailOwnerLus,
 } from "@/hooks/useBail";
 import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
 import PremiumPayment from "@/components/owner/PremiumPayment";
-import EtatDesLieuxSection from "@/components/owner/EtatDesLieuxSection";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
 import { generateRelancePDF } from "@/lib/generateRelance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
@@ -235,6 +234,10 @@ export default function BienDetail() {
   const { data: bail, refetch: refetchBail } = useBailActif(
     isLocation ? (id ?? "") : ""
   );
+  const { data: messagesBail = [] } = useMessagesBailOwner();
+  const marquerLus = useMarquerMessagesBailOwnerLus();
+  const messagesBailBien = messagesBail.filter((m) => m.bienId === bien?.id && !m.lu);
+
   const terminer = useTerminerBail();
   const resilier = useResilierBail();
   const prolonger = useProlongerBail();
@@ -337,6 +340,38 @@ export default function BienDetail() {
   return (
     <div className="space-y-5">
       <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Mes biens", to: "/owner/biens" }, { label: bien?.titre ?? "Bien" }]} />
+
+      {/* Alertes messages bail */}
+      {messagesBailBien.length > 0 && (
+        <div className="space-y-2">
+          {messagesBailBien.map((msg) => {
+            const isResil = msg.type === "RESILIATION";
+            const isFin = msg.type === "FIN_BAIL";
+            const color = isResil ? "bg-red-50 border-red-100 text-red-800"
+              : isFin ? "bg-slate-50 border-slate-200 text-slate-700"
+              : "bg-orange-50 border-orange-100 text-orange-800";
+            const iconColor = isResil ? "text-red-500" : isFin ? "text-slate-400" : "text-orange-500";
+            return (
+              <div key={msg.id} className={`flex items-start gap-3 p-4 rounded-xl border ${color}`}>
+                <Bell className={`w-4 h-4 mt-0.5 shrink-0 ${iconColor}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold">{msg.titre}</p>
+                  <p className="text-xs mt-0.5 opacity-80">{msg.corps}</p>
+                  <p className="text-[11px] mt-1 opacity-50">{new Date(msg.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+                </div>
+                <button
+                  onClick={() => marquerLus.mutate()}
+                  className="shrink-0 p-1 rounded hover:bg-black/5 transition-colors"
+                  title="Marquer comme lu"
+                >
+                  <X className="w-3.5 h-3.5 opacity-50" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* En-tête */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -620,6 +655,11 @@ export default function BienDetail() {
                   ? Math.ceil((new Date(bail.dateFinBail).getTime() - Date.now()) / 86400000)
                   : null;
                 const approachingEnd = statut === "ACTIF" && daysUntilEnd !== null && daysUntilEnd <= 30 && daysUntilEnd >= 0;
+                // Bailleur : préavis autorisé si pas de date de fin OU ≥ 6 mois restants
+                const preavisOwnerAllowed = !bail.dateFinBail || (daysUntilEnd !== null && daysUntilEnd >= 180);
+                const preavisOwnerReason = bail.dateFinBail && !preavisOwnerAllowed
+                  ? `Le délai minimal de préavis est de 6 mois. Il reste moins de 6 mois avant la fin du bail (${new Date(bail.dateFinBail).toLocaleDateString("fr-FR")}).`
+                  : null;
 
                 const BAIL_STATUT_BADGE: Record<string, { label: string; cls: string }> = {
                   ACTIF:             { label: "Actif",              cls: "bg-green-100 text-green-700" },
@@ -733,19 +773,29 @@ export default function BienDetail() {
                         </button>
                       )}
 
-                      {/* Mettre en préavis - ACTIF uniquement */}
+                      {/* Mettre en préavis - ACTIF uniquement, délai bailleur 6 mois */}
                       {statut === "ACTIF" && (
-                        <button
-                          onClick={() => setPreavisOpen(true)}
-                          className="flex items-center justify-center gap-2 px-3 py-2 border border-orange-200 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-50 transition-colors"
-                        >
-                          <Bell className="w-3.5 h-3.5" />
-                          Mettre en préavis
-                        </button>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => preavisOwnerAllowed && setPreavisOpen(true)}
+                            disabled={!preavisOwnerAllowed}
+                            className={`flex items-center justify-center gap-2 px-3 py-2 border rounded-lg text-xs font-medium transition-colors ${
+                              preavisOwnerAllowed
+                                ? "border-orange-200 text-orange-700 hover:bg-orange-50"
+                                : "border-slate-200 text-slate-400 cursor-not-allowed bg-slate-50"
+                            }`}
+                          >
+                            <Bell className="w-3.5 h-3.5" />
+                            Mettre en préavis
+                          </button>
+                          {preavisOwnerReason && (
+                            <p className="text-[11px] text-slate-400 px-1">{preavisOwnerReason}</p>
+                          )}
+                        </div>
                       )}
 
-                      {/* Résilier - ACTIF ou EN_PREAVIS */}
-                      {(statut === "ACTIF" || statut === "EN_PREAVIS") && (
+                      {/* Résilier - ACTIF ou EN_PREAVIS, uniquement si date de fin définie */}
+                      {(statut === "ACTIF" || statut === "EN_PREAVIS") && bail.dateFinBail && (
                         <button
                           onClick={() => { setResilierMotif(""); setResilierOpen(true); }}
                           className="flex items-center justify-center gap-2 px-3 py-2 border border-red-200 text-red-700 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
@@ -802,12 +852,6 @@ export default function BienDetail() {
             </Section>
           )}
 
-          {/* Section Bail à archiver - bail terminé ou résilié en attente d'archivage */}
-          {isLocation && (bail || bailAArchiver) && (
-            <Section title="Etat des lieux">
-              <EtatDesLieuxSection bienId={id ?? ""} bailId={(bail?.id ?? bailAArchiver?.id ?? "")} />
-            </Section>
-          )}
 
           {isLocation && !bail && bailAArchiver && (
             <Section title="Bail en attente d'archivage">
@@ -1465,8 +1509,8 @@ export default function BienDetail() {
       <ConfirmModal
         open={preavisOpen}
         title="Mettre le bail en préavis"
-        message={`Le bail passera en statut "En préavis" avec un délai de 3 mois. La date de fin sera automatiquement définie dans 3 mois si aucune date n'est fixée.`}
-        confirmLabel="Confirmer le préavis (3 mois)"
+        message={`Le bail passera en statut "En préavis" avec un délai de préavis de 6 mois. La date de fin sera automatiquement définie dans 6 mois si aucune date n'est fixée.`}
+        confirmLabel="Confirmer le préavis (6 mois)"
         cancelLabel="Annuler"
         variant="warning"
         isPending={mettreEnPreavis.isPending}

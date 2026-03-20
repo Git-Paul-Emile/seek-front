@@ -12,20 +12,19 @@ import {
   User,
   Users,
   Wallet,
-  Crown,
   PanelLeft,
   PanelLeftClose,
+  AlertCircle,
 } from "lucide-react";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
+import { useBiensEnRetard } from "@/hooks/useBail";
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
-const NAV_ITEMS = [
+const NAV_ITEMS_TOP = [
   { to: "/owner/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/owner/paiements", label: "Paiements", icon: Wallet },
-  { to: "/owner/abonnement", label: "Mon abonnement", icon: Crown },
-  { to: "/owner/profile", label: "Mon Profil", icon: User },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
@@ -45,6 +44,8 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   const { data: stats } = useOwnerStats();
   const pendingCount =
     stats?.byStatut.find((s) => s.statut === "EN_ATTENTE")?.count ?? 0;
+  const { data: biensEnRetard = [] } = useBiensEnRetard();
+  const retardCount = biensEnRetard.length;
 
   const handleLogout = async () => {
     await logout();
@@ -89,7 +90,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
       <nav className={`flex-1 overflow-y-auto py-4 ${isOpen ? "px-3" : "px-1"}`}>
         <ul className="space-y-0.5">
           {/* Items plats */}
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {NAV_ITEMS_TOP.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
                 to={to}
@@ -106,6 +107,58 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
               </NavLink>
             </li>
           ))}
+
+          {/* Loyers en retard */}
+          <li>
+            <NavLink
+              to="/owner/loyers-retard"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  isActive
+                    ? "bg-red-500 text-white shadow-sm shadow-red-200"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`}
+            >
+              {({ isActive }) => (
+                <>
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {isOpen && (
+                    <>
+                      <span className="flex-1">Loyers en retard</span>
+                      {retardCount > 0 && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                          isActive ? "bg-white/25 text-white" : "bg-red-500 text-white"
+                        }`}>
+                          {retardCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {!isOpen && retardCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          </li>
+
+          {/* Profil */}
+          <li>
+            <NavLink
+              to="/owner/profile"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  isActive
+                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`}
+            >
+              <User className="w-4 h-4 flex-shrink-0" />
+              {isOpen && <span className="flex-1">Mon Profil</span>}
+            </NavLink>
+          </li>
 
           {/* Locataires - groupe collapsible */}
           {isOpen && (

@@ -26,7 +26,6 @@ import {
   DollarSign,
   FileText,
   Settings2,
-  Crown,
   PanelLeft,
   PanelLeftClose,
 } from "lucide-react";
@@ -80,8 +79,6 @@ const NAV_GROUPS = [
     basePath: "/admin/monetisation",
     children: [
       { to: "/admin/monetisation/config",         label: "Configuration",       icon: Settings2 },
-      { to: "/admin/monetisation/plans",          label: "Plans d'abonnement",  icon: Crown },
-      { to: "/admin/monetisation/abonnements",    label: "Abonnements",         icon: Users },
       { to: "/admin/monetisation/mises-en-avant", label: "Mises en avant",      icon: TrendingUp },
     ],
   },

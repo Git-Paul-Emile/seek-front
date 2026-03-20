@@ -227,15 +227,21 @@ export default function LocatairesList() {
                       <StatutBadge statut={loc.statut} />
                     </div>
                     <div className="flex items-center gap-4 mt-0.5 flex-wrap">
-                      <span className="flex items-center gap-1 text-xs text-slate-400">
+                      <a
+                        href={`tel:${loc.telephone}`}
+                        className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#D4A843] transition-colors"
+                      >
                         <Phone className="w-3 h-3" />
                         {loc.telephone}
-                      </span>
+                      </a>
                       {loc.email && (
-                        <span className="flex items-center gap-1 text-xs text-slate-400">
+                        <a
+                          href={`mailto:${loc.email}`}
+                          className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#D4A843] transition-colors"
+                        >
                           <Mail className="w-3 h-3" />
                           {loc.email}
-                        </span>
+                        </a>
                       )}
                       {bailActif && (
                         <span className="flex items-center gap-1 text-xs text-[#D4A843] font-medium">

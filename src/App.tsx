@@ -77,10 +77,8 @@ import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
 import FavorisPage from "./pages/public/Favoris";
 import MonComptePage from "./pages/public/MonCompte";
 import ConfigMonetisationPage from "./pages/admin/monetisation/ConfigMonetisationPage";
-import PlansAbonnementPage from "./pages/admin/monetisation/PlansAbonnementPage";
-import AbonnementsAdminPage from "./pages/admin/monetisation/AbonnementsAdminPage";
 import MisesEnAvantAdminPage from "./pages/admin/monetisation/MisesEnAvantAdminPage";
-import AbonnementPage from "./pages/owner/abonnement/AbonnementPage";
+import LoyersEnRetardPage from "./pages/owner/LoyersEnRetardPage";
 
 const queryClient = new QueryClient();
 
@@ -149,7 +147,7 @@ const App = () => (
                     <Route path="/owner/locataires" element={<LocatairesList />} />
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
-                    <Route path="/owner/abonnement" element={<AbonnementPage />} />
+                    <Route path="/owner/loyers-retard" element={<LoyersEnRetardPage />} />
                   </Route>
                 </Route>
 
@@ -205,8 +203,6 @@ const App = () => (
                     <Route path="stats/revenus"            element={<AdminStatsRevenus />} />
                     <Route path="contrats/modeles"         element={<ModelesContratPage />} />
                     <Route path="monetisation/config"         element={<ConfigMonetisationPage />} />
-                    <Route path="monetisation/plans"          element={<PlansAbonnementPage />} />
-                    <Route path="monetisation/abonnements"    element={<AbonnementsAdminPage />} />
                     <Route path="monetisation/mises-en-avant" element={<MisesEnAvantAdminPage />} />
                   </Route>
                 </Route>

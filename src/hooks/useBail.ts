@@ -23,6 +23,7 @@ import {
   type CreateBailPayload,
   type PayerEcheancePayload,
   type PayerMoisMultiplesPayload,
+  getBiensEnRetardApi,
 } from "@/api/bail";
 import {
   mettreEnPreavisLocataireApi,
@@ -332,3 +333,12 @@ export const useMarquerMessagesBailLocataireLus = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["messages-bail-locataire"] }),
   });
 };
+
+// ─── Biens avec loyers en retard ──────────────────────────────────────────────
+
+export const useBiensEnRetard = () =>
+  useQuery({
+    queryKey: ["biens-en-retard"],
+    queryFn: getBiensEnRetardApi,
+    staleTime: 60 * 1000,
+  });

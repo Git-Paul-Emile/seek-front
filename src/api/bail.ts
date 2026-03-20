@@ -290,3 +290,45 @@ export const confirmerReceptionApi = async (
   const { data } = await api.patch(`/${bienId}/bail/${bailId}/echeancier/${echeanceId}/confirmer`);
   return data.data;
 };
+
+// ─── Biens avec loyers en retard ──────────────────────────────────────────────
+
+export interface EcheanceRetard {
+  id: string;
+  dateEcheance: string;
+  montant: number;
+  statut: string;
+}
+
+export interface BienEnRetard {
+  bailId: string;
+  bien: {
+    id: string;
+    titre: string | null;
+    adresse: string | null;
+    ville: string | null;
+    pays: string | null;
+    typeTransaction: { slug: string; nom: string } | null;
+  };
+  locataire: {
+    id: string;
+    prenom: string;
+    nom: string;
+    telephone: string;
+    email?: string | null;
+  };
+  nbEcheancesEnRetard: number;
+  totalRetard: number;
+  joursRetardMax: number;
+  echeancesEnRetard: EcheanceRetard[];
+}
+
+const ownerApi = axios.create({
+  baseURL: `${API_URL}/api/owner/biens`,
+  withCredentials: true,
+});
+
+export const getBiensEnRetardApi = async (): Promise<BienEnRetard[]> => {
+  const { data } = await ownerApi.get("/loyers-retard");
+  return data.data;
+};

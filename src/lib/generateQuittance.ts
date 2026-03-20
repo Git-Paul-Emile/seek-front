@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import JSZip from "jszip";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ function drawRoundedCard(
 
 // ─── Génération PDF ───────────────────────────────────────────────────────────
 
-export function generateQuittancePDF(data: QuittanceData) {
+function buildQuittancePDF(data: QuittanceData): jsPDF {
   const doc = new jsPDF({ format: "a4", unit: "mm" });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -251,9 +252,48 @@ export function generateQuittancePDF(data: QuittanceData) {
     align: "center",
   });
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  return doc;
+}
+
+export function generateQuittancePDF(data: QuittanceData) {
+  const doc = buildQuittancePDF(data);
   const moisAnnee = new Date(data.dateEcheance)
     .toLocaleDateString("fr-FR", { month: "2-digit", year: "numeric" })
     .replace("/", "-");
   doc.save(`quittance-${moisAnnee}-${data.numero}.pdf`);
+}
+
+/** Génère le PDF d'une quittance et retourne un Blob (sans déclencher le téléchargement) */
+export function generateQuittancePDFBlob(data: QuittanceData): Blob {
+  const doc = buildQuittancePDF(data);
+  return doc.output("blob");
+}
+
+/** Ouvre la quittance dans un nouvel onglet (sans téléchargement) */
+export function openQuittancePDF(data: QuittanceData): void {
+  const doc = buildQuittancePDF(data);
+  const url = doc.output("bloburl") as unknown as string;
+  window.open(url, "_blank");
+}
+
+/** Télécharge toutes les quittances fournies dans un fichier ZIP */
+export async function downloadAllQuittancesZip(
+  quittances: QuittanceData[],
+  zipName = "quittances.zip"
+): Promise<void> {
+  const zip = new JSZip();
+  for (const data of quittances) {
+    const blob = generateQuittancePDFBlob(data);
+    const moisAnnee = new Date(data.dateEcheance)
+      .toLocaleDateString("fr-FR", { month: "2-digit", year: "numeric" })
+      .replace("/", "-");
+    zip.file(`quittance-${moisAnnee}-${data.numero}.pdf`, blob);
+  }
+  const content = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(content);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = zipName;
+  a.click();
+  URL.revokeObjectURL(url);
 }

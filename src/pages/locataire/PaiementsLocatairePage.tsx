@@ -14,12 +14,15 @@ import {
   Wallet,
   Clock,
   Send,
+  Archive,
+  Loader2,
+  Eye,
 } from "lucide-react";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useLocataireEcheancier } from "@/hooks/useLocataireEcheancier";
 import { useQuittancesLocataire } from "@/hooks/useQuittance";
 import { useProprietaireLocataire } from "@/hooks/useProprietaireLocataire";
-import { generateQuittancePDF } from "@/lib/generateQuittance";
+import { generateQuittancePDF, openQuittancePDF, downloadAllQuittancesZip } from "@/lib/generateQuittance";
 import type { Echeance, StatutPaiement } from "@/api/bail";
 import LocatairePayModal from "@/components/locataire/LocatairePayModal";
 import { SkDetailSections } from "@/components/ui/Skeleton";
@@ -65,6 +68,7 @@ export default function PaiementsLocatairePage() {
   const [filter, setFilter] = useState<StatutFilter>("TOUT");
   const [showPayModal, setShowPayModal] = useState(false);
   const [showMM, setShowMM] = useState(false);
+  const [isZipping, setIsZipping] = useState(false);
 
   // On n'affiche les A_VENIR que pour l'année en cours (masque les futures années pré-générées)
   const currentYear = new Date().getFullYear();
@@ -96,16 +100,13 @@ export default function PaiementsLocatairePage() {
       new Date(a.dateEcheance).getTime() - new Date(b.dateEcheance).getTime()
   );
 
-  const handleDownload = (ech: Echeance) => {
+  const buildQuittanceData = (ech: Echeance) => {
     const quittance = quittances.find(q => q.echeanceId === ech.id);
-    if (!quittance || !ech.datePaiement) return;
-    
-    // Utiliser les vraies infos du propriétaire si disponibles
-    const proprietaireNom = proprietaireData?.proprietaire 
+    if (!quittance || !ech.datePaiement) return null;
+    const proprietaireNom = proprietaireData?.proprietaire
       ? `${proprietaireData.proprietaire.prenom} ${proprietaireData.proprietaire.nom}`
       : "Votre propriétaire";
-    
-    generateQuittancePDF({
+    return {
       numero: quittance.numero,
       dateGeneration: new Date(quittance.dateGeneration).toLocaleDateString("fr-FR"),
       dateEcheance: ech.dateEcheance,
@@ -123,7 +124,53 @@ export default function PaiementsLocatairePage() {
       proprietaireTelephone: proprietaireData?.proprietaire?.telephone,
       locataireNom: `${locataire?.prenom ?? ""} ${locataire?.nom ?? ""}`.trim(),
       locataireTelephone: locataire?.telephone ?? undefined,
-    });
+    };
+  };
+
+  const handleOpen = (ech: Echeance) => {
+    const data = buildQuittanceData(ech);
+    if (data) openQuittancePDF(data);
+  };
+
+  const handleDownload = (ech: Echeance) => {
+    const data = buildQuittanceData(ech);
+    if (data) generateQuittancePDF(data);
+  };
+
+  const handleDownloadAll = async () => {
+    const payees = echeancier.filter(e => canDownload(e.statut) && e.datePaiement);
+    if (payees.length === 0) return;
+    setIsZipping(true);
+    try {
+      const proprietaireNom = proprietaireData?.proprietaire
+        ? `${proprietaireData.proprietaire.prenom} ${proprietaireData.proprietaire.nom}`
+        : "Votre propriétaire";
+      const quittanceDatas = payees.map((ech) => {
+        const q = quittances.find(qv => qv.echeanceId === ech.id);
+        return {
+          numero: q?.numero ?? ech.id.slice(0, 8).toUpperCase(),
+          dateGeneration: q ? new Date(q.dateGeneration).toLocaleDateString("fr-FR") : new Date().toLocaleDateString("fr-FR"),
+          dateEcheance: ech.dateEcheance,
+          datePaiement: ech.datePaiement!,
+          modePaiement: ech.modePaiement ?? undefined,
+          reference: ech.reference ?? undefined,
+          note: ech.note ?? undefined,
+          montantLoyer: ech.montant,
+          statut: ech.statut,
+          bienTitre: proprietaireData?.bien?.titre ?? bailActif?.bien?.titre ?? undefined,
+          bienAdresse: proprietaireData?.bien?.adresse ?? undefined,
+          bienVille: proprietaireData?.bien?.ville ?? bailActif?.bien?.ville ?? undefined,
+          bienPays: proprietaireData?.bien?.pays ?? undefined,
+          proprietaireNom,
+          proprietaireTelephone: proprietaireData?.proprietaire?.telephone,
+          locataireNom: `${locataire?.prenom ?? ""} ${locataire?.nom ?? ""}`.trim(),
+          locataireTelephone: locataire?.telephone ?? undefined,
+        };
+      });
+      await downloadAllQuittancesZip(quittanceDatas, "mes-quittances.zip");
+    } finally {
+      setIsZipping(false);
+    }
   };
 
   const FILTER_TABS: { key: StatutFilter; label: string; count?: number }[] = [
@@ -185,6 +232,19 @@ export default function PaiementsLocatairePage() {
             </p>
           </div>
         </div>
+        {/* Bouton ZIP */}
+        {echeancier.filter(e => canDownload(e.statut) && e.datePaiement).length > 0 && (
+          <button
+            onClick={handleDownloadAll}
+            disabled={isZipping}
+            title="Télécharger toutes mes quittances en ZIP"
+            className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200
+              text-slate-600 hover:bg-slate-50 hover:text-[#0C1A35] text-xs font-medium transition-colors disabled:opacity-60"
+          >
+            {isZipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+            Tout en ZIP
+          </button>
+        )}
       </div>
 
       {/* Cartes de stats */}
@@ -400,17 +460,28 @@ export default function PaiementsLocatairePage() {
                         Payer
                       </button>
                     )}
-                    {/* Télécharger quittance si disponible */}
+                    {/* Voir / Télécharger quittance si disponible */}
                     {canDownload(ech.statut) && ech.datePaiement && quittance && (
-                      <button
-                        onClick={() => handleDownload(ech)}
-                        title="Télécharger la quittance"
-                        className="flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800
-                          px-2.5 py-1.5 rounded-lg border border-green-200 hover:bg-green-50 transition-colors"
-                      >
-                        <Download className="w-3 h-3" />
-                        Quittance
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleOpen(ech)}
+                          title="Voir la quittance"
+                          className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800
+                            px-2.5 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          Voir
+                        </button>
+                        <button
+                          onClick={() => handleDownload(ech)}
+                          title="Télécharger la quittance"
+                          className="flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800
+                            px-2.5 py-1.5 rounded-lg border border-green-200 hover:bg-green-50 transition-colors"
+                        >
+                          <Download className="w-3 h-3" />
+                          PDF
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

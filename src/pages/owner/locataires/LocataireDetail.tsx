@@ -327,15 +327,21 @@ export default function LocataireDetail() {
             Informations de base
           </h2>
           <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-2 text-slate-600">
+            <a
+              href={`tel:${locataire.telephone}`}
+              className="flex items-center gap-2 text-slate-600 hover:text-[#D4A843] transition-colors cursor-pointer"
+            >
               <Phone className="w-4 h-4 text-slate-300" />
               {locataire.telephone}
-            </div>
+            </a>
             {locataire.email && (
-              <div className="flex items-center gap-2 text-slate-600">
+              <a
+                href={`mailto:${locataire.email}`}
+                className="flex items-center gap-2 text-slate-600 hover:text-[#D4A843] transition-colors cursor-pointer"
+              >
                 <Mail className="w-4 h-4 text-slate-300" />
                 {locataire.email}
-              </div>
+              </a>
             )}
             <div className="flex items-center gap-2 text-slate-600">
               <Users className="w-4 h-4 text-slate-300" />

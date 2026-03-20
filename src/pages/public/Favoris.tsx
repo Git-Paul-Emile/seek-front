@@ -53,7 +53,7 @@ function FavoriCard({ item }: { item: FavoriItem }) {
         </div>
       )}
 
-      {/* Carte — grisée + overlay hover si indisponible */}
+      {/* Carte - grisée + overlay hover si indisponible */}
       <div className={`relative group ${hasChanges ? "ring-2 ring-amber-300 rounded-b-2xl" : ""}`}>
         <div className={isUnavailable ? "grayscale opacity-50 pointer-events-none select-none" : ""}>
           <PropertyCard property={bien} isApiData />

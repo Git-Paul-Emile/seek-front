@@ -755,7 +755,7 @@ export default function AnnonceDetail() {
                               {ETABLISSEMENT_LABELS[e.type] ?? e.type.replace(/_/g, ' ')}
                             </p>
                             <p className="text-sm font-medium text-[#0C1A35] truncate">
-                              {e.nom || "—"}
+                              {e.nom || ""}
                             </p>
                             {e.distance && (
                               <p className="text-xs text-slate-400 mt-0.5">

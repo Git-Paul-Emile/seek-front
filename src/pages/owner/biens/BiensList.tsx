@@ -295,7 +295,7 @@ export default function BiensList() {
                       {/* Type */}
                       <td className="px-6 py-4 hidden md:table-cell">
                         <span className="text-sm text-slate-600">
-                          {bien.typeLogement?.nom || "-"}
+                          {bien.typeLogement?.nom || ""}
                           {bien.typeTransaction?.nom && ` / ${bien.typeTransaction.nom}`}
                         </span>
                       </td>
@@ -303,7 +303,7 @@ export default function BiensList() {
                       {/* Prix */}
                       <td className="px-6 py-4 hidden sm:table-cell">
                         <span className="font-semibold text-[#0C1A35]">
-                          {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} F` : "-"}
+                          {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} F` : ""}
                         </span>
                       </td>
 
@@ -329,7 +329,7 @@ export default function BiensList() {
                       {/* Actions */}
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Voir — toujours disponible */}
+                          {/* Voir - toujours disponible */}
                           <Link
                             to={`/owner/biens/${bien.id}`}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"

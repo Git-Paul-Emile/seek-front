@@ -200,7 +200,7 @@ export default function ContratModal({
         {/* Toolbar */}
         {!isLoading && !isGenerating && contrat && (
           <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50/60 flex-wrap flex-shrink-0">
-            {/* PDF — toujours disponible */}
+            {/* PDF - toujours disponible */}
             <button
               onClick={handleDownloadPdf}
               disabled={isBusy}
@@ -268,7 +268,7 @@ export default function ContratModal({
               </p>
             </div>
           ) : (
-            /* Lecture seule — cible PDF */
+            /* Lecture seule - cible PDF */
             <div
               ref={pdfRef}
               className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm"

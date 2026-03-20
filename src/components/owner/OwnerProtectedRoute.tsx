@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
-/** Accessible uniquement si connecté — redirige vers /owner/register sinon */
+/** Accessible uniquement si connecté - redirige vers /owner/register sinon */
 const OwnerProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useOwnerAuth();
 

@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
-/** Accessible uniquement si connecté — redirige vers /locataire/login sinon */
+/** Accessible uniquement si connecté - redirige vers /locataire/login sinon */
 const LocataireProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useLocataireAuth();
 

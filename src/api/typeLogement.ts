@@ -49,11 +49,11 @@ const toFormData = (payload: CreateTypeLogementPayload | UpdateTypeLogementPaylo
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
 
-/** Types actifs — public */
+/** Types actifs - public */
 export const fetchTypesLogement = () =>
   api.get<{ data: TypeLogement[] }>("/").then((r) => r.data.data);
 
-/** Tous les types (actifs + inactifs) — admin */
+/** Tous les types (actifs + inactifs) - admin */
 export const fetchTypesLogementAdmin = () =>
   api.get<{ data: TypeLogement[] }>("/admin").then((r) => r.data.data);
 

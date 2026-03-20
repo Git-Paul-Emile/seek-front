@@ -66,7 +66,7 @@ function BailCard({ bail }: { bail: BailHistorique }) {
             </>
           )}
           {!bail.dateFinBail && bail.statut === "ACTIF" && (
-            <span className="text-emerald-600 font-medium">— en cours</span>
+            <span className="text-emerald-600 font-medium">- en cours</span>
           )}
         </div>
 

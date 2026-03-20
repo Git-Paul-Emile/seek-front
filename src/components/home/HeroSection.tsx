@@ -167,13 +167,13 @@ const HeroSection = () => {
               <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-6">
                 <div>
                   <div className="text-2xl font-bold text-white">
-                    {statsData.annoncesActives > 0 ? `${statsData.annoncesActives.toLocaleString("fr-FR")}+` : "—"}
+                    {statsData.annoncesActives > 0 ? `${statsData.annoncesActives.toLocaleString("fr-FR")}+` : ""}
                   </div>
                   <div className="text-white/40 text-sm mt-0.5">Annonces actives</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-white">
-                    {statsData.proprietaires > 0 ? `${statsData.proprietaires.toLocaleString("fr-FR")}+` : "—"}
+                    {statsData.proprietaires > 0 ? `${statsData.proprietaires.toLocaleString("fr-FR")}+` : ""}
                   </div>
                   <div className="text-white/40 text-sm mt-0.5">Propriétaires</div>
                 </div>

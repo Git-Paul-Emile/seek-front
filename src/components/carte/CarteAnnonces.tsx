@@ -166,7 +166,7 @@ function ClusteredMarkers({ items }: { items: BienWithCoords[] }) {
           );
         }
 
-        // Cluster bubble — click zooms in
+        // Cluster bubble - click zooms in
         return (
           <Marker
             key={`cluster-${i}-z${zoom}`}

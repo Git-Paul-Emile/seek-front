@@ -199,7 +199,7 @@ export default function CarteBienDetail({
     setOverpassLoading(true);
     fetchOverpassEtabs(latitude, longitude)
       .then((etabs) => { if (!cancelled) setOverpassEtabs(etabs); })
-      .catch(() => { /* silent — Overpass is best-effort */ })
+      .catch(() => { /* silent - Overpass is best-effort */ })
       .finally(() => { if (!cancelled) setOverpassLoading(false); });
     return () => { cancelled = true; };
   }, [hasCoords, latitude, longitude, etablissements.length]);

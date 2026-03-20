@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 // ─── Types internes (brut API Nominatim) ──────────────────────────────────────
 
-/** Résultat brut de l'API Nominatim — seuls les champs utiles sont déclarés */
+/** Résultat brut de l'API Nominatim - seuls les champs utiles sont déclarés */
 interface NominatimRawResult {
   place_id: number;
   display_name: string;
@@ -22,7 +22,7 @@ interface NominatimRawResult {
   };
 }
 
-// ─── Type public — données propres stockées dans le formulaire ────────────────
+// ─── Type public - données propres stockées dans le formulaire ────────────────
 
 /**
  * Données complètes d'un quartier sélectionné.
@@ -43,7 +43,7 @@ export interface QuartierSuggestion {
     city?: string;
     town?: string;
     village?: string;
-    /** Région / état — utile pour auto-sélectionner la ville dans le formulaire */
+    /** Région / état - utile pour auto-sélectionner la ville dans le formulaire */
     state?: string;
     country?: string;
     countryCode?: string;
@@ -56,7 +56,7 @@ const NOMINATIM_BASE = "https://nominatim.openstreetmap.org/search";
 
 /**
  * Identifiant obligatoire selon les CGU Nominatim.
- * Ne pas spammer : max 1 req/s — géré par le debounce 500 ms.
+ * Ne pas spammer : max 1 req/s - géré par le debounce 500 ms.
  * @see https://operations.osmfoundation.org/policies/nominatim/
  */
 const NOMINATIM_HEADERS: HeadersInit = {
@@ -70,7 +70,7 @@ const QUARTIER_TYPES = new Set<string>(["suburb", "neighbourhood"]);
 /** Nombre de caractères minimum pour déclencher une requête */
 const MIN_QUERY_LENGTH = 2;
 
-/** Délai debounce en ms — respecte la règle 1 req/s de Nominatim */
+/** Délai debounce en ms - respecte la règle 1 req/s de Nominatim */
 const DEBOUNCE_MS = 500;
 
 /** Nombre maximum de résultats affichés */

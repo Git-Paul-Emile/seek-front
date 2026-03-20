@@ -47,7 +47,7 @@ export default function StatsRevenus() {
       {/* 12 derniers mois - Loyer */}
       {stats?.revenus12Mois && (
         <div className="bg-white rounded-2xl border border-slate-100 p-5">
-          <h2 className="text-sm font-semibold text-[#0C1A35] mb-4">Revenus loyer — 12 derniers mois</h2>
+          <h2 className="text-sm font-semibold text-[#0C1A35] mb-4">Revenus loyer - 12 derniers mois</h2>
           <div className="space-y-2">
             {stats.revenus12Mois.map((m) => {
               const max = Math.max(...stats.revenus12Mois.map((x) => x.total), 1);
@@ -74,7 +74,7 @@ export default function StatsRevenus() {
       {/* 12 derniers mois - Premium */}
       {stats?.revenus12MoisPremium && (
         <div className="bg-white rounded-2xl border border-slate-100 p-5">
-          <h2 className="text-sm font-semibold text-[#0C1A35] mb-4">Revenus premium — 12 derniers mois</h2>
+          <h2 className="text-sm font-semibold text-[#0C1A35] mb-4">Revenus premium - 12 derniers mois</h2>
           <div className="space-y-2">
             {stats.revenus12MoisPremium.map((m) => {
               const max = Math.max(...stats.revenus12MoisPremium.map((x) => x.total), 1);

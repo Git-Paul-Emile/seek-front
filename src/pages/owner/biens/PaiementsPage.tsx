@@ -298,7 +298,7 @@ export default function PaiementsPage() {
               {bien.titre || "Logement"}
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              {bail.locataire.prenom} {bail.locataire.nom} — bail depuis{" "}
+              {bail.locataire.prenom} {bail.locataire.nom} - bail depuis{" "}
               {new Date(bail.dateDebutBail).toLocaleDateString("fr-FR", {
                 month: "long",
                 year: "numeric",
@@ -399,7 +399,7 @@ export default function PaiementsPage() {
               <Smartphone className="w-4 h-4 text-[#D4A843]" />
               <span className="text-sm font-semibold text-[#0C1A35]">
                 Moyens de paiement Mobile Money
-                {mobileMoney.pays ? ` — ${mobileMoney.pays}` : ""}
+                {mobileMoney.pays ? ` - ${mobileMoney.pays}` : ""}
               </span>
             </div>
             {showAllMM ? (

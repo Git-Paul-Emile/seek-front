@@ -38,7 +38,7 @@ const fmt = (date?: string | null) =>
     day: "2-digit",
     month: "long",
     year: "numeric",
-  }) : "—";
+  }) : "";
 
 // Convert various representations of sexe to the canonical letter used in the
 // forms ("M" or "F"). Handles full words that may have been saved earlier.
@@ -56,7 +56,7 @@ const displaySexe = (s?: string | null) => {
   if (norm === "M") return "Masculin";
   if (norm === "F") return "Féminin";
   if (s) return s; // Display the raw value if not normalized
-  return "—";
+  return "";
 };
 
 const VERIFICATION_STATUS_CONFIG: Record<
@@ -384,7 +384,7 @@ export default function LocataireProfil() {
               <InfoField label="Nom" value={locataire.nom} />
               <InfoField label="Prénom" value={locataire.prenom} />
               <InfoField label="Téléphone" value={locataire.telephone} icon={<Phone className="w-3.5 h-3.5" />} />
-              <InfoField label="Email" value={locataire.email ?? "—"} icon={<Mail className="w-3.5 h-3.5" />} />
+              <InfoField label="Email" value={locataire.email ?? ""} icon={<Mail className="w-3.5 h-3.5" />} />
               <InfoField label="Occupants" value={`${locataire.nbOccupants} personne${locataire.nbOccupants > 1 ? "s" : ""}`} />
               <InfoField 
                 label="Enfants" 
@@ -521,17 +521,17 @@ export default function LocataireProfil() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InfoField label="Date de naissance" value={fmt(locData?.dateNaissance)} />
-                  <InfoField label="Lieu de naissance" value={locData?.lieuNaissance ?? "—"} />
-                  <InfoField label="Nationalité" value={locData?.nationalite ?? "—"} />
+                  <InfoField label="Lieu de naissance" value={locData?.lieuNaissance ?? ""} />
+                  <InfoField label="Nationalité" value={locData?.nationalite ?? ""} />
                   <InfoField label="Sexe" value={displaySexe(locData?.sexe)} />
                   <InfoField 
                     label="Pièce d'identité" 
-                    value={locData?.typePiece ? `${locData.typePiece} — ${locData.numPieceIdentite ?? "—"}` : "—"} 
+                    value={locData?.typePiece ? `${locData.typePiece} - ${locData.numPieceIdentite ?? ""}` : ""} 
                   />
                   <InfoField label="Délivrée le" value={fmt(locData?.dateDelivrance)} />
                   <InfoField label="Expire le" value={fmt(locData?.dateExpirationPiece)} />
-                  <InfoField label="Autorité de délivrance" value={locData?.autoriteDelivrance ?? "—"} />
-                  <InfoField label="Situation professionnelle" value={locData?.situationProfessionnelle ?? "—"} />
+                  <InfoField label="Autorité de délivrance" value={locData?.autoriteDelivrance ?? ""} />
+                  <InfoField label="Situation professionnelle" value={locData?.situationProfessionnelle ?? ""} />
                 </div>
                 <button
                   onClick={() => setIsEditing(true)}

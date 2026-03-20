@@ -426,7 +426,7 @@ const SeekSolution = () => {
   <section id="pourquoi-nous" className="py-24 bg-[#0C1A35]">
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        {/* Left — Text */}
+        {/* Left - Text */}
         <div>
           <div className="inline-flex items-center gap-2 bg-[#D4A843]/12 border border-[#D4A843]/25 text-[#D4A843] rounded-full px-4 py-1.5 text-sm font-medium mb-6">
             Pourquoi nous ?
@@ -471,7 +471,7 @@ const SeekSolution = () => {
           )}
         </div>
 
-        {/* Right — Feature grid */}
+        {/* Right - Feature grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {FEATURES.map(({ icon: Icon, title, desc }, i) => (
             <motion.div

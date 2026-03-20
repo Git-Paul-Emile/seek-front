@@ -112,7 +112,7 @@ export default function PromotionsAdmin() {
               {promotions.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-5 py-3.5 text-slate-700 font-medium max-w-[150px] truncate">
-                    {p.bien?.titre ?? "—"}
+                    {p.bien?.titre ?? ""}
                   </td>
                   <td className="px-5 py-3.5 text-slate-600 text-xs">{p.formuleNom}</td>
                   <td className="px-5 py-3.5 font-semibold text-[#D4A843]">{fmtMontant(p.montant)}</td>

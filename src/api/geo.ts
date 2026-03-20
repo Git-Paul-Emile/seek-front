@@ -45,7 +45,7 @@ export const fetchVilles = (paysId: string): Promise<Ville[]> =>
 export const fetchQuartiersByVille = (villeId: string): Promise<Quartier[]> =>
   api.get<{ data: Quartier[] }>(`/villes/${villeId}/quartiers`).then((r) => r.data.data);
 
-// ─── Admin — Pays ─────────────────────────────────────────────────────────────
+// ─── Admin - Pays ─────────────────────────────────────────────────────────────
 
 export const fetchAllPaysAdmin = (): Promise<Pays[]> =>
   api.get<{ data: Pays[] }>("/admin/pays").then((r) => r.data.data);
@@ -59,7 +59,7 @@ export const updatePaysApi = (id: string, data: { nom?: string; code?: string })
 export const deletePaysApi = (id: string): Promise<void> =>
   api.delete(`/pays/${id}`).then(() => undefined);
 
-// ─── Admin — Villes ───────────────────────────────────────────────────────────
+// ─── Admin - Villes ───────────────────────────────────────────────────────────
 
 export const fetchAllVillesAdmin = (paysId?: string): Promise<Ville[]> =>
   api
@@ -75,7 +75,7 @@ export const updateVilleApi = (id: string, data: { nom?: string; paysId?: string
 export const deleteVilleApi = (id: string): Promise<void> =>
   api.delete(`/villes/${id}`).then(() => undefined);
 
-// ─── Admin — Quartiers ────────────────────────────────────────────────────────
+// ─── Admin - Quartiers ────────────────────────────────────────────────────────
 
 export const fetchAllQuartiersAdmin = (villeId?: string): Promise<Quartier[]> =>
   api

@@ -17,7 +17,7 @@ export const useCategoriesEquipement = () =>
   useQuery({
     queryKey: [QUERY_KEY],
     queryFn:  fetchCategoriesEquipement,
-    staleTime: 5 * 60 * 1000, // 5 min — données stables
+    staleTime: 5 * 60 * 1000, // 5 min - données stables
   });
 
 // ─── Admin ────────────────────────────────────────────────────────────────────

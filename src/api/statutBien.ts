@@ -33,11 +33,11 @@ export interface UpdateStatutBienPayload {
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
 
-/** Statuts actifs — public */
+/** Statuts actifs - public */
 export const fetchStatutsBien = () =>
   api.get<{ data: StatutBien[] }>("/").then((r) => r.data.data);
 
-/** Tous les statuts — admin */
+/** Tous les statuts - admin */
 export const fetchStatutsBienAdmin = () =>
   api.get<{ data: StatutBien[] }>("/admin").then((r) => r.data.data);
 

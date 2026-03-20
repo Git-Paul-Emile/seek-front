@@ -124,7 +124,7 @@ export default function TransactionsAdmin() {
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-slate-500 text-xs truncate max-w-[150px]">
-                    {t.bien?.titre ?? "—"}
+                    {t.bien?.titre ?? ""}
                   </td>
                   <td className="px-5 py-3.5 text-slate-400 text-xs">
                     {new Date(t.dateInitiation).toLocaleDateString("fr-FR")}

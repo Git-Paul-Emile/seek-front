@@ -169,7 +169,7 @@ function QuartierForm({
                 onChange={(e) => { setPaysId(e.target.value); setVilleId(""); }}
                 className={`${inputCls} cursor-pointer appearance-none pr-8`}
               >
-                <option value="">— Choisir un pays —</option>
+                <option value="">- Choisir un pays -</option>
                 {paysList.map((p) => (
                   <option key={p.id} value={p.id}>{p.nom}</option>
                 ))}
@@ -189,7 +189,7 @@ function QuartierForm({
                 className={`${inputCls} cursor-pointer appearance-none pr-8 disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 <option value="">
-                  {paysId ? "— Choisir une ville —" : "— Sélectionnez d'abord un pays —"}
+                  {paysId ? "- Choisir une ville -" : "- Sélectionnez d'abord un pays -"}
                 </option>
                 {villesList.map((v) => (
                   <option key={v.id} value={v.id}>{v.nom}</option>
@@ -228,13 +228,13 @@ function QuartierForm({
             <div>
               <label className={labelCls}>Latitude</label>
               <div className={`${inputCls} flex items-center ${latitude != null ? "text-emerald-600 font-medium bg-emerald-50 border-emerald-200" : "text-slate-300"}`}>
-                {latitude != null ? latitude.toFixed(6) : "—"}
+                {latitude != null ? latitude.toFixed(6) : ""}
               </div>
             </div>
             <div>
               <label className={labelCls}>Longitude</label>
               <div className={`${inputCls} flex items-center ${longitude != null ? "text-emerald-600 font-medium bg-emerald-50 border-emerald-200" : "text-slate-300"}`}>
-                {longitude != null ? longitude.toFixed(6) : "—"}
+                {longitude != null ? longitude.toFixed(6) : ""}
               </div>
             </div>
           </div>
@@ -347,7 +347,7 @@ export default function QuartiersPage() {
             disabled={!filterPaysId}
             className="h-10 pl-3.5 pr-8 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none focus:border-[#D4A843]/60 transition-all cursor-pointer appearance-none min-w-44 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <option value="">{filterPaysId ? "Toutes les villes" : "— Sélectionnez un pays —"}</option>
+            <option value="">{filterPaysId ? "Toutes les villes" : "- Sélectionnez un pays -"}</option>
             {villesFilter.map((v) => (
               <option key={v.id} value={v.id}>{v.nom}</option>
             ))}
@@ -392,7 +392,7 @@ export default function QuartiersPage() {
                           <span className="ml-1 text-slate-400">({q.ville.pays.nom})</span>
                         )}
                       </span>
-                    ) : "—"}
+                    ) : ""}
                   </td>
                   <td className="px-5 py-3.5">
                     <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">

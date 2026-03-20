@@ -33,11 +33,11 @@ export interface UpdateCategorieEquipementPayload {
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
 
-/** Catégories actives — public */
+/** Catégories actives - public */
 export const fetchCategoriesEquipement = () =>
   api.get<{ data: CategorieEquipement[] }>("/").then((r) => r.data.data);
 
-/** Toutes les catégories (actives + inactifs) — admin */
+/** Toutes les catégories (actives + inactifs) - admin */
 export const fetchCategoriesEquipementAdmin = () =>
   api.get<{ data: CategorieEquipement[] }>("/admin").then((r) => r.data.data);
 

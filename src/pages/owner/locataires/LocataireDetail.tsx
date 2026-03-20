@@ -27,7 +27,7 @@ import {
 
 // helper for displaying sexe values (owner detail view)
 const displaySexe = (s?: string | null) => {
-  if (!s) return "—";
+  if (!s) return "";
   const up = s.trim().toUpperCase();
   if (up === "M" || up.startsWith("MASC")) return "Masculin";
   if (up === "F" || up.startsWith("FEM")) return "Féminin";
@@ -70,10 +70,10 @@ const STATUT_CONFIG: Record<
 };
 
 const fmt = (date?: string | null) =>
-  date ? new Date(date).toLocaleDateString("fr-FR") : "—";
+  date ? new Date(date).toLocaleDateString("fr-FR") : "";
 
 const fmtMontant = (n?: number | null) =>
-  n != null ? `${n.toLocaleString("fr-FR")} FCFA` : "—";
+  n != null ? `${n.toLocaleString("fr-FR")} FCFA` : "";
 
 // Motifs de rejet pour les propriétaires
 const REJECTION_MOTIFS = [
@@ -286,7 +286,7 @@ export default function LocataireDetail() {
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-amber-900 text-sm">
                 {locataire.statut === 'INVITE' 
-                  ? 'Contrat validé — partagez ce lien d\'activation avec le locataire'
+                  ? 'Contrat validé - partagez ce lien d\'activation avec le locataire'
                   : 'Le locataire peut désormais se connecter à son espace'}
               </p>
               {lien ? (
@@ -383,7 +383,7 @@ export default function LocataireDetail() {
                 label="Pièce d'identité"
                 value={
                   locataire.typePiece
-                    ? `${locataire.typePiece} — ${locataire.numPieceIdentite ?? "—"}`
+                    ? `${locataire.typePiece} - ${locataire.numPieceIdentite ?? ""}`
                     : undefined
                 }
               />
@@ -773,6 +773,6 @@ const Row = ({
 }) => (
   <div className="flex justify-between gap-2">
     <span className="text-slate-400">{label}</span>
-    <span className="text-slate-700 font-medium text-right">{value || "—"}</span>
+    <span className="text-slate-700 font-medium text-right">{value || ""}</span>
   </div>
 );

@@ -118,7 +118,7 @@ function TypeForm({
             />
             {isEdit && (
               <p className="text-xs text-slate-400">
-                Entre 0 et {maxOrdre} — si la position est déjà prise, les deux types échangent leurs ordres
+                Entre 0 et {maxOrdre} - si la position est déjà prise, les deux types échangent leurs ordres
               </p>
             )}
           </div>

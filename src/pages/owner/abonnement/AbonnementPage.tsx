@@ -244,7 +244,7 @@ export default function AbonnementPage() {
       planNom: abo.plan.nom,
       montant: abo.montant,
       modePaiement: abo.modePaiement ?? "Mobile Money",
-      reference: abo.reference ?? "—",
+      reference: abo.reference ?? "",
       dateDebut: abo.dateDebut,
       dateFin: abo.dateFin,
       createdAt: abo.createdAt,

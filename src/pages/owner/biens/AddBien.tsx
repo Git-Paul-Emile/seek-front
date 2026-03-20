@@ -240,7 +240,7 @@ export default function AddBien() {
   const { data: villesList = [], isLoading: villesLoading } = useVilles(selectedPays?.id ?? null);
   const { data: quartiersList = [], isLoading: quartiersLoading } = useQuartiers(selectedVille?.id ?? null);
 
-  // ── Init champs en mode édition — attend que toutes les listes soient chargées ──
+  // ── Init champs en mode édition - attend que toutes les listes soient chargées ──
   useEffect(() => {
     if (!bienToEdit) return;
     if (initializedForRef.current === bienToEdit.id) return;
@@ -622,7 +622,7 @@ export default function AddBien() {
             <Lock className="w-4 h-4 text-amber-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-800">Contrat de bail actif — formulaire en lecture seule</p>
+            <p className="text-sm font-semibold text-amber-800">Contrat de bail actif - formulaire en lecture seule</p>
             <p className="text-xs text-amber-700 mt-0.5">
               Les éléments contractuels (loyer, charges, surface, adresse, type de bien…) ne peuvent pas être modifiés
               tant qu'un bail est en cours. Pour modifier ces éléments, créez un avenant depuis la fiche du bien.
@@ -647,7 +647,7 @@ export default function AddBien() {
         <div className={isLockedByBail ? "pointer-events-none select-none opacity-70" : ""}>
 
         {/* ═══════════════════════════════════════════════════════════
-            Tab 1 — Informations générales
+            Tab 1 - Informations générales
         ═══════════════════════════════════════════════════════════ */}
         {tab === "general" && (
           <div className="space-y-6">
@@ -758,7 +758,7 @@ export default function AddBien() {
                           }}
                           className={`${inputCls} cursor-pointer appearance-none pr-8`}
                         >
-                          <option value="">— Choisir un pays —</option>
+                          <option value="">- Choisir un pays -</option>
                           {paysList.map((p) => (
                             <option key={p.id} value={p.id}>{p.nom}</option>
                           ))}
@@ -791,7 +791,7 @@ export default function AddBien() {
                           className={`${inputCls} cursor-pointer appearance-none pr-8 disabled:opacity-40 disabled:cursor-not-allowed`}
                         >
                           <option value="">
-                            {selectedPays ? "— Choisir une région —" : "— Sélectionnez d'abord un pays —"}
+                            {selectedPays ? "- Choisir une région -" : "- Sélectionnez d'abord un pays -"}
                           </option>
                           {villesList.map((v) => (
                             <option key={v.id} value={v.id}>{v.nom}</option>
@@ -804,7 +804,7 @@ export default function AddBien() {
                   </div>
                 </div>
 
-                {/* Quartier — select depuis la DB */}
+                {/* Quartier - select depuis la DB */}
                 <div>
                   <label className={labelCls}>Quartier</label>
                   {quartiersLoading ? (
@@ -827,9 +827,9 @@ export default function AddBien() {
                         <option value="">
                           {selectedVille
                             ? quartiersList.length === 0
-                              ? "— Aucun quartier disponible —"
-                              : "— Choisir un quartier —"
-                            : "— Sélectionnez d'abord une région —"}
+                              ? "- Aucun quartier disponible -"
+                              : "- Choisir un quartier -"
+                            : "- Sélectionnez d'abord une région -"}
                         </option>
                         {quartiersList.map((q) => (
                           <option key={q.id} value={q.id}>{q.nom}</option>
@@ -847,7 +847,7 @@ export default function AddBien() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════
-            Tab 2 — Caractéristiques techniques
+            Tab 2 - Caractéristiques techniques
         ═══════════════════════════════════════════════════════════ */}
         {tab === "caract" && (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -906,7 +906,7 @@ export default function AddBien() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════
-            Tab 3 — Statut & Transaction
+            Tab 3 - Statut & Transaction
         ═══════════════════════════════════════════════════════════ */}
         {tab === "transaction" && (
           <div className="space-y-6">
@@ -1046,7 +1046,7 @@ export default function AddBien() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════
-            Tab 4 — Options & Équipements
+            Tab 4 - Options & Équipements
         ═══════════════════════════════════════════════════════════ */}
         {tab === "options" && (
           <div className="space-y-6">
@@ -1108,7 +1108,7 @@ export default function AddBien() {
               </div>
             </div>
 
-            {/* Meubles (si meublé) — avant équipements */}
+            {/* Meubles (si meublé) - avant équipements */}
             {meuble && (
               <div className="bg-white rounded-2xl border border-[#D4A843]/30 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-[#D4A843]/20 flex items-center justify-between">
@@ -1271,7 +1271,7 @@ export default function AddBien() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════
-            Tab 5 — Médias
+            Tab 5 - Médias
         ═══════════════════════════════════════════════════════════ */}
         {tab === "medias" && (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">

@@ -33,11 +33,11 @@ export interface UpdateCategorieMeublePayload {
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
 
-/** Catégories actives — public */
+/** Catégories actives - public */
 export const fetchCategoriesMeuble = () =>
   api.get<{ data: CategorieMeuble[] }>("/").then((r) => r.data.data);
 
-/** Toutes les catégories (actives + inactifs) — admin */
+/** Toutes les catégories (actives + inactifs) - admin */
 export const fetchCategoriesMeubleAdmin = () =>
   api.get<{ data: CategorieMeuble[] }>("/admin").then((r) => r.data.data);
 

@@ -9,7 +9,7 @@ import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 
 const QK = "public-favoris";
 
-/** Liste des favoris avec changements — ne s'exécute que si authentifié */
+/** Liste des favoris avec changements - ne s'exécute que si authentifié */
 export function useFavorisList() {
   const { isAuthenticated } = useComptePublicAuth();
   return useQuery<FavoriItem[]>({

@@ -93,7 +93,7 @@ export default function OwnerVerification() {
               {docs.pieceIdentiteRecto && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                    {docs.typePiece === "CNI" ? "CNI — Recto" : "Passeport — Page identité"}
+                    {docs.typePiece === "CNI" ? "CNI - Recto" : "Passeport - Page identité"}
                   </p>
                   <button
                     type="button"
@@ -110,7 +110,7 @@ export default function OwnerVerification() {
               )}
               {docs.pieceIdentiteVerso && (
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">CNI — Verso</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">CNI - Verso</p>
                   <button
                     type="button"
                     onClick={() => setLightboxImage(docs.pieceIdentiteVerso)}

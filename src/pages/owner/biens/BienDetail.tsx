@@ -242,7 +242,7 @@ export default function BienDetail() {
   const mettreEnRenouvellement = useMettreEnRenouvellement();
   const archiver = useArchiverBail();
 
-  // Bail à archiver (TERMINE/RESILIE) — chargé uniquement si pas de bail actif
+  // Bail à archiver (TERMINE/RESILIE) - chargé uniquement si pas de bail actif
   const { data: bailAArchiver } = useBailAArchiver(
     isLocation && !bail ? (id ?? "") : ""
   );
@@ -251,7 +251,7 @@ export default function BienDetail() {
   const { data: historiqueBails = [] } = useHistoriqueBails(isLocation ? (id ?? "") : "");
   const [historiqueOpen, setHistoriqueOpen] = useState(false);
 
-  // Suivi financier — chargé uniquement si bail actif
+  // Suivi financier - chargé uniquement si bail actif
   const { data: echeancier = [] } = useEcheancier(id ?? "", bail?.id ?? "");
   const { data: caution } = useCaution(id ?? "", bail?.id ?? "");
   const restituerCaution = useRestituerCaution();
@@ -611,7 +611,7 @@ export default function BienDetail() {
 
         {/* Colonne latérale */}
         <div className="space-y-5">
-          {/* Section Locataire — uniquement pour les biens en location */}
+          {/* Section Locataire - uniquement pour les biens en location */}
           {isLocation && (
             <Section title="Locataire actuel">
               {bail ? (() => {
@@ -711,9 +711,9 @@ export default function BienDetail() {
                       )}
                     </div>
 
-                    {/* Actions bail — selon statut */}
+                    {/* Actions bail - selon statut */}
                     <div className="flex flex-col gap-2 pt-1">
-                      {/* Voir le contrat — toujours disponible */}
+                      {/* Voir le contrat - toujours disponible */}
                       <button
                         onClick={() => { setActiveBailForContrat(bail); setIsContratCreationFlow(false); setShowContratModal(true); }}
                         className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-200 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
@@ -722,7 +722,7 @@ export default function BienDetail() {
                         Voir le contrat
                       </button>
 
-                      {/* Prolonger — disponible si ACTIF ou EN_RENOUVELLEMENT */}
+                      {/* Prolonger - disponible si ACTIF ou EN_RENOUVELLEMENT */}
                       {(statut === "ACTIF" || statut === "EN_RENOUVELLEMENT") && (
                         <button
                           onClick={() => { setProlongerDuree(null); setProlongerOpen(true); }}
@@ -733,7 +733,7 @@ export default function BienDetail() {
                         </button>
                       )}
 
-                      {/* Mettre en préavis — ACTIF uniquement */}
+                      {/* Mettre en préavis - ACTIF uniquement */}
                       {statut === "ACTIF" && (
                         <button
                           onClick={() => setPreavisOpen(true)}
@@ -744,7 +744,7 @@ export default function BienDetail() {
                         </button>
                       )}
 
-                      {/* Résilier — ACTIF ou EN_PREAVIS */}
+                      {/* Résilier - ACTIF ou EN_PREAVIS */}
                       {(statut === "ACTIF" || statut === "EN_PREAVIS") && (
                         <button
                           onClick={() => { setResilierMotif(""); setResilierOpen(true); }}
@@ -755,7 +755,7 @@ export default function BienDetail() {
                         </button>
                       )}
 
-                      {/* Terminer — bail sans date de fin, pour les baux indéterminés */}
+                      {/* Terminer - bail sans date de fin, pour les baux indéterminés */}
                       {(statut === "ACTIF" || statut === "EN_PREAVIS" || statut === "EN_RENOUVELLEMENT") && !bail.dateFinBail && (
                         <button
                           onClick={() => setTerminerOpen(true)}
@@ -802,7 +802,7 @@ export default function BienDetail() {
             </Section>
           )}
 
-          {/* Section Bail à archiver — bail terminé ou résilié en attente d'archivage */}
+          {/* Section Bail à archiver - bail terminé ou résilié en attente d'archivage */}
           {isLocation && (bail || bailAArchiver) && (
             <Section title="Etat des lieux">
               <EtatDesLieuxSection bienId={id ?? ""} bailId={(bail?.id ?? bailAArchiver?.id ?? "")} />
@@ -923,7 +923,7 @@ export default function BienDetail() {
             </Section>
           )}
 
-          {/* Suivi financier — uniquement si bail actif */}
+          {/* Suivi financier - uniquement si bail actif */}
           {bail && (
             <Section title="Suivi financier">
               <div className="space-y-4">
@@ -1260,7 +1260,7 @@ export default function BienDetail() {
             { bienId: bien.id, bailId: bail!.id },
             {
               onSuccess: () => {
-                toast.success("Bail terminé — le bien est Libre");
+                toast.success("Bail terminé, le bien est Libre");
                 setTerminerOpen(false);
                 refetchBail();
               },
@@ -1314,7 +1314,7 @@ export default function BienDetail() {
                     { bienId: bien.id, bailId: bail!.id, motif: resilierMotif },
                     {
                       onSuccess: () => {
-                        toast.success("Bail résilié — le bien est Libre");
+                        toast.success("Bail résilié, le bien est Libre");
                         setResilierOpen(false);
                         setResilierMotif("");
                         refetchBail();
@@ -1474,7 +1474,7 @@ export default function BienDetail() {
           mettreEnPreavis.mutate(
             { bienId: bien.id, bailId: bail!.id },
             {
-              onSuccess: () => { toast.success("Bail en préavis — fin dans 3 mois"); setPreavisOpen(false); refetchBail(); },
+              onSuccess: () => { toast.success("Bail en préavis, fin dans 3 mois"); setPreavisOpen(false); refetchBail(); },
               onError: () => { toast.error("Erreur"); setPreavisOpen(false); },
             }
           )
@@ -1564,7 +1564,7 @@ export default function BienDetail() {
                     { bienId: bien.id, bailId: bailAArchiver.id },
                     {
                       onSuccess: () => {
-                        toast.success("Bail archivé — locataire passé en ancien locataire");
+                        toast.success("Bail archivé, locataire passé en ancien locataire");
                         setArchiverOpen(false);
                       },
                       onError: () => toast.error("Erreur lors de l'archivage"),

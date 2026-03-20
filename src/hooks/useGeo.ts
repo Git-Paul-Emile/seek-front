@@ -38,7 +38,7 @@ export const useQuartiers = (villeId: string | null) =>
     staleTime: 10 * 60 * 1000,
   });
 
-// ─── Admin — Pays ─────────────────────────────────────────────────────────────
+// ─── Admin - Pays ─────────────────────────────────────────────────────────────
 
 export const useAllPaysAdmin = () =>
   useQuery({ queryKey: ["admin", "pays"], queryFn: fetchAllPaysAdmin });
@@ -77,7 +77,7 @@ export const useDeletePays = () => {
   });
 };
 
-// ─── Admin — Villes ───────────────────────────────────────────────────────────
+// ─── Admin - Villes ───────────────────────────────────────────────────────────
 
 export const useAllVillesAdmin = (paysId?: string) =>
   useQuery({
@@ -119,7 +119,7 @@ export const useDeleteVille = () => {
   });
 };
 
-// ─── Admin — Quartiers ────────────────────────────────────────────────────────
+// ─── Admin - Quartiers ────────────────────────────────────────────────────────
 
 export const useAllQuartiersAdmin = (villeId?: string) =>
   useQuery({

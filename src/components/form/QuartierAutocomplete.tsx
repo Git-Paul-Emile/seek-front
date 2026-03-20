@@ -116,7 +116,7 @@ export function QuartierAutocomplete({
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin pointer-events-none" />
         )}
 
-        {/* Bouton effacer — affiché quand il y a une valeur et pas de chargement */}
+        {/* Bouton effacer - affiché quand il y a une valeur et pas de chargement */}
         {!loading && value && !disabled && (
           <button
             type="button"
@@ -159,7 +159,7 @@ export function QuartierAutocomplete({
                 >
                   <div className="flex items-center gap-2.5">
                     <MapPin className="w-4 h-4 text-[#D4A843] flex-shrink-0" />
-                    {/* Nom court — suburb ou neighbourhood uniquement */}
+                    {/* Nom court - suburb ou neighbourhood uniquement */}
                     <span className="font-medium">{s.nom}</span>
                   </div>
                 </button>

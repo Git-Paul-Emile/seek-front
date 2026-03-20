@@ -28,11 +28,11 @@ const schema = z.object({
     .min(1, "Le numéro WhatsApp est requis")
     .regex(
       /^[+]?[\d\s\-()\d]{7,}$/,
-      "Format invalide — ex : 77 000 00 00 ou +221 77 000 00 00"
+      "Format invalide - ex : 77 000 00 00 ou +221 77 000 00 00"
     ),
   email: z.string().refine(
     (v) => v === "" || z.string().email().safeParse(v).success,
-    "Format email invalide — ex : prenom@email.com"
+    "Format email invalide - ex : prenom@email.com"
   ),
   password: z
     .string()

@@ -124,20 +124,20 @@ const App = () => (
                   <Route path="/mon-compte" element={<MonComptePage />} />
                 </Route>
 
-                {/* Espace propriétaires — landing */}
+                {/* Espace propriétaires - landing */}
                 <Route path="/proprietaires" element={<Proprietaires />} />
 
-                {/* Owner — inaccessible si déjà connecté */}
+                {/* Owner - inaccessible si déjà connecté */}
                 <Route element={<OwnerGuestRoute />}>
                   <Route path="/owner/register" element={<OwnerRegister />} />
                   <Route path="/owner/login" element={<OwnerLogin />} />
                 </Route>
 
-                {/* Owner — mot de passe (public) */}
+                {/* Owner - mot de passe (public) */}
                 <Route path="/owner/forgot-password" element={<OwnerForgotPassword />} />
                 <Route path="/owner/reset-password" element={<OwnerResetPassword />} />
 
-                {/* Owner — protégées */}
+                {/* Owner - protégées */}
                 <Route element={<OwnerProtectedRoute />}>
                   <Route element={<OwnerLayout />}>
                     <Route path="/owner/dashboard" element={<OwnerDashboard />} />
@@ -156,17 +156,17 @@ const App = () => (
                   </Route>
                 </Route>
 
-                {/* Locataire — pages publiques */}
+                {/* Locataire - pages publiques */}
                 <Route path="/locataire/activer" element={<LocataireActivate />} />
                 <Route path="/locataire/reset-password" element={<LocataireResetPassword />} />
 
-                {/* Locataire — inaccessible si déjà connecté */}
+                {/* Locataire - inaccessible si déjà connecté */}
                 <Route element={<LocataireGuestRoute />}>
                   <Route path="/locataire/login" element={<LocataireLogin />} />
                   <Route path="/locataire/forgot-password" element={<LocataireForgotPassword />} />
                 </Route>
 
-                {/* Locataire — protégées */}
+                {/* Locataire - protégées */}
                 <Route element={<LocataireProtectedRoute />}>
                   <Route element={<LocataireLayout />}>
                     <Route path="/locataire/dashboard" element={<LocataireDashboard />} />
@@ -179,7 +179,7 @@ const App = () => (
                   </Route>
                 </Route>
 
-                {/* Auth admin — inaccessible si déjà connecté */}
+                {/* Auth admin - inaccessible si déjà connecté */}
                 <Route element={<GuestRoute />}>
                   <Route path="/admin/login" element={<AdminLogin />} />
                 </Route>

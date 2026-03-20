@@ -1,5 +1,5 @@
 /**
- * GeoAutocomplete — utilise l'API Photon (Komoot/OSM) pour la suggestion d'adresses.
+ * GeoAutocomplete - utilise l'API Photon (Komoot/OSM) pour la suggestion d'adresses.
  * Exporté sous l'ancien nom pour compatibilité des imports existants.
  */
 import { useState, useRef, useEffect } from "react";
@@ -161,7 +161,7 @@ const NominatimAutocomplete = ({ onSelect, placeholder = "Ex: Avenue Bourguiba, 
         <div className={dropdownClass}>
           {suggestions.map((feature, i) => {
             const p    = feature.properties;
-            const main = p.name ?? "—";
+            const main = p.name ?? "";
             const sub  = [p.district, p.city, p.state, p.country].filter(Boolean).join(", ");
             return (
               <div key={`${p.osm_id ?? i}`} className={itemClass} onMouseDown={() => handleSelect(feature)}>

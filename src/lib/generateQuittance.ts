@@ -247,7 +247,7 @@ export function generateQuittancePDF(data: QuittanceData) {
     H - 10,
     { align: "center" }
   );
-  doc.text("SEEK Immobilier — Plateforme de gestion locative", W / 2, H - 5, {
+  doc.text("SEEK Immobilier - Plateforme de gestion locative", W / 2, H - 5, {
     align: "center",
   });
 

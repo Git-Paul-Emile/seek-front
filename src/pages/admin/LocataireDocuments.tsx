@@ -62,7 +62,7 @@ export default function LocataireDocuments() {
       </button>
 
       <h1 className="text-2xl font-bold text-[#0C1A35]">
-        {locataire.prenom} {locataire.nom} — Documents
+        {locataire.prenom} {locataire.nom} - Documents
       </h1>
 
       {/* Infos locataire */}
@@ -95,7 +95,7 @@ export default function LocataireDocuments() {
             <div className="col-span-2">
               <p className="text-slate-400 text-xs mb-0.5">Propriétaire associé</p>
               <p className="font-medium text-slate-700">
-                {locataire.proprietaire.prenom} {locataire.proprietaire.nom} — {locataire.proprietaire.telephone}
+                {locataire.proprietaire.prenom} {locataire.proprietaire.nom} - {locataire.proprietaire.telephone}
               </p>
             </div>
           )}

@@ -17,7 +17,7 @@ export const useCategoriesMeuble = () =>
   useQuery({
     queryKey: [QUERY_KEY],
     queryFn:  fetchCategoriesMeuble,
-    staleTime: 5 * 60 * 1000, // 5 min — données stables
+    staleTime: 5 * 60 * 1000, // 5 min - données stables
   });
 
 // ─── Admin ────────────────────────────────────────────────────────────────────

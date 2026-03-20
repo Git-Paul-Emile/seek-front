@@ -140,7 +140,7 @@ export default function ImageUpload({
                 Cliquez ou glissez une image
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
-                JPEG, JFIF, PNG, WEBP, AVIF — max 5 Mo
+                JPEG, JFIF, PNG, WEBP, AVIF - max 5 Mo
               </p>
             </div>
           </button>

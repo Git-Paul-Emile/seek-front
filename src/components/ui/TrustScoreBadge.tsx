@@ -41,7 +41,7 @@ export function TrustScoreCompact({ score }: { score: TrustScore }) {
   return (
     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${colors.bg} ${colors.text}`}>
       <span>{score.total}/100</span>
-      <span className="font-normal opacity-70">— {getScoreLabel(score.total)}</span>
+      <span className="font-normal opacity-70">- {getScoreLabel(score.total)}</span>
     </div>
   );
 }

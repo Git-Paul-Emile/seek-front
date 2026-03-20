@@ -87,8 +87,15 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
         setLocataire(data);
         startRefreshTimer();
       } catch {
-        setLocataire(null);
-        stopRefreshTimer();
+        try {
+          await refreshLocataireApi();
+          const data = await meLocataireApi();
+          setLocataire(data);
+          startRefreshTimer();
+        } catch {
+          setLocataire(null);
+          stopRefreshTimer();
+        }
       } finally {
         setIsLoading(false);
       }

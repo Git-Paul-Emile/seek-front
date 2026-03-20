@@ -44,7 +44,7 @@ export const getFavoriIdsApi = async (): Promise<string[]> => {
   return data.data;
 };
 
-/** Toggle favori — retourne { action: "added" | "removed" } */
+/** Toggle favori - retourne { action: "added" | "removed" } */
 export const toggleFavoriApi = async (bienId: string): Promise<{ action: "added" | "removed" }> => {
   const { data } = await api.post(`/${bienId}/toggle`);
   return data.data;

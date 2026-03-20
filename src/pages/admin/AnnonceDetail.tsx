@@ -443,7 +443,7 @@ export default function AnnonceDetail() {
             </Section>
           )}
 
-          {/* Caractéristiques — scroll horizontal avec flèches */}
+          {/* Caractéristiques - scroll horizontal avec flèches */}
           {caracteristiques.length > 0 && (
             <Section title="Caractéristiques">
               <div className="relative">
@@ -504,7 +504,7 @@ export default function AnnonceDetail() {
             </Section>
           )}
 
-          {/* Équipements & Mobilier — onglets */}
+          {/* Équipements & Mobilier - onglets */}
           {(hasEquipements || hasMeubles) && (
             <Section title="Informations supplémentaires">
               <Tabs defaultValue={defaultTab} className="w-full">

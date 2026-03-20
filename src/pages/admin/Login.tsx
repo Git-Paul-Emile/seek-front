@@ -15,7 +15,7 @@ const loginSchema = z.object({
   email: z
     .string({ required_error: "Veuillez saisir votre adresse email" })
     .min(1, "Veuillez saisir votre adresse email")
-    .email("Format invalide — exemple : admin@seek.sn")
+    .email("Format invalide - exemple : admin@seek.sn")
     .trim(),
   password: z
     .string({ required_error: "Veuillez saisir votre mot de passe" })

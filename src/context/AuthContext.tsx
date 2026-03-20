@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAdmin(data.data);
         startRefreshTimer();
       } catch {
-        // Pas de session active — tenter un refresh silencieux
+        // Pas de session active - tenter un refresh silencieux
         try {
           await refreshApi();
           const { data } = await meApi();

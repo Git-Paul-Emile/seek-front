@@ -1,5 +1,5 @@
 /**
- * useFavoris — Favoris stockés en base.
+ * useFavoris - Favoris stockés en base.
  * Nécessite un compte public (ComptePublic) authentifié.
  * Retourne aussi `isAuthenticated` pour savoir si l'utilisateur est connecté.
  */

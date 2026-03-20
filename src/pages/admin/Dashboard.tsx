@@ -64,7 +64,7 @@ function KpiCard({
       <div>
         <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{label}</p>
         <p className="text-2xl font-bold text-[#0C1A35]">
-          {value !== undefined ? value.toLocaleString("fr-FR") : "—"}
+          {value !== undefined ? value.toLocaleString("fr-FR") : ""}
         </p>
       </div>
     </div>
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
 
           {/* Ligne 2 : donut + bar type logement */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* Donut — répartition par statut */}
+            {/* Donut - répartition par statut */}
             <SectionCard title="Répartition par statut">
               {pieData.length === 0 ? (
                 <p className="text-sm text-slate-400 text-center py-8">Aucune donnée</p>
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
               )}
             </SectionCard>
 
-            {/* Bar — type de logement */}
+            {/* Bar - type de logement */}
             <SectionCard title="Annonces publiées par type de logement">
               {!stats?.annoncesByTypeLogement.length ? (
                 <p className="text-sm text-slate-400 text-center py-8">Aucune donnée</p>
@@ -213,7 +213,7 @@ export default function AdminDashboard() {
 
           {/* Ligne 3 : bar type transaction + top villes */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* Bar — type de transaction */}
+            {/* Bar - type de transaction */}
             <SectionCard title="Annonces publiées par type de transaction">
               {!stats?.annoncesByTypeTransaction.length ? (
                 <p className="text-sm text-slate-400 text-center py-8">Aucune donnée</p>
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
               )}
             </SectionCard>
 
-            {/* Bar horizontal — top villes */}
+            {/* Bar horizontal - top villes */}
             <SectionCard title="Top villes (annonces publiées)">
               {!stats?.topVilles.length ? (
                 <p className="text-sm text-slate-400 text-center py-8">Aucune donnée</p>

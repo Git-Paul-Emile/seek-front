@@ -47,7 +47,7 @@ function RejetModal({
           <span className="font-medium text-[#0C1A35]">
             {bien.titre || "Sans titre"}
           </span>{" "}
-          — Indiquez le motif de rejet qui sera transmis au propriétaire.
+          - Indiquez le motif de rejet qui sera transmis au propriétaire.
         </p>
         <textarea
           value={note}
@@ -127,7 +127,7 @@ function AnnonceRow({
 
       {/* Type */}
       <td className="px-4 py-4 hidden md:table-cell">
-        <p className="text-sm text-slate-600">{bien.typeLogement?.nom || "—"}</p>
+        <p className="text-sm text-slate-600">{bien.typeLogement?.nom || ""}</p>
         {bien.typeTransaction?.nom && (
           <p className="text-xs text-slate-400">{bien.typeTransaction.nom}</p>
         )}
@@ -147,14 +147,14 @@ function AnnonceRow({
             </div>
           </div>
         ) : (
-          <span className="text-slate-400 text-sm">—</span>
+          <span className="text-slate-400 text-sm">-</span>
         )}
       </td>
 
       {/* Prix */}
       <td className="px-4 py-4 hidden sm:table-cell">
         <span className="font-semibold text-[#0C1A35] text-sm">
-          {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} F` : "—"}
+          {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} F` : ""}
         </span>
       </td>
 

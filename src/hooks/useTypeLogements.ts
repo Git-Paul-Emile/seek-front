@@ -17,7 +17,7 @@ export const useTypeLogements = () =>
   useQuery({
     queryKey: [QUERY_KEY],
     queryFn:  fetchTypesLogement,
-    staleTime: 5 * 60 * 1000, // 5 min — données stables
+    staleTime: 5 * 60 * 1000, // 5 min - données stables
   });
 
 // ─── Admin ────────────────────────────────────────────────────────────────────

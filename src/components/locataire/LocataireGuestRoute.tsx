@@ -4,7 +4,7 @@ import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useAuth } from "@/context/AuthContext";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 
-/** Accessible uniquement si NON connecté — bloque quel que soit le rôle connecté */
+/** Accessible uniquement si NON connecté - bloque quel que soit le rôle connecté */
 const LocataireGuestRoute = () => {
   const { isAuthenticated: isLocataire, isLoading: locataireLoading } = useLocataireAuth();
   const { isAuthenticated: isOwner, isLoading: ownerLoading } = useOwnerAuth();

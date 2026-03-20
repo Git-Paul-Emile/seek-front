@@ -47,10 +47,10 @@ const fmt = (d?: string | null) =>
         month: "long",
         year: "numeric",
       })
-    : "—";
+    : "";
 
 const fmtMontant = (n?: number | null) =>
-  n != null ? `${n.toLocaleString("fr-FR")} FCFA` : "—";
+  n != null ? `${n.toLocaleString("fr-FR")} FCFA` : "";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -225,7 +225,7 @@ export default function LocataireDashboard() {
 
               {/* Actions bail */}
               <div className="flex flex-col gap-2 mt-4">
-                {/* Voir le contrat — toujours disponible */}
+                {/* Voir le contrat - toujours disponible */}
                 <button
                   onClick={handleVoirContrat}
                   className="flex items-center justify-center gap-2 w-full px-3 py-2.5 border border-blue-200 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors"
@@ -234,7 +234,7 @@ export default function LocataireDashboard() {
                   Voir le contrat
                 </button>
 
-                {/* Mettre en préavis — ACTIF uniquement */}
+                {/* Mettre en préavis - ACTIF uniquement */}
                 {bailActif.statut === "ACTIF" && (
                   <button
                     onClick={() => setPreavisOpen(true)}
@@ -245,7 +245,7 @@ export default function LocataireDashboard() {
                   </button>
                 )}
 
-                {/* Résilier — ACTIF ou EN_PREAVIS */}
+                {/* Résilier - ACTIF ou EN_PREAVIS */}
                 {(bailActif.statut === "ACTIF" || bailActif.statut === "EN_PREAVIS") && (
                   <button
                     onClick={() => { setResilierMotif(""); setResilierOpen(true); }}
@@ -406,7 +406,7 @@ export default function LocataireDashboard() {
             </div>
           </div>
 
-          {/* Identité — uniquement si remplie */}
+          {/* Identité - uniquement si remplie */}
           {(locataire.typePiece || locataire.dateNaissance) && (
             <div className="bg-white rounded-2xl border border-slate-100 p-5">
               <h2 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">
@@ -417,7 +417,7 @@ export default function LocataireDashboard() {
                   <Row label="Naissance" value={fmt(locataire.dateNaissance)} />
                 )}
                 {locataire.typePiece && (
-                  <Row label="Pièce" value={`${locataire.typePiece}${locataire.numPieceIdentite ? ` — ${locataire.numPieceIdentite}` : ""}`} />
+                  <Row label="Pièce" value={`${locataire.typePiece}${locataire.numPieceIdentite ? ` - ${locataire.numPieceIdentite}` : ""}`} />
                 )}
                 {locataire.dateExpirationPiece && (
                   <Row label="Expire le" value={fmt(locataire.dateExpirationPiece)} />
@@ -474,7 +474,7 @@ export default function LocataireDashboard() {
                                 month: "long",
                                 year: "numeric",
                               })
-                            : "—"}
+                            : ""}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
@@ -607,7 +607,7 @@ export default function LocataireDashboard() {
                     {},
                     {
                       onSuccess: () => {
-                        toast.success("Préavis enregistré — fin dans 3 mois");
+                        toast.success("Préavis enregistré, fin dans 3 mois");
                         setPreavisOpen(false);
                       },
                       onError: () => toast.error("Erreur lors de l'enregistrement du préavis"),

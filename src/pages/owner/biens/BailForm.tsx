@@ -30,10 +30,9 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
     typeBail: "",
     dateDebutBail: "",
     dateFinBail: "",
-    renouvellement: false,
+    renouvellement: true,
     cautionVersee: "" as "" | "oui" | "non",
     jourLimitePaiement: "",
-    delaiGrace: "5",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -46,15 +45,12 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
     if (!form.typeBail) errs.typeBail = "Le type de bail est requis";
     if (!form.dateDebutBail) errs.dateDebutBail = "La date de début est requise";
     if (!form.cautionVersee) errs.cautionVersee = "Indiquez si la caution a été versée";
-    if (form.jourLimitePaiement) {
+    if (!form.jourLimitePaiement) {
+      errs.jourLimitePaiement = "La date butoir de paiement est requise";
+    } else {
       const j = Number(form.jourLimitePaiement);
       if (!Number.isInteger(j) || j < 1 || j > 28)
         errs.jourLimitePaiement = "Le jour doit être entre 1 et 28";
-    }
-    if (form.delaiGrace !== "") {
-      const d = Number(form.delaiGrace);
-      if (!Number.isInteger(d) || d < 0 || d > 30)
-        errs.delaiGrace = "Le délai doit être entre 0 et 30 jours";
     }
     return errs;
   };
@@ -81,11 +77,10 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
           montantCaution: bien.caution ?? null,
           cautionVersee: form.cautionVersee === "oui",
           jourLimitePaiement: form.jourLimitePaiement ? Number(form.jourLimitePaiement) : null,
-          delaiGrace: form.delaiGrace !== "" ? Number(form.delaiGrace) : 5,
           frequencePaiement: bien.frequencePaiement ?? null,
         },
       });
-      toast.success("Bail créé — le bien est maintenant Loué");
+      toast.success("Bail créé, le bien est maintenant Loué");
       onBailCreated(createdBail);
     } catch (err: unknown) {
       const msg =
@@ -147,7 +142,7 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
                 <option value="">-- Sélectionner un locataire --</option>
                 {locataires.map((loc) => (
                   <option key={loc.id} value={loc.id}>
-                    {loc.prenom} {loc.nom} — {loc.telephone}
+                    {loc.prenom} {loc.nom} - {loc.telephone}
                   </option>
                 ))}
               </select>
@@ -221,7 +216,7 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
             <span className="text-sm font-medium text-gray-700">Renouvellement possible</span>
           </label>
 
-          {/* Tarifs depuis l'annonce — lecture seule + nouveaux champs */}
+          {/* Tarifs depuis l'annonce - lecture seule + nouveaux champs */}
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-4">
             <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
               Conditions financières
@@ -230,19 +225,19 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
               <div>
                 <p className="text-xs text-gray-500 mb-0.5">Loyer</p>
                 <p className="text-sm font-semibold text-gray-900">
-                  {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} FCFA` : "—"}
+                  {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} FCFA` : ""}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-0.5">Caution</p>
                 <p className="text-sm font-semibold text-gray-900">
-                  {bien.caution ? `${bien.caution.toLocaleString("fr-FR")} FCFA` : "—"}
+                  {bien.caution ? `${bien.caution.toLocaleString("fr-FR")} FCFA` : ""}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 mb-0.5">Fréquence</p>
                 <p className="text-sm font-semibold text-gray-900 capitalize">
-                  {bien.frequencePaiement ?? "—"}
+                  {bien.frequencePaiement ?? ""}
                 </p>
               </div>
             </div>
@@ -275,8 +270,7 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
             {/* Date butoir de paiement */}
             <div>
               <label className="block text-xs font-medium text-blue-700 mb-1">
-                Date butoir de paiement{" "}
-                <span className="font-normal text-blue-500">(optionnel)</span>
+                Date butoir de paiement <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -297,30 +291,6 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
               )}
             </div>
 
-            {/* Délai de grâce */}
-            <div>
-              <label className="block text-xs font-medium text-blue-700 mb-1">
-                Délai de grâce{" "}
-                <span className="font-normal text-blue-500">(jours, défaut : 5)</span>
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="30"
-                placeholder="ex : 5"
-                value={form.delaiGrace}
-                onChange={(e) => set("delaiGrace", e.target.value)}
-                className={`w-full border bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                  errors.delaiGrace ? "border-red-400" : "border-blue-200"
-                }`}
-              />
-              <p className="text-[11px] text-blue-500 mt-1">
-                Nombre de jours après l'échéance avant de passer en retard (0 = aucune tolérance).
-              </p>
-              {errors.delaiGrace && (
-                <p className="text-xs text-red-500 mt-1">{errors.delaiGrace}</p>
-              )}
-            </div>
           </div>
 
           {/* Actions */}

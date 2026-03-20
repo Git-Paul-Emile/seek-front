@@ -30,7 +30,7 @@ export const getContratApi = async (bienId: string, bailId: string): Promise<Con
   return data.data;
 };
 
-/** Génération automatique — le backend sélectionne le bon modèle selon le type de bail */
+/** Génération automatique - le backend sélectionne le bon modèle selon le type de bail */
 export const genererContratApi = async (bienId: string, bailId: string): Promise<Contrat> => {
   const { data } = await api.post(`/${bienId}/bail/${bailId}/contrat`);
   return data.data;

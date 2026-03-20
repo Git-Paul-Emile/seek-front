@@ -58,7 +58,7 @@ const PropertiesSection = () => {
     if (sort === "oldest")     return base.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     if (sort === "price-asc")  return base.sort((a, b) => (a.prix ?? 0) - (b.prix ?? 0));
     if (sort === "price-desc") return base.sort((a, b) => (b.prix ?? 0) - (a.prix ?? 0));
-    return base; // "recent" — ordre API par défaut
+    return base; // "recent" - ordre API par défaut
   }, [dernieresAnnonces, sort]);
 
   return (

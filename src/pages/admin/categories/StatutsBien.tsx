@@ -118,7 +118,7 @@ function StatutForm({
             />
             {isEdit && (
               <p className="text-xs text-slate-400">
-                Entre 0 et {maxOrdre} — si la position est déjà prise, les deux statuts échangent leurs ordres
+                Entre 0 et {maxOrdre} - si la position est déjà prise, les deux statuts échangent leurs ordres
               </p>
             )}
           </div>

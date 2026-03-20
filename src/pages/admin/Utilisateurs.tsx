@@ -342,7 +342,7 @@ export default function UtilisateursPage() {
       </td>
       <td className="px-6 py-4">
         <p className="text-sm text-[#0C1A35]">{p.telephone}</p>
-        <p className="text-sm text-slate-500">{p.email || "-"}</p>
+        <p className="text-sm text-slate-500">{p.email || ""}</p>
       </td>
       <td className="px-6 py-4">
         <span
@@ -421,7 +421,7 @@ export default function UtilisateursPage() {
       </td>
       <td className="px-6 py-4">
         <p className="text-sm text-[#0C1A35]">{l.telephone}</p>
-        <p className="text-sm text-slate-500">{l.email || "-"}</p>
+        <p className="text-sm text-slate-500">{l.email || ""}</p>
       </td>
       <td className="px-6 py-4">
         <span
@@ -762,7 +762,7 @@ export default function UtilisateursPage() {
                     <div>
                       <p className="text-sm text-slate-500">Email</p>
                       <p className="font-medium text-[#0C1A35]">
-                        {proprietaireDetails.data.email || "-"}
+                        {proprietaireDetails.data.email || ""}
                       </p>
                     </div>
                     <div>
@@ -782,7 +782,7 @@ export default function UtilisateursPage() {
                         <div>
                           <p className="text-sm text-slate-500">Motif de suspension</p>
                           <p className="font-medium text-red-600">
-                            {proprietaireDetails.data.motifSuspension || "-"}
+                            {proprietaireDetails.data.motifSuspension || ""}
                           </p>
                         </div>
                         <div>
@@ -792,7 +792,7 @@ export default function UtilisateursPage() {
                               ? new Date(proprietaireDetails.data.dateSuspension).toLocaleDateString(
                                   "fr-FR"
                                 )
-                              : "-"}
+                              : ""}
                           </p>
                         </div>
                       </>
@@ -825,11 +825,11 @@ export default function UtilisateursPage() {
                             <div className="space-y-1">
                               <p className="font-medium text-[#0C1A35]">{bien.titre || "Sans titre"}</p>
                               <p className="text-sm text-slate-500">
-                                {[bien.quartier, bien.ville, bien.pays].filter(Boolean).join(", ") || "-"}
+                                {[bien.quartier, bien.ville, bien.pays].filter(Boolean).join(", ") || ""}
                               </p>
-                              <p className="text-sm text-slate-500">{bien.adresse || "-"}</p>
+                              <p className="text-sm text-slate-500">{bien.adresse || ""}</p>
                               <p className="text-xs text-slate-400">
-                                Région: {bien.region || "-"}
+                                Région: {bien.region || ""}
                               </p>
                               <div className="flex flex-wrap gap-2 pt-1">
                                 {bien.typeLogement && (
@@ -849,12 +849,12 @@ export default function UtilisateursPage() {
                                 )}
                               </div>
                               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600 pt-1">
-                                <p>Prix: {bien.prix != null ? `${bien.prix.toLocaleString("fr-FR")} FCFA` : "-"}</p>
-                                <p>Surface: {bien.surface != null ? `${bien.surface} m²` : "-"}</p>
-                                <p>Chambres: {bien.nbChambres ?? "-"}</p>
-                                <p>SDB: {bien.nbSdb ?? "-"}</p>
-                                <p>Pièces: {bien.nbPieces ?? "-"}</p>
-                                <p>Statut bien: {bien.statutBien || "-"}</p>
+                                <p>Prix: {bien.prix != null ? `${bien.prix.toLocaleString("fr-FR")} FCFA` : ""}</p>
+                                <p>Surface: {bien.surface != null ? `${bien.surface} m²` : ""}</p>
+                                <p>Chambres: {bien.nbChambres ?? ""}</p>
+                                <p>SDB: {bien.nbSdb ?? ""}</p>
+                                <p>Pièces: {bien.nbPieces ?? ""}</p>
+                                <p>Statut bien: {bien.statutBien || ""}</p>
                               </div>
                             </div>
                             <div className="text-right">
@@ -867,7 +867,7 @@ export default function UtilisateursPage() {
                               >
                                 {bien.actif ? "Actif" : "Inactif"}
                               </span>
-                              <p className="text-xs text-slate-500 mt-1">{bien.statut || "-"}</p>
+                              <p className="text-xs text-slate-500 mt-1">{bien.statut || ""}</p>
                             </div>
                           </div>
                         </div>
@@ -897,7 +897,7 @@ export default function UtilisateursPage() {
                     <div>
                       <p className="text-sm text-slate-500">Email</p>
                       <p className="font-medium text-[#0C1A35]">
-                        {locataireDetails.data.email || "-"}
+                        {locataireDetails.data.email || ""}
                       </p>
                     </div>
                     <div>
@@ -917,7 +917,7 @@ export default function UtilisateursPage() {
                         <div>
                           <p className="text-sm text-slate-500">Motif de suspension</p>
                           <p className="font-medium text-red-600">
-                            {locataireDetails.data.motifSuspension || "-"}
+                            {locataireDetails.data.motifSuspension || ""}
                           </p>
                         </div>
                         <div>
@@ -927,7 +927,7 @@ export default function UtilisateursPage() {
                               ? new Date(locataireDetails.data.dateSuspension).toLocaleDateString(
                                   "fr-FR"
                                 )
-                              : "-"}
+                              : ""}
                           </p>
                         </div>
                       </>
@@ -963,7 +963,7 @@ export default function UtilisateursPage() {
                     <div>
                       <p className="text-sm text-slate-500">Email</p>
                       <p className="font-medium text-[#0C1A35]">
-                        {locataireDetails.data.proprietaire.email || "-"}
+                        {locataireDetails.data.proprietaire.email || ""}
                       </p>
                     </div>
                   </div>
@@ -1050,7 +1050,7 @@ export default function UtilisateursPage() {
                               <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div>
                                   <p className="text-slate-500">Titre</p>
-                                  <p className="font-medium text-[#0C1A35]">{bail.bien.titre || "-"}</p>
+                                  <p className="font-medium text-[#0C1A35]">{bail.bien.titre || ""}</p>
                                 </div>
                                 {bail.bien.typeLogement && (
                                   <div>
@@ -1066,19 +1066,19 @@ export default function UtilisateursPage() {
                                 )}
                                 <div>
                                   <p className="text-slate-500">Pays</p>
-                                  <p className="font-medium text-[#0C1A35]">{bail.bien.pays || "-"}</p>
+                                  <p className="font-medium text-[#0C1A35]">{bail.bien.pays || ""}</p>
                                 </div>
                                 <div>
                                   <p className="text-slate-500">Région</p>
-                                  <p className="font-medium text-[#0C1A35]">{bail.bien.region || "-"}</p>
+                                  <p className="font-medium text-[#0C1A35]">{bail.bien.region || ""}</p>
                                 </div>
                                 <div>
                                   <p className="text-slate-500">Ville</p>
-                                  <p className="font-medium text-[#0C1A35]">{bail.bien.ville || "-"}</p>
+                                  <p className="font-medium text-[#0C1A35]">{bail.bien.ville || ""}</p>
                                 </div>
                                 <div>
                                   <p className="text-slate-500">Quartier</p>
-                                  <p className="font-medium text-[#0C1A35]">{bail.bien.quartier || "-"}</p>
+                                  <p className="font-medium text-[#0C1A35]">{bail.bien.quartier || ""}</p>
                                 </div>
                                 {bail.bien.quartierRel && (
                                   <>
@@ -1098,7 +1098,7 @@ export default function UtilisateursPage() {
                                 )}
                                 <div>
                                   <p className="text-slate-500">Adresse</p>
-                                  <p className="font-medium text-[#0C1A35]">{bail.bien.adresse || "-"}</p>
+                                  <p className="font-medium text-[#0C1A35]">{bail.bien.adresse || ""}</p>
                                 </div>
                                 {bail.bien.surface && (
                                   <div>
@@ -1158,7 +1158,7 @@ export default function UtilisateursPage() {
                                 </span>
                               </div>
                               <div className="text-sm">
-                                <p className="text-slate-500 mb-1">Titre: <span className="text-[#0C1A35]">{bail.contrat.titre || "-"}</span></p>
+                                <p className="text-slate-500 mb-1">Titre: <span className="text-[#0C1A35]">{bail.contrat.titre || ""}</span></p>
                                 <p className="text-slate-500 mb-1">Créé le: <span className="text-[#0C1A35]">{new Date(bail.contrat.createdAt).toLocaleDateString("fr-FR")}</span></p>
                                 {bail.contrat.contenu && (
                                   <button

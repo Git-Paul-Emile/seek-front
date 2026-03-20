@@ -508,7 +508,7 @@ export default function MeubleEquipement() {
   const filteredMeubles     = activeTab === "Tous" ? meubles     : meubles.filter((m) => m.categorie.nom === activeTab);
   const filteredEquipements = activeTab === "Tous" ? equipements : equipements.filter((e) => e.categorie.nom === activeTab);
 
-  // Pagination — 4 tables indépendantes
+  // Pagination - 4 tables indépendantes
   const pgMeubles  = usePagination(filteredMeubles);
   const pgEquips   = usePagination(filteredEquipements);
   const pgCatM     = usePagination(catMeubles);

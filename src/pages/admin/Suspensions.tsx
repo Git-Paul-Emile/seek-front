@@ -271,7 +271,7 @@ export default function SuspensionsPage() {
       </td>
       <td className="px-6 py-4">
         <p className="text-sm text-[#0C1A35]">{p.telephone}</p>
-        <p className="text-sm text-slate-500">{p.email || "-"}</p>
+        <p className="text-sm text-slate-500">{p.email || ""}</p>
       </td>
       <td className="px-6 py-4">
         <span
@@ -286,12 +286,12 @@ export default function SuspensionsPage() {
       </td>
       <td className="px-6 py-4">
         {filterSuspendu ? (
-          <p className="text-sm text-red-600 font-medium">{p.motifSuspension || "-"}</p>
+          <p className="text-sm text-red-600 font-medium">{p.motifSuspension || ""}</p>
         ) : (
           <p className="text-sm text-slate-600">
             {p.dateSuspension
               ? new Date(p.dateSuspension).toLocaleDateString("fr-FR")
-              : "-"}
+              : ""}
           </p>
         )}
       </td>
@@ -351,7 +351,7 @@ export default function SuspensionsPage() {
       </td>
       <td className="px-6 py-4">
         <p className="text-sm text-[#0C1A35]">{l.telephone}</p>
-        <p className="text-sm text-slate-500">{l.email || "-"}</p>
+        <p className="text-sm text-slate-500">{l.email || ""}</p>
       </td>
       <td className="px-6 py-4">
         <span
@@ -366,12 +366,12 @@ export default function SuspensionsPage() {
       </td>
       <td className="px-6 py-4">
         {filterSuspendu ? (
-          <p className="text-sm text-red-600 font-medium">{l.motifSuspension || "-"}</p>
+          <p className="text-sm text-red-600 font-medium">{l.motifSuspension || ""}</p>
         ) : (
           <p className="text-sm text-slate-600">
             {l.dateSuspension
               ? new Date(l.dateSuspension).toLocaleDateString("fr-FR")
-              : "-"}
+              : ""}
           </p>
         )}
       </td>
@@ -683,7 +683,7 @@ export default function SuspensionsPage() {
                   <div>
                     <p className="text-sm text-slate-500">Email</p>
                     <p className="font-medium text-[#0C1A35]">
-                      {selectedProprietaire.email || "-"}
+                      {selectedProprietaire.email || ""}
                     </p>
                   </div>
                   <div>
@@ -703,7 +703,7 @@ export default function SuspensionsPage() {
                       <div>
                         <p className="text-sm text-slate-500">Motif de suspension</p>
                         <p className="font-medium text-red-600">
-                          {selectedProprietaire.motifSuspension || "-"}
+                          {selectedProprietaire.motifSuspension || ""}
                         </p>
                       </div>
                       <div>
@@ -713,7 +713,7 @@ export default function SuspensionsPage() {
                             ? new Date(selectedProprietaire.dateSuspension).toLocaleDateString(
                                 "fr-FR"
                               )
-                            : "-"}
+                            : ""}
                         </p>
                       </div>
                     </>
@@ -742,7 +742,7 @@ export default function SuspensionsPage() {
                   <div>
                     <p className="text-sm text-slate-500">Email</p>
                     <p className="font-medium text-[#0C1A35]">
-                      {selectedLocataire.email || "-"}
+                      {selectedLocataire.email || ""}
                     </p>
                   </div>
                   <div>
@@ -762,7 +762,7 @@ export default function SuspensionsPage() {
                       <div>
                         <p className="text-sm text-slate-500">Motif de suspension</p>
                         <p className="font-medium text-red-600">
-                          {selectedLocataire.motifSuspension || "-"}
+                          {selectedLocataire.motifSuspension || ""}
                         </p>
                       </div>
                       <div>
@@ -772,7 +772,7 @@ export default function SuspensionsPage() {
                             ? new Date(selectedLocataire.dateSuspension).toLocaleDateString(
                                 "fr-FR"
                               )
-                            : "-"}
+                            : ""}
                         </p>
                       </div>
                     </>

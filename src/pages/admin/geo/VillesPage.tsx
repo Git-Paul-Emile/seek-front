@@ -90,7 +90,7 @@ function VilleForm({
                 onChange={(e) => setPaysId(e.target.value)}
                 className={`${inputCls} cursor-pointer appearance-none pr-8`}
               >
-                <option value="">— Choisir un pays —</option>
+                <option value="">- Choisir un pays -</option>
                 {paysList.map((p) => (
                   <option key={p.id} value={p.id}>{p.nom}</option>
                 ))}

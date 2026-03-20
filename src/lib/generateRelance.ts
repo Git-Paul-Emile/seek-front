@@ -226,7 +226,7 @@ export function generateRelancePDF(data: RelanceData) {
     "Ce document est une mise en demeure amiable de paiement de loyer.",
     W / 2, H - 10, { align: "center" }
   );
-  doc.text("SEEK Immobilier — Plateforme de gestion locative", W / 2, H - 5, { align: "center" });
+  doc.text("SEEK Immobilier - Plateforme de gestion locative", W / 2, H - 5, { align: "center" });
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const moisAnnee = new Date(data.dateEcheance)

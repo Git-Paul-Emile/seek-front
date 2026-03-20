@@ -109,7 +109,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             </li>
           ))}
 
-          {/* Locataires — groupe collapsible */}
+          {/* Locataires - groupe collapsible */}
           {isOpen && (
             <li>
               <button
@@ -155,7 +155,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             </li>
           )}
 
-          {/* Gestion de biens — groupe collapsible */}
+          {/* Gestion de biens - groupe collapsible */}
           {isOpen && (
             <li>
               <button

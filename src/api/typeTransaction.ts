@@ -33,11 +33,11 @@ export interface UpdateTypeTransactionPayload {
 
 // ─── Requêtes ─────────────────────────────────────────────────────────────────
 
-/** Types actifs — public */
+/** Types actifs - public */
 export const fetchTypesTransaction = () =>
   api.get<{ data: TypeTransaction[] }>("/").then((r) => r.data.data);
 
-/** Tous les types (actifs + inactifs) — admin */
+/** Tous les types (actifs + inactifs) - admin */
 export const fetchTypesTransactionAdmin = () =>
   api.get<{ data: TypeTransaction[] }>("/admin").then((r) => r.data.data);
 

@@ -124,7 +124,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
                 <div className="relative h-40 sm:h-44 md:h-48 bg-slate-100">
                   <img
                     src={img}
-                    alt={`${displayProperty.title} — image ${idx + 1}`}
+                    alt={`${displayProperty.title} - image ${idx + 1}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />

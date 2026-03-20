@@ -126,7 +126,7 @@ export default function AbonnementsAdminPage() {
                     <td className="px-4 py-3 text-xs text-slate-500">
                       {fmtDate(item.dateDebut)} → {fmtDate(item.dateFin)}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-400 font-mono">{item.reference ?? "—"}</td>
+                    <td className="px-4 py-3 text-xs text-slate-400 font-mono">{item.reference ?? ""}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${statutConf.cls}`}>
                         {statutConf.label}

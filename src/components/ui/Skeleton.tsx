@@ -1,4 +1,4 @@
-/** Composants skeleton réutilisables — remplacent les spinners Loader2 sur les chargements de contenu */
+/** Composants skeleton réutilisables - remplacent les spinners Loader2 sur les chargements de contenu */
 
 // ─── Base ──────────────────────────────────────────────────────────────────────
 

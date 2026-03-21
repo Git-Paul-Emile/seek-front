@@ -89,6 +89,26 @@ export const envoyerRappelApi = async (
   return data.data;
 };
 
+export interface RappelHistorique {
+  id: string;
+  type: string;
+  canal: string;
+  statut: string;
+  contenu: string;
+  messageRetour: string | null;
+  envoyeAt: string | null;
+  createdAt: string;
+}
+
+export const getRappelsEcheanceApi = async (
+  bienId: string,
+  bailId: string,
+  echeanceId: string
+): Promise<RappelHistorique[]> => {
+  const { data } = await api.get(`/${bienId}/bail/${bailId}/echeancier/${echeanceId}/rappels`);
+  return data.data;
+};
+
 // ─── Locataire API ────────────────────────────────────────────────────────────
 
 export interface InitierPaiementPayload {

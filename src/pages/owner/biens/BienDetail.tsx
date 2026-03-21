@@ -74,7 +74,7 @@ import BailForm from "./BailForm";
 import ContratModal from "./ContratModal";
 import PremiumPayment from "@/components/owner/PremiumPayment";
 import { generateQuittancePDF } from "@/lib/generateQuittance";
-import { generateRelancePDF } from "@/lib/generateRelance";
+import { useEnvoyerRappel } from "@/hooks/useQuittance";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useDocumentsBien, useUploadDocumentBien, useDeleteDocumentBien } from "@/hooks/useDocumentBien";
 import { useStatsFavorisBien } from "@/hooks/useBien";
@@ -258,6 +258,7 @@ export default function BienDetail() {
   const { data: echeancier = [] } = useEcheancier(id ?? "", bail?.id ?? "");
   const { data: caution } = useCaution(id ?? "", bail?.id ?? "");
   const restituerCaution = useRestituerCaution();
+  const envoyerRappel = useEnvoyerRappel();
   const { owner } = useOwnerAuth();
   const queryClient = useQueryClient();
   const { data: statsFavoris } = useStatsFavorisBien(id);
@@ -1099,30 +1100,26 @@ export default function BienDetail() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                {ech.statut === "EN_RETARD" && (
+                                {(ech.statut === "EN_RETARD" || ech.statut === "EN_ATTENTE") && bail && (
                                   <button
-                                    onClick={() => {
-                                      if (!bail || !bien || !owner) return;
-                                      generateRelancePDF({
-                                        numero: ech.id.slice(0, 8).toUpperCase(),
-                                        dateGeneration: new Date().toLocaleDateString("fr-FR"),
-                                        dateEcheance: ech.dateEcheance,
-                                        joursRetard: joursRetard(ech.dateEcheance),
-                                        montant: ech.montant,
-                                        bienTitre: bien.titre ?? undefined,
-                                        bienAdresse: [bien.adresse, bien.quartier].filter(Boolean).join(", ") || undefined,
-                                        bienVille: bien.ville ?? undefined,
-                                        bienPays: bien.pays ?? undefined,
-                                        proprietaireNom: `${owner.prenom} ${owner.nom}`,
-                                        proprietaireTelephone: owner.telephone,
-                                        locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
-                                        locataireTelephone: bail.locataire.telephone,
-                                      });
-                                    }}
-                                    title="Télécharger la lettre de relance"
-                                    className="flex items-center gap-1 text-[10px] font-medium text-red-700 hover:text-red-800 px-2 py-1 rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+                                    onClick={() =>
+                                      envoyerRappel.mutate(
+                                        { bienId: id!, bailId: bail.id, echeanceId: ech.id },
+                                        {
+                                          onSuccess: (data) => toast.success(data.message ?? "Relance envoyée"),
+                                          onError: () => toast.error("Erreur lors de l'envoi de la relance"),
+                                        }
+                                      )
+                                    }
+                                    disabled={envoyerRappel.isPending}
+                                    title="Envoyer une relance SMS + Email au locataire"
+                                    className="flex items-center gap-1 text-[10px] font-medium text-amber-700 hover:text-amber-800 px-2 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors disabled:opacity-60"
                                   >
-                                    <FileText className="w-3 h-3" />
+                                    {envoyerRappel.isPending ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <Bell className="w-3 h-3" />
+                                    )}
                                     Relance
                                   </button>
                                 )}

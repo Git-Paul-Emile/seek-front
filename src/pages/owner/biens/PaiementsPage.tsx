@@ -15,13 +15,13 @@ import {
   Wallet,
   Clock,
   Bell,
-  FileText,
   CalendarPlus,
   ShieldCheck,
   Archive,
   Eye,
   Banknote,
   Hourglass,
+  History,
 } from "lucide-react";
 import EnregistrerEspecesModal from "@/components/owner/EnregistrerEspecesModal";
 import { toast } from "sonner";
@@ -36,9 +36,8 @@ import {
 } from "@/hooks/useBail";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { generateQuittancePDF, openQuittancePDF, downloadAllQuittancesZip } from "@/lib/generateQuittance";
-import { generateRelancePDF } from "@/lib/generateRelance";
 import { genererQuittanceApi } from "@/api/quittance";
-import { useEnvoyerRappel } from "@/hooks/useQuittance";
+import { useEnvoyerRappel, useRappelsEcheance } from "@/hooks/useQuittance";
 import type { Echeance } from "@/api/bail";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,9 +73,72 @@ const joursRetard = (dateEcheance: string) =>
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 
-// ─── Bouton rappel SMS ────────────────────────────────────────────────────────
+// ─── Statuts de notification ──────────────────────────────────────────────────
 
-function RappelButton({
+const NOTIF_STATUT: Record<string, { label: string; cls: string }> = {
+  EN_ATTENTE: { label: "En attente", cls: "bg-yellow-100 text-yellow-700" },
+  ENVOYE:     { label: "Envoyé",     cls: "bg-green-100 text-green-700" },
+  ECHEC:      { label: "Échec",      cls: "bg-red-100 text-red-700" },
+};
+
+// ─── Historique des relances d'une échéance ───────────────────────────────────
+
+function RelanceHistoriquePanel({
+  bienId,
+  bailId,
+  echeanceId,
+}: {
+  bienId: string;
+  bailId: string;
+  echeanceId: string;
+}) {
+  const { data = [], isLoading } = useRappelsEcheance(bienId, bailId, echeanceId, true);
+
+  return (
+    <div className="border-t border-amber-200 px-3 pt-2 pb-3 bg-amber-50/50">
+      <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-1.5">
+        Historique des relances
+      </p>
+      {isLoading ? (
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 py-1">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          Chargement…
+        </div>
+      ) : data.length === 0 ? (
+        <p className="text-xs text-slate-400 italic py-1">Aucune relance envoyée pour cette échéance.</p>
+      ) : (
+        <div className="space-y-1">
+          {data.map((r) => {
+            const cfg = NOTIF_STATUT[r.statut] ?? { label: r.statut, cls: "bg-slate-100 text-slate-600" };
+            return (
+              <div key={r.id} className="flex items-start gap-2 text-xs">
+                <span className={`shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${cfg.cls}`}>
+                  {cfg.label}
+                </span>
+                <span className="text-slate-500 shrink-0">
+                  {new Date(r.createdAt).toLocaleString("fr-FR", {
+                    day: "2-digit", month: "2-digit", year: "numeric",
+                    hour: "2-digit", minute: "2-digit",
+                  })}
+                </span>
+                <span className="text-slate-400 shrink-0">{r.canal}</span>
+                {r.messageRetour && (
+                  <span className="text-slate-400 truncate" title={r.messageRetour}>
+                    · {r.messageRetour}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Bouton relance SMS + Email ───────────────────────────────────────────────
+
+function RelanceButton({
   bienId,
   bailId,
   echeanceId,
@@ -93,13 +155,13 @@ function RappelButton({
           { bienId, bailId, echeanceId },
           {
             onSuccess: (data) =>
-              toast.success(data.message ?? "Rappel programmé"),
-            onError: () => toast.error("Erreur lors de l'envoi du rappel"),
+              toast.success(data.message ?? "Relance envoyée"),
+            onError: () => toast.error("Erreur lors de l'envoi de la relance"),
           }
         )
       }
       disabled={isPending}
-      title="Envoyer un rappel SMS au locataire"
+      title="Envoyer une relance SMS + Email au locataire"
       className="flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-800
         px-2.5 py-1.5 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors disabled:opacity-60"
     >
@@ -108,7 +170,7 @@ function RappelButton({
       ) : (
         <Bell className="w-3 h-3" />
       )}
-      Rappel
+      Relance
     </button>
   );
 }
@@ -172,6 +234,7 @@ export default function PaiementsPage() {
 
   const [filter, setFilter] = useState<StatutFilter>("TOUT");
   const [showAllMM, setShowAllMM] = useState(false);
+  const [expandedRappelId, setExpandedRappelId] = useState<string | null>(null);
 
   const currentYear = new Date().getFullYear();
   // displayYear contrôle jusqu'à quelle année les A_VENIR sont affichées
@@ -621,160 +684,158 @@ export default function PaiementsPage() {
               const Icon = cfg.icon;
               const total = ech.montant;
 
+              const showRappelActions = ech.statut === "EN_RETARD" || ech.statut === "EN_ATTENTE";
+              const isExpanded = expandedRappelId === ech.id;
+
               return (
                 <div
                   key={ech.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl border ${cfg.rowCls}`}
+                  className={`rounded-xl border overflow-hidden ${cfg.rowCls}`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${cfg.iconCls}`} />
+                  {/* ── Ligne principale ── */}
+                  <div className="flex items-center gap-3 p-3">
+                    <Icon className={`w-4 h-4 shrink-0 ${cfg.iconCls}`} />
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-[#0C1A35]">
-                        {new Date(ech.dateEcheance).toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-[#0C1A35]">
+                          {new Date(ech.dateEcheance).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
+                          {cfg.label}
+                        </span>
+                        {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                            ech.sourceEnregistrement === "LOCATAIRE"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-purple-100 text-purple-700"
+                          }`}>
+                            {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
+                          </span>
+                        )}
+                        {ech.confirmeParProprietaire && (
+                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 flex items-center gap-0.5">
+                            <ShieldCheck className="w-2.5 h-2.5" />
+                            Confirmé prop.
+                          </span>
+                        )}
+                        {ech.confirmeParLocataire && (
+                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center gap-0.5">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            Confirmé loc.
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {fmt(total)} FCFA
                       </p>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
-                        {cfg.label}
-                      </span>
-                      {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                          ech.sourceEnregistrement === "LOCATAIRE"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-purple-100 text-purple-700"
-                        }`}>
-                          {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
-                        </span>
+                      {ech.statut === "PARTIEL" && ech.montantPaye != null && (
+                        <p className="text-xs mt-0.5">
+                          <span className="text-orange-600 font-semibold">{fmt(ech.montantPaye)} FCFA payés</span>
+                          <span className="text-slate-400"> · reste </span>
+                          <span className="text-red-500 font-semibold">{fmt(ech.montant - ech.montantPaye)} FCFA</span>
+                        </p>
                       )}
-                      {ech.confirmeParProprietaire && (
-                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 flex items-center gap-0.5">
-                          <ShieldCheck className="w-2.5 h-2.5" />
-                          Confirmé prop.
-                        </span>
+                      {ech.statut === "EN_RETARD" && (
+                        <p className="text-xs text-red-500 font-semibold mt-0.5">
+                          {joursRetard(ech.dateEcheance)} jours de retard
+                        </p>
                       )}
-                      {ech.confirmeParLocataire && (
-                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center gap-0.5">
-                          <CheckCircle2 className="w-2.5 h-2.5" />
-                          Confirmé loc.
-                        </span>
+                      {ech.datePaiement && (
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Payé le{" "}
+                          {new Date(ech.datePaiement).toLocaleDateString("fr-FR")}
+                          {ech.modePaiement ? ` · ${ech.modePaiement}` : ""}
+                          {ech.reference ? ` · Réf: ${ech.reference}` : ""}
+                        </p>
+                      )}
+                      {ech.confirmeParProprietaire && ech.dateConfirmation && (
+                        <p className="text-xs text-teal-600 mt-0.5">
+                          Réception confirmée le {new Date(ech.dateConfirmation).toLocaleDateString("fr-FR")}
+                        </p>
+                      )}
+                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && (
+                        <p className="text-xs text-purple-600 mt-0.5 italic">
+                          En attente de confirmation du locataire
+                        </p>
+                      )}
+                      {ech.note && (
+                        <p className="text-xs text-slate-400 italic mt-0.5">{ech.note}</p>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {fmt(total)} FCFA
-                    </p>
-                    {/* Paiement partiel : montant payé + reste */}
-                    {ech.statut === "PARTIEL" && ech.montantPaye != null && (
-                      <p className="text-xs mt-0.5">
-                        <span className="text-orange-600 font-semibold">{fmt(ech.montantPaye)} FCFA payés</span>
-                        <span className="text-slate-400"> · reste </span>
-                        <span className="text-red-500 font-semibold">{fmt(ech.montant - ech.montantPaye)} FCFA</span>
-                      </p>
-                    )}
-                    {ech.statut === "EN_RETARD" && (
-                      <p className="text-xs text-red-500 font-semibold mt-0.5">
-                        {joursRetard(ech.dateEcheance)} jours de retard
-                      </p>
-                    )}
-                    {ech.datePaiement && (
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Payé le{" "}
-                        {new Date(ech.datePaiement).toLocaleDateString("fr-FR")}
-                        {ech.modePaiement ? ` · ${ech.modePaiement}` : ""}
-                        {ech.reference ? ` · Réf: ${ech.reference}` : ""}
-                      </p>
-                    )}
-                    {ech.confirmeParProprietaire && ech.dateConfirmation && (
-                      <p className="text-xs text-teal-600 mt-0.5">
-                        Réception confirmée le {new Date(ech.dateConfirmation).toLocaleDateString("fr-FR")}
-                      </p>
-                    )}
-                    {ech.statut === "EN_ATTENTE_CONFIRMATION" && (
-                      <p className="text-xs text-purple-600 mt-0.5 italic">
-                        En attente de confirmation du locataire
-                      </p>
-                    )}
-                    {ech.note && (
-                      <p className="text-xs text-slate-400 italic mt-0.5">{ech.note}</p>
-                    )}
-                  </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <p className="text-sm font-bold text-[#0C1A35] whitespace-nowrap">
-                      {fmt(total)} F
-                    </p>
-                    {/* Relance PDF sur EN_RETARD */}
-                    {ech.statut === "EN_RETARD" && (
-                      <button
-                        onClick={() => {
-                          if (!bail || !bien || !owner) return;
-                          generateRelancePDF({
-                            numero: ech.id.slice(0, 8).toUpperCase(),
-                            dateGeneration: new Date().toLocaleDateString("fr-FR"),
-                            dateEcheance: ech.dateEcheance,
-                            joursRetard: joursRetard(ech.dateEcheance),
-                            montant: ech.montant,
-                            bienTitre: bien.titre ?? undefined,
-                            bienAdresse: [bien.adresse, bien.quartier].filter(Boolean).join(", ") || undefined,
-                            bienVille: bien.ville ?? undefined,
-                            bienPays: bien.pays ?? undefined,
-                            proprietaireNom: `${owner.prenom} ${owner.nom}`,
-                            proprietaireTelephone: owner.telephone,
-                            locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
-                            locataireTelephone: bail.locataire.telephone,
-                          });
-                        }}
-                        title="Télécharger la lettre de relance"
-                        className="flex items-center gap-1 text-xs font-medium text-red-700 hover:text-red-800 px-2.5 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
-                      >
-                        <FileText className="w-3 h-3" />
-                        Relance
-                      </button>
-                    )}
-                    {/* Rappel SMS sur EN_RETARD / EN_ATTENTE */}
-                    {(ech.statut === "EN_RETARD" || ech.statut === "EN_ATTENTE") && bail && (
-                      <RappelButton
-                        bienId={id!}
-                        bailId={bail.id}
-                        echeanceId={ech.id}
-                      />
-                    )}
-                    {/* Confirmer réception quand le locataire a enregistré le paiement */}
-                    {canDownload(ech.statut) &&
-                      ech.sourceEnregistrement === "LOCATAIRE" &&
-                      !ech.confirmeParProprietaire &&
-                      bail && (
-                        <ConfirmerButton
+                    <div className="flex items-center gap-2 shrink-0">
+                      <p className="text-sm font-bold text-[#0C1A35] whitespace-nowrap">
+                        {fmt(total)} F
+                      </p>
+                      {/* Relance SMS + Email sur EN_RETARD / EN_ATTENTE */}
+                      {showRappelActions && bail && (
+                        <RelanceButton
                           bienId={id!}
                           bailId={bail.id}
                           echeanceId={ech.id}
                         />
                       )}
-                    {canDownload(ech.statut) && ech.datePaiement && (
-                      <>
+                      {/* Toggle historique des relances */}
+                      {showRappelActions && (
                         <button
-                          onClick={() => handleOpen(ech)}
-                          title="Voir la quittance"
-                          className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800
-                            px-2.5 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                          onClick={() => setExpandedRappelId(isExpanded ? null : ech.id)}
+                          title="Historique des relances"
+                          className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700
+                            px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
                         >
-                          <Eye className="w-3 h-3" />
-                          Voir
+                          <History className="w-3 h-3" />
+                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </button>
-                        <button
-                          onClick={() => handleDownload(ech)}
-                          title="Télécharger la quittance"
-                          className="flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800
-                            px-2.5 py-1.5 rounded-lg border border-green-200 hover:bg-green-50 transition-colors"
-                        >
-                          <Download className="w-3 h-3" />
-                          PDF
-                        </button>
-                      </>
-                    )}
+                      )}
+                      {/* Confirmer réception */}
+                      {canDownload(ech.statut) &&
+                        ech.sourceEnregistrement === "LOCATAIRE" &&
+                        !ech.confirmeParProprietaire &&
+                        bail && (
+                          <ConfirmerButton
+                            bienId={id!}
+                            bailId={bail.id}
+                            echeanceId={ech.id}
+                          />
+                        )}
+                      {canDownload(ech.statut) && ech.datePaiement && (
+                        <>
+                          <button
+                            onClick={() => handleOpen(ech)}
+                            title="Voir la quittance"
+                            className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800
+                              px-2.5 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Voir
+                          </button>
+                          <button
+                            onClick={() => handleDownload(ech)}
+                            title="Télécharger la quittance"
+                            className="flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800
+                              px-2.5 py-1.5 rounded-lg border border-green-200 hover:bg-green-50 transition-colors"
+                          >
+                            <Download className="w-3 h-3" />
+                            PDF
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
+
+                  {/* ── Historique des relances ── */}
+                  {isExpanded && bail && (
+                    <RelanceHistoriquePanel
+                      bienId={id!}
+                      bailId={bail.id}
+                      echeanceId={ech.id}
+                    />
+                  )}
                 </div>
               );
             })}

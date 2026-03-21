@@ -1,9 +1,10 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getQuittanceApi,
   genererQuittanceApi,
   getQuittancesBailApi,
   envoyerRappelApi,
+  getRappelsEcheanceApi,
   initierPaiementLocataireApi,
   getQuittancesLocataireApi,
   type InitierPaiementPayload,
@@ -39,14 +40,32 @@ export const useQuittancesBail = (bienId: string, bailId: string) =>
     staleTime: 2 * 60 * 1000,
   });
 
-export const useEnvoyerRappel = () =>
-  useMutation({
+export const useEnvoyerRappel = () => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: ({
       bienId,
       bailId,
       echeanceId,
     }: { bienId: string; bailId: string; echeanceId: string }) =>
       envoyerRappelApi(bienId, bailId, echeanceId),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["rappels", vars.echeanceId] });
+    },
+  });
+};
+
+export const useRappelsEcheance = (
+  bienId: string,
+  bailId: string,
+  echeanceId: string,
+  enabled = false
+) =>
+  useQuery({
+    queryKey: ["rappels", echeanceId],
+    queryFn: () => getRappelsEcheanceApi(bienId, bailId, echeanceId),
+    enabled: !!bienId && !!bailId && !!echeanceId && enabled,
+    staleTime: 0,
   });
 
 // ─── Locataire ─────────────────────────────────────────────────────────────────

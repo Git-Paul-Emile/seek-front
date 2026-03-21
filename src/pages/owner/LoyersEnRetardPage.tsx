@@ -5,12 +5,12 @@ import {
   ExternalLink,
   Loader2,
   CheckCircle2,
-  FileText,
+  Bell,
 } from "lucide-react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useBiensEnRetard } from "@/hooks/useBail";
-import { useOwnerAuth } from "@/context/OwnerAuthContext";
-import { generateRelancePDF } from "@/lib/generateRelance";
+import { useEnvoyerRappel } from "@/hooks/useQuittance";
+import { toast } from "sonner";
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 
@@ -19,7 +19,7 @@ const joursLabel = (j: number) =>
 
 export default function LoyersEnRetardPage() {
   const { data: biens = [], isLoading } = useBiensEnRetard();
-  const { owner } = useOwnerAuth();
+  const { mutate: envoyerRappel, isPending: isSending } = useEnvoyerRappel();
 
   if (isLoading) {
     return (
@@ -138,32 +138,26 @@ export default function LoyersEnRetardPage() {
                 </div>
                 <button
                   onClick={() => {
-                    if (!owner) return;
                     const firstEch = b.echeancesEnRetard[0];
                     if (!firstEch) return;
-                    const jours = Math.max(0, Math.floor(
-                      (Date.now() - new Date(firstEch.dateEcheance).getTime()) / 86400000
-                    ));
-                    generateRelancePDF({
-                      numero: firstEch.id.slice(0, 8).toUpperCase(),
-                      dateGeneration: new Date().toLocaleDateString("fr-FR"),
-                      dateEcheance: firstEch.dateEcheance,
-                      joursRetard: jours,
-                      montant: b.totalRetard,
-                      bienTitre: b.bien.titre ?? undefined,
-                      bienAdresse: b.bien.adresse ?? undefined,
-                      bienVille: b.bien.ville ?? undefined,
-                      bienPays: b.bien.pays ?? undefined,
-                      proprietaireNom: `${owner.prenom} ${owner.nom}`,
-                      proprietaireTelephone: owner.telephone,
-                      locataireNom: `${b.locataire.prenom} ${b.locataire.nom}`,
-                      locataireTelephone: b.locataire.telephone,
-                    });
+                    envoyerRappel(
+                      { bienId: b.bien.id, bailId: b.bailId, echeanceId: firstEch.id },
+                      {
+                        onSuccess: (data) => toast.success(data.message ?? "Relance envoyée"),
+                        onError: () => toast.error("Erreur lors de l'envoi de la relance"),
+                      }
+                    );
                   }}
+                  disabled={isSending}
+                  title="Envoyer une relance SMS + Email au locataire"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium
-                    border border-red-200 text-red-700 hover:bg-red-50 transition-colors"
+                    border border-amber-200 text-amber-700 hover:bg-amber-50 transition-colors disabled:opacity-60"
                 >
-                  <FileText className="w-3.5 h-3.5" />
+                  {isSending ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Bell className="w-3.5 h-3.5" />
+                  )}
                   Relance
                 </button>
               </div>

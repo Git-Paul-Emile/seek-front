@@ -110,8 +110,6 @@ function StatutForm({
             <label className="text-xs font-medium text-slate-500">Ordre d'affichage</label>
             <input
               type="number"
-              min={0}
-              max={isEdit ? maxOrdre : undefined}
               {...register("ordre")}
               className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm
                 outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition"

@@ -568,7 +568,6 @@ const RecherchePage = () => {
                 <label className="block text-xs text-white/60 mb-1">Prix min (FCFA)</label>
                 <input
                   type="number"
-                  min={0}
                   value={prixMin}
                   onChange={e => setPrixMin(e.target.value)}
                   placeholder="0"
@@ -580,7 +579,6 @@ const RecherchePage = () => {
                 <label className="block text-xs text-white/60 mb-1">Prix max (FCFA)</label>
                 <input
                   type="number"
-                  min={0}
                   value={prixMax}
                   onChange={e => setPrixMax(e.target.value)}
                   placeholder="Illimité"
@@ -609,7 +607,6 @@ const RecherchePage = () => {
                 <label className="block text-xs text-white/60 mb-1">Surface min (m²)</label>
                 <input
                   type="number"
-                  min={0}
                   value={surfaceMin}
                   onChange={e => setSurfaceMin(e.target.value)}
                   placeholder="0"
@@ -621,7 +618,6 @@ const RecherchePage = () => {
                 <label className="block text-xs text-white/60 mb-1">Surface max (m²)</label>
                 <input
                   type="number"
-                  min={0}
                   value={surfaceMax}
                   onChange={e => setSurfaceMax(e.target.value)}
                   placeholder="Illimitée"

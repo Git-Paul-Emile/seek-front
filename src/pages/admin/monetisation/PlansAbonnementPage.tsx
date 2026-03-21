@@ -65,7 +65,6 @@ function PlanForm({
           <label className={labelCls}>Prix mensuel (FCFA)</label>
           <input
             type="number"
-            min={0}
             value={form.prix}
             onChange={(e) => set("prix", parseFloat(e.target.value) || 0)}
             className={inputCls}
@@ -77,7 +76,6 @@ function PlanForm({
           <label className={labelCls}>Max annonces (vide = illimité)</label>
           <input
             type="number"
-            min={1}
             value={form.maxAnnonces === null ? "" : form.maxAnnonces}
             onChange={(e) =>
               set("maxAnnonces", e.target.value === "" ? "" : parseInt(e.target.value))
@@ -90,7 +88,6 @@ function PlanForm({
           <label className={labelCls}>Ordre d'affichage</label>
           <input
             type="number"
-            min={0}
             value={form.ordre}
             onChange={(e) => set("ordre", parseInt(e.target.value) || 0)}
             className={inputCls}

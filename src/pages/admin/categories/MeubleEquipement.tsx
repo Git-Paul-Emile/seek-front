@@ -310,7 +310,7 @@ function CatFormModal({ initial, type: forcedType, maxOrdre, onClose, onSuccess 
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-500">Ordre d'affichage</label>
-            <input type="number" {...register("ordre")} min={0}
+            <input type="number" {...register("ordre")}
               className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-[#D4A843] focus:ring-1 focus:ring-[#D4A843]/30 transition"
             />
           </div>

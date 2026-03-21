@@ -178,7 +178,6 @@ function FormStep({
           value={montantSaisi}
           onChange={e => setMontantSaisi(e.target.value)}
           placeholder={selectedEch ? String(selectedEch.montant) : "Montant"}
-          min={1}
           className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0C1A35] focus:outline-none focus:border-[#D4A843]"
         />
       </div>
@@ -189,7 +188,6 @@ function FormStep({
         <input
           type="date"
           value={datePaiement}
-          max={todayIso()}
           onChange={e => setDatePaiement(e.target.value)}
           className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0C1A35] focus:outline-none focus:border-[#D4A843]"
         />

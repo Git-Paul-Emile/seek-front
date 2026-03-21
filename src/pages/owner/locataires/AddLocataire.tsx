@@ -164,7 +164,7 @@ export default function AddLocataire() {
               <span className="text-slate-300 font-normal">(optionnel)</span>
             </label>
             <input
-              type="email"
+              type="text"
               value={form.email}
               onChange={(e) => set("email", e.target.value)}
               placeholder="locataire@exemple.com"

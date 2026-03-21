@@ -112,8 +112,6 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
               <div className="flex items-center gap-3">
                 <input
                   type="range"
-                  min={1}
-                  max={unpaidCount}
                   value={nombreMois}
                   onChange={e => setNombreMois(Number(e.target.value))}
                   className="flex-1 accent-[#D4A843]"
@@ -164,7 +162,6 @@ export default function LocatairePayModal({ echeancier, onClose }: LocatairePayM
             <input
               type="date"
               value={datePaiement}
-              max={todayIso()}
               onChange={e => setDatePaiement(e.target.value)}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50"
             />

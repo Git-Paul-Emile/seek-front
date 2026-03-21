@@ -387,7 +387,7 @@ const HeroSection = () => {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleAlertSubmit} className="space-y-3">
+                <form onSubmit={handleAlertSubmit} noValidate className="space-y-3">
                   {/* Ville */}
                   <div>
                     <label className="text-xs font-medium text-slate-500 block mb-1">Ville / Région</label>
@@ -441,12 +441,11 @@ const HeroSection = () => {
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                       <Input
-                        type="tel"
+                        type="text"
                         placeholder="77 xxx xx xx"
                         value={telephone}
                         onChange={(e) => setTelephone(e.target.value)}
                         className="pl-9 h-9 text-xs"
-                        required
                       />
                     </div>
                   </div>

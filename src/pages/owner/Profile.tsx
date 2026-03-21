@@ -360,7 +360,6 @@ export default function Profile() {
                   value={formData.prenom}
                   onChange={handleChange}
                   placeholder="Votre prénom"
-                  required
                   className="w-full h-11 rounded-xl text-sm bg-slate-50 border border-slate-200 pl-9 pr-3 text-slate-700 placeholder:text-slate-300 outline-none focus:border-[#D4A843] focus:bg-white transition-all"
                 />
               </div>
@@ -378,7 +377,6 @@ export default function Profile() {
                   value={formData.nom}
                   onChange={handleChange}
                   placeholder="Votre nom"
-                  required
                   className="w-full h-11 rounded-xl text-sm bg-slate-50 border border-slate-200 pl-9 pr-3 text-slate-700 placeholder:text-slate-300 outline-none focus:border-[#D4A843] focus:bg-white transition-all"
                 />
               </div>
@@ -420,7 +418,6 @@ export default function Profile() {
                 value={formData.telephone}
                 onChange={handleChange}
                 placeholder="77 000 00 00"
-                required
                 className="w-full h-11 rounded-xl text-sm bg-slate-50 border border-slate-200 pl-9 pr-3 text-slate-700 placeholder:text-slate-300 outline-none focus:border-[#D4A843] focus:bg-white transition-all"
               />
             </div>
@@ -436,7 +433,7 @@ export default function Profile() {
               <input
                 id="email"
                 name="email"
-                type="email"
+                type="text"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="votre@email.com"

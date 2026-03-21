@@ -1471,7 +1471,7 @@ export default function BienDetail() {
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Montant restitué (FCFA) *</label>
-                <input type="number" min={0} value={restituerMontant} onChange={e => setRestituerMontant(e.target.value)}
+                <input type="number" value={restituerMontant} onChange={e => setRestituerMontant(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
@@ -1569,7 +1569,6 @@ export default function BienDetail() {
                   <label className="block text-xs font-medium text-gray-600 mb-1">Montant restitué (FCFA)</label>
                   <input
                     type="number"
-                    min={0}
                     value={archiverRestituerMontant}
                     onChange={e => setArchiverRestituerMontant(e.target.value)}
                     placeholder="Laisser vide si déjà traitée"

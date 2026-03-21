@@ -178,7 +178,7 @@ export default function MonCompte() {
                   Email <span className="text-slate-400 font-normal">(optionnel)</span>
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="votre@email.com"

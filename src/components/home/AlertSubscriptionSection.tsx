@@ -122,19 +122,18 @@ const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSection
         Créez une alerte pour être notifié des nouvelles annonces correspondant à vos critères.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} noValidate className="space-y-3">
         {/* Téléphone */}
         <div>
           <label className={labelClasses}>Téléphone *</label>
           <div className="relative">
             <Phone className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${variant === "hero" ? "text-white/35" : "text-gray-400"}`} />
             <Input
-              type="tel"
+              type="text"
               placeholder="77 xxx xx xx"
               value={telephone}
               onChange={(e) => setTelephone(e.target.value)}
               className={`pl-10 h-11 ${inputClasses}`}
-              required
             />
           </div>
         </div>

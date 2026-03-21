@@ -95,7 +95,6 @@ function PaysForm({
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               placeholder="ex : SN"
-              maxLength={3}
               className={inputCls}
             />
             {errors.code && <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.code}</p>}

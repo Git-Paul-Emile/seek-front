@@ -715,7 +715,6 @@ export default function AddBien() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={6}
-                    maxLength={MAX_DESCRIPTION}
                     placeholder="Décrivez le bien, l'environnement, les points forts…"
                     className="w-full px-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 placeholder:text-slate-300 outline-none focus:border-[#D4A843]/60 focus:bg-white transition-all resize-none"
                   />
@@ -864,7 +863,6 @@ export default function AddBien() {
                   <label className={labelCls}>Surface (m²)</label>
                   <input
                     type="number"
-                    min={1}
                     value={surface}
                     onChange={(e) => setSurface(e.target.value)}
                     placeholder="ex : 80"
@@ -875,7 +873,6 @@ export default function AddBien() {
                   <label className={labelCls}>Étage <span className="text-slate-400 font-normal">(0 = RDC)</span></label>
                   <input
                     type="number"
-                    min={0}
                     value={etage}
                     onChange={(e) => setEtage(e.target.value)}
                     placeholder="ex : 2"
@@ -985,7 +982,6 @@ export default function AddBien() {
                     <div className="relative">
                       <input
                         type="number"
-                        min={0}
                         value={prix}
                         onChange={(e) => setPrix(e.target.value)}
                         placeholder="ex : 150 000"
@@ -1015,7 +1011,6 @@ export default function AddBien() {
                     <div className="relative">
                       <input
                         type="number"
-                        min={0}
                         value={caution}
                         onChange={(e) => setCaution(e.target.value)}
                         placeholder="ex : 300 000"

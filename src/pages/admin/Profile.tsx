@@ -234,7 +234,7 @@ export default function Profile() {
                 <input
                   id="email"
                   name="email"
-                  type="email"
+                  type="text"
                   value={profileForm.email}
                   onChange={handleProfileChange}
                   placeholder="admin@seek.com"

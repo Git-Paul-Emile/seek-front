@@ -138,8 +138,6 @@ export default function ConfigMonetisationPage() {
             <div className="relative">
               <input
                 type="number"
-                min={0}
-                max={100}
                 step={0.5}
                 value={form.tauxCommission}
                 onChange={(e) =>

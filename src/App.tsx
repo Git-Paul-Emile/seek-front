@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import GlobalFloatingActions from "@/components/layout/GlobalFloatingActions";
 import { AuthProvider } from "@/context/AuthContext";
 import { OwnerAuthProvider } from "@/context/OwnerAuthContext";
 import { LocataireAuthProvider } from "@/context/LocataireAuthContext";
@@ -93,12 +94,13 @@ const PublicLayout = () => {
   const location = useLocation();
   const isHome = location.pathname === "/";
   return (
-    <div className="overflow-x-clip">
+    <div className="overflow-x-clip relative">
       <Navbar />
       <main className={`min-h-screen ${isHome ? "" : "pt-16"}`}>
         <Outlet />
       </main>
       <Footer />
+      <GlobalFloatingActions />
     </div>
   );
 };

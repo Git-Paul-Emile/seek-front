@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
           "vendor-charts": ["recharts"],
           "vendor-map": ["leaflet", "react-leaflet"],
           "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
-          "vendor-editor": ["@tiptap/react", "@tiptap/starter-kit", "@tiptap/pm"],
+          "vendor-editor": ["@tiptap/react", "@tiptap/starter-kit"],
           "vendor-utils": ["date-fns", "axios", "socket.io-client", "framer-motion"],
         },
       },

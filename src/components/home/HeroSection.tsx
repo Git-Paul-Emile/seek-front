@@ -129,7 +129,7 @@ const HeroSection = () => {
   const labelClasses = "text-white/50 text-xs font-medium block mb-1.5 ml-0.5";
 
   return (
-    <section className="relative h-screen max-h-screen flex flex-col justify-center overflow-hidden">
+    <section className="relative min-h-screen lg:h-screen lg:max-h-screen flex flex-col justify-center overflow-hidden">
       <img
         src={heroBg}
         alt="Architecture moderne à Dakar"
@@ -137,7 +137,7 @@ const HeroSection = () => {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0C1A35] via-[#0C1A35]/68 to-[#0C1A35]/15" />
 
-      <div className="relative z-10 container mx-auto px-8 pt-20">
+      <div className="relative z-10 container mx-auto px-5 md:px-8 pt-24 pb-10 lg:pt-20 lg:pb-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
           {/* ── Colonne gauche : textes + stats ── */}

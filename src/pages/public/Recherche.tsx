@@ -14,6 +14,7 @@ import { useRecherchePublique, useLieux } from "@/hooks/useRecherche";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import { useEquipements } from "@/hooks/useEquipements";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 import type { Bien } from "@/api/bien";
 
 // ─── Tri ──────────────────────────────────────────────────────────────────────
@@ -167,7 +168,8 @@ const RecherchePage = () => {
   const [sort,            setSort]            = useState<SortKey>((searchParams.get("sort") as SortKey) ?? "recent");
 
   // Filtres avancés
-  const [showAvanced,  setShowAdvanced] = useState(false);
+  const [showAvanced,      setShowAdvanced]      = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [prixMin,      setPrixMin]      = useState(searchParams.get("prixMin") ?? "");
   const [prixMax,      setPrixMax]      = useState(searchParams.get("prixMax") ?? "");
   const [chambres,     setChambres]     = useState(searchParams.get("chambres") ?? "");
@@ -432,8 +434,310 @@ const RecherchePage = () => {
   return (
     <div className="min-h-screen bg-[#F8F5EE]">
 
-      {/* ── Barre de recherche sticky ── */}
-      <div className="bg-[#0C1A35] sticky top-0 z-40 shadow-lg">
+      {/* ── Barre de recherche ── */}
+      {/* Mobile : bouton compact + panneau plein écran */}
+      <div className="lg:hidden bg-[#0C1A35] sticky top-0 z-40 shadow-lg">
+        <div className="container mx-auto py-3 px-4 flex items-center justify-between gap-3">
+          <span className="text-white/60 text-sm">
+            {isLoading ? "Recherche…" : `${total} annonce${total > 1 ? "s" : ""}`}
+          </span>
+          <button
+            onClick={() => setShowMobileFilters(prev => !prev)}
+            className={`h-10 flex items-center gap-2 px-4 rounded-lg border text-sm font-medium transition-colors ${
+              chips.length > 0
+                ? "border-[#D4A843] bg-[#D4A843]/20 text-[#D4A843]"
+                : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+            }`}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            Filtres
+            {chips.length > 0 && (
+              <span className="w-5 h-5 rounded-full bg-[#D4A843] text-white text-xs flex items-center justify-center font-bold">
+                {chips.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile : panneau filtres plein écran */}
+      {showMobileFilters && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-[#0C1A35] flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+            <span className="text-white font-semibold text-base">Filtres</span>
+            <button
+              onClick={() => setShowMobileFilters(false)}
+              className="p-2 rounded-lg text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div>
+              <label className="block text-xs text-white/60 mb-1">Ville / Région</label>
+              <SearchableSelect
+                value={ville}
+                onChange={(val) => { setVille(val); setSearchParams(buildParams(1, undefined, { ville: val })); }}
+                options={villeOptions}
+                placeholder="Ville / Région…"
+                searchPlaceholder="Rechercher une ville…"
+                dark
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-white/60 mb-1">Quartier</label>
+              <SearchableSelect
+                value={quartier}
+                onChange={(val) => { setQuartier(val); setSearchParams(buildParams(1, undefined, { quartier: val })); }}
+                options={quartierOptions}
+                placeholder="Quartier…"
+                searchPlaceholder="Rechercher un quartier…"
+                dark
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-white/60 mb-1">Type de logement</label>
+              <SearchableSelect
+                value={typeLogement}
+                onChange={(val) => { setTypeLogement(val); setSearchParams(buildParams(1, undefined, { typeLogement: val })); }}
+                options={typeLogementOptions}
+                placeholder="Tous les types"
+                searchPlaceholder="Rechercher un type…"
+                dark
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-white/60 mb-1">Type de transaction</label>
+              <SearchableSelect
+                value={typeTransaction}
+                onChange={(val) => { setTypeTransaction(val); setSearchParams(buildParams(1, undefined, { typeTransaction: val })); }}
+                options={typeTransactionOptions}
+                placeholder="Vente & Location"
+                searchPlaceholder="Rechercher…"
+                dark
+              />
+            </div>
+            {!isProximityMode && (
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Trier par</label>
+                <div className="relative">
+                  <select
+                    value={sort}
+                    onChange={(e) => applySort(e.target.value as SortKey)}
+                    className="w-full h-11 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-8 focus:outline-none focus:border-white/40 cursor-pointer"
+                  >
+                    {SORT_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value} className="bg-[#0C1A35] text-white">{o.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+                </div>
+              </div>
+            )}
+            {isProximityMode && (
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Rayon</label>
+                <div className="flex gap-2">
+                  {[1, 3, 5, 10].map((km) => (
+                    <button
+                      key={km}
+                      type="button"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams);
+                        next.set("radius", String(km));
+                        next.set("page", "1");
+                        setSearchParams(next);
+                      }}
+                      className={`h-9 px-3 rounded-lg text-xs font-medium border transition-colors ${
+                        proximityRadius === km
+                          ? "bg-[#D4A843] border-[#D4A843] text-white"
+                          : "bg-white/10 border-white/20 text-white/70 hover:bg-white/20 hover:text-white"
+                      }`}
+                    >
+                      {km} km
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Filtres avancés dans le panneau mobile */}
+            <div className="border-t border-white/10 pt-4 grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Prix min (FCFA)</label>
+                <input type="number" value={prixMin} onChange={e => setPrixMin(e.target.value)} placeholder="0" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
+              </div>
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Prix max (FCFA)</label>
+                <input type="number" value={prixMax} onChange={e => setPrixMax(e.target.value)} placeholder="Illimité" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
+              </div>
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Chambres min</label>
+                <div className="relative">
+                  <select value={chambres} onChange={e => setChambres(e.target.value)} className="w-full h-9 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-7 focus:outline-none focus:border-white/40">
+                    <option value="" className="bg-[#0C1A35]">Toutes</option>
+                    {[1,2,3,4,5].map(n => (<option key={n} value={n} className="bg-[#0C1A35]">{n}+</option>))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Surface min (m²)</label>
+                <input type="number" value={surfaceMin} onChange={e => setSurfaceMin(e.target.value)} placeholder="0" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
+              </div>
+              <div>
+                <label className="block text-xs text-white/60 mb-1">Surface max (m²)</label>
+                <input type="number" value={surfaceMax} onChange={e => setSurfaceMax(e.target.value)} placeholder="Illimitée" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
+              </div>
+              {/* Caractéristiques multi-select (identique au desktop) */}
+              {(() => {
+                const BOOL_OPTIONS = [
+                  { key: "meuble",    label: "Meublé",           Icon: Armchair,    state: meuble,    set: setMeuble    },
+                  { key: "parking",   label: "Parking",          Icon: Car,         state: parking,   set: setParking   },
+                  { key: "ascenseur", label: "Ascenseur",        Icon: ArrowUpDown, state: ascenseur, set: setAscenseur },
+                  { key: "fumeurs",   label: "Fumeurs acceptés", Icon: Cigarette,   state: fumeurs,   set: setFumeurs   },
+                  { key: "animaux",   label: "Animaux acceptés", Icon: PawPrint,    state: animaux,   set: setAnimaux   },
+                ];
+                const nbBoolSelected = BOOL_OPTIONS.filter(o => o.state).length;
+                const totalSelected  = nbBoolSelected + selectedEquipements.length;
+                const btnLabel = totalSelected === 0 ? "Caractéristiques"
+                  : totalSelected === 1
+                    ? (BOOL_OPTIONS.find(o => o.state)?.label
+                        ?? equipements.find(e => e.id === selectedEquipements[0])?.nom
+                        ?? "1 sélectionné")
+                  : `${totalSelected} sélectionnés`;
+
+                const lowerSearch = caracSearch.toLowerCase();
+                const filteredGroups = equipementsGroupes.map(g => ({
+                  ...g,
+                  items: g.items.filter(e => e.nom.toLowerCase().includes(lowerSearch)),
+                })).filter(g => g.items.length > 0);
+
+                return (
+                  <div className="relative col-span-2">
+                    <label className="block text-xs text-white/60 mb-1">Caractéristiques</label>
+                    <button
+                      type="button"
+                      onClick={() => setCaracOpen(p => !p)}
+                      className={`w-full h-9 flex items-center justify-between gap-2 px-3 rounded-lg border text-sm transition-colors ${
+                        totalSelected > 0
+                          ? "bg-[#D4A843]/15 border-[#D4A843]/50 text-[#D4A843]"
+                          : "bg-white/10 border-white/20 text-white/70 hover:bg-white/20 hover:text-white"
+                      }`}
+                    >
+                      <span className="truncate text-left">{btnLabel}</span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {totalSelected > 0 && (
+                          <span className="w-4 h-4 rounded-full bg-[#D4A843] text-white text-[10px] flex items-center justify-center font-bold">
+                            {totalSelected}
+                          </span>
+                        )}
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${caracOpen ? "rotate-180" : ""}`} />
+                      </div>
+                    </button>
+                    {caracOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-[#0C1A35] border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+                        <div className="p-2 border-b border-white/10">
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                            <input
+                              type="text"
+                              value={caracSearch}
+                              onChange={e => setCaracSearch(e.target.value)}
+                              placeholder="Filtrer…"
+                              className="w-full h-8 bg-white/10 border border-white/15 text-white text-xs rounded-lg pl-8 pr-3 focus:outline-none focus:border-white/30 placeholder:text-white/25"
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto max-h-72">
+                          {BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).length > 0 && (
+                            <div>
+                              <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">Options</div>
+                              {BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).map(({ key, label, Icon, state: val, set }) => (
+                                <label
+                                  key={key}
+                                  className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${
+                                    val ? "bg-[#D4A843]/10" : "hover:bg-white/6"
+                                  }`}
+                                >
+                                  <input type="checkbox" checked={val} onChange={e => set(e.target.checked)} className="sr-only" />
+                                  <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${
+                                    val ? "bg-[#D4A843] border-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,0.4)]" : "bg-transparent border-white/20"
+                                  }`}>
+                                    {val && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                                  </span>
+                                  <Icon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${val ? "text-[#D4A843]/80" : "text-white/35"}`} />
+                                  <span className={`text-sm transition-colors ${val ? "text-white font-medium" : "text-white/70"}`}>{label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                          {filteredGroups.map(group => (
+                            <div key={group.categorie}>
+                              <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">{group.categorie}</div>
+                              {group.items.map(eq => {
+                                const isChecked = selectedEquipements.includes(eq.id);
+                                return (
+                                  <label
+                                    key={eq.id}
+                                    className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${
+                                      isChecked ? "bg-[#D4A843]/10" : "hover:bg-white/6"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={e => {
+                                        setSelectedEquipements(prev =>
+                                          e.target.checked ? [...prev, eq.id] : prev.filter(id => id !== eq.id)
+                                        );
+                                      }}
+                                      className="sr-only"
+                                    />
+                                    <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${
+                                      isChecked ? "bg-[#D4A843] border-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,0.4)]" : "bg-transparent border-white/20"
+                                    }`}>
+                                      {isChecked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                                    </span>
+                                    <span className={`text-sm transition-colors ${isChecked ? "text-white font-medium" : "text-white/70"}`}>{eq.nom}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          ))}
+                          {filteredGroups.length === 0 && BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).length === 0 && (
+                            <p className="text-xs text-white/30 text-center py-4">Aucun résultat</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Boutons d'action mobile — toujours visibles en bas */}
+          <div className="flex-shrink-0 flex gap-3 p-4 border-t border-white/10 bg-[#0C1A35]">
+            <button
+              onClick={() => { clearFilters(); setShowMobileFilters(false); }}
+              className="flex-1 h-11 rounded-lg border border-white/20 text-white/60 text-sm font-medium hover:bg-white/10 transition-colors"
+            >
+              Tout effacer
+            </button>
+            <Button
+              onClick={() => { applyFilters(); setShowMobileFilters(false); }}
+              className="flex-1 h-11 bg-[#D4A843] hover:bg-[#C09535] text-white font-semibold"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Rechercher
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop : barre sticky classique */}
+      <div className="hidden lg:block bg-[#0C1A35] sticky top-0 z-40 shadow-lg">
         <div className="container mx-auto py-4 px-4">
           <div className="flex flex-wrap gap-2.5 items-center">
 
@@ -465,7 +769,7 @@ const RecherchePage = () => {
               />
             </div>
 
-            <div className="w-full sm:w-48">
+            <div className="w-48">
               <SearchableSelect
                 value={typeLogement}
                 onChange={(val) => {
@@ -479,7 +783,7 @@ const RecherchePage = () => {
               />
             </div>
 
-            <div className="w-full sm:w-40">
+            <div className="w-40">
               <SearchableSelect
                 value={typeTransaction}
                 onChange={(val) => {
@@ -494,7 +798,7 @@ const RecherchePage = () => {
             </div>
 
             {!isProximityMode && (
-              <div className="relative w-full sm:w-44">
+              <div className="relative w-44">
                 <select
                   value={sort}
                   onChange={(e) => applySort(e.target.value as SortKey)}
@@ -511,7 +815,7 @@ const RecherchePage = () => {
             )}
             {isProximityMode && (
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className="text-xs text-white/50 hidden sm:block">Rayon :</span>
+                <span className="text-xs text-white/50">Rayon :</span>
                 {[1, 3, 5, 10].map((km) => (
                   <button
                     key={km}
@@ -536,7 +840,7 @@ const RecherchePage = () => {
 
             <button
               onClick={() => setShowAdvanced(prev => !prev)}
-              className={`h-11 flex items-center gap-2 px-4 rounded-lg border text-sm font-medium transition-colors flex-shrink-0 w-full sm:w-auto justify-center ${
+              className={`h-11 flex items-center gap-2 px-4 rounded-lg border text-sm font-medium transition-colors flex-shrink-0 ${
                 showAvanced || nbAdvancedActive > 0
                   ? "border-[#D4A843] bg-[#D4A843]/20 text-[#D4A843]"
                   : "border-white/20 bg-white/10 text-white hover:bg-white/20"
@@ -553,76 +857,41 @@ const RecherchePage = () => {
 
             <Button
               onClick={() => applyFilters()}
-              className="h-11 bg-[#D4A843] hover:bg-[#C09535] text-white font-semibold flex-shrink-0 w-full sm:w-auto"
+              className="h-11 bg-[#D4A843] hover:bg-[#C09535] text-white font-semibold flex-shrink-0"
             >
               <Search className="w-4 h-4 mr-2" />
               Rechercher
             </Button>
           </div>
 
-          {/* Panneau filtres avancés */}
+          {/* Panneau filtres avancés desktop */}
           {showAvanced && (
-            <div className="border-t border-white/10 pt-4 mt-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {/* Prix min */}
+            <div className="border-t border-white/10 pt-4 mt-1 grid grid-cols-6 gap-3">
               <div>
                 <label className="block text-xs text-white/60 mb-1">Prix min (FCFA)</label>
-                <input
-                  type="number"
-                  value={prixMin}
-                  onChange={e => setPrixMin(e.target.value)}
-                  placeholder="0"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                />
+                <input type="number" value={prixMin} onChange={e => setPrixMin(e.target.value)} placeholder="0" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
               </div>
-              {/* Prix max */}
               <div>
                 <label className="block text-xs text-white/60 mb-1">Prix max (FCFA)</label>
-                <input
-                  type="number"
-                  value={prixMax}
-                  onChange={e => setPrixMax(e.target.value)}
-                  placeholder="Illimité"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                />
+                <input type="number" value={prixMax} onChange={e => setPrixMax(e.target.value)} placeholder="Illimité" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
               </div>
-              {/* Chambres */}
               <div>
                 <label className="block text-xs text-white/60 mb-1">Chambres min</label>
                 <div className="relative">
-                  <select
-                    value={chambres}
-                    onChange={e => setChambres(e.target.value)}
-                    className="w-full h-9 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-7 focus:outline-none focus:border-white/40"
-                  >
+                  <select value={chambres} onChange={e => setChambres(e.target.value)} className="w-full h-9 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-7 focus:outline-none focus:border-white/40">
                     <option value="" className="bg-[#0C1A35]">Toutes</option>
-                    {[1,2,3,4,5].map(n => (
-                      <option key={n} value={n} className="bg-[#0C1A35]">{n}+</option>
-                    ))}
+                    {[1,2,3,4,5].map(n => (<option key={n} value={n} className="bg-[#0C1A35]">{n}+</option>))}
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
                 </div>
               </div>
-              {/* Surface min */}
               <div>
                 <label className="block text-xs text-white/60 mb-1">Surface min (m²)</label>
-                <input
-                  type="number"
-                  value={surfaceMin}
-                  onChange={e => setSurfaceMin(e.target.value)}
-                  placeholder="0"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                />
+                <input type="number" value={surfaceMin} onChange={e => setSurfaceMin(e.target.value)} placeholder="0" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
               </div>
-              {/* Surface max */}
               <div>
                 <label className="block text-xs text-white/60 mb-1">Surface max (m²)</label>
-                <input
-                  type="number"
-                  value={surfaceMax}
-                  onChange={e => setSurfaceMax(e.target.value)}
-                  placeholder="Illimitée"
-                  className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                />
+                <input type="number" value={surfaceMax} onChange={e => setSurfaceMax(e.target.value)} placeholder="Illimitée" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
               </div>
               {/* Caractéristiques multi-select */}
               {(() => {
@@ -649,7 +918,7 @@ const RecherchePage = () => {
                 })).filter(g => g.items.length > 0);
 
                 return (
-                  <div ref={caracRef} className="relative col-span-2 sm:col-span-1">
+                  <div ref={caracRef} className="relative">
                     <label className="block text-xs text-white/60 mb-1">Caractéristiques</label>
                     <button
                       type="button"
@@ -672,7 +941,6 @@ const RecherchePage = () => {
                     </button>
                     {caracOpen && (
                       <div className="absolute top-full right-0 mt-1 z-50 w-72 bg-[#0C1A35] border border-white/20 rounded-xl shadow-2xl overflow-hidden">
-                        {/* Recherche */}
                         <div className="p-2 border-b border-white/10">
                           <div className="relative">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
@@ -686,7 +954,6 @@ const RecherchePage = () => {
                           </div>
                         </div>
                         <div className="overflow-y-auto max-h-72">
-                          {/* Section options booléennes (filtrées par search) */}
                           {BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).length > 0 && (
                             <div>
                               <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">Options</div>
@@ -709,7 +976,6 @@ const RecherchePage = () => {
                               ))}
                             </div>
                           )}
-                          {/* Équipements groupés par catégorie */}
                           {filteredGroups.map(group => (
                             <div key={group.categorie}>
                               <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">{group.categorie}</div>
@@ -881,6 +1147,7 @@ const RecherchePage = () => {
           );
         })()}
       </div>
+      {!showMobileFilters && <ScrollToTop />}
     </div>
   );
 };

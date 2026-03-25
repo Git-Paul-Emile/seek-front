@@ -63,6 +63,14 @@ export const submitEtatDesLieux = (id: string): Promise<EtatDesLieux> =>
 export const getEtatDesLieuxOwner = (id: string): Promise<EtatDesLieux> =>
   api.get<{ data: EtatDesLieux }>(`/owner/${id}`).then((r) => r.data.data);
 
+export const uploadEtatLieuxImage = (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("image", file);
+  return api.post<{ url: string }>("/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }).then((r) => r.data.url);
+};
+
 export const getEtatsDesLieuxByBailOwner = (bailId: string): Promise<EtatDesLieux[]> =>
   api.get<{ data: EtatDesLieux[] }>(`/owner/bail/${bailId}`).then((r) => r.data.data);
 

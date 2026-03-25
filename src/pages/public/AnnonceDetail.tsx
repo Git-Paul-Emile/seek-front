@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+  import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -861,7 +861,7 @@ export default function AnnonceDetail() {
                 {/* Bouton Signaler */}
                 <button
                   onClick={() => setShowSignalementModal(true)}
-                  className="mt-6 flex items-center justify-center gap-2 w-full h-10 rounded-xl text-slate-400 font-medium hover:text-red-500 hover:bg-red-50 transition-colors"
+                  className="mt-6 flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-colors"
                 >
                   <AlertTriangle className="w-4 h-4" />
                   Signaler cette annonce

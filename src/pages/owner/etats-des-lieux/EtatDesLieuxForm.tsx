@@ -13,7 +13,8 @@ import {
   createEtatDesLieux,
   updateEtatDesLieux,
   getEtatDesLieuxOwner,
-  submitEtatDesLieux
+  submitEtatDesLieux,
+  uploadEtatLieuxImage
 } from "@/api/etatDesLieux.api";
 import { toast } from "sonner";
 import { PlusCircle, Trash2, ArrowLeft, Send, CheckCircle } from "lucide-react";
@@ -135,7 +136,7 @@ const EtatDesLieuxForm = () => {
     setPieces(newPieces);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (submitAfterSave = false) => {
     try {
       setLoading(true);
       const payload = {
@@ -155,26 +156,23 @@ const EtatDesLieuxForm = () => {
 
       if (id) {
         await updateEtatDesLieux(id, payload);
-        toast.success("Enregistré avec succès !");
+        if (submitAfterSave) {
+          await submitEtatDesLieux(id);
+          toast.success("Envoyé au locataire pour validation !");
+        } else {
+          toast.success("Enregistré en brouillon !");
+        }
+        loadEDL(id);
       } else {
         const created = await createEtatDesLieux(payload);
-        toast.success("Créé avec succès !");
+        if (submitAfterSave) {
+          await submitEtatDesLieux(created.id);
+          toast.success("Créé et envoyé pour validation !");
+        } else {
+          toast.success("Brouillon créé avec succès !");
+        }
         navigate(`/owner/etats-des-lieux/${created.id}`);
       }
-    } catch (e: any) {
-      toast.error("Erreur", { description: e.response?.data?.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitVal = async () => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      await submitEtatDesLieux(id);
-      toast.success("Envoyé au locataire pour validation !");
-      loadEDL(id);
     } catch (e: any) {
       toast.error("Erreur", { description: e.response?.data?.message });
     } finally {
@@ -294,19 +292,23 @@ const EtatDesLieuxForm = () => {
                       <div className="mt-3">
                         <ImageUpload 
                            currentImage={element.photos?.[0] || null}
-                           onChange={(file) => {
-                             if (file) {
-                               // TODO: Implémenter l'upload du fichier vers l'API
-                               updateElement(pIndex, eIndex, "photos", [URL.createObjectURL(file)]);
+                           onChange={async (file) => {
+                             if (!file) {
+                               updateElement(pIndex, eIndex, "photos", []);
+                               return;
+                             }
+                             try {
+                               setLoading(true);
+                               const url = await uploadEtatLieuxImage(file);
+                               updateElement(pIndex, eIndex, "photos", [url]);
+                               toast.success("Image ajoutée");
+                             } catch (err: any) {
+                               toast.error("Erreur", { description: err.response?.data?.message || err.message });
+                             } finally {
+                               setLoading(false);
                              }
                            }}
                         />
-                        {/* Optionally display existing photos here if ImageUpload doesn't */}
-                        {element.photos && element.photos.length > 0 && (
-                          <div className="flex gap-2 mt-2">
-                            {element.photos.map(u => <img key={u} src={u} alt="Preuve" className="w-16 h-16 object-cover rounded-md border" />)}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -342,14 +344,12 @@ const EtatDesLieuxForm = () => {
       <div className="flex justify-end gap-3 sticky bottom-4 bg-white/80 backdrop-blur-md p-4 rounded-xl border shadow-lg mt-8 z-10">
         {!isReadonly ? (
           <>
-            <Button variant="outline" size="lg" disabled={loading} onClick={handleSave}>
+            <Button variant="outline" size="lg" disabled={loading} onClick={() => handleSave(false)}>
               Sauvegarder Brouillon
             </Button>
-            {id && (
-              <Button size="lg" disabled={loading} onClick={handleSubmitVal} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
-                <Send className="w-4 h-4" /> Envoyer pour Validation
-              </Button>
-            )}
+            <Button size="lg" disabled={loading} onClick={() => handleSave(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+              <Send className="w-4 h-4" /> Envoyer pour Validation
+            </Button>
           </>
         ) : (
           <div className="flex items-center gap-2 text-indigo-600 font-medium">

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,66 +24,67 @@ import LocataireGuestRoute from "@/components/locataire/LocataireGuestRoute";
 import LocataireProtectedRoute from "@/components/locataire/LocataireProtectedRoute";
 import LocataireLayout from "@/components/locataire/LocataireLayout";
 
-import Index from "./pages/Index";
-import Proprietaires from "./pages/Proprietaires";
-import PublicAnnonceDetail from "./pages/public/AnnonceDetail";
-import RecherchePage from "./pages/public/Recherche";
-import OwnerRegister from "./pages/owner/Register";
-import OwnerLogin from "./pages/owner/Login";
-import OwnerDashboard from "./pages/owner/Dashboard";
-import OwnerVerification from "./pages/owner/Verification";
-import HistoriquePaiements from "./pages/owner/HistoriquePaiements";
-import Profile from "./pages/owner/Profile";
-import BiensList from "./pages/owner/biens/BiensList";
-import AddBien from "./pages/owner/biens/AddBien";
-import BienDetail from "./pages/owner/biens/BienDetail";
-import PaiementsPage from "./pages/owner/biens/PaiementsPage";
-import AdminLogin from "./pages/admin/Login";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminProfile from "./pages/admin/Profile";
-import TypesLogement from "./pages/admin/categories/TypesLogement";
-import TypesTransaction from "./pages/admin/categories/TypesTransaction";
-import StatutsBien from "./pages/admin/categories/StatutsBien";
-import MeubleEquipement from "./pages/admin/categories/MeubleEquipement";
-import Annonces from "./pages/admin/Annonces";
-import AdminAnnonceDetail from "./pages/admin/AnnonceDetail";
-import AdminVerificationsPage from "./pages/admin/Verifications";
-import ProprietairesStats from "./pages/admin/ProprietairesStats";
-import PaysPage from "./pages/admin/geo/PaysPage";
-import VillesPage from "./pages/admin/geo/VillesPage";
-import QuartiersPage from "./pages/admin/geo/QuartiersPage";
-import SuspensionsPage from "./pages/admin/Suspensions";
-import UtilisateursPage from "./pages/admin/Utilisateurs";
-import LocatairesList from "./pages/owner/locataires/LocatairesList";
-import AddLocataire from "./pages/owner/locataires/AddLocataire";
-import LocataireDetail from "./pages/owner/locataires/LocataireDetail";
-import LocataireActivate from "./pages/locataire/Activate";
-import LocataireLogin from "./pages/locataire/Login";
-import LocataireForgotPassword from "./pages/locataire/ForgotPassword";
-import LocataireResetPassword from "./pages/locataire/ResetPassword";
-import LocataireDashboard from "./pages/locataire/Dashboard";
-import LocataireProfil from "./pages/locataire/Profil";
-import PaiementsLocatairePage from "./pages/locataire/PaiementsLocatairePage";
-import ProprietaireLocatairePage from "./pages/locataire/Proprietaire";
-import HistoriqueLogement from "./pages/locataire/HistoriqueLogement";
-import DocumentsBien from "./pages/locataire/DocumentsBien";
-import OwnerForgotPassword from "./pages/owner/ForgotPassword";
-import OwnerResetPassword from "./pages/owner/ResetPassword";
-import AdminTransactions from "./pages/admin/TransactionsAdmin";
-import AdminPromotions from "./pages/admin/PromotionsAdmin";
-import AdminFormulesPremium from "./pages/admin/FormulesPremium";
-import AdminLocataireDocuments from "./pages/admin/LocataireDocuments";
-import AdminStatsRevenus from "./pages/admin/StatsRevenus";
-import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
-import FavorisPage from "./pages/public/Favoris";
-import MonComptePage from "./pages/public/MonCompte";
-import ConfigMonetisationPage from "./pages/admin/monetisation/ConfigMonetisationPage";
-import LoyersEnRetardPage from "./pages/owner/LoyersEnRetardPage";
-import SignalementsAdmin from "./pages/admin/SignalementsAdmin";
-import EtatDesLieuxList from "./pages/owner/etats-des-lieux/EtatDesLieuxList";
-import EtatDesLieuxForm from "./pages/owner/etats-des-lieux/EtatDesLieuxForm";
-import EtatDesLieuxComparison from "./pages/owner/etats-des-lieux/EtatDesLieuxComparison";
-import EtatDesLieuxReview from "./pages/locataire/etats-des-lieux/EtatDesLieuxReview";
+// Lazy-loaded pages — chaque page est chargée à la demande
+const Index = React.lazy(() => import("./pages/Index"));
+const Proprietaires = React.lazy(() => import("./pages/Proprietaires"));
+const PublicAnnonceDetail = React.lazy(() => import("./pages/public/AnnonceDetail"));
+const RecherchePage = React.lazy(() => import("./pages/public/Recherche"));
+const OwnerRegister = React.lazy(() => import("./pages/owner/Register"));
+const OwnerLogin = React.lazy(() => import("./pages/owner/Login"));
+const OwnerDashboard = React.lazy(() => import("./pages/owner/Dashboard"));
+const OwnerVerification = React.lazy(() => import("./pages/owner/Verification"));
+const HistoriquePaiements = React.lazy(() => import("./pages/owner/HistoriquePaiements"));
+const Profile = React.lazy(() => import("./pages/owner/Profile"));
+const BiensList = React.lazy(() => import("./pages/owner/biens/BiensList"));
+const AddBien = React.lazy(() => import("./pages/owner/biens/AddBien"));
+const BienDetail = React.lazy(() => import("./pages/owner/biens/BienDetail"));
+const PaiementsPage = React.lazy(() => import("./pages/owner/biens/PaiementsPage"));
+const AdminLogin = React.lazy(() => import("./pages/admin/Login"));
+const AdminDashboard = React.lazy(() => import("./pages/admin/Dashboard"));
+const AdminProfile = React.lazy(() => import("./pages/admin/Profile"));
+const TypesLogement = React.lazy(() => import("./pages/admin/categories/TypesLogement"));
+const TypesTransaction = React.lazy(() => import("./pages/admin/categories/TypesTransaction"));
+const StatutsBien = React.lazy(() => import("./pages/admin/categories/StatutsBien"));
+const MeubleEquipement = React.lazy(() => import("./pages/admin/categories/MeubleEquipement"));
+const Annonces = React.lazy(() => import("./pages/admin/Annonces"));
+const AdminAnnonceDetail = React.lazy(() => import("./pages/admin/AnnonceDetail"));
+const AdminVerificationsPage = React.lazy(() => import("./pages/admin/Verifications"));
+const ProprietairesStats = React.lazy(() => import("./pages/admin/ProprietairesStats"));
+const PaysPage = React.lazy(() => import("./pages/admin/geo/PaysPage"));
+const VillesPage = React.lazy(() => import("./pages/admin/geo/VillesPage"));
+const QuartiersPage = React.lazy(() => import("./pages/admin/geo/QuartiersPage"));
+const SuspensionsPage = React.lazy(() => import("./pages/admin/Suspensions"));
+const UtilisateursPage = React.lazy(() => import("./pages/admin/Utilisateurs"));
+const LocatairesList = React.lazy(() => import("./pages/owner/locataires/LocatairesList"));
+const AddLocataire = React.lazy(() => import("./pages/owner/locataires/AddLocataire"));
+const LocataireDetail = React.lazy(() => import("./pages/owner/locataires/LocataireDetail"));
+const LocataireActivate = React.lazy(() => import("./pages/locataire/Activate"));
+const LocataireLogin = React.lazy(() => import("./pages/locataire/Login"));
+const LocataireForgotPassword = React.lazy(() => import("./pages/locataire/ForgotPassword"));
+const LocataireResetPassword = React.lazy(() => import("./pages/locataire/ResetPassword"));
+const LocataireDashboard = React.lazy(() => import("./pages/locataire/Dashboard"));
+const LocataireProfil = React.lazy(() => import("./pages/locataire/Profil"));
+const PaiementsLocatairePage = React.lazy(() => import("./pages/locataire/PaiementsLocatairePage"));
+const ProprietaireLocatairePage = React.lazy(() => import("./pages/locataire/Proprietaire"));
+const HistoriqueLogement = React.lazy(() => import("./pages/locataire/HistoriqueLogement"));
+const DocumentsBien = React.lazy(() => import("./pages/locataire/DocumentsBien"));
+const OwnerForgotPassword = React.lazy(() => import("./pages/owner/ForgotPassword"));
+const OwnerResetPassword = React.lazy(() => import("./pages/owner/ResetPassword"));
+const AdminTransactions = React.lazy(() => import("./pages/admin/TransactionsAdmin"));
+const AdminPromotions = React.lazy(() => import("./pages/admin/PromotionsAdmin"));
+const AdminFormulesPremium = React.lazy(() => import("./pages/admin/FormulesPremium"));
+const AdminLocataireDocuments = React.lazy(() => import("./pages/admin/LocataireDocuments"));
+const AdminStatsRevenus = React.lazy(() => import("./pages/admin/StatsRevenus"));
+const ModelesContratPage = React.lazy(() => import("./pages/admin/contrats/ModelesContratPage"));
+const FavorisPage = React.lazy(() => import("./pages/public/Favoris"));
+const MonComptePage = React.lazy(() => import("./pages/public/MonCompte"));
+const ConfigMonetisationPage = React.lazy(() => import("./pages/admin/monetisation/ConfigMonetisationPage"));
+const LoyersEnRetardPage = React.lazy(() => import("./pages/owner/LoyersEnRetardPage"));
+const SignalementsAdmin = React.lazy(() => import("./pages/admin/SignalementsAdmin"));
+const EtatDesLieuxList = React.lazy(() => import("./pages/owner/etats-des-lieux/EtatDesLieuxList"));
+const EtatDesLieuxForm = React.lazy(() => import("./pages/owner/etats-des-lieux/EtatDesLieuxForm"));
+const EtatDesLieuxComparison = React.lazy(() => import("./pages/owner/etats-des-lieux/EtatDesLieuxComparison"));
+const EtatDesLieuxReview = React.lazy(() => import("./pages/locataire/etats-des-lieux/EtatDesLieuxReview"));
 
 const queryClient = new QueryClient();
 
@@ -115,6 +116,7 @@ const App = () => (
           <OwnerAuthProvider>
             <LocataireAuthProvider>
               <PageTitle />
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
               <Routes>
                 {/* Routes publiques */}
                 <Route element={<PublicLayout />}>
@@ -223,6 +225,7 @@ const App = () => (
                   </Route>
                 </Route>
               </Routes>
+              </Suspense>
             </LocataireAuthProvider>
           </OwnerAuthProvider>
           </FavorisAuthModalProvider>

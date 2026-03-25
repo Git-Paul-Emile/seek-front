@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { getEtatsDesLieuxByBailOwner, EtatDesLieux } from "@/api/etatDesLieux.api";
+import { getEtatsDesLieuxByBailOwner, deleteEtatDesLieux, EtatDesLieux } from "@/api/etatDesLieux.api";
 import { toast } from "sonner";
-import { PlusCircle, Search, Eye, Edit, CheckCircle } from "lucide-react";
+import { PlusCircle, Search, Eye, Edit, CheckCircle, Trash2, AlertTriangle } from "lucide-react";
 
 const EtatDesLieuxList = () => {
   const { bailId } = useParams<{ bailId: string }>();
   const [edls, setEdls] = useState<EtatDesLieux[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   useEffect(() => {
     if (bailId) fetchEDLs();
@@ -25,6 +26,18 @@ const EtatDesLieuxList = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteEtatDesLieux(deleteTarget);
+      toast.success("Brouillon supprimé.");
+      setDeleteTarget(null);
+      fetchEDLs();
+    } catch (e: any) {
+      toast.error("Erreur", { description: e.response?.data?.message });
     }
   };
 
@@ -110,6 +123,11 @@ const EtatDesLieuxList = () => {
                            <CheckCircle className="w-4 h-4" /> PDF
                         </a>
                       )}
+                      {edl.statut === 'BROUILLON' && (
+                        <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteTarget(edl.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -118,6 +136,24 @@ const EtatDesLieuxList = () => {
           </table>
         )}
       </div>
+
+      {/* Modal de confirmation de suppression */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3 text-red-600">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="text-lg font-bold">Supprimer ce brouillon ?</h3>
+            </div>
+            <p className="text-sm text-gray-600">Cette action est irréversible. Toutes les pièces et éléments associés seront définitivement supprimés.</p>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setDeleteTarget(null)}>Annuler</Button>
+              <Button className="bg-red-600 hover:bg-red-700" onClick={confirmDelete}>Supprimer</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

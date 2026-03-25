@@ -67,6 +67,9 @@ export const updateEtatDesLieux = (id: string, payload: Partial<EtatDesLieuxCrea
 export const submitEtatDesLieux = (id: string): Promise<EtatDesLieux> =>
   api.post<{ data: EtatDesLieux }>(`/${id}/submit`).then((r) => r.data.data);
 
+export const deleteEtatDesLieux = (id: string): Promise<void> =>
+  api.delete(`/${id}`).then(() => undefined);
+
 export const resoudreContestationsProprietaire = (id: string, resolutions: {
   elementId: string;
   decision: "RECTIFIER" | "ACCEPTER_RESERVE" | "REFUSER";

@@ -1,10 +1,10 @@
-import { ShieldCheck, Flame, Clock } from "lucide-react";
+import { ShieldCheck, Clock } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface TrustScore {
   total: number;
-  badges: ("identite_verifiee" | "hote_actif" | "anciennete_1an")[];
+  badges: ("identite_verifiee" | "anciennete_1an")[];
   nbAnnonces: number;
   moisAnciennete: number;
 }
@@ -29,7 +29,6 @@ const BADGE_META: Record<
   { icon: React.ComponentType<{ className?: string }>; label: string; color: string }
 > = {
   identite_verifiee: { icon: ShieldCheck, label: "Identité vérifiée", color: "text-emerald-600 bg-emerald-50" },
-  hote_actif:        { icon: Flame,       label: "Hôte actif",         color: "text-orange-600 bg-orange-50" },
   anciennete_1an:    { icon: Clock,       label: "Ancienneté > 1 an",  color: "text-blue-600 bg-blue-50" },
 };
 
@@ -70,7 +69,7 @@ export function TrustScoreFull({ score }: { score: TrustScore }) {
       {/* Badges */}
       {score.badges.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {score.badges.filter(b => b !== 'hote_actif').map((b) => {
+          {score.badges.map((b) => {
             const meta = BADGE_META[b];
             const Icon = meta.icon;
             return (

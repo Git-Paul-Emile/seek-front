@@ -147,7 +147,7 @@ export interface OwnerTrustScore {
     anciennete: number;
     bailsActifs: number;
   };
-  badges: ("identite_verifiee" | "hote_actif" | "anciennete_1an")[];
+  badges: ("identite_verifiee" | "anciennete_1an")[];
   nbAnnonces: number;
   nbBailsActifs: number;
   moisAnciennete: number;

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { SkDetailSections } from "@/components/ui/Skeleton";
-import { ArrowLeft, Loader2, AlertTriangle, FileText, User, Home, ExternalLink, X } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, FileText, User, Home, ExternalLink, X, Info } from "lucide-react";
 import { useLocataireAvecDocuments } from "@/hooks/useSuspension";
 import { useState } from "react";
 
@@ -104,9 +104,13 @@ export default function LocataireDocuments() {
 
       {/* Vérification & documents */}
       <div className="bg-white rounded-2xl border border-slate-100 p-5">
-        <h2 className="text-sm font-semibold text-[#0C1A35] mb-4 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-[#0C1A35] mb-3 flex items-center gap-2">
           <FileText className="w-4 h-4" /> Vérification d'identité
         </h2>
+        <div className="mb-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-700">
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          La validation des documents d'identité est effectuée par le propriétaire, pas par l'admin.
+        </div>
         {!locataire.verification ? (
           <p className="text-sm text-slate-400">Aucune vérification soumise</p>
         ) : (

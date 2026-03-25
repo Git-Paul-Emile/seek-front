@@ -59,7 +59,6 @@ export default function ConfigMonetisationPage() {
   const [form, setForm] = useState({
     miseEnAvantActive: false,
     commissionActive: false,
-    abonnementActive: false,
     tauxCommission: 0,
   });
 
@@ -68,7 +67,6 @@ export default function ConfigMonetisationPage() {
       setForm({
         miseEnAvantActive: config.miseEnAvantActive,
         commissionActive: config.commissionActive,
-        abonnementActive: config.abonnementActive,
         tauxCommission: config.tauxCommission,
       });
     }
@@ -110,12 +108,6 @@ export default function ConfigMonetisationPage() {
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-2">
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Modules actifs</h2>
-        <Toggle
-          checked={form.abonnementActive}
-          onChange={(v) => setForm((f) => ({ ...f, abonnementActive: v }))}
-          label="Abonnements propriétaires"
-          description="Limite les annonces par plan. Basic = 1 annonce gratuite."
-        />
         <Toggle
           checked={form.commissionActive}
           onChange={(v) => setForm((f) => ({ ...f, commissionActive: v }))}

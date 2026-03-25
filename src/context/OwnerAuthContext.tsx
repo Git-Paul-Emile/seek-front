@@ -13,6 +13,7 @@ import {
   logoutOwnerApi,
   type OwnerInfo,
 } from "@/api/ownerAuth";
+import { socketService } from "@/services/socketService";
 
 // Rafraîchir le token 1 minute avant son expiry (15 min - 1 min = 14 min)
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
@@ -86,6 +87,13 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
 
   // Nettoyer le timer au démontage
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
+
+  // Rejoindre / quitter la room socket selon l'état d'auth
+  useEffect(() => {
+    if (owner) {
+      socketService.joinOwner(owner.id);
+    }
+  }, [owner]);
 
   const logout = useCallback(async () => {
     stopRefreshTimer();

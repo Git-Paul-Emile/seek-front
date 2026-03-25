@@ -14,6 +14,7 @@ import {
   logoutLocataireApi,
 } from "@/api/locataireAuth";
 import type { Locataire } from "@/api/locataire";
+import { socketService } from "@/services/socketService";
 
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
 
@@ -103,6 +104,13 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
   }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
+
+  // Rejoindre la room socket du locataire
+  useEffect(() => {
+    if (locataire) {
+      socketService.joinLocataire(locataire.id);
+    }
+  }, [locataire]);
 
   const logout = useCallback(async () => {
     stopRefreshTimer();

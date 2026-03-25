@@ -8,10 +8,6 @@ import {
   deleteBien,
   retourBrouillon,
   annulerAnnonce,
-  fetchStatsVuesBien,
-  fetchStatsVuesOwner,
-  fetchAdminStatsVues,
-  fetchStatsFavorisOwner,
   fetchStatsFavorisBien,
   type CreateBienPayload,
 } from "@/api/bien";
@@ -82,35 +78,6 @@ export const useAnnulerAnnonce = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });
 };
-
-export const useStatsVuesBien = (bienId: string | undefined) =>
-  useQuery({
-    queryKey: ["stats-vues-bien", bienId],
-    queryFn: () => fetchStatsVuesBien(bienId!),
-    enabled: !!bienId,
-    staleTime: 60 * 1000,
-  });
-
-export const useStatsVuesOwner = () =>
-  useQuery({
-    queryKey: ["stats-vues-owner"],
-    queryFn: fetchStatsVuesOwner,
-    staleTime: 60 * 1000,
-  });
-
-export const useAdminStatsVues = () =>
-  useQuery({
-    queryKey: ["admin-stats-vues"],
-    queryFn: fetchAdminStatsVues,
-    staleTime: 60 * 1000,
-  });
-
-export const useStatsFavorisOwner = () =>
-  useQuery({
-    queryKey: ["stats-favoris-owner"],
-    queryFn: fetchStatsFavorisOwner,
-    staleTime: 60 * 1000,
-  });
 
 export const useStatsFavorisBien = (bienId: string | undefined) =>
   useQuery({

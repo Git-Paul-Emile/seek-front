@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -12,6 +12,7 @@ import {
   CircleDot,
   Sofa,
   ChevronDown,
+  AlertTriangle,
   ChevronRight,
   FileSearch,
   User,
@@ -29,9 +30,12 @@ import {
   PanelLeft,
   PanelLeftClose,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
 import { usePendingVerificationsCount } from "@/hooks/useAdminVerification";
+import { socketService, SOCKET_EVENTS } from "@/services/socketService";
 
 // ─── Structure de navigation ──────────────────────────────────────────────────
 
@@ -78,8 +82,7 @@ const NAV_GROUPS = [
     icon: DollarSign,
     basePath: "/admin/monetisation",
     children: [
-      { to: "/admin/monetisation/config",         label: "Configuration",       icon: Settings2 },
-      { to: "/admin/monetisation/mises-en-avant", label: "Mises en avant",      icon: TrendingUp },
+      { to: "/admin/monetisation/config", label: "Configuration", icon: Settings2 },
     ],
   },
   {
@@ -361,6 +364,27 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             </NavLink>
           </li>
 
+          {/* Signalements */}
+          <li>
+            <NavLink
+              to="/admin/signalements"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  isActive
+                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`}
+            >
+              {({ isActive }) => (
+                <>
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  {isOpen && <span className="flex-1">Signalements</span>}
+                </>
+              )}
+            </NavLink>
+          </li>
+
           {/* Séparateur */}
           {isOpen && (
             <li className="pt-3 pb-1">
@@ -454,10 +478,41 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
   );
 }
 
+// ─── Hook temps réel admin ────────────────────────────────────────────────────
+
+function useAdminRealtime() {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const unsubVerifCount = socketService.on(SOCKET_EVENTS.VERIFICATION_COUNT_UPDATE, () => {
+      qc.invalidateQueries({ queryKey: ["admin-verifications-count"] });
+    });
+
+    const unsubVerifNew = socketService.on(SOCKET_EVENTS.VERIFICATION_SUBMITTED, () => {
+      toast.info("Nouvelle vérification soumise", {
+        description: "Un propriétaire a soumis ses documents d'identité.",
+      });
+      qc.invalidateQueries({ queryKey: ["admin-verifications-count"] });
+      qc.invalidateQueries({ queryKey: ["admin-verifications"] });
+    });
+
+    const unsubStats = socketService.on(SOCKET_EVENTS.STATS_UPDATE, () => {
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    });
+
+    return () => {
+      unsubVerifCount();
+      unsubVerifNew();
+      unsubStats();
+    };
+  }, [qc]);
+}
+
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  useAdminRealtime();
 
   return (
     <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">

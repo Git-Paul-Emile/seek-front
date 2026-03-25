@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -62,7 +62,9 @@ import {
   MessageCircle,
   Eye,
   Flame,
+  AlertTriangle,
 } from "lucide-react";
+import SignalementModal from "@/components/SignalementModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -298,6 +300,7 @@ export default function AnnonceDetail() {
   const { id } = useParams<{ id: string }>();
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showVisiteModal, setShowVisiteModal] = useState(false);
+  const [showSignalementModal, setShowSignalementModal] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { isFavori, toggleFavori, isAuthenticated } = useFavoris();
   const { openModal } = useFavorisAuthModal();
@@ -855,6 +858,14 @@ export default function AnnonceDetail() {
                   Email
                 </button>
 
+                {/* Bouton Signaler */}
+                <button
+                  onClick={() => setShowSignalementModal(true)}
+                  className="mt-6 flex items-center justify-center gap-2 w-full h-10 rounded-xl text-slate-400 font-medium hover:text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  Signaler cette annonce
+                </button>
               </div>
 
               {/* Pricing Details */}
@@ -959,6 +970,11 @@ export default function AnnonceDetail() {
         <DemandeVisiteModal bien={bien} onClose={() => setShowVisiteModal(false)} />
       )}
 
+      {/* Signalement Modal */}
+      {showSignalementModal && bien && (
+        <SignalementModal bien={bien} onClose={() => setShowSignalementModal(false)} />
+      )}
+
       {/* Similar Announcements Section */}
       {similaires && similaires.length > 0 && (
         <div className="container mx-auto px-8 py-8">
@@ -966,7 +982,7 @@ export default function AnnonceDetail() {
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">
               Annonces similaires
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {similaires.map((item) => (
                 <PropertyCard key={item.id} property={item} isApiData={true} />
               ))}

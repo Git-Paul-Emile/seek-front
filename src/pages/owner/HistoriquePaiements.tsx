@@ -29,11 +29,7 @@ export default function HistoriquePaiements() {
   const [showEspecesModal, setShowEspecesModal] = useState(false);
   const limit = 10;
 
-  const { data, isLoading, error } = useHistoriqueTransactions(
-    owner?.id || "",
-    page,
-    limit
-  );
+  const { data, isLoading, error } = useHistoriqueTransactions(page, limit);
 
   const transactions = data?.transactions || [];
   const pagination = data?.pagination;

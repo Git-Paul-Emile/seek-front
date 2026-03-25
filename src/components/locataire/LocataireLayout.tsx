@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Building2,
@@ -15,7 +15,10 @@ import {
   PanelLeft,
   PanelLeftClose,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
+import { socketService, SOCKET_EVENTS, type NotificationPayload } from "@/services/socketService";
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
@@ -186,10 +189,34 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
   );
 }
 
+// ─── Hook temps réel locataire ────────────────────────────────────────────────
+
+function useLocataireRealtime() {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const unsubNotif = socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationPayload) => {
+      toast.info(data.titre, { description: data.message });
+      qc.invalidateQueries({ queryKey: ["locataire-messages"] });
+    });
+
+    const unsubPayOk = socketService.on(SOCKET_EVENTS.PAYMENT_CONFIRMED, () => {
+      toast.success("Paiement confirmé par le propriétaire");
+      qc.invalidateQueries({ queryKey: ["locataire-echeancier"] });
+    });
+
+    return () => {
+      unsubNotif();
+      unsubPayOk();
+    };
+  }, [qc]);
+}
+
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
 export default function LocataireLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  useLocataireRealtime();
 
   return (
     <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">

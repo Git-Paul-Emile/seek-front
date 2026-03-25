@@ -64,12 +64,6 @@ function buildQuittancePDF(data: QuittanceData): jsPDF {
   doc.setFontSize(9);
   doc.text(`Réf. ${data.numero}  •  Émise le ${data.dateGeneration}`, W / 2, 24, { align: "center" });
 
-  if (data.statut === "PARTIEL") {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.text("PAIEMENT PARTIEL", W / 2, 32, { align: "center" });
-  }
-
   // ── App branding ─────────────────────────────────────────────────────────
   let y = 50;
   doc.setTextColor(...NAVY);

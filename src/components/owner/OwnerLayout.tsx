@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -16,9 +16,13 @@ import {
   PanelLeftClose,
   AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
 import { useBiensEnRetard } from "@/hooks/useBail";
+import { usePendingVerificationsCount } from "@/hooks/useLocataire";
+import { socketService, SOCKET_EVENTS, type NotificationPayload, type TransactionStatusPayload } from "@/services/socketService";
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
@@ -46,6 +50,8 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
     stats?.byStatut.find((s) => s.statut === "EN_ATTENTE")?.count ?? 0;
   const { data: biensEnRetard = [] } = useBiensEnRetard();
   const retardCount = biensEnRetard.length;
+  const { data: pendingVerif } = usePendingVerificationsCount();
+  const pendingVerifCount = pendingVerif?.count ?? 0;
 
   const handleLogout = async () => {
     await logout();
@@ -175,6 +181,11 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
               >
                 <Users className="w-4 h-4 flex-shrink-0" />
                 <span className="flex-1 text-left">Locataires</span>
+                {pendingVerifCount > 0 && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-amber-500 text-white">
+                    {pendingVerifCount}
+                  </span>
+                )}
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
                     locatairesOpen ? "rotate-180" : ""
@@ -347,10 +358,50 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
   );
 }
 
+// ─── Hook temps réel owner ────────────────────────────────────────────────────
+
+function useOwnerRealtime() {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const unsubNotif = socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationPayload) => {
+      toast.info(data.titre, { description: data.message });
+      qc.invalidateQueries({ queryKey: ["owner-messages"] });
+    });
+
+    const unsubBadge = socketService.on(SOCKET_EVENTS.BADGE_UPDATE, () => {
+      qc.invalidateQueries({ queryKey: ["owner-stats"] });
+      qc.invalidateQueries({ queryKey: ["biens-retard"] });
+    });
+
+    const unsubPayOk = socketService.on(SOCKET_EVENTS.PAYMENT_CONFIRMED, (data: TransactionStatusPayload) => {
+      toast.success("Paiement confirmé", {
+        description: `${data.montant.toLocaleString("fr-FR")} FCFA reçu`,
+      });
+      qc.invalidateQueries({ queryKey: ["bail"] });
+      qc.invalidateQueries({ queryKey: ["echeancier"] });
+    });
+
+    const unsubPayFail = socketService.on(SOCKET_EVENTS.PAYMENT_FAILED, (data: TransactionStatusPayload) => {
+      toast.error("Paiement échoué", {
+        description: `Transaction ${data.transactionId} — montant ${data.montant.toLocaleString("fr-FR")} FCFA`,
+      });
+    });
+
+    return () => {
+      unsubNotif();
+      unsubBadge();
+      unsubPayOk();
+      unsubPayFail();
+    };
+  }, [qc]);
+}
+
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
 export default function OwnerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  useOwnerRealtime();
 
   return (
     <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">

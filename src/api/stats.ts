@@ -29,6 +29,7 @@ export interface AdminStats {
     ville: string | null;
     proprietaire: { prenom: string | null; nom: string | null } | null;
     createdAt: string;
+    statutAnnonce: string;
   }[];
 }
 

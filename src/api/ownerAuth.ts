@@ -146,13 +146,11 @@ export interface OwnerTrustScore {
     annoncesPubliees: number;
     anciennete: number;
     bailsActifs: number;
-    penalitesSignalements: number;
   };
   badges: ("identite_verifiee" | "hote_actif" | "anciennete_1an")[];
   nbAnnonces: number;
   nbBailsActifs: number;
   moisAnciennete: number;
-  nbSignalementsNegatifs: number;
 }
 
 export const getOwnScoreApi = () =>

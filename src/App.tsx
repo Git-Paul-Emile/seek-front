@@ -12,6 +12,7 @@ import { OwnerAuthProvider } from "@/context/OwnerAuthContext";
 import { LocataireAuthProvider } from "@/context/LocataireAuthContext";
 import { ComptePublicAuthProvider } from "@/context/ComptePublicAuthContext";
 import { FavorisAuthModalProvider } from "@/context/FavorisAuthModalContext";
+import { SocketProvider } from "@/context/SocketContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import PageTitle from "@/components/PageTitle";
 import GuestRoute from "@/components/admin/GuestRoute";
@@ -77,8 +78,12 @@ import ModelesContratPage from "./pages/admin/contrats/ModelesContratPage";
 import FavorisPage from "./pages/public/Favoris";
 import MonComptePage from "./pages/public/MonCompte";
 import ConfigMonetisationPage from "./pages/admin/monetisation/ConfigMonetisationPage";
-import MisesEnAvantAdminPage from "./pages/admin/monetisation/MisesEnAvantAdminPage";
 import LoyersEnRetardPage from "./pages/owner/LoyersEnRetardPage";
+import SignalementsAdmin from "./pages/admin/SignalementsAdmin";
+import EtatDesLieuxList from "./pages/owner/etats-des-lieux/EtatDesLieuxList";
+import EtatDesLieuxForm from "./pages/owner/etats-des-lieux/EtatDesLieuxForm";
+import EtatDesLieuxComparison from "./pages/owner/etats-des-lieux/EtatDesLieuxComparison";
+import EtatDesLieuxReview from "./pages/locataire/etats-des-lieux/EtatDesLieuxReview";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +108,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <SocketProvider>
         <AuthProvider>
           <ComptePublicAuthProvider>
           <FavorisAuthModalProvider>
@@ -148,6 +154,12 @@ const App = () => (
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
                     <Route path="/owner/loyers-retard" element={<LoyersEnRetardPage />} />
+                    
+                    {/* Etats des Lieux Owner */}
+                    <Route path="/owner/bails/:bailId/etats-des-lieux" element={<EtatDesLieuxList />} />
+                    <Route path="/owner/bails/:bailId/etats-des-lieux/creer" element={<EtatDesLieuxForm />} />
+                    <Route path="/owner/bails/:bailId/etats-des-lieux/comparaison" element={<EtatDesLieuxComparison role="PROPRIETAIRE" />} />
+                    <Route path="/owner/etats-des-lieux/:id" element={<EtatDesLieuxForm />} />
                   </Route>
                 </Route>
 
@@ -170,6 +182,10 @@ const App = () => (
                     <Route path="/locataire/proprietaire" element={<ProprietaireLocatairePage />} />
                     <Route path="/locataire/historique" element={<HistoriqueLogement />} />
                     <Route path="/locataire/documents" element={<DocumentsBien />} />
+
+                    {/* Etats des Lieux Locataire */}
+                    <Route path="/locataire/etats-des-lieux/:id" element={<EtatDesLieuxReview />} />
+                    <Route path="/locataire/bails/:bailId/etats-des-lieux/comparaison" element={<EtatDesLieuxComparison role="LOCATAIRE" />} />
                   </Route>
                 </Route>
 
@@ -203,7 +219,7 @@ const App = () => (
                     <Route path="stats/revenus"            element={<AdminStatsRevenus />} />
                     <Route path="contrats/modeles"         element={<ModelesContratPage />} />
                     <Route path="monetisation/config"         element={<ConfigMonetisationPage />} />
-                    <Route path="monetisation/mises-en-avant" element={<MisesEnAvantAdminPage />} />
+                    <Route path="signalements"         element={<SignalementsAdmin />} />
                   </Route>
                 </Route>
               </Routes>
@@ -212,6 +228,7 @@ const App = () => (
           </FavorisAuthModalProvider>
           </ComptePublicAuthProvider>
         </AuthProvider>
+        </SocketProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

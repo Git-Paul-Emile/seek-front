@@ -47,7 +47,7 @@ export const useValiderAnnonce = () => {
       note,
     }: {
       id: string;
-      action: "APPROUVER" | "REJETER" | "REVISION";
+      action: "APPROUVER" | "REJETER";
       note?: string;
     }) => validerAnnonce(id, action, note),
     onSuccess: () => {

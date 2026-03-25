@@ -117,7 +117,7 @@ export const prolongerBailApi = async (
 
 // ─── Échéancier ───────────────────────────────────────────────────────────────
 
-export type StatutPaiement = "A_VENIR" | "EN_ATTENTE" | "EN_RETARD" | "EN_ATTENTE_CONFIRMATION" | "PAYE" | "PARTIEL" | "ANNULE";
+export type StatutPaiement = "A_VENIR" | "EN_ATTENTE" | "EN_RETARD" | "EN_ATTENTE_CONFIRMATION" | "PAYE" | "ANNULE";
 
 export interface Echeance {
   id: string;
@@ -131,7 +131,6 @@ export interface Echeance {
   reference?: string | null;
   note?: string | null;
   sourceEnregistrement?: "LOCATAIRE" | "PROPRIETAIRE" | null;
-  montantPaye?: number | null;
   confirmeParProprietaire: boolean;
   dateConfirmation?: string | null;
   confirmeParLocataire: boolean;
@@ -143,7 +142,6 @@ export interface PayerEcheancePayload {
   modePaiement?: string;
   reference?: string;
   note?: string;
-  montant?: number;
 }
 
 export const getEcheancierApi = async (bienId: string, bailId: string): Promise<Echeance[]> => {
@@ -182,7 +180,6 @@ export const payerMoisMultiplesApi = async (
 
 export interface EnregistrerEspecesPayload {
   datePaiement: string;
-  montant?: number;
   note?: string;
 }
 

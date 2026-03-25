@@ -45,19 +45,18 @@ const STATUT_CFG: Record<string, {
   EN_RETARD:               { label: "En retard",            icon: AlertCircle,  rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
   EN_ATTENTE_CONFIRMATION: { label: "À confirmer",          icon: Hourglass,    rowCls: "bg-purple-50 border-purple-100", iconCls: "text-purple-400", badgeCls: "bg-purple-100 text-purple-700" },
   PAYE:                    { label: "Payé",                 icon: CheckCircle2, rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
-  PARTIEL:                 { label: "Partiellement payé",   icon: CheckCircle2, rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
   ANNULE:                  { label: "Annulé",               icon: CircleDashed, rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
 };
 
 const ORDER: Record<string, number> = {
-  EN_RETARD: 0, EN_ATTENTE: 1, PARTIEL: 2, A_VENIR: 3, PAYE: 4, ANNULE: 5,
+  EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PAYE: 3, ANNULE: 4,
 };
 
 const isUnpaid = (s: string) => s !== "PAYE" && s !== "ANNULE" && s !== "EN_ATTENTE_CONFIRMATION";
-const canDownload = (s: string) => s === "PAYE" || s === "PARTIEL";
+const canDownload = (s: string) => s === "PAYE";
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 
-type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "EN_ATTENTE_CONFIRMATION" | "A_VENIR" | "PAYE" | "PARTIEL";
+type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "EN_ATTENTE_CONFIRMATION" | "A_VENIR" | "PAYE";
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
@@ -85,11 +84,10 @@ export default function PaiementsLocatairePage() {
 
   // Stats calculées depuis l'échéancier
   const nbPaye    = echeancier.filter(e => e.statut === "PAYE").length;
-  const nbPartiel = echeancier.filter(e => e.statut === "PARTIEL").length;
   const nbEnRetard = echeancier.filter(e => e.statut === "EN_RETARD").length;
   const nbEnAttente = echeancier.filter(e => e.statut === "EN_ATTENTE").length;
   const nbAVenir  = echeancier.filter(e => e.statut === "A_VENIR").length;
-  const nbPayeTotal = nbPaye + nbPartiel;
+  const nbPayeTotal = nbPaye;
   const montantEnRetard = echeancier.filter(e => e.statut === "EN_RETARD").reduce((s, e) => s + e.montant, 0);
   const solde = echeancier.filter(e => isUnpaid(e.statut)).reduce((s, e) => s + e.montant, 0);
 
@@ -189,7 +187,6 @@ export default function PaiementsLocatairePage() {
     { key: "EN_ATTENTE_CONFIRMATION", label: "À confirmer", count: nbEnAttenteConfirmation },
     { key: "A_VENIR",                 label: "À venir",     count: nbAVenir },
     { key: "PAYE",                    label: "Payés",       count: nbPaye },
-    { key: "PARTIEL",                 label: "Partiels",    count: nbPartiel },
   ];
 
   if (isLoading) {
@@ -429,7 +426,7 @@ export default function PaiementsLocatairePage() {
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
                         {cfg.label}
                       </span>
-                      {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
+                      {ech.statut === "PAYE" && ech.sourceEnregistrement && (
                         <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
                           ech.sourceEnregistrement === "LOCATAIRE"
                             ? "bg-blue-100 text-blue-700"

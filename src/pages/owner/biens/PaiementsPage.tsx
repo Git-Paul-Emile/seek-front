@@ -42,7 +42,7 @@ import type { Echeance } from "@/api/bail";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "EN_ATTENTE_CONFIRMATION" | "A_VENIR" | "PAYE" | "PARTIEL";
+type StatutFilter = "TOUT" | "EN_RETARD" | "EN_ATTENTE" | "EN_ATTENTE_CONFIRMATION" | "A_VENIR" | "PAYE";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -58,15 +58,14 @@ const STATUT_CFG: Record<string, {
   EN_RETARD:               { label: "En retard",            icon: AlertCircle,   rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
   EN_ATTENTE_CONFIRMATION: { label: "Attente confirmation", icon: Hourglass,     rowCls: "bg-purple-50 border-purple-100", iconCls: "text-purple-400", badgeCls: "bg-purple-100 text-purple-700" },
   PAYE:                    { label: "Payé",                 icon: CheckCircle2,  rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
-  PARTIEL:                 { label: "Partiellement payé",   icon: CheckCircle2,  rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
   ANNULE:                  { label: "Annulé",               icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
 };
 
 const ORDER: Record<string, number> = {
-  EN_RETARD: 0, EN_ATTENTE: 1, PARTIEL: 2, A_VENIR: 3, PAYE: 4, ANNULE: 5,
+  EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PAYE: 3, ANNULE: 4,
 };
 
-const canDownload = (s: string) => s === "PAYE" || s === "PARTIEL";
+const canDownload = (s: string) => s === "PAYE";
 
 const joursRetard = (dateEcheance: string) =>
   Math.max(0, Math.floor((Date.now() - new Date(dateEcheance).getTime()) / 86400000));
@@ -394,7 +393,6 @@ export default function PaiementsPage() {
     { key: "EN_ATTENTE_CONFIRMATION",  label: "À confirmer",         count: nbEnAttenteConfirmation },
     { key: "A_VENIR",                  label: "À venir",             count: visibleEcheancier.filter(e => e.statut === "A_VENIR").length },
     { key: "PAYE",                     label: "Payés",               count: visibleEcheancier.filter(e => e.statut === "PAYE").length },
-    { key: "PARTIEL",                  label: "Partiels",            count: visibleEcheancier.filter(e => e.statut === "PARTIEL").length },
   ];
 
   if (isLoading) {
@@ -708,7 +706,7 @@ export default function PaiementsPage() {
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
                           {cfg.label}
                         </span>
-                        {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
+                        {ech.statut === "PAYE" && ech.sourceEnregistrement && (
                           <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
                             ech.sourceEnregistrement === "LOCATAIRE"
                               ? "bg-blue-100 text-blue-700"
@@ -733,13 +731,6 @@ export default function PaiementsPage() {
                       <p className="text-xs text-slate-500 mt-0.5">
                         {fmt(total)} FCFA
                       </p>
-                      {ech.statut === "PARTIEL" && ech.montantPaye != null && (
-                        <p className="text-xs mt-0.5">
-                          <span className="text-orange-600 font-semibold">{fmt(ech.montantPaye)} FCFA payés</span>
-                          <span className="text-slate-400"> · reste </span>
-                          <span className="text-red-500 font-semibold">{fmt(ech.montant - ech.montantPaye)} FCFA</span>
-                        </p>
-                      )}
                       {ech.statut === "EN_RETARD" && (
                         <p className="text-xs text-red-500 font-semibold mt-0.5">
                           {joursRetard(ech.dateEcheance)} jours de retard

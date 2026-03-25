@@ -121,17 +121,9 @@ export const payerEtActiverPremium = (
   bienId: string,
   formuleId: string,
   modePaiement: string,
-  ownerId: string
 ): Promise<PremiumResponse> =>
   api
-    .post<{ data: PremiumResponse }>(`/${bienId}/payer`, {
-      formuleId,
-      modePaiement,
-    }, {
-      headers: {
-        'x-owner-id': ownerId,
-      },
-    })
+    .post<{ data: PremiumResponse }>(`/${bienId}/payer`, { formuleId, modePaiement })
     .then((r) => r.data.data);
 
 /**
@@ -145,14 +137,9 @@ export const getMoyensPaiement = (): Promise<MoyenPaiement[]> =>
  */
 export const arreterPremium = (
   bienId: string,
-  ownerId: string
 ): Promise<{ success: boolean; message: string }> =>
   api
-    .post<{ data: { success: boolean; message: string } }>(`/${bienId}/arreter`, {}, {
-      headers: {
-        'x-owner-id': ownerId,
-      },
-    })
+    .post<{ data: { success: boolean; message: string } }>(`/${bienId}/arreter`, {})
     .then((r) => r.data.data);
 
 /**
@@ -160,30 +147,21 @@ export const arreterPremium = (
  */
 export const getHistoriqueMisesEnAvant = (
   bienId: string,
-  ownerId: string
 ): Promise<PromotionHistory[]> =>
   api
-    .get<{ data: PromotionHistory[] }>(`/${bienId}/historique`, {
-      headers: {
-        'x-owner-id': ownerId,
-      },
-    })
+    .get<{ data: PromotionHistory[] }>(`/${bienId}/historique`)
     .then((r) => r.data.data);
 
 /**
  * Récupère l'historique de tous les paiements premium du propriétaire
  */
 export const getHistoriquePaiementsPremium = (
-  ownerId: string,
   page?: number,
   limit?: number
 ): Promise<{ data: PromotionHistory[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> =>
   api
     .get<{ data: { data: PromotionHistory[]; pagination: { page: number; limit: number; total: number; totalPages: number } } }>("/historique", {
       params: { page, limit },
-      headers: {
-        'x-owner-id': ownerId,
-      },
     })
     .then((r) => r.data.data);
 

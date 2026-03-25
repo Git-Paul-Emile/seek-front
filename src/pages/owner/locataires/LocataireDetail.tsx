@@ -554,16 +554,27 @@ export default function LocataireDetail() {
                     {fmtMontant(bail.montantLoyer)} / mois
                   </span>
                 </div>
-                {/* Bouton voir le contrat */}
-                {bail.contrat && (
-                  <button
-                    onClick={() => setSelectedBail(bail as unknown as Bail)}
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                <div className="flex gap-2 mt-3">
+                  {/* Bouton voir le contrat */}
+                  {bail.contrat && (
+                    <button
+                      onClick={() => setSelectedBail(bail as unknown as Bail)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                    >
+                      <FileText className="w-3 h-3" />
+                      Voir le contrat
+                    </button>
+                  )}
+                  
+                  {/* Bouton Etats des Lieux */}
+                  <Link
+                    to={`/owner/bails/${bail.id}/etats-des-lieux`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D4A843]/10 text-[#D4A843] hover:bg-[#D4A843]/20 rounded-lg text-xs font-medium transition-colors"
                   >
-                    <FileText className="w-3 h-3" />
-                    Voir le contrat
-                  </button>
-                )}
+                    <CheckCircle className="w-3 h-3" />
+                    États des Lieux
+                  </Link>
+                </div>
               </div>
             ))}
           </div>

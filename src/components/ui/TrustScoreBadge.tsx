@@ -7,7 +7,6 @@ export interface TrustScore {
   badges: ("identite_verifiee" | "hote_actif" | "anciennete_1an")[];
   nbAnnonces: number;
   moisAnciennete: number;
-  nbSignalementsNegatifs: number;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

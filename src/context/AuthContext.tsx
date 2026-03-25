@@ -10,6 +10,7 @@ import React, {
 import axios from "axios";
 import { loginApi, logoutApi, meApi, refreshApi, type AdminInfo } from "@/api/auth";
 import { useLocation } from "react-router-dom";
+import { socketService } from "@/services/socketService";
 
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
 
@@ -93,6 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
+
+  // Rejoindre la room admin socket
+  useEffect(() => {
+    if (admin) {
+      socketService.joinAdmin();
+    }
+  }, [admin]);
 
   const login = useCallback(async (email: string, password: string) => {
     await loginApi({ email, password });

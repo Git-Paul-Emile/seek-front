@@ -46,7 +46,7 @@ export const getQuittanceApi = async (
   return data.data;
 };
 
-/** Génère (ou récupère) la quittance d'une échéance PAYE/PARTIEL */
+/** Génère (ou récupère) la quittance d'une échéance PAYE */
 export const genererQuittanceApi = async (
   bienId: string,
   bailId: string,

@@ -501,15 +501,14 @@ export default function LocataireDashboard() {
               EN_ATTENTE: { label: "En attente",         icon: AlertCircle,   rowCls: "bg-amber-50 border-amber-100",   iconCls: "text-amber-400",  badgeCls: "bg-amber-100 text-amber-700" },
               EN_RETARD:  { label: "En retard",          icon: AlertCircle,   rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
               PAYE:       { label: "Payé",               icon: CheckCircle2,  rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
-              PARTIEL:    { label: "Partiellement payé", icon: CheckCircle2,  rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
               ANNULE:     { label: "Annulé",             icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
             };
 
             const total   = echeancier.length;
-            const payes   = echeancier.filter(e => e.statut === "PAYE" || e.statut === "PARTIEL").length;
+            const payes   = echeancier.filter(e => e.statut === "PAYE").length;
             const retards = echeancier.filter(e => e.statut === "EN_RETARD").length;
 
-            const ORDER: Record<string, number> = { EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PARTIEL: 3, PAYE: 4, ANNULE: 5 };
+            const ORDER: Record<string, number> = { EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PAYE: 3, ANNULE: 4 };
             const sorted = [...echeancier].sort((a, b) =>
               (ORDER[a.statut] ?? 9) - (ORDER[b.statut] ?? 9) ||
               new Date(a.dateEcheance).getTime() - new Date(b.dateEcheance).getTime()
@@ -563,7 +562,7 @@ export default function LocataireDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-2">
-                          {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.datePaiement && (
+                          {ech.statut === "PAYE" && ech.datePaiement && (
                             <span className="text-[9px] text-slate-400">
                               {new Date(ech.datePaiement).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
                             </span>
@@ -723,7 +722,7 @@ export default function LocataireDashboard() {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-[9px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full">
-                          {q.echeance?.statut === "PARTIEL" ? "Partiel" : "Payé"}
+                          Payé
                         </span>
                         {q.echeance?.montant != null && (
                           <span className="text-[10px] text-slate-400">

@@ -60,10 +60,9 @@ export interface TransactionPaginatedResponse {
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
 /**
- * Récupère l'historique des transactions du propriétaire
+ * Récupère l'historique des transactions du propriétaire connecté
  */
 export const getHistoriqueTransactions = (
-  ownerId: string,
   page?: number,
   limit?: number,
   filters?: {
@@ -75,9 +74,6 @@ export const getHistoriqueTransactions = (
   api
     .get<TransactionPaginatedResponse>("", {
       params: { page, limit, ...filters },
-      headers: {
-        'x-owner-id': ownerId,
-      },
     })
     .then((r) => r.data.data);
 

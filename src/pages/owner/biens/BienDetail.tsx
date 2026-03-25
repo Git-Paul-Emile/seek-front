@@ -763,6 +763,15 @@ export default function BienDetail() {
                         Voir le contrat
                       </button>
 
+                      {/* Gérer les états des lieux */}
+                      <Link
+                        to={`/owner/bails/${bail.id}/etats-des-lieux`}
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-[#D4A843] text-[#D4A843] rounded-lg text-xs font-medium hover:bg-[#D4A843]/10 transition-colors"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        États des Lieux
+                      </Link>
+
                       {/* Prolonger - disponible si ACTIF ou EN_RENOUVELLEMENT */}
                       {(statut === "ACTIF" || statut === "EN_RENOUVELLEMENT") && (
                         <button
@@ -1014,12 +1023,12 @@ export default function BienDetail() {
                 {/* Échéancier */}
                 {echeancier.length > 0 && (() => {
                   const total   = echeancier.length;
-                  const payes   = echeancier.filter(e => e.statut === "PAYE" || e.statut === "PARTIEL").length;
+                  const payes   = echeancier.filter(e => e.statut === "PAYE").length;
                   const retards = echeancier.filter(e => e.statut === "EN_RETARD").length;
                   const avenir  = echeancier.filter(e => e.statut === "A_VENIR").length;
 
-                  // Tri : EN_RETARD → EN_ATTENTE → A_VENIR → PAYE/PARTIEL
-                  const ORDER: Record<string, number> = { EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PARTIEL: 3, PAYE: 4, ANNULE: 5 };
+                  // Tri : EN_RETARD → EN_ATTENTE → A_VENIR → PAYE
+                  const ORDER: Record<string, number> = { EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PAYE: 3, ANNULE: 4 };
                   const sorted = [...echeancier].sort((a, b) =>
                     (ORDER[a.statut] ?? 9) - (ORDER[b.statut] ?? 9) ||
                     new Date(a.dateEcheance).getTime() - new Date(b.dateEcheance).getTime()
@@ -1031,7 +1040,6 @@ export default function BienDetail() {
                     EN_ATTENTE: { label: "En attente",         icon: AlertCircle,   rowCls: "bg-amber-50 border-amber-100",   iconCls: "text-amber-400",  badgeCls: "bg-amber-100 text-amber-700" },
                     EN_RETARD:  { label: "En retard",          icon: AlertCircle,   rowCls: "bg-red-50 border-red-100",       iconCls: "text-red-400",    badgeCls: "bg-red-100 text-red-700" },
                     PAYE:       { label: "Payé",               icon: CheckCircle2,  rowCls: "bg-green-50 border-green-100",   iconCls: "text-green-500",  badgeCls: "bg-green-100 text-green-700" },
-                    PARTIEL:    { label: "Partiellement payé", icon: CheckCircle2,  rowCls: "bg-orange-50 border-orange-100", iconCls: "text-orange-400", badgeCls: "bg-orange-100 text-orange-700" },
                     ANNULE:     { label: "Annulé",             icon: CircleDashed,  rowCls: "bg-slate-50 border-slate-100",   iconCls: "text-slate-300",  badgeCls: "bg-slate-100 text-slate-400" },
                   };
 
@@ -1079,7 +1087,7 @@ export default function BienDetail() {
                                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cfg.badgeCls}`}>
                                       {cfg.label}
                                     </span>
-                                    {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.sourceEnregistrement && (
+                                    {ech.statut === "PAYE" && ech.sourceEnregistrement && (
                                       <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
                                         ech.sourceEnregistrement === "LOCATAIRE"
                                           ? "bg-blue-100 text-blue-700"
@@ -1123,7 +1131,7 @@ export default function BienDetail() {
                                     Relance
                                   </button>
                                 )}
-                                {(ech.statut === "PAYE" || ech.statut === "PARTIEL") && ech.datePaiement && (
+                                {ech.statut === "PAYE" && ech.datePaiement && (
                                   <button
                                     onClick={() => {
                                       if (!bail || !bien || !owner) return;

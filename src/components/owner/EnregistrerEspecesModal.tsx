@@ -27,25 +27,22 @@ function FormStep({
   onClose: () => void;
 }) {
   const unpaid = echeancier
-    .filter(e => e.statut !== "PAYE" && e.statut !== "PARTIEL" && e.statut !== "ANNULE" && e.statut !== "EN_ATTENTE_CONFIRMATION")
+    .filter(e => e.statut !== "PAYE" && e.statut !== "ANNULE" && e.statut !== "EN_ATTENTE_CONFIRMATION")
     .sort((a, b) => new Date(a.dateEcheance).getTime() - new Date(b.dateEcheance).getTime());
 
   const [selectedEcheanceId, setSelectedEcheanceId] = useState(unpaid[0]?.id ?? "");
   const [datePaiement, setDatePaiement] = useState(todayIso());
-  const [montantSaisi, setMontantSaisi] = useState(String(unpaid[0]?.montant ?? ""));
   const [note, setNote] = useState("");
   const [done, setDone] = useState(false);
 
   const { mutate, isPending } = useEnregistrerPaiementEspeces();
 
   const selectedEch = echeancier.find(e => e.id === selectedEcheanceId);
-  const montant = montantSaisi ? parseFloat(montantSaisi) : (selectedEch?.montant ?? 0);
 
   const canSubmit =
     !!selectedEcheanceId &&
     datePaiement.length > 0 &&
-    new Date(datePaiement) <= new Date(todayIso()) &&
-    montant > 0;
+    new Date(datePaiement) <= new Date(todayIso());
 
   const handleSubmit = () => {
     if (!canSubmit) return;
@@ -56,7 +53,6 @@ function FormStep({
         echeanceId: selectedEcheanceId,
         payload: {
           datePaiement,
-          montant: montantSaisi ? parseFloat(montantSaisi) : undefined,
           note: note || undefined,
         },
       },
@@ -141,12 +137,7 @@ function FormStep({
         ) : (
           <select
             value={selectedEcheanceId}
-            onChange={e => {
-              const id = e.target.value;
-              setSelectedEcheanceId(id);
-              const ech = echeancier.find(x => x.id === id);
-              if (ech) setMontantSaisi(String(ech.montant));
-            }}
+            onChange={e => setSelectedEcheanceId(e.target.value)}
             className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-[#0C1A35] focus:outline-none focus:border-[#D4A843]"
           >
             {unpaid.map(e => (
@@ -163,24 +154,17 @@ function FormStep({
         )}
       </div>
 
-      {/* Montant */}
-      <div>
-        <label className="block text-xs font-medium text-slate-600 mb-1">
-          Montant reçu (FCFA)
-          {selectedEch && (
-            <span className="ml-1 text-slate-400 font-normal">
-              — loyer : {fmt(selectedEch.montant)} FCFA
-            </span>
-          )}
-        </label>
-        <input
-          type="number"
-          value={montantSaisi}
-          onChange={e => setMontantSaisi(e.target.value)}
-          placeholder={selectedEch ? String(selectedEch.montant) : "Montant"}
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0C1A35] focus:outline-none focus:border-[#D4A843]"
-        />
-      </div>
+      {/* Montant (lecture seule) */}
+      {selectedEch && (
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Montant (FCFA)</label>
+          <input
+            readOnly
+            value={`${fmt(selectedEch.montant)} FCFA`}
+            className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 cursor-not-allowed"
+          />
+        </div>
+      )}
 
       {/* Date */}
       <div>

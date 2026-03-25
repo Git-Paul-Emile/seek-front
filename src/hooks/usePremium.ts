@@ -27,10 +27,7 @@ import { toast } from "sonner";
 export const useFormulesPremium = () => {
   return useQuery({
     queryKey: ["formules-premium"],
-    queryFn: async () => {
-      const result = await getFormulesPremium();
-      return result;
-    },
+    queryFn: getFormulesPremium,
   });
 };
 
@@ -41,11 +38,10 @@ export const usePayerPremium = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ bienId, formuleId, modePaiement, ownerId }: { bienId: string; formuleId: string; modePaiement: string; ownerId: string }) =>
-      payerEtActiverPremium(bienId, formuleId, modePaiement, ownerId),
-    onSuccess: (data) => {
+    mutationFn: ({ bienId, formuleId, modePaiement }: { bienId: string; formuleId: string; modePaiement: string }) =>
+      payerEtActiverPremium(bienId, formuleId, modePaiement),
+    onSuccess: () => {
       toast.success("Paiement effectué avec succès ! Votre annonce est maintenant mise en avant.");
-      // Invalider les requêtes liées
       queryClient.invalidateQueries({ queryKey: ["biens"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-status"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
@@ -64,11 +60,9 @@ export const useArreterPremium = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ bienId, ownerId }: { bienId: string; ownerId: string }) =>
-      arreterPremium(bienId, ownerId),
+    mutationFn: ({ bienId }: { bienId: string }) => arreterPremium(bienId),
     onSuccess: (data) => {
       toast.success(data.message || "Mise en avant arrêtée avec succès.");
-      // Invalider les requêtes liées
       queryClient.invalidateQueries({ queryKey: ["biens"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-status"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
@@ -83,14 +77,10 @@ export const useArreterPremium = () => {
 /**
  * Hook pour récupérer l'historique de tous les paiements du propriétaire
  */
-export const useHistoriqueTransactions = (ownerId: string, page?: number, limit?: number) => {
+export const useHistoriqueTransactions = (page?: number, limit?: number) => {
   return useQuery({
-    queryKey: ["transactions", ownerId, page, limit],
-    queryFn: async () => {
-      const result = await getHistoriqueTransactions(ownerId, page, limit);
-      return result;
-    },
-    enabled: !!ownerId,
+    queryKey: ["transactions", page, limit],
+    queryFn: () => getHistoriqueTransactions(page, limit),
   });
 };
 

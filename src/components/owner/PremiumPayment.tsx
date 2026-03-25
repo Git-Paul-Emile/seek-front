@@ -206,7 +206,7 @@ export default function PremiumPayment({ bienId, bienTitre, onSuccess }: Premium
     if (!selectedFormule || !selectedPaiement || !owner) return;
 
     payerMutation.mutate(
-      { bienId, formuleId: selectedFormule.id, modePaiement: selectedPaiement, ownerId: owner.id },
+      { bienId, formuleId: selectedFormule.id, modePaiement: selectedPaiement },
       {
         onSuccess: (data) => {
           console.log('Paiement réussi:', data);
@@ -237,7 +237,7 @@ export default function PremiumPayment({ bienId, bienTitre, onSuccess }: Premium
     if (!owner) return;
 
     arreterMutation.mutate(
-      { bienId, ownerId: owner.id },
+      { bienId },
       {
         onSuccess: () => {
           setModalType(null);

@@ -14,10 +14,11 @@ import {
   updateEtatDesLieux,
   getEtatDesLieuxOwner,
   submitEtatDesLieux,
-  uploadEtatLieuxImage
+  uploadEtatLieuxImage,
+  resoudreContestationsProprietaire
 } from "@/api/etatDesLieux.api";
 import { toast } from "sonner";
-import { PlusCircle, Trash2, ArrowLeft, Send, CheckCircle } from "lucide-react";
+import { PlusCircle, Trash2, ArrowLeft, Send, CheckCircle, AlertTriangle, MessageSquareWarning } from "lucide-react";
 
 const ETATS: { value: EtatElement, label: string }[] = [
   { value: "NEUF", label: "Neuf" },
@@ -76,6 +77,14 @@ const EtatDesLieuxForm = () => {
   // Form State
   const [nbCles, setNbCles] = useState<number>(0);
   const [pieces, setPieces] = useState<PieceEtatDesLieux[]>([]);
+
+  // Resolution state (owner resolving disputes)
+  const [resolutions, setResolutions] = useState<Record<string, {
+    decision: "RECTIFIER" | "ACCEPTER_RESERVE" | "REFUSER";
+    etat?: EtatElement;
+    commentaire?: string;
+    photos?: string[];
+  }>>({});
 
   useEffect(() => {
     if (id) {
@@ -180,7 +189,40 @@ const EtatDesLieuxForm = () => {
     }
   };
 
+  const handleResolveContestations = async () => {
+    const contestedElements = pieces.flatMap(p => p.elements).filter(e => e.estConteste && e.id);
+    const unresolvedIds = contestedElements.filter(e => !resolutions[e.id!]);
+    if (unresolvedIds.length > 0) {
+      toast.error(`Veuillez traiter les ${unresolvedIds.length} contestation(s) restante(s).`);
+      return;
+    }
+    try {
+      setLoading(true);
+      const payload = Object.entries(resolutions).map(([elementId, r]) => ({
+        elementId,
+        decision: r.decision,
+        etat: r.etat,
+        commentaire: r.commentaire,
+        photos: r.photos,
+      }));
+      await resoudreContestationsProprietaire(id!, payload);
+      toast.success("Résolutions envoyées au locataire.");
+      setResolutions({});
+      loadEDL(id!);
+    } catch (e: any) {
+      toast.error("Erreur", { description: e.response?.data?.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const setResolution = (elementId: string, decision: "RECTIFIER" | "ACCEPTER_RESERVE" | "REFUSER") => {
+    setResolutions(prev => ({ ...prev, [elementId]: { decision } }));
+  };
+
   const isReadonly = edl ? (edl.statut !== "BROUILLON" && edl.statut !== "CONTESTE") : false;
+  const isConteste = edl?.statut === "CONTESTE";
+  const isLitige = edl?.statut === "EN_LITIGE";
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl space-y-6">
@@ -193,10 +235,32 @@ const EtatDesLieuxForm = () => {
             {id ? `État des Lieux (${edl?.type})` : `Nouvel État des Lieux (${typeParam})`}
           </h1>
           {edl && (
-            <p className="text-sm text-gray-500">Statut: <span className="font-semibold">{edl.statut}</span></p>
+            <p className="text-sm text-gray-500">Statut: <span className={`font-semibold ${
+              isConteste ? 'text-orange-600' : isLitige ? 'text-red-600' : ''
+            }`}>{edl.statut.replace(/_/g, " ")}</span></p>
           )}
         </div>
       </div>
+
+      {isConteste && (
+        <div className="bg-orange-50 border border-orange-200 text-orange-800 p-4 rounded-lg flex items-start gap-3">
+          <AlertTriangle className="w-6 h-6 flex-shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold block">Le locataire conteste des éléments</span>
+            Vous devez traiter chaque contestation ci-dessous en choisissant de <strong>Rectifier</strong>, émettre une <strong>Note de Réserve</strong>, ou <strong>Refuser</strong>. Attention : un refus placera l'état des lieux en <strong>litige</strong>.
+          </div>
+        </div>
+      )}
+
+      {isLitige && (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg flex items-start gap-3">
+          <MessageSquareWarning className="w-6 h-6 flex-shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold block">État des lieux en litige</span>
+            Vous avez refusé certaines contestations du locataire. Un médiateur tiers ou un huissier devra intervenir.
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border space-y-4">
@@ -221,6 +285,78 @@ const EtatDesLieuxForm = () => {
         </div>
       </div>
 
+      {/* Dispute Resolution Section for Owner */}
+      {isConteste && (
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold text-orange-900 border-b border-orange-200 pb-2">Contestations du locataire</h2>
+          {pieces.map((piece) => {
+            const contested = piece.elements.filter(e => e.estConteste);
+            if (contested.length === 0) return null;
+            return (
+              <div key={piece.id || piece.nom} className="bg-white rounded-lg shadow-sm border">
+                <div className="bg-orange-50 p-4 border-b font-bold text-lg text-orange-900">{piece.nom}</div>
+                <div className="p-4 space-y-4">
+                  {contested.map((element) => {
+                    const res = resolutions[element.id!];
+                    return (
+                      <div key={element.id} className="border border-orange-200 rounded-lg overflow-hidden">
+                        <div className="bg-orange-50/50 p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <span className="font-semibold text-gray-800">{element.nom}</span>
+                            <span className="text-xs font-bold px-2 py-1 bg-blue-50 text-blue-700 rounded-full">{element.etat.replace(/_/g, " ")}</span>
+                          </div>
+                          <div className="bg-orange-100 rounded p-3 text-sm space-y-2">
+                            <div className="font-semibold text-orange-800">Motif du locataire :</div>
+                            <p className="text-orange-900">"{element.motifContestation}"</p>
+                            {element.photoContestation && (
+                              <img src={element.photoContestation} alt="Preuve contestation" className="w-24 h-24 object-cover rounded border border-orange-200 mt-2" crossOrigin="anonymous" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="p-4 bg-white border-t border-orange-100">
+                          <label className="text-sm font-semibold text-gray-600 block mb-2">Votre décision :</label>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant={res?.decision === "RECTIFIER" ? "default" : "outline"}
+                              className={res?.decision === "RECTIFIER" ? "bg-green-600 hover:bg-green-700" : "text-green-700 border-green-200 hover:bg-green-50"}
+                              onClick={() => setResolution(element.id!, "RECTIFIER")}
+                            >
+                              ✓ Rectifier la ligne
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={res?.decision === "ACCEPTER_RESERVE" ? "default" : "outline"}
+                              className={res?.decision === "ACCEPTER_RESERVE" ? "bg-orange-600 hover:bg-orange-700" : "text-orange-700 border-orange-200 hover:bg-orange-50"}
+                              onClick={() => setResolution(element.id!, "ACCEPTER_RESERVE")}
+                            >
+                              ⚖ Note de réserve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={res?.decision === "REFUSER" ? "default" : "outline"}
+                              className={res?.decision === "REFUSER" ? "bg-red-600 hover:bg-red-700" : "text-red-700 border-red-200 hover:bg-red-50"}
+                              onClick={() => setResolution(element.id!, "REFUSER")}
+                            >
+                              ✕ Refuser la contestation
+                            </Button>
+                          </div>
+                          {res?.decision === "REFUSER" && (
+                            <p className="text-xs text-red-600 mt-2 font-medium">⚠ Un refus placera l'état des lieux en litige bloquant.</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Normal edit form for BROUILLON */}
+      {!isConteste && !isLitige && (
       <div className="space-y-6">
         {pieces.map((piece, pIndex) => (
           <div key={pIndex} className="bg-white rounded-lg shadow-sm border" style={{ zIndex: 100 - pIndex, position: "relative" }}>
@@ -340,9 +476,14 @@ const EtatDesLieuxForm = () => {
            </Button>
         )}
       </div>
+      )}
 
       <div className="flex justify-end gap-3 sticky bottom-4 bg-white/80 backdrop-blur-md p-4 rounded-xl border shadow-lg mt-8 z-10">
-        {!isReadonly ? (
+        {isConteste ? (
+          <Button size="lg" disabled={loading} onClick={handleResolveContestations} className="gap-2 bg-orange-600 hover:bg-orange-700">
+            <Send className="w-4 h-4" /> Envoyer mes résolutions au locataire
+          </Button>
+        ) : !isReadonly ? (
           <>
             <Button variant="outline" size="lg" disabled={loading} onClick={() => handleSave(false)}>
               Sauvegarder Brouillon

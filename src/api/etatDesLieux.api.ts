@@ -8,7 +8,8 @@ const api = axios.create({
 });
 
 export type TypeEtatDesLieux = "ENTREE" | "SORTIE";
-export type StatutEtatDesLieux = "BROUILLON" | "EN_ATTENTE_VALIDATION" | "VALIDE" | "CONTESTE";
+export type StatutEtatDesLieux = "BROUILLON" | "EN_ATTENTE_VALIDATION" | "VALIDE" | "CONTESTE" | "EN_LITIGE";
+export type StatutContestationElement = "EN_ATTENTE" | "RECTIFIE" | "RESERVE" | "REFUSE";
 export type EtatElement = "NEUF" | "BON" | "USAGE" | "MAUVAIS" | "DEGRADE";
 
 export interface ElementEtatDesLieux {
@@ -17,6 +18,12 @@ export interface ElementEtatDesLieux {
   etat: EtatElement;
   commentaire?: string;
   photos?: string[];
+  
+  // Contestation
+  estConteste?: boolean;
+  motifContestation?: string;
+  photoContestation?: string;
+  statutContestation?: StatutContestationElement;
 }
 
 export interface PieceEtatDesLieux {
@@ -60,6 +67,15 @@ export const updateEtatDesLieux = (id: string, payload: Partial<EtatDesLieuxCrea
 export const submitEtatDesLieux = (id: string): Promise<EtatDesLieux> =>
   api.post<{ data: EtatDesLieux }>(`/${id}/submit`).then((r) => r.data.data);
 
+export const resoudreContestationsProprietaire = (id: string, resolutions: {
+  elementId: string;
+  decision: "RECTIFIER" | "ACCEPTER_RESERVE" | "REFUSER";
+  etat?: EtatElement;
+  commentaire?: string;
+  photos?: string[];
+}[]): Promise<EtatDesLieux> =>
+  api.post<{ data: EtatDesLieux }>(`/${id}/resoudre-contestation`, { resolutions }).then((r) => r.data.data);
+
 export const getEtatDesLieuxOwner = (id: string): Promise<EtatDesLieux> =>
   api.get<{ data: EtatDesLieux }>(`/owner/${id}`).then((r) => r.data.data);
 
@@ -80,8 +96,16 @@ export const getComparisonOwner = (bailId: string): Promise<{ entree: EtatDesLie
 
 // ─── API Locataire ──────────────────────────────────────────────────────────
 
-export const commentEtatDesLieux = (id: string, commentaire: string): Promise<EtatDesLieux> =>
-  api.post<{ data: EtatDesLieux }>(`/${id}/comment`, { commentaire }).then((r) => r.data.data);
+export const uploadEtatLieuxImageLocataire = (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("image", file);
+  return api.post<{ url: string }>("/locataire/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }).then((r) => r.data.url);
+};
+
+export const contesterElementsLocataire = (id: string, elements: { elementId: string; motifContestation: string; photoContestation: string }[]): Promise<EtatDesLieux> =>
+  api.post<{ data: EtatDesLieux }>(`/${id}/contester`, { elements }).then((r) => r.data.data);
 
 export const validateEtatDesLieux = (id: string, documentPdf?: string): Promise<EtatDesLieux> =>
   api.post<{ data: EtatDesLieux }>(`/${id}/validate`, { documentPdf }).then((r) => r.data.data);

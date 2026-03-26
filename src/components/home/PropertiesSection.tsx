@@ -32,9 +32,18 @@ const PropertiesSection = () => {
   const [page, setPage] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [limit, setLimit] = useState(typeof window !== "undefined" ? (window.innerWidth < 1024 ? 6 : 12) : 12);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setLimit(window.innerWidth < 1024 ? 6 : 12);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const queryParams = useMemo(() => {
-    const params: any = { limit: 12, page };
+    const params: any = { limit, page };
     if (sort === "oldest") {
       params.sortBy = "createdAt";
       params.sortOrder = "asc";
@@ -103,13 +112,13 @@ const PropertiesSection = () => {
   }, [page, totalPages]);
 
   return (
-    <section className="py-16 bg-white">
+    <section className="pt-10 pb-16 md:py-16 bg-white">
       <div className="container mx-auto px-8">
         {/* ───────────────────────────────────────────────────────────────────── */}
         {/* SECTION 1: À LA UNE (Annonces Premium en slider horizontal)         */}
         {/* ───────────────────────────────────────────────────────────────────── */}
         {hasPremium && (
-          <div className="mb-16">
+          <div className="mb-10 md:mb-16">
             {/* En-tête de section */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 gap-4">
               <div>
@@ -160,8 +169,8 @@ const PropertiesSection = () => {
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <CarouselPrevious className="left-2 bg-white/90 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
-                  <CarouselNext className="right-2 bg-white/90 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
+                  <CarouselPrevious className="left-2 bg-white/70 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
+                  <CarouselNext className="right-2 bg-white/70 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
                 </Carousel>
               </div>
             )}
@@ -169,7 +178,7 @@ const PropertiesSection = () => {
         )}
 
         {/* ── BANNEmarketing ── */}
-        <div className="mb-16">
+        <div className="mb-10 md:mb-16">
            <MarketingBanner />
         </div>
 

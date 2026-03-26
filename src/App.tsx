@@ -80,6 +80,7 @@ const ModelesContratPage = React.lazy(() => import("./pages/admin/contrats/Model
 const FavorisPage = React.lazy(() => import("./pages/public/Favoris"));
 const MonComptePage = React.lazy(() => import("./pages/public/MonCompte"));
 const ConfigMonetisationPage = React.lazy(() => import("./pages/admin/monetisation/ConfigMonetisationPage"));
+const ConfigSitePage = React.lazy(() => import("./pages/admin/parametres/ConfigSitePage"));
 const LoyersEnRetardPage = React.lazy(() => import("./pages/owner/LoyersEnRetardPage"));
 const SignalementsAdmin = React.lazy(() => import("./pages/admin/SignalementsAdmin"));
 const EtatDesLieuxList = React.lazy(() => import("./pages/owner/etats-des-lieux/EtatDesLieuxList"));
@@ -223,6 +224,7 @@ const App = () => (
                     <Route path="stats/revenus"            element={<AdminStatsRevenus />} />
                     <Route path="contrats/modeles"         element={<ModelesContratPage />} />
                     <Route path="monetisation/config"         element={<ConfigMonetisationPage />} />
+                    <Route path="parametres/config-site"      element={<ConfigSitePage />} />
                     <Route path="signalements"         element={<SignalementsAdmin />} />
                   </Route>
                 </Route>

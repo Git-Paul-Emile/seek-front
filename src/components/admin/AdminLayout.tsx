@@ -89,11 +89,12 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Monétisation",
-    icon: DollarSign,
-    basePath: "/admin/monetisation",
+    label: "Paramètres",
+    icon: Settings2,
+    basePath: "/admin/parametres",
     children: [
-      { to: "/admin/monetisation/config", label: "Configuration", icon: Settings2 },
+      { to: "/admin/monetisation/config", label: "Monétisation", icon: DollarSign },
+      { to: "/admin/parametres/config-site", label: "Configuration globale", icon: Settings2 },
     ],
   },
   {

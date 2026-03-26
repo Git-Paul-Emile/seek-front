@@ -1399,90 +1399,78 @@ export default function AddBien() {
         </div>{/* end pointer-events wrapper */}
 
         {/* ── Navigation footer ─────────────────────────────────────── */}
-        <div className="flex items-center justify-between pt-2 pb-4">
+        <div className="pt-2 pb-4 space-y-3">
           {isLockedByBail ? (
-            /* Footer bail verrouillé */
-            <div className="flex items-center gap-3 w-full justify-between">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between">
               <Link
                 to={`/owner/biens/${editId}`}
-                className="flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
+                className="flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" /> Retour au bien
               </Link>
               <Link
                 to={`/owner/biens/${editId}`}
-                className="flex items-center gap-2 h-10 px-6 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-sm transition-all"
+                className="flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-sm transition-all"
               >
                 <Lock className="w-4 h-4" /> Gérer le bail
               </Link>
             </div>
           ) : (
           <>
-          <div className="flex items-center gap-2">
-            <Link
-              to={isEditingPublished ? `/owner/biens/${editId}` : "/owner/biens"}
-              className="flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
-            >
-              {isEditingPublished ? "Annuler la modification" : "Annuler"}
-            </Link>
-            <button
-              type="button"
-              onClick={goPrev}
-              disabled={isFirst}
-              className="flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-0 disabled:pointer-events-none"
-            >
-              <ChevronLeft className="w-4 h-4" /> Précédent
-            </button>
-          </div>
+          {/* Row 1: Annuler + Précédent + Suivant/Soumettre */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Link
+                to={isEditingPublished ? `/owner/biens/${editId}` : "/owner/biens"}
+                className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
+              >
+                {isEditingPublished ? "Annuler" : "Annuler"}
+              </Link>
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={isFirst}
+                className="flex items-center gap-1.5 h-11 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-0 disabled:pointer-events-none"
+              >
+                <ChevronLeft className="w-4 h-4" /> <span className="hidden sm:inline">Précédent</span>
+              </button>
+            </div>
 
-          <div className="flex items-center gap-3">
             {isLast ? (
-              <>
-                {canSaveAsDraft && (
-                  <button
-                    type="button"
-                    onClick={() => handleSubmit(true)}
-                    disabled={submitting}
-                    className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
-                  >
-                    {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {draftLabel}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => handleSubmit(false)}
-                  disabled={submitting || (!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty)}
-                  title={!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty ? "Modifiez au moins un élément avant de resoumettre" : undefined}
-                  className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  {!editId ? "Soumettre l'annonce" : bienToEdit?.statutAnnonce === "REJETE" ? "Resoumettre l'annonce" : bienToEdit?.statutAnnonce === "BROUILLON" ? "Soumettre l'annonce" : "Mettre à jour l'annonce"}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => handleSubmit(false)}
+                disabled={submitting || (!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty)}
+                title={!!editId && (bienToEdit?.statutAnnonce === "BROUILLON" || bienToEdit?.statutAnnonce === "REJETE") && !isDirty ? "Modifiez au moins un élément avant de resoumettre" : undefined}
+                className="flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm font-bold shadow-sm shadow-[#D4A843]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {pendingAction === "publish" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                <span className="hidden sm:inline">{!editId ? "Soumettre l'annonce" : bienToEdit?.statutAnnonce === "REJETE" ? "Resoumettre" : bienToEdit?.statutAnnonce === "BROUILLON" ? "Soumettre" : "Mettre à jour"}</span>
+                <span className="sm:hidden">Soumettre</span>
+              </button>
             ) : (
-              <div className="flex items-center gap-3">
-                {canSaveAsDraft && (
-                  <button
-                    type="button"
-                    onClick={() => handleSubmit(true)}
-                    disabled={submitting}
-                    className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
-                  >
-                    {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {draftLabel}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={goNext}
-                  className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#0C1A35] hover:bg-[#162540] text-white text-sm font-semibold transition-all hover:scale-[1.01]"
-                >
-                  Suivant <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={goNext}
+                className="flex items-center gap-2 h-11 px-5 rounded-xl bg-[#0C1A35] hover:bg-[#162540] text-white text-sm font-semibold transition-all"
+              >
+                Suivant <ChevronRight className="w-4 h-4" />
+              </button>
             )}
           </div>
+
+          {/* Row 2: Brouillon (full width, on its own line) */}
+          {canSaveAsDraft && (
+            <button
+              type="button"
+              onClick={() => handleSubmit(true)}
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors disabled:opacity-60"
+            >
+              {pendingAction === "draft" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {draftLabel}
+            </button>
+          )}
           </>)}
         </div>
 

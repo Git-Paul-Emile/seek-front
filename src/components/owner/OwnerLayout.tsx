@@ -23,6 +23,17 @@ import { useOwnerStats } from "@/hooks/useBien";
 import { useBiensEnRetard } from "@/hooks/useBail";
 import { usePendingVerificationsCount } from "@/hooks/useLocataire";
 import { socketService, SOCKET_EVENTS, type NotificationPayload, type TransactionStatusPayload } from "@/services/socketService";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { MobileHeader } from "@/components/ui/MobileHeader";
+import { MobileDrawer } from "@/components/ui/MobileDrawer";
+import { BottomNav, type BottomNavItem } from "@/components/ui/BottomNav";
+
+const OWNER_BOTTOM_NAV: BottomNavItem[] = [
+  { to: "/owner/dashboard",  label: "Accueil",    icon: LayoutDashboard },
+  { to: "/owner/biens",      label: "Biens",      icon: Building2 },
+  { to: "/owner/paiements",  label: "Paiements",  icon: Wallet },
+  { to: "/owner/profile",    label: "Profil",     icon: User },
+];
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
@@ -397,11 +408,153 @@ function useOwnerRealtime() {
   }, [qc]);
 }
 
+// ─── Drawer mobile owner ──────────────────────────────────────────────────────
+
+function OwnerMobileNav({ onClose }: { onClose: () => void }) {
+  const { owner, logout } = useOwnerAuth();
+  const navigate = useNavigate();
+  const { data: stats } = useOwnerStats();
+  const pendingCount = stats?.byStatut.find((s) => s.statut === "EN_ATTENTE")?.count ?? 0;
+  const { data: biensEnRetard = [] } = useBiensEnRetard();
+  const retardCount = biensEnRetard.length;
+  const { data: pendingVerif } = usePendingVerificationsCount();
+  const pendingVerifCount = pendingVerif?.count ?? 0;
+
+  const initiales =
+    `${owner?.prenom?.[0] ?? ""}${owner?.nom?.[0] ?? ""}`.toUpperCase() || "P";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/proprietaires", { replace: true });
+  };
+
+  const linkClass = (isActive: boolean) =>
+    `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium min-h-[44px]
+    transition-colors duration-150 ${
+      isActive
+        ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+        : "text-slate-600 hover:bg-slate-50 active:bg-slate-100"
+    }`;
+
+  return (
+    <ul className="space-y-1">
+      {NAV_ITEMS_TOP.map(({ to, label, icon: Icon }) => (
+        <li key={to}>
+          <NavLink to={to} onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            {label}
+          </NavLink>
+        </li>
+      ))}
+
+      {/* Loyers en retard */}
+      <li>
+        <NavLink to="/owner/loyers-retard" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="flex-1">Loyers en retard</span>
+          {retardCount > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
+              {retardCount}
+            </span>
+          )}
+        </NavLink>
+      </li>
+
+      {/* Profil */}
+      <li>
+        <NavLink to="/owner/profile" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <User className="w-5 h-5 flex-shrink-0" />
+          Mon Profil
+        </NavLink>
+      </li>
+
+      {/* Locataires */}
+      <li className="pt-2">
+        <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-300">
+          Gestion
+        </span>
+      </li>
+      <li>
+        <NavLink to="/owner/locataires" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <Users className="w-5 h-5 flex-shrink-0" />
+          <span className="flex-1">Locataires</span>
+          {pendingVerifCount > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
+              {pendingVerifCount}
+            </span>
+          )}
+        </NavLink>
+      </li>
+
+      {/* Biens */}
+      <li>
+        <NavLink to="/owner/biens" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <Building2 className="w-5 h-5 flex-shrink-0" />
+          <span className="flex-1">Liste des biens</span>
+          {pendingCount > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
+              {pendingCount > 99 ? "99+" : pendingCount}
+            </span>
+          )}
+        </NavLink>
+      </li>
+
+      {/* Déconnexion */}
+      <li className="pt-4 border-t border-slate-100 mt-4">
+        <div className="flex items-center gap-3 px-3 py-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-[#0C1A35] flex items-center justify-center">
+            <span className="text-white text-xs font-semibold">{initiales}</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-[#0C1A35] truncate">
+              {owner?.prenom} {owner?.nom}
+            </p>
+            <p className="text-[10px] text-slate-400 font-medium">Propriétaire</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium min-h-[44px]
+            text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+          Déconnexion
+        </button>
+      </li>
+    </ul>
+  );
+}
+
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
 export default function OwnerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isMobile = useIsMobile();
   useOwnerRealtime();
+
+  const location = useLocation();
+  useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">
+        <MobileHeader onMenuOpen={() => setDrawerOpen(true)} homePath="/owner/dashboard" />
+        <MobileDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          roleLabel="Propriétaires"
+          homePath="/owner/dashboard"
+        >
+          <OwnerMobileNav onClose={() => setDrawerOpen(false)} />
+        </MobileDrawer>
+        <main className="pt-20 pb-24 px-4 overflow-x-clip">
+          <Outlet />
+        </main>
+        <BottomNav items={OWNER_BOTTOM_NAV} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">

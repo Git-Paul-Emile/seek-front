@@ -273,7 +273,9 @@ export default function BiensList() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl overflow-hidden border border-slate-100">
+        <>
+        {/* --- VUE DESKTOP : Tableau --- */}
+        <div className="hidden md:block bg-white rounded-2xl overflow-hidden border border-slate-100">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-100">
@@ -445,6 +447,145 @@ export default function BiensList() {
             </table>
           </div>
         </div>
+
+        {/* --- VUE MOBILE : Liste de cartes (<768px) --- */}
+        <div className="block md:hidden space-y-4">
+          {filteredBiens.map((bien) => (
+            <div key={bien.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm relative overflow-hidden">
+              {bien.estMisEnAvant && (
+                <div className="absolute top-0 right-0 bg-amber-50 text-amber-600 text-[10px] uppercase font-bold px-2 py-0.5 rounded-bl-lg z-10">
+                  En avant
+                </div>
+              )}
+              
+              {/* Contenu principal de la carte */}
+              <div className="flex gap-4">
+                {/* Photo */}
+                {bien.photos && bien.photos.length > 0 ? (
+                  <img src={bien.photos[0]} alt={bien.titre || "Bien"} className="w-20 h-20 rounded-xl object-cover shrink-0" />
+                ) : (
+                  <div className="w-20 h-20 rounded-xl bg-slate-50 flex flex-col items-center justify-center shrink-0 border border-slate-100">
+                    <Building2 className="w-6 h-6 text-slate-300 mb-1" />
+                    <span className="text-[10px] text-slate-400 font-medium">Sans photo</span>
+                  </div>
+                )}
+                
+                {/* Infos */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                  <div>
+                    <h3 className="font-bold text-[#0C1A35] text-sm leading-tight line-clamp-2 mb-1">
+                      {bien.titre || "Sans titre"}
+                    </h3>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                      {bien.region && bien.quartier ? `${bien.region}, ${bien.quartier}` : bien.region || bien.pays || "Zone non spécifiée"}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="font-bold text-[#0C1A35] text-sm">
+                      {bien.prix ? `${bien.prix.toLocaleString("fr-FR")} F` : "-"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer: Statut + Actions */}
+              <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
+                <StatutBadge statut={bien.statutAnnonce} />
+
+                <div className="flex items-center justify-end gap-1.5 flex-1">
+                  {/* Action Voir */}
+                  <Link
+                    to={`/owner/biens/${bien.id}`}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors border border-slate-100"
+                    title="Voir"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Link>
+
+                  {/* Boutons d'action conditionnels sous forme d'icônes */}
+                  {bien.statutAnnonce === "BROUILLON" && (
+                    <>
+                      <button
+                        onClick={() => soumettre.mutate(bien.id, {
+                          onSuccess: () => toast.success("Annonce soumise à la modération"),
+                          onError: () => toast.error("Erreur lors de la soumission"),
+                        })}
+                        disabled={soumettre.isPending}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-700 disabled:opacity-50"
+                        title="Soumettre"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                      <Link
+                        to={`/owner/biens/ajouter?edit=${bien.id}`}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 border border-slate-100"
+                        title="Modifier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => setDeleteTargetId(bien.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+
+                  {bien.statutAnnonce === "EN_ATTENTE" && (
+                    <button
+                      onClick={() => setRetourTargetId(bien.id)}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 border border-slate-100"
+                      title="Annuler la soumission"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  {bien.statutAnnonce === "PUBLIE" && (
+                    <>
+                      <Link
+                        to={`/owner/biens/ajouter?edit=${bien.id}`}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 border border-slate-100"
+                        title="Modifier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => setRetourTargetId(bien.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 border border-slate-100"
+                        title="Dépublier"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+
+                  {bien.statutAnnonce === "REJETE" && (
+                    <>
+                      <Link
+                        to={`/owner/biens/ajouter?edit=${bien.id}`}
+                        className="flex items-center gap-1.5 px-3 h-8 rounded-lg bg-amber-50 text-amber-700 text-xs font-medium"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        Corriger
+                      </Link>
+                      <button
+                        onClick={() => setDeleteTargetId(bien.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       )}
 
       {/* Modal suppression */}

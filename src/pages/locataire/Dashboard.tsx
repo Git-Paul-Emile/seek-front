@@ -752,19 +752,28 @@ export default function LocataireDashboard() {
         <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-4 flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 flex-shrink-0 gap-3">
+              <div className="flex items-start sm:items-center gap-3 w-full sm:w-auto overflow-hidden min-w-0">
+                <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
                   <FileText className="w-5 h-5 text-blue-600" />
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 leading-tight">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-bold text-gray-900 leading-tight truncate">
                     {contratData?.contrat?.titre || "Contrat de bail"}
                   </h2>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 truncate">
                     Bail {contratData?.bail?.typeBail || "Standard"} · {contratData?.bien?.titre || contratData?.bien?.ville || ""}
                   </p>
                 </div>
+                {/* Bouton de fermeture sur mobile */}
+                <button
+                  onClick={() => setShowContratModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden shrink-0 -mt-1 -mr-2"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <div className="flex items-center justify-between w-full sm:w-auto gap-3">
                 {contratData?.contrat?.statut && (
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     contratData.contrat.statut === "ACTIF"
@@ -775,21 +784,21 @@ export default function LocataireDashboard() {
                     {contratData.contrat.statut === "ACTIF" ? "Actif" : "Brouillon"}
                   </span>
                 )}
+                <button
+                  onClick={() => setShowContratModal(false)}
+                  className="hidden sm:block p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
-              <button
-                onClick={() => setShowContratModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
             </div>
 
             {/* Toolbar */}
             {!loadingContrat && contratData && (
-              <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50/60 flex-wrap flex-shrink-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-4 sm:px-6 py-3 border-b border-gray-100 bg-gray-50/60 flex-shrink-0">
                 <button
                   onClick={handleDownloadPdf}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto"
                 >
                   <Download className="w-3.5 h-3.5" />
                   Télécharger PDF
@@ -798,7 +807,7 @@ export default function LocataireDashboard() {
             )}
 
             {/* Body */}
-            <div className="p-6 overflow-y-auto">
+            <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden">
               {loadingContrat ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-3">
                   <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
@@ -812,14 +821,16 @@ export default function LocataireDashboard() {
                   </p>
                 </div>
               ) : (
-                <div
-                  ref={pdfRef}
-                  className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm"
-                >
+                <div className="overflow-x-auto pb-2">
                   <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: contratData.contrat.contenu }}
-                  />
+                    ref={pdfRef}
+                    className="bg-white rounded-xl border border-gray-200 p-4 sm:p-8 shadow-sm min-w-[700px] w-full"
+                  >
+                    <div
+                      className="prose prose-sm max-w-none break-words"
+                      dangerouslySetInnerHTML={{ __html: contratData.contrat.contenu }}
+                    />
+                  </div>
                 </div>
               )}
             </div>

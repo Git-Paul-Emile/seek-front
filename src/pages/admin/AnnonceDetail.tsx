@@ -305,7 +305,7 @@ export default function AnnonceDetail() {
     <div className="space-y-5">
       <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Annonces", to: "/admin/annonces" }, { label: "Détail" }]} />
       {/* En-tête */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/admin/annonces"
@@ -319,13 +319,13 @@ export default function AnnonceDetail() {
               <Building2 className="w-3.5 h-3.5" />
               Modération
             </div>
-            <h1 className="font-display text-xl font-bold text-[#0C1A35] truncate">
+            <h1 className="font-display text-xl font-bold text-[#0C1A35] break-words">
               {bien.titre || "Annonce sans titre"}
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+        <div className="flex items-center gap-2 flex-wrap">
           <StatutBadge statut={bien.statutAnnonce} />
           {isEnAttente && (
             <>
@@ -676,7 +676,7 @@ export default function AnnonceDetail() {
 
       {/* Barre d'actions fixe en bas */}
       {(isEnAttente || isPublie || isRejete) && (
-        <div className="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-100 -mx-6 px-6 py-4 flex items-center justify-between">
+        <div className="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-100 -mx-6 px-6 py-4 flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-between gap-3">
           <p className="text-sm text-slate-500">
             {isEnAttente && "Cette annonce est en attente de modération."}
             {isPublie && "Cette annonce est publiée."}

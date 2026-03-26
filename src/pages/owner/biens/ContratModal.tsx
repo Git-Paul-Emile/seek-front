@@ -176,48 +176,58 @@ export default function ContratModal({
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-4 flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 flex-shrink-0 gap-3">
+          <div className="flex items-start sm:items-center gap-3 w-full sm:w-auto overflow-hidden min-w-0">
+            <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 leading-tight">{titre}</h2>
-              <p className="text-xs text-gray-500">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 leading-tight truncate">{titre}</h2>
+              <p className="text-xs text-gray-500 truncate">
                 Bail {bail.typeBail} · {bail.bien?.titre ?? ""}
               </p>
             </div>
-            {contrat && <StatutBadge statut={contrat.statut} />}
+            {/* Close button on mobile for better UX (top right aligned) */}
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors sm:hidden shrink-0 -mt-1 -mr-2"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
+          
+          <div className="flex items-center justify-between w-full sm:w-auto gap-3">
+            {contrat && <StatutBadge statut={contrat.statut} />}
+            <button
+              onClick={handleClose}
+              className="hidden sm:block p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
         </div>
 
         {/* Toolbar */}
         {!isLoading && !isGenerating && contrat && (
-          <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-100 bg-gray-50/60 flex-wrap flex-shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 px-4 sm:px-6 py-3 border-b border-gray-100 bg-gray-50/60 flex-shrink-0">
             {/* PDF - toujours disponible */}
             <button
               onClick={handleDownloadPdf}
               disabled={isBusy}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 w-full sm:w-auto"
             >
               <Download className="w-3.5 h-3.5" />
               Télécharger PDF
             </button>
 
-            <div className="flex-1" />
+            <div className="hidden sm:block flex-1" />
 
             {/* Flux création : Valider */}
             {isCreationFlow && (
               <button
                 onClick={handleValider}
                 disabled={isBusy}
-                className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors w-full sm:w-auto"
               >
                 {envoyer.isPending
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Validation...</>
@@ -231,7 +241,7 @@ export default function ContratModal({
               <button
                 onClick={handleRenvoyer}
                 disabled={isBusy}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors ${
+                className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors w-full sm:w-auto ${
                   contrat?.statut === "BROUILLON"
                     ? "bg-green-600 hover:bg-green-700 text-white"
                     : "border border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -249,7 +259,7 @@ export default function ContratModal({
         )}
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto">
+        <div className="p-4 sm:p-6 overflow-y-auto overflow-x-hidden">
           {(isLoading || isGenerating) ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
@@ -269,14 +279,16 @@ export default function ContratModal({
             </div>
           ) : (
             /* Lecture seule - cible PDF */
-            <div
-              ref={pdfRef}
-              className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm"
-            >
+            <div className="overflow-x-auto pb-2">
               <div
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: contenu }}
-              />
+                ref={pdfRef}
+                className="bg-white rounded-xl border border-gray-200 p-4 sm:p-8 shadow-sm min-w-[700px] w-full"
+              >
+                <div
+                  className="prose prose-sm max-w-none break-words"
+                  dangerouslySetInnerHTML={{ __html: contenu }}
+                />
+              </div>
             </div>
           )}
         </div>

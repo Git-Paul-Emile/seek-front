@@ -605,7 +605,7 @@ export default function MeubleEquipement() {
     <div>
       <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Catalogue" }, { label: "Meubles & Équipements" }]} />
       {/* En-tête */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6 gap-3">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">
             <Sofa className="w-3.5 h-3.5" />Gestion de biens

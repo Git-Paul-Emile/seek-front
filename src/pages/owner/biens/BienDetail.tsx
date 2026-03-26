@@ -374,7 +374,7 @@ export default function BienDetail() {
       )}
 
       {/* En-tête */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/owner/biens"
@@ -388,13 +388,13 @@ export default function BienDetail() {
               <Building2 className="w-3.5 h-3.5" />
               Mes biens
             </div>
-            <h1 className="font-display text-xl font-bold text-[#0C1A35] truncate">
+            <h1 className="font-display text-xl font-bold text-[#0C1A35] break-words">
               {bien.titre || "Annonce sans titre"}
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
           <StatutBadge statut={statut} />
           {statut === "BROUILLON" && (
             <button
@@ -407,7 +407,7 @@ export default function BienDetail() {
                 bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               <Send className="w-3.5 h-3.5" />
-              Soumettre l'annonce
+              Soumettre
             </button>
           )}
           {canEdit && (
@@ -440,7 +440,7 @@ export default function BienDetail() {
                 bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50"
             >
               <XCircle className="w-3.5 h-3.5" />
-              Annuler l'annonce
+              Annuler
             </button>
           )}
           

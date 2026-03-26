@@ -134,3 +134,25 @@ export function SkForm({ fields = 4 }: { fields?: number }) {
     </div>
   );
 }
+
+// ─── Cartes mobile (remplacement de tableau) ──────────────────────────────────
+
+export function SkMobileCards({ count = 4 }: { count?: number }) {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Sk className="h-4 w-32" />
+            <Sk className="h-5 w-16 rounded-full" />
+          </div>
+          <div className="space-y-2">
+            <Sk className="h-3 w-full" />
+            <Sk className="h-3 w-2/3" />
+          </div>
+          <Sk className="h-10 w-full rounded-xl" />
+        </div>
+      ))}
+    </div>
+  );
+}

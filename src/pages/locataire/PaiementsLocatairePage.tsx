@@ -213,7 +213,7 @@ export default function PaiementsLocatairePage() {
     <div className="space-y-5">
       <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mes paiements" }]} />
       {/* En-tête */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/locataire/dashboard"
@@ -227,7 +227,7 @@ export default function PaiementsLocatairePage() {
               <TrendingUp className="w-3.5 h-3.5" />
               Mes paiements
             </div>
-            <h1 className="font-display text-xl font-bold text-[#0C1A35] truncate">
+            <h1 className="font-display text-xl font-bold text-[#0C1A35] break-words">
               {bailActif.bien?.titre || "Mon logement"}
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -245,7 +245,7 @@ export default function PaiementsLocatairePage() {
             onClick={handleDownloadAll}
             disabled={isZipping}
             title="Télécharger toutes mes quittances en ZIP"
-            className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200
               text-slate-600 hover:bg-slate-50 hover:text-[#0C1A35] text-xs font-medium transition-colors disabled:opacity-60"
           >
             {isZipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
@@ -410,118 +410,126 @@ export default function PaiementsLocatairePage() {
               return (
                 <div
                   key={ech.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl border ${cfg.rowCls}`}
+                  className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-xl border ${cfg.rowCls}`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${cfg.iconCls}`} />
+                  {/* Partie gauche : Icône + Informations */}
+                  <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                    <Icon className={`w-4 h-4 shrink-0 mt-0.5 sm:mt-0 ${cfg.iconCls}`} />
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-[#0C1A35]">
-                        {new Date(ech.dateEcheance).toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
-                        {cfg.label}
-                      </span>
-                      {ech.statut === "PAYE" && ech.sourceEnregistrement && (
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                          ech.sourceEnregistrement === "LOCATAIRE"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-purple-100 text-purple-700"
-                        }`}>
-                          {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-[#0C1A35]">
+                          {new Date(ech.dateEcheance).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.badgeCls}`}>
+                          {cfg.label}
                         </span>
+                        {ech.statut === "PAYE" && ech.sourceEnregistrement && (
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                            ech.sourceEnregistrement === "LOCATAIRE"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-purple-100 text-purple-700"
+                          }`}>
+                            {ech.sourceEnregistrement === "LOCATAIRE" ? "Locataire" : "Propriétaire"}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {fmt(ech.montant)} FCFA
+                      </p>
+                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
+                        <p className="text-xs text-purple-600 mt-0.5 font-medium">
+                          Enregistré par votre propriétaire le {new Date(ech.datePaiement).toLocaleDateString("fr-FR")} · Espèces · Veuillez confirmer
+                        </p>
+                      )}
+                      {ech.statut !== "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Payé le{" "}
+                          {new Date(ech.datePaiement).toLocaleDateString("fr-FR")}
+                          {ech.modePaiement ? ` · ${ech.modePaiement}` : ""}
+                          {ech.reference ? ` · Réf: ${ech.reference}` : ""}
+                        </p>
+                      )}
+                      {ech.note && (
+                        <p className="text-xs text-slate-400 italic mt-0.5">{ech.note}</p>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {fmt(ech.montant)} FCFA
-                    </p>
-                    {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
-                      <p className="text-xs text-purple-600 mt-0.5 font-medium">
-                        Enregistré par votre propriétaire le {new Date(ech.datePaiement).toLocaleDateString("fr-FR")} · Espèces · Veuillez confirmer
-                      </p>
-                    )}
-                    {ech.statut !== "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Payé le{" "}
-                        {new Date(ech.datePaiement).toLocaleDateString("fr-FR")}
-                        {ech.modePaiement ? ` · ${ech.modePaiement}` : ""}
-                        {ech.reference ? ` · Réf: ${ech.reference}` : ""}
-                      </p>
-                    )}
-                    {ech.note && (
-                      <p className="text-xs text-slate-400 italic mt-0.5">{ech.note}</p>
-                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <p className="text-sm font-bold text-[#0C1A35] whitespace-nowrap">
+                  {/* Section basse (mobile) ou droite (desktop) : Prix et Boutons */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-0 border-black/5 shrink-0">
+                    <p className="text-base font-bold text-[#0C1A35] whitespace-nowrap">
                       {fmt(ech.montant)} F
                     </p>
-                    {/* Bouton confirmer paiement espèces */}
-                    {ech.statut === "EN_ATTENTE_CONFIRMATION" && !ech.confirmeParLocataire && (
-                      <button
-                        onClick={() =>
-                          confirmerEspeces(
-                            { echeanceId: ech.id, bailId: bailActif.id },
-                            {
-                              onSuccess: () => toast.success("Paiement confirmé avec succès"),
-                              onError: (err: unknown) => {
-                                const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-                                toast.error(msg ?? "Erreur lors de la confirmation");
-                              },
-                            }
-                          )
-                        }
-                        disabled={isConfirming && confirmingVars?.echeanceId === ech.id}
-                        className="flex items-center gap-1 text-xs font-semibold text-purple-700 hover:text-purple-800
-                          px-2.5 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-50 transition-colors disabled:opacity-60"
-                      >
-                        {isConfirming && confirmingVars?.echeanceId === ech.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <ThumbsUp className="w-3 h-3" />
-                        )}
-                        Confirmer
-                      </button>
-                    )}
-                    {/* Bouton initier paiement sur la prochaine échéance */}
-                    {isNext && ech.statut !== "EN_ATTENTE_CONFIRMATION" && (
-                      <button
-                        onClick={() => setShowPayModal(true)}
-                        className="flex items-center gap-1 text-xs font-semibold text-[#D4A843] hover:text-[#c49a38]
-                          px-2.5 py-1.5 rounded-lg border border-[#D4A843]/30 hover:bg-[#D4A843]/10 transition-colors"
-                      >
-                        <Send className="w-3 h-3" />
-                        Payer
-                      </button>
-                    )}
-                    {/* Voir / Télécharger quittance si disponible */}
-                    {canDownload(ech.statut) && ech.datePaiement && quittance && (
-                      <>
+                    
+                    {/* Conteneur des boutons */}
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                      {/* Bouton confirmer paiement espèces */}
+                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && !ech.confirmeParLocataire && (
                         <button
-                          onClick={() => handleOpen(ech)}
-                          title="Voir la quittance"
-                          className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800
-                            px-2.5 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                          onClick={() =>
+                            confirmerEspeces(
+                              { echeanceId: ech.id, bailId: bailActif.id },
+                              {
+                                onSuccess: () => toast.success("Paiement confirmé avec succès"),
+                                onError: (err: unknown) => {
+                                  const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+                                  toast.error(msg ?? "Erreur lors de la confirmation");
+                                },
+                              }
+                            )
+                          }
+                          disabled={isConfirming && confirmingVars?.echeanceId === ech.id}
+                          className="flex items-center gap-1 text-xs font-semibold text-purple-700 hover:text-purple-800
+                            px-2.5 py-1.5 rounded-lg border border-purple-200 hover:bg-purple-50 transition-colors disabled:opacity-60"
                         >
-                          <Eye className="w-3 h-3" />
-                          Voir
+                          {isConfirming && confirmingVars?.echeanceId === ech.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <ThumbsUp className="w-3 h-3" />
+                          )}
+                          Confirmer
                         </button>
+                      )}
+                      {/* Bouton initier paiement sur la prochaine échéance */}
+                      {isNext && ech.statut !== "EN_ATTENTE_CONFIRMATION" && (
                         <button
-                          onClick={() => handleDownload(ech)}
-                          title="Télécharger la quittance"
-                          className="flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800
-                            px-2.5 py-1.5 rounded-lg border border-green-200 hover:bg-green-50 transition-colors"
+                          onClick={() => setShowPayModal(true)}
+                          className="flex items-center gap-1 text-xs font-semibold text-[#D4A843] hover:text-[#c49a38]
+                            px-2.5 py-1.5 rounded-lg border border-[#D4A843]/30 hover:bg-[#D4A843]/10 transition-colors"
                         >
-                          <Download className="w-3 h-3" />
-                          PDF
+                          <Send className="w-3 h-3" />
+                          Payer
                         </button>
-                      </>
-                    )}
+                      )}
+                      {/* Voir / Télécharger quittance si disponible */}
+                      {canDownload(ech.statut) && ech.datePaiement && quittance && (
+                        <>
+                          <button
+                            onClick={() => handleOpen(ech)}
+                            title="Voir la quittance"
+                            className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:text-blue-800
+                              px-2.5 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Voir
+                          </button>
+                          <button
+                            onClick={() => handleDownload(ech)}
+                            title="Télécharger la quittance"
+                            className="flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-800
+                              px-2.5 py-1.5 rounded-lg border border-green-200 hover:bg-green-50 transition-colors"
+                          >
+                            <Download className="w-3 h-3" />
+                            PDF
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Building2,
   House,
@@ -19,6 +19,17 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { socketService, SOCKET_EVENTS, type NotificationPayload } from "@/services/socketService";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { MobileHeader } from "@/components/ui/MobileHeader";
+import { MobileDrawer } from "@/components/ui/MobileDrawer";
+import { BottomNav, type BottomNavItem } from "@/components/ui/BottomNav";
+
+const LOCATAIRE_BOTTOM_NAV: BottomNavItem[] = [
+  { to: "/locataire/dashboard",  label: "Mon espace",  icon: LayoutDashboard },
+  { to: "/locataire/paiements",  label: "Paiements",   icon: TrendingUp },
+  { to: "/locataire/documents",  label: "Documents",   icon: FileText },
+  { to: "/locataire/profil",     label: "Profil",      icon: User },
+];
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
@@ -212,11 +223,103 @@ function useLocataireRealtime() {
   }, [qc]);
 }
 
+// ─── Drawer mobile locataire ──────────────────────────────────────────────────
+
+function LocataireMobileNav({ onClose }: { onClose: () => void }) {
+  const { locataire, logout } = useLocataireAuth();
+  const navigate = useNavigate();
+
+  const initiales =
+    `${locataire?.prenom?.[0] ?? ""}${locataire?.nom?.[0] ?? ""}`.toUpperCase() || "L";
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/locataire/login", { replace: true });
+  };
+
+  const linkClass = (isActive: boolean) =>
+    `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium min-h-[44px]
+    transition-colors duration-150 ${
+      isActive
+        ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+        : "text-slate-600 hover:bg-slate-50 active:bg-slate-100"
+    }`;
+
+  return (
+    <ul className="space-y-1">
+      {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        <li key={to}>
+          <NavLink to={to} onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            {label}
+          </NavLink>
+        </li>
+      ))}
+
+      {/* Mon profil */}
+      <li>
+        <NavLink to="/locataire/profil" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <User className="w-5 h-5 flex-shrink-0" />
+          Mon profil
+        </NavLink>
+      </li>
+
+      {/* Déconnexion */}
+      <li className="pt-4 border-t border-slate-100 mt-4">
+        <div className="flex items-center gap-3 px-3 py-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-[#0C1A35] flex items-center justify-center">
+            <span className="text-white text-xs font-semibold">{initiales}</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-[#0C1A35] truncate">
+              {locataire?.prenom} {locataire?.nom}
+            </p>
+            <p className="text-[10px] text-slate-400 font-medium">Locataire</p>
+          </div>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium min-h-[44px]
+            text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+          Déconnexion
+        </button>
+      </li>
+    </ul>
+  );
+}
+
 // ─── Layout principal ─────────────────────────────────────────────────────────
 
 export default function LocataireLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isMobile = useIsMobile();
   useLocataireRealtime();
+
+  const location = useLocation();
+  useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">
+        <MobileHeader onMenuOpen={() => setDrawerOpen(true)} homePath="/locataire/dashboard" />
+        <MobileDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          roleLabel="Locataires"
+          homePath="/locataire/dashboard"
+        >
+          <LocataireMobileNav onClose={() => setDrawerOpen(false)} />
+        </MobileDrawer>
+        <main className="pt-20 pb-24 px-4 overflow-x-clip">
+          <Outlet />
+        </main>
+        <BottomNav items={LOCATAIRE_BOTTOM_NAV} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F5EE] overflow-x-clip">

@@ -39,7 +39,7 @@ export default function ProprietaireLocatairePage() {
     <div className="space-y-5">
       <Breadcrumb items={[{ label: "Mon espace", to: "/locataire/dashboard" }, { label: "Mon propriétaire" }]} />
       {/* En-tête */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/locataire/dashboard"
@@ -53,7 +53,7 @@ export default function ProprietaireLocatairePage() {
               <User className="w-3.5 h-3.5" />
               Mon propriétaire
             </div>
-            <h1 className="font-display text-xl font-bold text-[#0C1A35] truncate">
+            <h1 className="font-display text-xl font-bold text-[#0C1A35] break-words">
               Informations du propriétaire
             </h1>
           </div>

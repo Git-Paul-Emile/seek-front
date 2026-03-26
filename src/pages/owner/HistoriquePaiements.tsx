@@ -139,7 +139,7 @@ export default function HistoriquePaiements() {
     <div className="space-y-6">
       <Breadcrumb items={[{ label: "Dashboard", to: "/owner/dashboard" }, { label: "Historique des paiements" }]} />
       {/* En-tête */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-1">
             <Receipt className="w-3.5 h-3.5" />
@@ -183,7 +183,9 @@ export default function HistoriquePaiements() {
       ) : (
         <>
           {/* Liste des transactions */}
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <>
+          {/* --- VUE DESKTOP : Tableau --- */}
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-100">
@@ -259,6 +261,58 @@ export default function HistoriquePaiements() {
               </table>
             </div>
           </div>
+
+          {/* --- VUE MOBILE : Liste de cartes (<768px) --- */}
+          <div className="block md:hidden space-y-4">
+            {transactions.map((item) => (
+              <div key={item.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+                {/* En-tête de la carte */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl shrink-0">
+                      {getTypeIcon(item.type)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-[#0C1A35] leading-tight">
+                        {getTypeLabel(item.type)}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1 w-32 truncate">
+                        {getReference(item)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="shrink-0 pl-2">
+                    {getStatutBadge(item.statut)}
+                  </div>
+                </div>
+
+                {/* Infos principales (Montant, Date, Mode) */}
+                <div className="flex flex-col items-start gap-1 mb-4 bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">
+                  <span className="text-xs text-slate-500 flex items-center gap-1.5 mb-0.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {formatDate(item.dateInitiation)}
+                    <span className="mx-0.5">·</span>
+                    <span className="font-medium text-slate-600">{item.modePaiement}</span>
+                  </span>
+                  <div className="text-base font-bold text-[#0C1A35]">
+                    {formatMontant(item.montant, item.type)}
+                  </div>
+                </div>
+
+                {/* Bouton d'action */}
+                <div className="pt-2 border-t border-slate-100">
+                  <button
+                    onClick={() => setSelectedTransaction(item)}
+                    className="w-full h-10 flex items-center justify-center gap-2 rounded-xl bg-slate-50 text-slate-600 font-medium text-sm hover:bg-slate-100 transition-colors"
+                  >
+                    <Eye className="w-4 h-4 text-slate-400" />
+                    Voir les détails
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (

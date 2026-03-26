@@ -39,7 +39,7 @@ export default function LoyersEnRetardPage() {
       />
 
       {/* En-tête */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-500 mb-1">
             <AlertCircle className="w-3.5 h-3.5" />

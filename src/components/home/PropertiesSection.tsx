@@ -22,6 +22,7 @@ import { useRecherchePublique } from "@/hooks/useRecherche";
 import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import { SkPropertyCards } from "@/components/ui/Skeleton";
 import Pagination from "@/components/ui/Pagination";
+import MarketingBanner from "@/components/home/MarketingBanner";
 
 const ROTATION_INTERVAL = 4000; // ms entre chaque glissement auto
 const MAX_VISIBLE = 4;
@@ -144,7 +145,7 @@ const PropertiesSection = () => {
                   opts={{ align: "start", loop: true, slidesToScroll: "auto" }}
                   className="w-full"
                 >
-                  <CarouselContent className="-ml-4" wrapperClassName="py-8 -my-6">
+                  <CarouselContent className="-ml-4" wrapperClassName="pt-0 lg:pt-8 pb-8 -my-6">
                     {annoncesMiseEnAvant.map((property) => (
                       <CarouselItem
                         key={property.id}
@@ -166,6 +167,11 @@ const PropertiesSection = () => {
             )}
           </div>
         )}
+
+        {/* ── BANNEmarketing ── */}
+        <div className="mb-16">
+           <MarketingBanner />
+        </div>
 
         {/* ───────────────────────────────────────────────────────────────────── */}
         {/* SECTION 2: DERNIÈRES ANNONCES (Grille classique)                     */}

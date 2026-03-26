@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogOut, User, ChevronDown, Home, Search, UserCheck, Heart, Shield, Key, MapPin, Tag, Building2 } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown, Home, Search, Users, Heart, Shield, Key, MapPin, Tag, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useFavoris } from "@/hooks/useFavoris";
@@ -61,7 +61,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden md:flex items-center gap-7">
+        <div className="hidden lg:flex items-center gap-7">
           {navLinks.map((link) => {
             const Icon = link.icon;
             return (
@@ -144,7 +144,7 @@ const Navbar = () => {
               }`}
             >
               <span className="mr-2 flex items-center justify-center w-7 h-7 bg-slate-50 border border-slate-100 rounded-full group-hover:border-slate-300 group-hover:bg-slate-100 transition-colors">
-                <UserCheck className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0C1A35]" />
+                <Users className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0C1A35]" />
               </span>
               Espace locataire
             </Link>
@@ -203,15 +203,12 @@ const Navbar = () => {
           {showProprietaireLink && (
             <Link
               to={isOwnerAuth ? "/owner/dashboard" : "/proprietaires"}
-              className={`group flex items-center text-sm font-medium px-3 py-1.5 rounded-full border transition-all duration-200 ${
+              className={`group flex items-center text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
                 location.pathname === "/proprietaires" || location.pathname.startsWith("/owner")
                   ? "border-[#D4A843] text-[#D4A843] bg-[#D4A843]/10"
                   : "border-[#0C1A35]/20 text-[#0C1A35] hover:border-[#D4A843] hover:text-[#D4A843]"
               }`}
             >
-              <span className="mr-2 flex items-center justify-center w-6 h-6 bg-white border border-slate-100 rounded-full group-hover:border-slate-300 transition-colors">
-                <Key className="w-3 h-3 text-slate-400 group-hover:text-[#D4A843]" />
-              </span>
               Espace propriétaire
             </Link>
           )}
@@ -219,7 +216,7 @@ const Navbar = () => {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden p-1 rounded-md transition-colors text-[#0C1A35]"
+          className="lg:hidden p-1 rounded-md transition-colors text-[#0C1A35]"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
@@ -235,7 +232,7 @@ const Navbar = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden bg-[#0C1A35] overflow-hidden"
+            className="lg:hidden bg-[#0C1A35] overflow-hidden"
           >
             <div className="px-4 py-5 flex flex-col gap-1">
               {navLinks.map((link) => {
@@ -295,7 +292,7 @@ const Navbar = () => {
                       : "text-white/65 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <UserCheck className="w-4 h-4 mr-2" />
+                  <Users className="w-4 h-4 mr-2" />
                   Espace locataire
                 </Link>
               )}
@@ -352,7 +349,6 @@ const Navbar = () => {
                       : "text-[#D4A843]/70 hover:text-[#D4A843] hover:bg-white/5"
                   }`}
                 >
-                  <Key className="w-4 h-4 mr-2" />
                   Espace propriétaire
                 </Link>
               )}

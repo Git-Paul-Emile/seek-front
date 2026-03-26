@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, CheckCircle, AlertCircle, Phone, X, Loader2, ArrowUp } from "lucide-react";
+import { Bell, CheckCircle, AlertCircle, Phone, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/SearchableSelect";
@@ -10,9 +10,6 @@ import { useLieux } from "@/hooks/useRecherche";
 const GlobalFloatingActions = () => {
   const { data: typesLogement = [] } = useTypeLogements();
   const { data: lieux } = useLieux();
-
-  // Scroll to Top state
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Panneau alerte flottant
   const [showAlertPanel, setShowAlertPanel] = useState(false);
@@ -29,21 +26,6 @@ const GlobalFloatingActions = () => {
   const [alertType, setAlertType] = useState("");
   const [alertBudgetMin, setAlertBudgetMin] = useState("");
   const [alertBudgetMax, setAlertBudgetMax] = useState("");
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-      // Close alert panel when scrolling down significantly if open, optional UX improvement
-      // (Wait, user might want to fill form while scrolling, let's just keep the scroll to top logic)
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const openAlertPanel = () => {
     setAlertClosing(false);
@@ -263,20 +245,6 @@ const GlobalFloatingActions = () => {
             <Bell className={`w-6 h-6 transition-colors duration-200 ${showAlertPanel ? "text-white/60" : "text-[#D4A843]"}`} />
           </button>
 
-          {/* Bouton Scroll Top */}
-          <div
-            className={`transition-all duration-300 ease-in-out shrink-0 ${
-              showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
-            }`}
-          >
-            <button
-              onClick={scrollToTop}
-              title="Remonter en haut"
-              className="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center text-slate-500 hover:text-[#0C1A35] hover:bg-slate-50 hover:scale-110 active:scale-95 transition-all duration-150"
-            >
-              <ArrowUp className="w-5 h-5" />
-            </button>
-          </div>
         </div>
       </div>
     </>

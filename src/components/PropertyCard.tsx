@@ -113,7 +113,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
 
   return (
     <div
-      className="group bg-white overflow-hidden hover:shadow-[0_16px_40px_rgba(0,0,0,0.16),0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2 border border-slate-100 flex flex-col h-full"
+      className="group bg-white overflow-hidden hover:shadow-[0_16px_40px_rgba(0,0,0,0.16),0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2 border border-slate-100 flex flex-col h-full w-[90%] mx-auto"
       style={{ borderRadius: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.05)' }}
     >
       <div className="relative h-40 sm:h-44 md:h-48">

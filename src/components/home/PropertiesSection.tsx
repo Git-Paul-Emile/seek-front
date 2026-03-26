@@ -18,18 +18,51 @@ import {
 import type { CarouselApi } from "@/components/ui/carousel";
 import PropertyCard from "@/components/PropertyCard";
 import { SORT_OPTIONS } from "@/data/home";
-import { useDernieresAnnonces } from "@/hooks/useDernieresAnnonces";
+import { useRecherchePublique } from "@/hooks/useRecherche";
 import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import { SkPropertyCards } from "@/components/ui/Skeleton";
+import Pagination from "@/components/ui/Pagination";
 
 const ROTATION_INTERVAL = 4000; // ms entre chaque glissement auto
 const MAX_VISIBLE = 4;
 
 const PropertiesSection = () => {
   const [sort, setSort] = useState("recent");
+  const [page, setPage] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const { data: dernieresAnnonces = [], isLoading } = useDernieresAnnonces(10);
+
+  const queryParams = useMemo(() => {
+    const params: any = { limit: 12, page };
+    if (sort === "oldest") {
+      params.sortBy = "createdAt";
+      params.sortOrder = "asc";
+    } else if (sort === "price-asc") {
+      params.sortBy = "prix";
+      params.sortOrder = "asc";
+    } else if (sort === "price-desc") {
+      params.sortBy = "prix";
+      params.sortOrder = "desc";
+    } else {
+      params.sortBy = "createdAt";
+      params.sortOrder = "desc";
+    }
+    return params;
+  }, [sort, page]);
+
+  const { data: searchResult, isLoading } = useRecherchePublique(queryParams);
+  const dernieresAnnonces = useMemo(() => {
+    const rawItems = searchResult?.items ?? [];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return rawItems.map(item => ({
+      ...item,
+      isNew: new Date(item.createdAt) >= sevenDaysAgo
+    }));
+  }, [searchResult?.items]);
+  const total = searchResult?.total ?? 0;
+  const totalPages = searchResult?.totalPages ?? 1;
+
   const { data: miseEnAvantData, isLoading: isLoadingPremium } = useAnnoncesMiseEnAvant(20);
 
   // Extraire les annonces mises en avant (max MAX_VISIBLE si ≤ 5, sinon toutes pour la rotation)
@@ -52,14 +85,21 @@ const PropertiesSection = () => {
     };
   }, [carouselApi, needsRotation]);
 
-  // Tri côté client sur les 10 dernières annonces
-  const sortedBiens = useMemo(() => {
-    const base = [...dernieresAnnonces];
-    if (sort === "oldest")     return base.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    if (sort === "price-asc")  return base.sort((a, b) => (a.prix ?? 0) - (b.prix ?? 0));
-    if (sort === "price-desc") return base.sort((a, b) => (b.prix ?? 0) - (a.prix ?? 0));
-    return base; // "recent" - ordre API par défaut
-  }, [dernieresAnnonces, sort]);
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+  
+  const pageWindow = useMemo(() => {
+    const windowSize = 5;
+    const half = Math.floor(windowSize / 2);
+    let start = Math.max(1, page - half);
+    let end = start + windowSize - 1;
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - windowSize + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, [page, totalPages]);
 
   return (
     <section className="py-16 bg-white">
@@ -143,9 +183,9 @@ const PropertiesSection = () => {
                 Découvrez les biens immobiliers les plus récents au Sénégal
               </p>
             </div>
-            <div className="flex items-center gap-3 self-start md:self-auto">
-              <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className="w-44 h-9 text-sm border-slate-200 text-[#1A2942] focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
+              <Select value={sort} onValueChange={(val) => { setSort(val); setPage(1); }}>
+                <SelectTrigger className="w-44 h-9 text-sm border-slate-200 text-[#1A2942] focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -154,12 +194,17 @@ const PropertiesSection = () => {
                   ))}
                 </SelectContent>
               </Select>
+              <Link to="/annonces">
+                <Button variant="outline" className="h-9 px-6 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm bg-white">
+                  Toutes les annonces
+                </Button>
+              </Link>
             </div>
           </div>
 
           {isLoading ? (
-            <SkPropertyCards count={10} />
-          ) : sortedBiens.length === 0 ? (
+            <SkPropertyCards count={12} />
+          ) : dernieresAnnonces.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <svg className="w-16 h-16 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H15v-6H9v6H3.75A.75.75 0 013 21V9.75z" />
@@ -168,23 +213,34 @@ const PropertiesSection = () => {
               <p className="text-slate-400 text-sm mt-1">Revenez bientôt, de nouvelles annonces arrivent régulièrement.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {sortedBiens.slice(0, 10).map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  isApiData={true}
-                />
-              ))}
+            <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                {dernieresAnnonces.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property as any}
+                    isApiData={true}
+                  />
+                ))}
+              </div>
+              
+              {totalPages > 1 && (
+                <div className="mt-8">
+                  <Pagination 
+                    page={page}
+                    totalPages={totalPages}
+                    pageWindow={pageWindow}
+                    total={total}
+                    pageSize={12}
+                    goTo={handlePageChange}
+                    goNext={() => handlePageChange(Math.min(totalPages, page + 1))}
+                    goPrev={() => handlePageChange(Math.max(1, page - 1))}
+                    reset={() => handlePageChange(1)}
+                  />
+                </div>
+              )}
             </div>
           )}
-          <div className="flex justify-center mt-10">
-            <Link to="/annonces">
-              <Button variant="outline" className="h-10 px-8 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm">
-                Toutes les annonces
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
     </section>

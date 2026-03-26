@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import NominatimAutocomplete, { type NominatimPoint } from "@/components/ui/NominatimAutocomplete";
-import heroBg from "@/assets/hero-bg.jpg";
+import herosection from "@/assets/herosection.png";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useStats } from "@/hooks/useStats";
 import { useLieux } from "@/hooks/useRecherche";
@@ -67,7 +67,7 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen lg:h-screen lg:max-h-screen flex flex-col justify-center">
       <img
-        src={heroBg}
+        src={herosection}
         alt="Architecture moderne à Dakar"
         className="absolute inset-0 w-full h-full object-cover"
       />

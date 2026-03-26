@@ -12,7 +12,7 @@ export default function Pagination({ page, totalPages, pageWindow, total, pageSi
   const from = (page - 1) * pageSize + 1;
   const to   = Math.min(page * pageSize, total);
 
-  const btnBase = "w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold transition-all";
+  const btnBase = "!w-7 !h-7 !min-h-0 !p-0 flex-shrink-0 flex items-center justify-center rounded-full text-xs font-semibold transition-all";
 
   return (
     <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/40">

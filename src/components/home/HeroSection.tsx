@@ -88,7 +88,7 @@ const HeroSection = () => {
         <div className={`grid gap-12 items-center transition-all duration-500 ${(isSearchVisible || isDesktop) ? 'grid-cols-1 md:grid-cols-2 opacity-100' : 'grid-cols-1 max-w-3xl mx-auto text-center'}`}>
 
           {/* ── Colonne gauche : textes + stats ── */}
-          <div>
+          <div className={`${!isDesktop && isSearchVisible ? 'hidden' : 'block'}`}>
             <h1 className="font-display text-5xl md:text-6xl font-bold text-white mb-5 leading-[1.1]">
               Trouvez votre<br />
               <span className="text-[#D4A843]">propriété idéale</span><br />
@@ -112,7 +112,7 @@ const HeroSection = () => {
             {/* Stats */}
             {/* Stats */}
             {statsData && (
-              <div className={`pt-8 border-t border-white/10 grid grid-cols-3 gap-6 ${(!isSearchVisible && !isDesktop) ? 'max-w-md mx-auto' : ''}`}>
+              <div className={`hidden md:grid pt-8 border-t border-white/10 grid-cols-3 gap-6 ${(!isSearchVisible && !isDesktop) ? 'max-w-md mx-auto' : ''}`}>
                 <div>
                   <div className="text-2xl font-bold text-white">
                     {statsData.annoncesActives > 0 ? `${statsData.annoncesActives.toLocaleString("fr-FR")}+` : ""}

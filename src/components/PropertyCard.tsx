@@ -152,7 +152,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
                 toast(wasFavori ? "Retiré des favoris" : "Ajouté aux favoris !");
               }}
               title={isFavori(bienId) ? "Retirer des favoris" : "Ajouter aux favoris"}
-              className="absolute top-3 left-3 z-10 w-8 h-8 flex items-center justify-center transition-colors rounded-full"
+              className="absolute top-3 left-3 z-10 !w-8 !h-8 !min-h-0 !p-0 flex-shrink-0 flex items-center justify-center transition-colors rounded-full"
               style={!isFavori(bienId) ? { background: 'rgba(0,0,0,0.5)' } : undefined}
             >
               <Heart
@@ -249,7 +249,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
               : []),
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="relative group/spec">
-              <span className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-slate-50 border border-slate-100 rounded-full cursor-default hover:border-slate-300 hover:bg-slate-100 transition-colors">
+              <span className="flex items-center justify-center !w-7 !h-7 sm:!w-8 sm:!h-8 !min-h-0 !p-0 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-full cursor-default hover:border-slate-300 hover:bg-slate-100 transition-colors">
                 <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
               </span>
               <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-[#0C1A35] text-white text-xs px-2.5 py-1 rounded-lg whitespace-nowrap opacity-0 group-hover/spec:opacity-100 transition-opacity pointer-events-none z-20">

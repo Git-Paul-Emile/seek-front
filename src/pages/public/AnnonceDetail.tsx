@@ -429,7 +429,7 @@ export default function AnnonceDetail() {
                   toast(wasFavori ? "Retiré des favoris" : "Ajouté aux favoris !");
                 }}
                 title={isFavori(bien.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
-                className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors"
+                className="!w-9 !h-9 !min-h-0 !p-0 flex-shrink-0 flex items-center justify-center !rounded-full border border-slate-100 hover:bg-slate-50 transition-colors"
               >
                 <Heart
                   className={`w-5 h-5 transition-colors ${isFavori(bien.id) ? "fill-red-500 text-red-500" : "text-slate-400 hover:text-red-400"}`}
@@ -467,13 +467,13 @@ export default function AnnonceDetail() {
                     <>
                       <button
                         onClick={(e) => { e.stopPropagation(); setPhotoIndex((photoIndex - 1 + photos.length) % photos.length); }}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 !w-10 !h-10 !min-h-0 !p-0 flex-shrink-0 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white transition-colors"
                       >
                         <ChevronLeft className="w-5 h-5 text-slate-700" />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setPhotoIndex((photoIndex + 1) % photos.length); }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 !w-10 !h-10 !min-h-0 !p-0 flex-shrink-0 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-white transition-colors"
                       >
                         <ChevronRight className="w-5 h-5 text-slate-700" />
                       </button>
@@ -606,7 +606,7 @@ export default function AnnonceDetail() {
                     const container = document.getElementById('caracteristiques-scroll');
                     if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
                   }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 !w-8 !h-8 !min-h-0 !p-0 flex-shrink-0 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -615,7 +615,7 @@ export default function AnnonceDetail() {
                     const container = document.getElementById('caracteristiques-scroll');
                     if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 !w-8 !h-8 !min-h-0 !p-0 flex-shrink-0 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>

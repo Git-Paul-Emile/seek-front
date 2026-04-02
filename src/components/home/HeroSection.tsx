@@ -115,7 +115,7 @@ const HeroSection = () => {
               <div className={`hidden md:grid pt-8 border-t border-white/10 grid-cols-3 gap-6 ${(!isSearchVisible && !isDesktop) ? 'max-w-md mx-auto' : ''}`}>
                 <div>
                   <div className="text-2xl font-bold text-white">
-                    {statsData.annoncesActives > 0 ? `${statsData.annoncesActives.toLocaleString("fr-FR")}+` : ""}
+                    {statsData.annoncesActives > 0 ? `${statsData.annoncesActives.toLocaleString("fr-FR")}+` : "--"}
                   </div>
                   <div className="text-white/40 text-sm mt-0.5">Annonces actives</div>
                 </div>

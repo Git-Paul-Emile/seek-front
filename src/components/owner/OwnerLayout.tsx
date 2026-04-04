@@ -19,14 +19,13 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
-import { useOwnerStats } from "@/hooks/useBien";
-import { useBiensEnRetard } from "@/hooks/useBail";
-import { usePendingVerificationsCount } from "@/hooks/useLocataire";
 import { socketService, SOCKET_EVENTS, type NotificationPayload, type TransactionStatusPayload } from "@/services/socketService";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileHeader } from "@/components/ui/MobileHeader";
 import { MobileDrawer } from "@/components/ui/MobileDrawer";
 import { BottomNav, type BottomNavItem } from "@/components/ui/BottomNav";
+import { NotificationPanel } from "@/components/ui/NotificationPanel";
+import { useOwnerNotifications, useMarkOwnerNotificationsRead } from "@/hooks/useNotificationInApp";
 
 const OWNER_BOTTOM_NAV: BottomNavItem[] = [
   { to: "/owner/dashboard",  label: "Accueil",    icon: LayoutDashboard },
@@ -54,15 +53,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   const [locatairesOpen, setLocatairesOpen] = useState(
     location.pathname.startsWith("/owner/locataires")
   );
-
-  // fetch stats to know if we have any pending annonces
-  const { data: stats } = useOwnerStats();
-  const pendingCount =
-    stats?.byStatut.find((s) => s.statut === "EN_ATTENTE")?.count ?? 0;
-  const { data: biensEnRetard = [] } = useBiensEnRetard();
-  const retardCount = biensEnRetard.length;
-  const { data: pendingVerif } = usePendingVerificationsCount();
-  const pendingVerifCount = pendingVerif?.count ?? 0;
 
   const handleLogout = async () => {
     await logout();
@@ -106,7 +96,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
       {/* Navigation */}
       <nav className={`flex-1 overflow-y-auto py-4 ${isOpen ? "px-3" : "px-1"}`}>
         <ul className="space-y-0.5">
-          {/* Items plats */}
           {NAV_ITEMS_TOP.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
@@ -125,7 +114,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             </li>
           ))}
 
-          {/* Loyers en retard */}
+          {/* Loyers en retard (sans badge) */}
           <li>
             <NavLink
               to="/owner/loyers-retard"
@@ -137,26 +126,8 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
                     : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
                 }`}
             >
-              {({ isActive }) => (
-                <>
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {isOpen && (
-                    <>
-                      <span className="flex-1">Loyers en retard</span>
-                      {retardCount > 0 && (
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                          isActive ? "bg-white/25 text-white" : "bg-red-500 text-white"
-                        }`}>
-                          {retardCount}
-                        </span>
-                      )}
-                    </>
-                  )}
-                  {!isOpen && retardCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
-                  )}
-                </>
-              )}
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {isOpen && <span className="flex-1">Loyers en retard</span>}
             </NavLink>
           </li>
 
@@ -177,7 +148,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             </NavLink>
           </li>
 
-          {/* Locataires - groupe collapsible */}
+          {/* Locataires - groupe collapsible (sans badge) */}
           {isOpen && (
             <li>
               <button
@@ -192,11 +163,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
               >
                 <Users className="w-4 h-4 flex-shrink-0" />
                 <span className="flex-1 text-left">Locataires</span>
-                {pendingVerifCount > 0 && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-amber-500 text-white">
-                    {pendingVerifCount}
-                  </span>
-                )}
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
                     locatairesOpen ? "rotate-180" : ""
@@ -228,7 +194,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             </li>
           )}
 
-          {/* Gestion de biens - groupe collapsible */}
+          {/* Gestion de biens - groupe collapsible (sans badge) */}
           {isOpen && (
             <li>
               <button
@@ -250,7 +216,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
                 />
               </button>
 
-              {/* Sous-items */}
               <ul
                 className={`overflow-hidden transition-all duration-200 ml-3 pl-3 border-l border-slate-100 space-y-0.5 ${
                   biensOpen ? "max-h-40 opacity-100 mt-0.5" : "max-h-0 opacity-0"
@@ -267,23 +232,8 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
                           : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
                       }`}
                   >
-                    {({ isActive }) => (
-                      <>
-                        <List className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span className="flex-1">Liste des biens</span>
-                        {pendingCount > 0 && (
-                          <span
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                              isActive
-                                ? "bg-white/25 text-white"
-                                : "bg-red-500 text-white"
-                            }`}
-                          >
-                            {pendingCount > 99 ? "99+" : pendingCount}
-                          </span>
-                        )}
-                      </>
-                    )}
+                    <List className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="flex-1">Liste des biens</span>
                   </NavLink>
                 </li>
               </ul>
@@ -326,9 +276,14 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   );
 }
 
-// ─── Topbar ───────────────────────────────────────────────────────────────────
+// ─── Topbar avec cloche de notifications ──────────────────────────────────────
 
 function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
+  const { data } = useOwnerNotifications();
+  const { mutate: markRead } = useMarkOwnerNotificationsRead();
+  const notifications = data?.notifications ?? [];
+  const unreadCount = data?.unreadCount ?? 0;
+
   return (
     <header className={`fixed top-0 h-16 bg-white border-b border-slate-100
       flex items-center justify-between px-6 z-30 transition-all duration-300 ${
@@ -357,14 +312,23 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
           />
         </div>
       </div>
-      <Link
-        to="/proprietaires"
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-500
-          hover:text-[#0C1A35] transition-colors"
-      >
-        Retour à l'accueil
-        <ArrowUpRight className="w-4 h-4" />
-      </Link>
+      <div className="flex items-center gap-3">
+        <NotificationPanel
+          role="owner"
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkAllRead={() => markRead()}
+          allNotificationsPath="/owner/notifications"
+        />
+        <Link
+          to="/proprietaires"
+          className="flex items-center gap-1.5 text-sm font-medium text-slate-500
+            hover:text-[#0C1A35] transition-colors"
+        >
+          Retour à l'accueil
+          <ArrowUpRight className="w-4 h-4" />
+        </Link>
+      </div>
     </header>
   );
 }
@@ -376,13 +340,15 @@ function useOwnerRealtime() {
 
   useEffect(() => {
     const unsubNotif = socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationPayload) => {
-      toast.info(data.titre, { description: data.message });
+      toast.info(data.titre);
       qc.invalidateQueries({ queryKey: ["owner-messages"] });
+      qc.invalidateQueries({ queryKey: ["owner-notifications"] });
     });
 
     const unsubBadge = socketService.on(SOCKET_EVENTS.BADGE_UPDATE, () => {
       qc.invalidateQueries({ queryKey: ["owner-stats"] });
       qc.invalidateQueries({ queryKey: ["biens-retard"] });
+      qc.invalidateQueries({ queryKey: ["owner-notifications"] });
     });
 
     const unsubPayOk = socketService.on(SOCKET_EVENTS.PAYMENT_CONFIRMED, (data: TransactionStatusPayload) => {
@@ -391,6 +357,7 @@ function useOwnerRealtime() {
       });
       qc.invalidateQueries({ queryKey: ["bail"] });
       qc.invalidateQueries({ queryKey: ["echeancier"] });
+      qc.invalidateQueries({ queryKey: ["owner-notifications"] });
     });
 
     const unsubPayFail = socketService.on(SOCKET_EVENTS.PAYMENT_FAILED, (data: TransactionStatusPayload) => {
@@ -399,11 +366,34 @@ function useOwnerRealtime() {
       });
     });
 
+    const unsubBailUpdated = socketService.on(SOCKET_EVENTS.BAIL_UPDATED, (data) => {
+      qc.invalidateQueries({ queryKey: ["bail", data.bienId] });
+      qc.invalidateQueries({ queryKey: ["bail_historique", data.bienId] });
+      qc.invalidateQueries({ queryKey: ["bail_a_archiver", data.bienId] });
+      qc.invalidateQueries({ queryKey: ["echeancier"] });
+      qc.invalidateQueries({ queryKey: ["solde"] });
+      qc.invalidateQueries({ queryKey: ["biensAvecBailActif"] });
+      qc.invalidateQueries({ queryKey: ["biens-en-retard"] });
+    });
+
+    const unsubBienUpdated = socketService.on(SOCKET_EVENTS.BIEN_UPDATED, (data) => {
+      qc.invalidateQueries({ queryKey: ["biens"] });
+      qc.invalidateQueries({ queryKey: ["biens", data.bienId] });
+    });
+
+    const unsubSignalementUpdated = socketService.on(SOCKET_EVENTS.SIGNALEMENT_UPDATED, (data) => {
+      qc.invalidateQueries({ queryKey: ["biens"] });
+      qc.invalidateQueries({ queryKey: ["biens", data.bienId] });
+    });
+
     return () => {
       unsubNotif();
       unsubBadge();
       unsubPayOk();
       unsubPayFail();
+      unsubBailUpdated();
+      unsubBienUpdated();
+      unsubSignalementUpdated();
     };
   }, [qc]);
 }
@@ -413,12 +403,6 @@ function useOwnerRealtime() {
 function OwnerMobileNav({ onClose }: { onClose: () => void }) {
   const { owner, logout } = useOwnerAuth();
   const navigate = useNavigate();
-  const { data: stats } = useOwnerStats();
-  const pendingCount = stats?.byStatut.find((s) => s.statut === "EN_ATTENTE")?.count ?? 0;
-  const { data: biensEnRetard = [] } = useBiensEnRetard();
-  const retardCount = biensEnRetard.length;
-  const { data: pendingVerif } = usePendingVerificationsCount();
-  const pendingVerifCount = pendingVerif?.count ?? 0;
 
   const initiales =
     `${owner?.prenom?.[0] ?? ""}${owner?.nom?.[0] ?? ""}`.toUpperCase() || "P";
@@ -451,12 +435,7 @@ function OwnerMobileNav({ onClose }: { onClose: () => void }) {
       <li>
         <NavLink to="/owner/loyers-retard" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span className="flex-1">Loyers en retard</span>
-          {retardCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
-              {retardCount}
-            </span>
-          )}
+          Loyers en retard
         </NavLink>
       </li>
 
@@ -468,7 +447,7 @@ function OwnerMobileNav({ onClose }: { onClose: () => void }) {
         </NavLink>
       </li>
 
-      {/* Locataires */}
+      {/* Gestion */}
       <li className="pt-2">
         <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-300">
           Gestion
@@ -477,12 +456,7 @@ function OwnerMobileNav({ onClose }: { onClose: () => void }) {
       <li>
         <NavLink to="/owner/locataires" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
           <Users className="w-5 h-5 flex-shrink-0" />
-          <span className="flex-1">Locataires</span>
-          {pendingVerifCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
-              {pendingVerifCount}
-            </span>
-          )}
+          Locataires
         </NavLink>
       </li>
 
@@ -490,12 +464,15 @@ function OwnerMobileNav({ onClose }: { onClose: () => void }) {
       <li>
         <NavLink to="/owner/biens" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
           <Building2 className="w-5 h-5 flex-shrink-0" />
-          <span className="flex-1">Liste des biens</span>
-          {pendingCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
-              {pendingCount > 99 ? "99+" : pendingCount}
-            </span>
-          )}
+          Liste des biens
+        </NavLink>
+      </li>
+
+      {/* Notifications */}
+      <li>
+        <NavLink to="/owner/notifications" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center text-base">🔔</span>
+          Notifications
         </NavLink>
       </li>
 

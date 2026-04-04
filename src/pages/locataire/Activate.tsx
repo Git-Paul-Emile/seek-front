@@ -167,10 +167,7 @@ export default function LocataireActivate() {
       setLocataire(locataire);
       setSuccess(true);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Erreur lors de l'activation";
-      toast.error(msg);
+      toast.error("Erreur lors de l'activation");
     } finally {
       setIsSubmitting(false);
     }

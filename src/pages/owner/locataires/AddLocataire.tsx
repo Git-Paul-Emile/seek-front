@@ -67,10 +67,7 @@ export default function AddLocataire() {
       toast.success("Locataire créé avec succès !");
       navigate("/owner/locataires");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Erreur lors de la création";
-      toast.error(msg);
+      toast.error("Erreur lors de la création");
     }
   };
 

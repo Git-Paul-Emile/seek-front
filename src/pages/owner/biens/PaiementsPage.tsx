@@ -152,11 +152,7 @@ function RelanceButton({
       onClick={() =>
         mutate(
           { bienId, bailId, echeanceId },
-          {
-            onSuccess: (data) =>
-              toast.success(data.message ?? "Relance envoyée"),
-            onError: () => toast.error("Erreur lors de l'envoi de la relance"),
-          }
+          {}
         )
       }
       disabled={isPending}
@@ -751,7 +747,12 @@ export default function PaiementsPage() {
                             Réception confirmée le {new Date(ech.dateConfirmation).toLocaleDateString("fr-FR")}
                           </p>
                         )}
-                        {ech.statut === "EN_ATTENTE_CONFIRMATION" && (
+                        {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.sourceEnregistrement === "LOCATAIRE" && (
+                          <p className="text-xs text-indigo-600 mt-0.5 font-medium">
+                            Paiement déclaré par le locataire — en attente de votre confirmation
+                          </p>
+                        )}
+                        {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.sourceEnregistrement === "PROPRIETAIRE" && (
                           <p className="text-xs text-purple-600 mt-0.5 italic">
                             En attente de confirmation du locataire
                           </p>
@@ -790,8 +791,8 @@ export default function PaiementsPage() {
                             {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                           </button>
                         )}
-                        {/* Confirmer réception */}
-                        {canDownload(ech.statut) &&
+                        {/* Confirmer réception — paiement LOCATAIRE en attente ou déjà PAYE non confirmé */}
+                        {(ech.statut === "EN_ATTENTE_CONFIRMATION" || canDownload(ech.statut)) &&
                           ech.sourceEnregistrement === "LOCATAIRE" &&
                           !ech.confirmeParProprietaire &&
                           bail && (

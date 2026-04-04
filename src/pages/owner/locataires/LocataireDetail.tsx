@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,8 +10,6 @@ import {
   Users,
   Baby,
   Link2,
-  Copy,
-  Check,
   CheckCircle,
   Clock,
   XCircle,
@@ -106,8 +104,6 @@ export default function LocataireDetail() {
   const getLien = useGetLienActivation();
   const approveVerification = useApproveLocataireVerification();
   const rejectVerification = useRejectLocataireVerification();
-  const [lien, setLien] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedBail, setSelectedBail] = useState<Bail | null>(null);
   
@@ -141,28 +137,11 @@ export default function LocataireDetail() {
     locataire.bails.some((bail) => bail.contrat && bail.contrat.statut === "ACTIF")
   );
 
-  // Auto-fetch lien d'activation au chargement si contrat validé
-  const handleGetLien = useCallback(async () => {
+  const handleSendActivation = async () => {
     try {
-      const result = await getLien.mutateAsync(id!);
-      setLien(result.lien);
+      await getLien.mutateAsync(id!);
     } catch {
-      toast.error("Erreur lors de la récupération du lien");
     }
-  }, [getLien, id]);
-
-  useEffect(() => {
-    if (peutAfficherLien && !lien && !getLien.isPending) {
-      handleGetLien();
-    }
-  }, [peutAfficherLien, lien, getLien.isPending, handleGetLien]);
-
-  const handleCopy = () => {
-    if (!lien) return;
-    navigator.clipboard.writeText(lien);
-    setCopied(true);
-    toast.success("Lien copié !");
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDelete = async () => {
@@ -171,10 +150,7 @@ export default function LocataireDetail() {
       toast.success("Locataire supprimé");
       navigate("/owner/locataires");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Erreur lors de la suppression";
-      toast.error(msg);
+      toast.error("Erreur lors de la suppression");
     } finally {
       setConfirmDelete(false);
     }
@@ -193,10 +169,7 @@ export default function LocataireDetail() {
         selfieCorrespond: false,
       });
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Erreur lors de l'approbation";
-      toast.error(msg);
+      toast.error("Erreur lors de l'approbation");
     }
   };
 
@@ -213,10 +186,7 @@ export default function LocataireDetail() {
       setSelectedMotif("");
       setCustomMotif("");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Erreur lors du rejet";
-      toast.error(msg);
+      toast.error("Erreur lors du rejet");
     }
   };
 
@@ -286,34 +256,19 @@ export default function LocataireDetail() {
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-amber-900 text-sm">
                 {locataire.statut === 'INVITE' 
-                  ? 'Contrat validé - partagez ce lien d\'activation avec le locataire'
+                  ? 'Contrat validé - le lien d\'activation doit être envoyé uniquement par SMS'
                   : 'Le locataire peut désormais se connecter à son espace'}
               </p>
-              {lien ? (
-                <div className="mt-3 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={lien}
-                    readOnly
-                    className="flex-1 text-xs bg-white border border-amber-200 rounded-lg px-2.5 py-1.5 text-slate-700 min-w-0 outline-none"
-                  />
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4A843] text-white rounded-lg text-xs font-medium hover:bg-[#c49a3a] transition-colors"
-                  >
-                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copied ? "Copié" : "Copier"}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleGetLien}
-                  disabled={getLien.isPending}
-                  className="mt-3 px-4 py-1.5 bg-[#D4A843] text-white rounded-lg text-xs font-medium hover:bg-[#c49a3a] disabled:opacity-60 transition-colors"
-                >
-                  {getLien.isPending ? "Génération..." : "Générer le lien"}
-                </button>
-              )}
+              <p className="mt-2 text-xs text-amber-700">
+                Le contenu du SMS n'est pas affiché à l'écran. Vous pouvez seulement déclencher l'envoi au numéro du locataire.
+              </p>
+              <button
+                onClick={handleSendActivation}
+                disabled={getLien.isPending}
+                className="mt-3 px-4 py-1.5 bg-[#D4A843] text-white rounded-lg text-xs font-medium hover:bg-[#c49a3a] disabled:opacity-60 transition-colors"
+              >
+                {getLien.isPending ? "Envoi..." : "Envoyer le lien par SMS"}
+              </button>
             </div>
           </div>
         </div>

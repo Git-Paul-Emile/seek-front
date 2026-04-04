@@ -61,8 +61,7 @@ function VilleForm({
       }
       onClose();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de l'enregistrement de la ville");
     }
   };
 
@@ -155,8 +154,7 @@ export default function VillesPage() {
       await deleteVille.mutateAsync(toDelete.id);
       toast.success("Ville supprimée");
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de la suppression de la ville");
     } finally {
       setToDelete(null);
     }

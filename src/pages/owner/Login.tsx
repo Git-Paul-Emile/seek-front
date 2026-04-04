@@ -13,6 +13,8 @@ import { loginOwnerApi } from "@/api/ownerAuth";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import heroBg from "@/assets/hero-bg.jpg";
 
+const OWNER_PENDING_OTP_KEY = "ownerPendingOtp";
+
 // ─── Schéma Zod ───────────────────────────────────────────────────────────────
 
 const schema = z.object({
@@ -100,6 +102,18 @@ export default function OwnerLogin() {
         password: data.password,
       });
       setOwner(res.data.data);
+      if (!res.data.data.telephoneVerifie) {
+        sessionStorage.setItem(
+          OWNER_PENDING_OTP_KEY,
+          JSON.stringify({
+            proprietaireId: res.data.data.id,
+            prenom: res.data.data.prenom,
+            telephone: res.data.data.telephone,
+          })
+        );
+        navigate("/owner/verify-phone", { replace: true });
+        return;
+      }
       navigate("/owner/dashboard", { replace: true });
     } catch (err) {
       setServerError(resolveServerError(err));

@@ -441,9 +441,14 @@ export default function PaiementsLocatairePage() {
                       <p className="text-xs text-slate-500 mt-0.5">
                         {fmt(ech.montant)} FCFA
                       </p>
-                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
+                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.sourceEnregistrement === "PROPRIETAIRE" && ech.datePaiement && (
                         <p className="text-xs text-purple-600 mt-0.5 font-medium">
                           Enregistré par votre propriétaire le {new Date(ech.datePaiement).toLocaleDateString("fr-FR")} · Espèces · Veuillez confirmer
+                        </p>
+                      )}
+                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.sourceEnregistrement === "LOCATAIRE" && (
+                        <p className="text-xs text-indigo-600 mt-0.5 font-medium">
+                          Paiement déclaré · En attente de confirmation par votre propriétaire
                         </p>
                       )}
                       {ech.statut !== "EN_ATTENTE_CONFIRMATION" && ech.datePaiement && (
@@ -468,17 +473,16 @@ export default function PaiementsLocatairePage() {
                     
                     {/* Conteneur des boutons */}
                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                      {/* Bouton confirmer paiement espèces */}
-                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && !ech.confirmeParLocataire && (
+                      {/* Bouton confirmer paiement espèces (uniquement si enregistré par le propriétaire) */}
+                      {ech.statut === "EN_ATTENTE_CONFIRMATION" && ech.sourceEnregistrement === "PROPRIETAIRE" && !ech.confirmeParLocataire && (
                         <button
                           onClick={() =>
                             confirmerEspeces(
                               { echeanceId: ech.id, bailId: bailActif.id },
                               {
                                 onSuccess: () => toast.success("Paiement confirmé avec succès"),
-                                onError: (err: unknown) => {
-                                  const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-                                  toast.error(msg ?? "Erreur lors de la confirmation");
+                                onError: () => {
+                                  toast.error("Erreur lors de la confirmation");
                                 },
                               }
                             )

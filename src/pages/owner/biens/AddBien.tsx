@@ -555,8 +555,7 @@ export default function AddBien() {
       toast.success(brouillon ? "Bien enregistré comme brouillon" : "Bien soumis pour publication !");
       navigate("/owner/biens");
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Une erreur est survenue";
-      toast.error(msg);
+      toast.error("Une erreur est survenue lors de l'enregistrement du bien");
     } finally {
       setPendingAction(null);
     }

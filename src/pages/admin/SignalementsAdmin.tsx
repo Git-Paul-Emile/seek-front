@@ -60,7 +60,7 @@ export default function SignalementsAdmin() {
       setSelectedSignalement(null);
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Erreur lors de la validation du signalement.");
+      toast.error("Erreur lors de la validation du signalement.");
     },
   });
 
@@ -73,7 +73,7 @@ export default function SignalementsAdmin() {
       setSelectedSignalement(null);
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Erreur lors du rejet du signalement.");
+      toast.error("Erreur lors du rejet du signalement.");
     },
   });
 

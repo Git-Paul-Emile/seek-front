@@ -157,7 +157,7 @@ export default function UtilisateursPage() {
       setCustomMotif("");
       setSelectedProprietaire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la suspension");
+      toast.error("Erreur lors de la suspension");
     }
   };
 
@@ -173,7 +173,7 @@ export default function UtilisateursPage() {
       setShowReactiverModal(false);
       setSelectedProprietaire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la réactivation");
+      toast.error("Erreur lors de la réactivation");
     }
   };
 
@@ -186,7 +186,7 @@ export default function UtilisateursPage() {
       setShowSupprimerModal(false);
       setSelectedProprietaire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la suppression");
+      toast.error("Erreur lors de la suppression");
     }
   };
 
@@ -210,7 +210,7 @@ export default function UtilisateursPage() {
       setCustomMotif("");
       setSelectedLocataire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la suspension");
+      toast.error("Erreur lors de la suspension");
     }
   };
 
@@ -223,7 +223,7 @@ export default function UtilisateursPage() {
       setShowReactiverModal(false);
       setSelectedLocataire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la réactivation");
+      toast.error("Erreur lors de la réactivation");
     }
   };
 
@@ -236,7 +236,7 @@ export default function UtilisateursPage() {
       setShowSupprimerModal(false);
       setSelectedLocataire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la suppression");
+      toast.error("Erreur lors de la suppression");
     }
   };
 

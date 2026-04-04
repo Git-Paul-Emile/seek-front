@@ -114,10 +114,7 @@ export default function LocatairesList() {
       await deleteLocataire.mutateAsync(id);
       toast.success("Locataire supprimé");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Erreur lors de la suppression";
-      toast.error(msg);
+      toast.error("Erreur lors de la suppression");
     } finally {
       setConfirmId(null);
     }

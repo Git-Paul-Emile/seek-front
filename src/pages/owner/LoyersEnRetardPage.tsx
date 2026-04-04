@@ -10,7 +10,6 @@ import {
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useBiensEnRetard } from "@/hooks/useBail";
 import { useEnvoyerRappel } from "@/hooks/useQuittance";
-import { toast } from "sonner";
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 
@@ -142,10 +141,7 @@ export default function LoyersEnRetardPage() {
                     if (!firstEch) return;
                     envoyerRappel(
                       { bienId: b.bien.id, bailId: b.bailId, echeanceId: firstEch.id },
-                      {
-                        onSuccess: (data) => toast.success(data.message ?? "Relance envoyée"),
-                        onError: () => toast.error("Erreur lors de l'envoi de la relance"),
-                      }
+                      {}
                     );
                   }}
                   disabled={isSending}

@@ -18,6 +18,14 @@ export const SOCKET_EVENTS = {
   NEW_PROPERTY_ALERT:        "property:new",
   VERIFICATION_SUBMITTED:    "verification:submitted",
   VERIFICATION_COUNT_UPDATE: "verification:count",
+
+  // Bail & Bien
+  BAIL_UPDATED:        "bail:updated",
+  BIEN_UPDATED:        "bien:updated",
+
+  // Signalements
+  SIGNALEMENT_NEW:     "signalement:new",
+  SIGNALEMENT_UPDATED: "signalement:updated",
 } as const;
 
 // ─── Payloads ─────────────────────────────────────────────────────────────────
@@ -54,6 +62,15 @@ export interface VerificationCountPayload {
   count: number;
 }
 
+export interface BailUpdatedPayload {
+  proprietaireId: string;
+  bienId: string;
+}
+
+export interface SignalementPayload {
+  bienId: string;
+}
+
 export interface PropertyAlertPayload {
   alerteId: string;
   telephone: string;
@@ -76,6 +93,10 @@ type EventMap = {
   [SOCKET_EVENTS.NEW_PROPERTY_ALERT]: PropertyAlertPayload;
   [SOCKET_EVENTS.VERIFICATION_SUBMITTED]: Record<string, unknown>;
   [SOCKET_EVENTS.VERIFICATION_COUNT_UPDATE]: VerificationCountPayload;
+  [SOCKET_EVENTS.BAIL_UPDATED]: BailUpdatedPayload;
+  [SOCKET_EVENTS.BIEN_UPDATED]: BailUpdatedPayload;
+  [SOCKET_EVENTS.SIGNALEMENT_NEW]: SignalementPayload;
+  [SOCKET_EVENTS.SIGNALEMENT_UPDATED]: SignalementPayload;
 };
 
 type Unsubscribe = () => void;

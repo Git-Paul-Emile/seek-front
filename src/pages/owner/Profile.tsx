@@ -115,12 +115,12 @@ export default function Profile() {
       setOwner(data.data);
       
       // Afficher le toast de succès
-      toast.success(data.message || "Profil mis à jour avec succès");
+      toast.success("Profil mis à jour avec succès");
       
       // Reset password fields
       setFormData((prev) => ({ ...prev, password: "", confirmPassword: "" }));
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Une erreur est survenue lors de la mise à jour du profil.");
+      toast.error("Une erreur est survenue lors de la mise à jour du profil.");
     } finally {
       setIsSaving(false);
     }
@@ -133,7 +133,7 @@ export default function Profile() {
       await logout();
       navigate("/proprietaires");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Une erreur est survenue lors de la suppression du compte.");
+      toast.error("Une erreur est survenue lors de la suppression du compte.");
       setShowDeleteModal(false);
     } finally {
       setIsDeleting(false);

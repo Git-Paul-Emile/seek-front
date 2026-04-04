@@ -47,8 +47,7 @@ export default function SignalementModal({ bien, onClose }: SignalementModalProp
       onClose();
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || "Une erreur est survenue lors de l'envoi du signalement.";
-      toast.error(message);
+      toast.error("Une erreur est survenue lors de l'envoi du signalement.");
     },
   });
 

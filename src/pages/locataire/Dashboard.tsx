@@ -103,8 +103,7 @@ export default function LocataireDashboard() {
       await accepterInvitation.mutateAsync(inv.token);
       toast.success(`Invitation acceptée ! Le bail pour ${inv.bien?.titre || inv.bien?.ville || "le bien"} a été créé.`);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de l'acceptation de l'invitation");
     } finally {
       setInvitationPending(null);
     }
@@ -909,10 +908,7 @@ export default function LocataireDashboard() {
                       window.location.href = "/locataire/login";
                     },
                     onError: (err: unknown) => {
-                      const msg =
-                        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-                        "Impossible de supprimer le compte";
-                      toast.error(msg);
+                      toast.error("Impossible de supprimer le compte");
                     },
                   })
                 }

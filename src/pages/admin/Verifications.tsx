@@ -62,9 +62,36 @@ export default function AdminVerificationsPage() {
   const approveMutation = useApproveVerification();
   const rejectMutation = useRejectVerification();
 
+  const resetReviewState = () => {
+    setChecklist({
+      documentLisible: false,
+      documentComplet: false,
+      documentNonExpire: false,
+      nomCorrespond: false,
+      selfieCorrespond: false,
+    });
+    setSelectedMotif("");
+    setCustomMotif("");
+    setShowRejectModal(false);
+    setLightboxImage(null);
+  };
+
+  const closeVerificationModal = () => {
+    setSelectedVerification(null);
+    resetReviewState();
+  };
+
   const handleApprove = () => {
     if (!selectedVerification) return;
-    approveMutation.mutate(selectedVerification.id);
+    approveMutation.mutate(selectedVerification.id, {
+      onSuccess: () => {
+        closeVerificationModal();
+        toast.success("Identité du propriétaire validée avec succès");
+      },
+      onError: () => {
+        toast.error("Erreur lors de la validation de l'identité");
+      },
+    });
   };
 
   const handleReject = () => {
@@ -74,7 +101,18 @@ export default function AdminVerificationsPage() {
       toast.error("Veuillez sélectionner ou saisir un motif de rejet");
       return;
     }
-    rejectMutation.mutate({ proprietaireId: selectedVerification.id, motif });
+    rejectMutation.mutate(
+      { proprietaireId: selectedVerification.id, motif },
+      {
+        onSuccess: () => {
+          closeVerificationModal();
+          toast.success("Demande rejetée avec succès");
+        },
+        onError: () => {
+          toast.error("Erreur lors du rejet de la demande");
+        },
+      }
+    );
   };
 
   const allChecksPassed = Object.values(checklist).every(Boolean);
@@ -179,7 +217,7 @@ export default function AdminVerificationsPage() {
                 </p>
               </div>
               <button
-                onClick={() => setSelectedVerification(null)}
+                onClick={closeVerificationModal}
                 className="p-2 hover:bg-slate-100 rounded-xl"
               >
                 <X className="w-5 h-5 text-slate-400" />

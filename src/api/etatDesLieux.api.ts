@@ -116,6 +116,9 @@ export const validateEtatDesLieux = (id: string, documentPdf?: string): Promise<
 export const getEtatDesLieuxLocataire = (id: string): Promise<EtatDesLieux> =>
   api.get<{ data: EtatDesLieux }>(`/locataire/${id}`).then((r) => r.data.data);
 
+export const getAllEtatsDesLieuxLocataire = (): Promise<EtatDesLieux[]> =>
+  api.get<{ data: EtatDesLieux[] }>("/locataire/mes-edl").then((r) => r.data.data);
+
 export const getEtatsDesLieuxByBailLocataire = (bailId: string): Promise<EtatDesLieux[]> =>
   api.get<{ data: EtatDesLieux[] }>(`/locataire/bail/${bailId}`).then((r) => r.data.data);
 

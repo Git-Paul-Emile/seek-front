@@ -6,12 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Phone, Mail, Lock, ArrowLeft,
-  AlertCircle, Loader2, Eye, EyeOff, ChevronDown, CheckCircle2,
+  AlertCircle, Loader2, Eye, EyeOff, ChevronDown,
 } from "lucide-react";
 import axios from "axios";
 import { registerOwnerApi } from "@/api/ownerAuth";
-import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import heroBg from "@/assets/hero-bg.jpg";
+
+const OWNER_PENDING_OTP_KEY = "ownerPendingOtp";
 
 // ─── Schéma Zod (validation 100 % front, sans validation HTML) ───────────────
 
@@ -106,10 +107,8 @@ const inputCls = (hasError: boolean) =>
 
 export default function OwnerRegister() {
   const navigate = useNavigate();
-  const { setOwner } = useOwnerAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const {
     register,
@@ -132,13 +131,15 @@ export default function OwnerRegister() {
         email: data.email,
         password: data.password,
       });
-
-      // Connecter le propriétaire immédiatement avec les données retournées
-      setOwner(res.data.data);
-      setSuccess(true);
-
-      // Redirection vers le dashboard après un court délai (affichage du message)
-      setTimeout(() => navigate("/owner/dashboard", { replace: true }), 1800);
+      sessionStorage.setItem(
+        OWNER_PENDING_OTP_KEY,
+        JSON.stringify({
+          proprietaireId: res.data.data.id,
+          prenom: res.data.data.prenom,
+          telephone: res.data.data.telephone,
+        })
+      );
+      navigate("/owner/verify-phone", { replace: true });
     } catch (err) {
       setServerError(resolveServerError(err));
     }
@@ -197,27 +198,6 @@ export default function OwnerRegister() {
 
           {/* Carte */}
           <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-8">
-
-            {/* Message de succès */}
-            <AnimatePresence>
-              {success && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-start gap-3 rounded-xl bg-emerald-500/15 border border-emerald-400/25 px-4 py-4 mb-6"
-                >
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-emerald-300 font-medium">
-                      Compte créé avec succès !
-                    </p>
-                    <p className="text-xs text-emerald-400/70 mt-0.5">
-                      Bienvenue sur SEEK. Redirection vers votre tableau de bord…
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
 
@@ -418,7 +398,7 @@ export default function OwnerRegister() {
               <div className="pt-1">
                 <button
                   type="submit"
-                  disabled={isSubmitting || success}
+                  disabled={isSubmitting}
                   className="w-full h-11 rounded-xl bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] text-sm
                     font-bold shadow-lg shadow-[#D4A843]/20 transition-all hover:scale-[1.02]
                     focus:outline-none focus:ring-2 focus:ring-[#D4A843]/50

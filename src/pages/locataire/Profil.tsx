@@ -196,8 +196,7 @@ export default function LocataireProfil() {
     } catch (error: unknown) {
       // Extract error message from response
       const err = error as { response?: { data?: { message?: string } } };
-      const message = err.response?.data?.message || "Erreur lors de la mise à jour";
-      toast.error(message);
+      toast.error("Erreur lors de la mise à jour");
     } finally {
       setIsSaving(false);
     }

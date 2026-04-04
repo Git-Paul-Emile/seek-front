@@ -103,7 +103,7 @@ const EtatDesLieuxForm = () => {
       setNbCles(data.nbCles || 0);
       setPieces(data.pieces || []);
     } catch (e: any) {
-      toast.error("Erreur de chargement", { description: e.response?.data?.message });
+      toast.error("Erreur de chargement");
     } finally {
       setLoading(false);
     }
@@ -183,7 +183,7 @@ const EtatDesLieuxForm = () => {
         navigate(`/owner/etats-des-lieux/${created.id}`);
       }
     } catch (e: any) {
-      toast.error("Erreur", { description: e.response?.data?.message });
+      toast.error("Erreur lors de l'enregistrement");
     } finally {
       setLoading(false);
     }
@@ -210,7 +210,7 @@ const EtatDesLieuxForm = () => {
       setResolutions({});
       loadEDL(id!);
     } catch (e: any) {
-      toast.error("Erreur", { description: e.response?.data?.message });
+      toast.error("Erreur lors de l'envoi des résolutions");
     } finally {
       setLoading(false);
     }
@@ -439,7 +439,7 @@ const EtatDesLieuxForm = () => {
                                updateElement(pIndex, eIndex, "photos", [url]);
                                toast.success("Image ajoutée");
                              } catch (err: any) {
-                               toast.error("Erreur", { description: err.response?.data?.message || err.message });
+                               toast.error("Erreur lors de l'ajout de l'image");
                              } finally {
                                setLoading(false);
                              }

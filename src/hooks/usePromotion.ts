@@ -44,7 +44,7 @@ export const useActivatePromotion = () => {
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erreur lors de l'activation de la promotion");
+      toast.error("Erreur lors de l'activation de la promotion");
     },
   });
 };
@@ -63,7 +63,7 @@ export const useDeactivatePromotion = () => {
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erreur lors de la désactivation de la promotion");
+      toast.error("Erreur lors de la désactivation de la promotion");
     },
   });
 };
@@ -83,7 +83,7 @@ export const useExtendPromotion = () => {
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erreur lors de la prolongation de la promotion");
+      toast.error("Erreur lors de la prolongation de la promotion");
     },
   });
 };

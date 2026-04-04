@@ -48,7 +48,7 @@ export const usePayerPremium = () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erreur lors du paiement");
+      toast.error("Erreur lors du paiement");
     },
   });
 };
@@ -62,14 +62,14 @@ export const useArreterPremium = () => {
   return useMutation({
     mutationFn: ({ bienId }: { bienId: string }) => arreterPremium(bienId),
     onSuccess: (data) => {
-      toast.success(data.message || "Mise en avant arrêtée avec succès.");
+      toast.success("Mise en avant arrêtée avec succès.");
       queryClient.invalidateQueries({ queryKey: ["biens"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-status"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erreur lors de l'arrêt de la mise en avant");
+      toast.error("Erreur lors de l'arrêt de la mise en avant");
     },
   });
 };

@@ -72,6 +72,7 @@ const transformBienToProperty = (bien: Bien | BienAvecIsNew): Property => {
 interface PropertyCardProps {
   property: Property | Bien | BienAvecIsNew;
   isApiData?: boolean;
+  showFavoriteButton?: boolean;
 }
 
 // Type pour le propriétaire avec statut de vérification
@@ -84,7 +85,11 @@ interface ProprietaireWithVerification {
   statutVerification?: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
 }
 
-const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
+const PropertyCard = ({
+  property,
+  isApiData = false,
+  showFavoriteButton = true,
+}: PropertyCardProps) => {
   // Si les données viennent de l'API, les transformer
   const displayProperty = isApiData ? transformBienToProperty(property as BienAvecIsNew) : (property as Property);
 
@@ -138,7 +143,7 @@ const PropertyCard = ({ property, isApiData = false }: PropertyCardProps) => {
         </Carousel>
 
         {/* Bouton Favori - coin supérieur gauche */}
-        {isApiData && bienId && (
+        {showFavoriteButton && isApiData && bienId && (
           <>
             <button
               onClick={(e) => {

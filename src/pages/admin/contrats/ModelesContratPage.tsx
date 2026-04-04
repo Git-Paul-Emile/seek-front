@@ -121,8 +121,7 @@ function ModeleForm({
       }
       onClose();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de l'enregistrement du modèle");
     }
   };
 
@@ -298,8 +297,7 @@ export default function ModelesContratPage() {
       toast.success("Modèle supprimé");
       setDeleteTarget(null);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de la suppression du modèle");
       setDeleteTarget(null);
     }
   };

@@ -33,13 +33,13 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import { useAnnoncesPendingCount } from "@/hooks/useAnnonces";
-import { usePendingVerificationsCount } from "@/hooks/useAdminVerification";
 import { socketService, SOCKET_EVENTS } from "@/services/socketService";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileHeader } from "@/components/ui/MobileHeader";
 import { MobileDrawer } from "@/components/ui/MobileDrawer";
 import { BottomNav, type BottomNavItem } from "@/components/ui/BottomNav";
+import { NotificationPanel } from "@/components/ui/NotificationPanel";
+import { useAdminNotifications } from "@/hooks/useNotificationInApp";
 
 const ADMIN_BOTTOM_NAV: BottomNavItem[] = [
   { to: "/admin/dashboard",    label: "Accueil",       icon: LayoutDashboard },
@@ -115,19 +115,15 @@ function NavGroup({
   group: (typeof NAV_GROUPS)[number];
 }) {
   const location = useLocation();
-  
-  // Check if any child path matches exactly or is a sub-path
   const isChildActive = group.children.some(
     child => location.pathname === child.to || location.pathname.startsWith(child.to + "/")
   );
-  
   const isGroupActive = isChildActive;
   const [open, setOpen] = useState(isGroupActive);
   const Icon = group.icon;
 
   return (
     <li>
-      {/* Bouton parent */}
       <button
         onClick={() => setOpen((v) => !v)}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
@@ -144,7 +140,6 @@ function NavGroup({
         />
       </button>
 
-      {/* Enfants */}
       {open && (
         <ul className="mt-0.5 ml-3 pl-4 border-l border-slate-100 space-y-0.5">
           {group.children.map(({ to, label, icon: ChildIcon }) => (
@@ -178,10 +173,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { data: pendingData } = useAnnoncesPendingCount();
-  const { data: verificationData } = usePendingVerificationsCount();
-  const pendingCount = pendingData?.count ?? 0;
-  const verificationCount = verificationData ?? 0;
 
   const [usersOpen, setUsersOpen] = useState(
     location.pathname.startsWith("/admin/utilisateurs")
@@ -224,7 +215,6 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
       {/* Navigation */}
       <nav className={`flex-1 overflow-y-auto py-4 ${isOpen ? "px-3" : "px-1"}`}>
         <ul className="space-y-0.5">
-          {/* Items directs */}
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
@@ -304,7 +294,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             )}
           </li>
 
-          {/* Annonces avec badge */}
+          {/* Annonces (sans badge) */}
           <li>
             <NavLink
               to="/admin/annonces"
@@ -319,28 +309,13 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
               {({ isActive }) => (
                 <>
                   <FileSearch className="w-4 h-4 flex-shrink-0" />
-                  {isOpen && (
-                    <>
-                      <span className="flex-1">Annonces</span>
-                      {pendingCount > 0 && (
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                            isActive
-                              ? "bg-white/25 text-white"
-                              : "bg-red-500 text-white"
-                          }`}
-                        >
-                          {pendingCount > 99 ? "99+" : pendingCount}
-                        </span>
-                      )}
-                    </>
-                  )}
+                  {isOpen && <span className="flex-1">Annonces</span>}
                 </>
               )}
             </NavLink>
           </li>
 
-          {/* Vérifications avec badge */}
+          {/* Vérifications (sans badge) */}
           <li>
             <NavLink
               to="/admin/verifications"
@@ -355,22 +330,7 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
               {({ isActive }) => (
                 <>
                   <Shield className="w-4 h-4 flex-shrink-0" />
-                  {isOpen && (
-                    <>
-                      <span className="flex-1">Vérifications</span>
-                      {verificationCount > 0 && (
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                            isActive
-                              ? "bg-white/25 text-white"
-                              : "bg-amber-500 text-white"
-                          }`}
-                        >
-                          {verificationCount > 99 ? "99+" : verificationCount}
-                        </span>
-                      )}
-                    </>
-                  )}
+                  {isOpen && <span className="flex-1">Vérifications</span>}
                 </>
               )}
             </NavLink>
@@ -447,9 +407,13 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   );
 }
 
-// ─── Topbar ───────────────────────────────────────────────────────────────────
+// ─── Topbar avec cloche de notifications ──────────────────────────────────────
 
 function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
+  const { data } = useAdminNotifications();
+  const items = data?.items ?? [];
+  const unreadCount = data?.unreadCount ?? 0;
+
   return (
     <header className={`fixed top-0 h-16 bg-white border-b border-slate-100
       flex items-center justify-between px-6 z-30 transition-all duration-300 ${
@@ -478,14 +442,22 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
           />
         </div>
       </div>
-      <Link
-        to="/"
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-500
-          hover:text-[#0C1A35] transition-colors"
-      >
-        Retour au site
-        <ArrowUpRight className="w-4 h-4" />
-      </Link>
+      <div className="flex items-center gap-3">
+        <NotificationPanel
+          role="admin"
+          items={items}
+          unreadCount={unreadCount}
+          allNotificationsPath="/admin/notifications"
+        />
+        <Link
+          to="/"
+          className="flex items-center gap-1.5 text-sm font-medium text-slate-500
+            hover:text-[#0C1A35] transition-colors"
+        >
+          Retour au site
+          <ArrowUpRight className="w-4 h-4" />
+        </Link>
+      </div>
     </header>
   );
 }
@@ -498,6 +470,7 @@ function useAdminRealtime() {
   useEffect(() => {
     const unsubVerifCount = socketService.on(SOCKET_EVENTS.VERIFICATION_COUNT_UPDATE, () => {
       qc.invalidateQueries({ queryKey: ["admin-verifications-count"] });
+      qc.invalidateQueries({ queryKey: ["admin-notifications"] });
     });
 
     const unsubVerifNew = socketService.on(SOCKET_EVENTS.VERIFICATION_SUBMITTED, () => {
@@ -506,9 +479,29 @@ function useAdminRealtime() {
       });
       qc.invalidateQueries({ queryKey: ["admin-verifications-count"] });
       qc.invalidateQueries({ queryKey: ["admin-verifications"] });
+      qc.invalidateQueries({ queryKey: ["admin-notifications"] });
     });
 
     const unsubStats = socketService.on(SOCKET_EVENTS.STATS_UPDATE, () => {
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      qc.invalidateQueries({ queryKey: ["admin-notifications"] });
+    });
+
+    const unsubSignalementNew = socketService.on(SOCKET_EVENTS.SIGNALEMENT_NEW, () => {
+      toast.info("Nouveau signalement", {
+        description: "Une annonce vient d'être signalée par un utilisateur.",
+      });
+      qc.invalidateQueries({ queryKey: ["admin-signalements"] });
+      qc.invalidateQueries({ queryKey: ["admin-signalements-count"] });
+    });
+
+    const unsubSignalementUpdated = socketService.on(SOCKET_EVENTS.SIGNALEMENT_UPDATED, () => {
+      qc.invalidateQueries({ queryKey: ["admin-signalements"] });
+      qc.invalidateQueries({ queryKey: ["admin-signalements-count"] });
+    });
+
+    const unsubBienUpdated = socketService.on(SOCKET_EVENTS.BIEN_UPDATED, () => {
+      qc.invalidateQueries({ queryKey: ["admin-biens"] });
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
     });
 
@@ -516,6 +509,9 @@ function useAdminRealtime() {
       unsubVerifCount();
       unsubVerifNew();
       unsubStats();
+      unsubSignalementNew();
+      unsubSignalementUpdated();
+      unsubBienUpdated();
     };
   }, [qc]);
 }
@@ -525,10 +521,6 @@ function useAdminRealtime() {
 function AdminMobileNav({ onClose }: { onClose: () => void }) {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
-  const { data: pendingData } = useAnnoncesPendingCount();
-  const pendingCount = pendingData?.count ?? 0;
-  const { data: verificationData } = usePendingVerificationsCount();
-  const verificationCount = verificationData ?? 0;
 
   const handleLogout = async () => {
     await logout();
@@ -558,12 +550,7 @@ function AdminMobileNav({ onClose }: { onClose: () => void }) {
       <li>
         <NavLink to="/admin/annonces" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
           <FileSearch className="w-5 h-5 flex-shrink-0" />
-          <span className="flex-1">Annonces</span>
-          {pendingCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
-              {pendingCount > 99 ? "99+" : pendingCount}
-            </span>
-          )}
+          Annonces
         </NavLink>
       </li>
 
@@ -571,12 +558,7 @@ function AdminMobileNav({ onClose }: { onClose: () => void }) {
       <li>
         <NavLink to="/admin/verifications" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
           <Shield className="w-5 h-5 flex-shrink-0" />
-          <span className="flex-1">Vérifications</span>
-          {verificationCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
-              {verificationCount > 99 ? "99+" : verificationCount}
-            </span>
-          )}
+          Vérifications
         </NavLink>
       </li>
 
@@ -585,6 +567,14 @@ function AdminMobileNav({ onClose }: { onClose: () => void }) {
         <NavLink to="/admin/signalements" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           Signalements
+        </NavLink>
+      </li>
+
+      {/* Notifications */}
+      <li>
+        <NavLink to="/admin/notifications" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center text-base">🔔</span>
+          Notifications
         </NavLink>
       </li>
 
@@ -641,7 +631,6 @@ export default function AdminLayout() {
   const isMobile = useIsMobile();
   useAdminRealtime();
 
-  // Close drawer on route change
   const location = useLocation();
   useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
 

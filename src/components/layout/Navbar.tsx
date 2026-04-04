@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogOut, User, ChevronDown, Home, Search, Users, Heart, Shield, Key, MapPin, Tag, Building2 } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown, Home, Search, Users, Heart, Key, MapPin, Tag, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useFavoris } from "@/hooks/useFavoris";
@@ -38,14 +38,7 @@ const Navbar = () => {
   const showLocataireLink = !isAuthenticated && !isOwnerAuth && !isPublicAuth;
   const showProprietaireLink = !isAuthenticated && !isLocataireAuth && !isPublicAuth;
 
-  // Lien Admin : dashboard si connecté, sinon login
-  const adminLink = {
-    to: isAuthenticated ? "/admin/dashboard" : "/admin/login",
-    label: "Admin",
-    icon: Shield,
-  };
-
-  const navLinks = [...STATIC_NAV_LINKS, ...(showAdminLink ? [adminLink] : [])];
+  const navLinks = [...STATIC_NAV_LINKS];
 
 
   return (

@@ -56,7 +56,7 @@ function FavoriCard({ item }: { item: FavoriItem }) {
       {/* Carte - grisée + overlay hover si indisponible */}
       <div className={`relative group ${hasChanges ? "ring-2 ring-amber-300 rounded-b-2xl" : ""}`}>
         <div className={isUnavailable ? "grayscale opacity-50 pointer-events-none select-none" : ""}>
-          <PropertyCard property={bien} isApiData />
+          <PropertyCard property={bien} isApiData showFavoriteButton={false} />
         </div>
         {isUnavailable && (
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900/30 rounded-2xl">
@@ -163,7 +163,7 @@ export default function FavorisPage() {
 
         {/* Grille */}
         {isAuthenticated && apiFavoris && apiFavoris.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {apiFavoris.map((item) => (
               <FavoriCard key={item.id} item={item} />
             ))}
@@ -172,7 +172,7 @@ export default function FavorisPage() {
 
         {/* Loading */}
         {isAuthenticated && isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-pulse">
                 <div className="h-52 bg-slate-100" />

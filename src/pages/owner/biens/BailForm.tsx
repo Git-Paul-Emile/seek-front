@@ -101,13 +101,8 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
           jourLimitePaiement: form.jourLimitePaiement ? Number(form.jourLimitePaiement) : null,
           frequencePaiement: bien.frequencePaiement ?? null,
         });
-        toast.success(`Invitation envoyée à ${foundExternal.prenom} ${foundExternal.nom}`);
         onClose();
       } catch (err: unknown) {
-        const msg =
-          (err as { response?: { data?: { message?: string } } })?.response?.data
-            ?.message ?? "Erreur lors de l'envoi de l'invitation";
-        toast.error(msg);
       }
       return;
     }
@@ -132,10 +127,7 @@ export default function BailForm({ bienId, bien, onClose, onBailCreated }: BailF
       toast.success("Bail créé, le bien est maintenant Loué");
       onBailCreated(createdBail);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Erreur lors de la création du bail";
-      toast.error(msg);
+      toast.error("Erreur lors de la création du bail");
     }
   };
 

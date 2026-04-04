@@ -101,9 +101,9 @@ export default function Profile() {
 
       const { data } = await updateProfileApi(payload);
       
-      toast.success(data.message);
+      toast.success("Profil mis à jour avec succès");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Une erreur est survenue lors de la mise à jour du profil.");
+      toast.error("Une erreur est survenue lors de la mise à jour du profil.");
     } finally {
       setIsSavingProfile(false);
     }
@@ -151,7 +151,7 @@ export default function Profile() {
         confirmPassword: passwordForm.confirmPassword,
       });
       
-      toast.success(data.message);
+      toast.success("Mot de passe modifié avec succès");
       
       // Reset password fields
       setPasswordForm({
@@ -165,7 +165,7 @@ export default function Profile() {
         logout();
       }, 2000);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Une erreur est survenue lors du changement de mot de passe.");
+      toast.error("Une erreur est survenue lors du changement de mot de passe.");
     } finally {
       setIsChangingPassword(false);
     }

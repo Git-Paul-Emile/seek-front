@@ -47,7 +47,7 @@ const EtatDesLieuxReview = () => {
       const data = await getEtatDesLieuxLocataire(edlId);
       setEdl(data);
     } catch (e: any) {
-      toast.error("Erreur de chargement", { description: e.response?.data?.message });
+      toast.error("Erreur de chargement");
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ const EtatDesLieuxReview = () => {
       toast.success("État des lieux signé et validé avec succès !");
       loadEDL(id!);
     } catch (e: any) {
-      toast.error("Erreur", { description: e.response?.data?.message });
+      toast.error("Erreur lors de la signature");
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ const EtatDesLieuxReview = () => {
       setPendingContestations([]);
       loadEDL(id!);
     } catch (e: any) {
-      toast.error("Erreur", { description: e.response?.data?.message });
+      toast.error("Erreur lors de l'envoi des contestations");
     } finally {
       setLoading(false);
     }

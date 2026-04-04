@@ -136,7 +136,7 @@ export default function SuspensionsPage() {
       setCustomMotif("");
       setSelectedProprietaire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la suspension");
+      toast.error("Erreur lors de la suspension");
     }
   };
 
@@ -152,7 +152,7 @@ export default function SuspensionsPage() {
       setShowReactiverModal(false);
       setSelectedProprietaire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la réactivation");
+      toast.error("Erreur lors de la réactivation");
     }
   };
 
@@ -176,7 +176,7 @@ export default function SuspensionsPage() {
       setCustomMotif("");
       setSelectedLocataire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la suspension");
+      toast.error("Erreur lors de la suspension");
     }
   };
 
@@ -189,7 +189,7 @@ export default function SuspensionsPage() {
       setShowReactiverModal(false);
       setSelectedLocataire(null);
     } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de la réactivation");
+      toast.error("Erreur lors de la réactivation");
     }
   };
 

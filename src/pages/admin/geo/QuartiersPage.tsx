@@ -139,8 +139,7 @@ function QuartierForm({
       }
       onClose();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de l'enregistrement du quartier");
     }
   };
 
@@ -295,8 +294,7 @@ export default function QuartiersPage() {
       await deleteQuartier.mutateAsync(toDelete.id);
       toast.success("Quartier supprimé");
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de la suppression du quartier");
     } finally {
       setToDelete(null);
     }

@@ -61,9 +61,8 @@ function FormStep({
           setDone(true);
           toast.success("Paiement espèces enregistré — le locataire doit confirmer");
         },
-        onError: (err: unknown) => {
-          const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-          toast.error(msg ?? "Erreur lors de l'enregistrement");
+        onError: () => {
+          toast.error("Erreur lors de l'enregistrement");
         },
       }
     );

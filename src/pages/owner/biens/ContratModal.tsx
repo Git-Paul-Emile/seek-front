@@ -83,10 +83,7 @@ export default function ContratModal({
       generer.mutateAsync({ bienId, bailId }).then((c) => {
         setContenu(c.contenu);
       }).catch((err: unknown) => {
-        const msg =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-          ?? "Impossible de générer le contrat. Vérifiez qu'un modèle existe pour ce type de bail.";
-        toast.error(msg);
+        toast.error("Impossible de générer le contrat.");
       });
     }
   }, [isLoading, contrat, autoGenDone, generer.isPending, isCreationFlow]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -109,9 +106,7 @@ export default function ContratModal({
         onValiderSuccess(bail.locataireId);
       }
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
+      toast.error("Erreur lors de la validation du contrat");
     }
   };
 
@@ -132,11 +127,7 @@ export default function ContratModal({
     if (!contratId) return;
     try {
       await envoyer.mutateAsync({ bienId, bailId, contratId });
-      toast.success("Contrat envoyé au locataire !");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Erreur";
-      toast.error(msg);
     }
   };
 

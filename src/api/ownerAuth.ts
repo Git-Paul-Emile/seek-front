@@ -45,6 +45,7 @@ export interface OwnerInfo {
   telephone: string;
   email?: string;
   sexe?: string;
+  telephoneVerifie?: boolean;
   statutVerification: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED";
   verifiedAt?: string | null;
   nbAvertissements?: number;
@@ -121,6 +122,18 @@ export const updateProfileApi = (payload: UpdateProfilePayload) =>
 
 export const deleteProfileApi = () =>
   ownerAuthApi.delete<{ status: string; message: string }>("/profile");
+
+export const verifyOwnerPhoneApi = (otp: string) =>
+  ownerAuthApi.post<{ status: string; message: string; data: OwnerInfo }>("/verifier-telephone", { otp });
+
+export const resendOwnerOtpApi = () =>
+  ownerAuthApi.post<{ status: string; message: string }>("/renvoyer-otp");
+
+export const verifyOwnerPhonePublicApi = (payload: { proprietaireId: string; otp: string }) =>
+  ownerAuthApi.post<{ status: string; message: string; data: OwnerInfo }>("/verifier-telephone-public", payload);
+
+export const resendOwnerOtpPublicApi = (proprietaireId: string) =>
+  ownerAuthApi.post<{ status: string; message: string }>("/renvoyer-otp-public", { proprietaireId });
 
 // ─── Vérification d'identité ───────────────────────────────────────────────
 

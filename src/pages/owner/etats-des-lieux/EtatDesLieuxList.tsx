@@ -21,9 +21,7 @@ const EtatDesLieuxList = () => {
       const data = await getEtatsDesLieuxByBailOwner(bailId!);
       setEdls(data);
     } catch (e: any) {
-      toast.error("Erreur lors du chargement", {
-        description: e.response?.data?.message || "Erreur système",
-      });
+      toast.error("Erreur lors du chargement");
     } finally {
       setLoading(false);
     }
@@ -37,7 +35,7 @@ const EtatDesLieuxList = () => {
       setDeleteTarget(null);
       fetchEDLs();
     } catch (e: any) {
-      toast.error("Erreur", { description: e.response?.data?.message });
+      toast.error("Erreur lors de la suppression du brouillon");
     }
   };
 

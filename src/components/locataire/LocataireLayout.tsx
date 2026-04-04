@@ -12,6 +12,7 @@ import {
   UserCog,
   History,
   FileText,
+  ClipboardList,
   PanelLeft,
   PanelLeftClose,
 } from "lucide-react";
@@ -23,22 +24,26 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileHeader } from "@/components/ui/MobileHeader";
 import { MobileDrawer } from "@/components/ui/MobileDrawer";
 import { BottomNav, type BottomNavItem } from "@/components/ui/BottomNav";
+import { NotificationPanel } from "@/components/ui/NotificationPanel";
+import { useLocataireNotifications, useMarkLocataireNotificationsRead } from "@/hooks/useNotificationInApp";
 
 const LOCATAIRE_BOTTOM_NAV: BottomNavItem[] = [
-  { to: "/locataire/dashboard",  label: "Mon espace",  icon: LayoutDashboard },
-  { to: "/locataire/paiements",  label: "Paiements",   icon: TrendingUp },
-  { to: "/locataire/documents",  label: "Documents",   icon: FileText },
-  { to: "/locataire/profil",     label: "Profil",      icon: User },
+  { to: "/locataire/dashboard",         label: "Mon espace",    icon: LayoutDashboard },
+  { to: "/locataire/paiements",         label: "Paiements",     icon: TrendingUp },
+  { to: "/locataire/etats-des-lieux",   label: "EDL",           icon: ClipboardList },
+  { to: "/locataire/documents",         label: "Documents",     icon: FileText },
+  { to: "/locataire/profil",            label: "Profil",        icon: User },
 ];
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { to: "/locataire/dashboard",   label: "Mon espace",        icon: LayoutDashboard },
-  { to: "/locataire/paiements",   label: "Mes paiements",     icon: TrendingUp },
-  { to: "/locataire/historique",  label: "Mes logements",     icon: History },
-  { to: "/locataire/documents",   label: "Documents",         icon: FileText },
-  { to: "/locataire/proprietaire",   label: "Mon propriétaire", icon: UserCog },
+  { to: "/locataire/dashboard",         label: "Mon espace",         icon: LayoutDashboard },
+  { to: "/locataire/paiements",         label: "Mes paiements",      icon: TrendingUp },
+  { to: "/locataire/etats-des-lieux",   label: "États des lieux",    icon: ClipboardList },
+  { to: "/locataire/historique",        label: "Mes logements",      icon: History },
+  { to: "/locataire/documents",         label: "Documents",          icon: FileText },
+  { to: "/locataire/proprietaire",      label: "Mon propriétaire",   icon: UserCog },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
@@ -157,9 +162,14 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   );
 }
 
-// ─── Topbar ───────────────────────────────────────────────────────────────────
+// ─── Topbar avec cloche de notifications ──────────────────────────────────────
 
 function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
+  const { data } = useLocataireNotifications();
+  const { mutate: markRead } = useMarkLocataireNotificationsRead();
+  const notifications = data?.notifications ?? [];
+  const unreadCount = data?.unreadCount ?? 0;
+
   return (
     <header className={`fixed top-0 h-16 bg-white border-b border-slate-100
       flex items-center justify-between px-6 z-30 transition-all duration-300 ${
@@ -188,14 +198,23 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
           />
         </div>
       </div>
-      <Link
-        to="/"
-        className="flex items-center gap-1.5 text-sm font-medium text-slate-500
-          hover:text-[#0C1A35] transition-colors"
-      >
-        Retour au site
-        <ArrowUpRight className="w-4 h-4" />
-      </Link>
+      <div className="flex items-center gap-3">
+        <NotificationPanel
+          role="locataire"
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkAllRead={() => markRead()}
+          allNotificationsPath="/locataire/notifications"
+        />
+        <Link
+          to="/"
+          className="flex items-center gap-1.5 text-sm font-medium text-slate-500
+            hover:text-[#0C1A35] transition-colors"
+        >
+          Retour au site
+          <ArrowUpRight className="w-4 h-4" />
+        </Link>
+      </div>
     </header>
   );
 }
@@ -207,18 +226,28 @@ function useLocataireRealtime() {
 
   useEffect(() => {
     const unsubNotif = socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationPayload) => {
-      toast.info(data.titre, { description: data.message });
+      toast.info(data.titre);
       qc.invalidateQueries({ queryKey: ["locataire-messages"] });
+      qc.invalidateQueries({ queryKey: ["locataire-notifications"] });
     });
 
     const unsubPayOk = socketService.on(SOCKET_EVENTS.PAYMENT_CONFIRMED, () => {
       toast.success("Paiement confirmé par le propriétaire");
       qc.invalidateQueries({ queryKey: ["locataire-echeancier"] });
+      qc.invalidateQueries({ queryKey: ["locataire-notifications"] });
+    });
+
+    const unsubBailUpdated = socketService.on(SOCKET_EVENTS.BAIL_UPDATED, (data) => {
+      qc.invalidateQueries({ queryKey: ["bail", data.bienId] });
+      qc.invalidateQueries({ queryKey: ["echeancier"] });
+      qc.invalidateQueries({ queryKey: ["locataire-echeancier"] });
+      qc.invalidateQueries({ queryKey: ["locataire-notifications"] });
     });
 
     return () => {
       unsubNotif();
       unsubPayOk();
+      unsubBailUpdated();
     };
   }, [qc]);
 }
@@ -261,6 +290,14 @@ function LocataireMobileNav({ onClose }: { onClose: () => void }) {
         <NavLink to="/locataire/profil" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
           <User className="w-5 h-5 flex-shrink-0" />
           Mon profil
+        </NavLink>
+      </li>
+
+      {/* Notifications */}
+      <li>
+        <NavLink to="/locataire/notifications" onClick={onClose} className={({ isActive }) => linkClass(isActive)}>
+          <span className="w-5 h-5 flex-shrink-0 flex items-center justify-center text-base">🔔</span>
+          Notifications
         </NavLink>
       </li>
 

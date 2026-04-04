@@ -578,7 +578,7 @@ export default function MeubleEquipement() {
     if (!deleteCatMTarget) return;
     deleteCatMeuble.mutate(deleteCatMTarget.id, {
       onSuccess: () => { toast.success(`Catégorie "${deleteCatMTarget.nom}" supprimée`); setDeleteCatMTarget(null); },
-      onError: (err: any) => { toast.error(err?.response?.data?.message ?? "Erreur de suppression"); setDeleteCatMTarget(null); },
+      onError: () => { toast.error("Erreur de suppression"); setDeleteCatMTarget(null); },
     });
   };
 
@@ -594,7 +594,7 @@ export default function MeubleEquipement() {
     if (!deleteCatETarget) return;
     deleteCatEquip.mutate(deleteCatETarget.id, {
       onSuccess: () => { toast.success(`Catégorie "${deleteCatETarget.nom}" supprimée`); setDeleteCatETarget(null); },
-      onError: (err: any) => { toast.error(err?.response?.data?.message ?? "Erreur de suppression"); setDeleteCatETarget(null); },
+      onError: () => { toast.error("Erreur de suppression"); setDeleteCatETarget(null); },
     });
   };
 

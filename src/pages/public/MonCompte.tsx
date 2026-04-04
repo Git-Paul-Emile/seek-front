@@ -43,7 +43,7 @@ export default function MonCompte() {
       toast.success("Profil mis à jour");
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message ?? "Erreur lors de la mise à jour");
+      toast.error("Erreur lors de la mise à jour");
     },
   });
 
@@ -61,7 +61,7 @@ export default function MonCompte() {
       setConfirmPassword("");
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message ?? "Erreur");
+      toast.error("Erreur lors du changement de mot de passe");
     },
   });
 
@@ -89,7 +89,7 @@ export default function MonCompte() {
       navigate("/");
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message ?? "Erreur lors de la suppression");
+      toast.error("Erreur lors de la suppression");
     },
   });
 

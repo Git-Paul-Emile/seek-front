@@ -32,6 +32,7 @@ const PublicAnnonceDetail = React.lazy(() => import("./pages/public/AnnonceDetai
 const RecherchePage = React.lazy(() => import("./pages/public/Recherche"));
 const OwnerRegister = React.lazy(() => import("./pages/owner/Register"));
 const OwnerLogin = React.lazy(() => import("./pages/owner/Login"));
+const VerifyOwnerPhone = React.lazy(() => import("./pages/owner/VerifyPhone"));
 const OwnerDashboard = React.lazy(() => import("./pages/owner/Dashboard"));
 const OwnerVerification = React.lazy(() => import("./pages/owner/Verification"));
 const HistoriquePaiements = React.lazy(() => import("./pages/owner/HistoriquePaiements"));
@@ -87,6 +88,10 @@ const EtatDesLieuxList = React.lazy(() => import("./pages/owner/etats-des-lieux/
 const EtatDesLieuxForm = React.lazy(() => import("./pages/owner/etats-des-lieux/EtatDesLieuxForm"));
 const EtatDesLieuxComparison = React.lazy(() => import("./pages/owner/etats-des-lieux/EtatDesLieuxComparison"));
 const EtatDesLieuxReview = React.lazy(() => import("./pages/locataire/etats-des-lieux/EtatDesLieuxReview"));
+const EtatsDesLieuxListLocataire = React.lazy(() => import("./pages/locataire/etats-des-lieux/EtatsDesLieuxList"));
+const OwnerNotificationsPage = React.lazy(() => import("./pages/owner/NotificationsPage"));
+const LocataireNotificationsPage = React.lazy(() => import("./pages/locataire/NotificationsPage"));
+const AdminNotificationsPage = React.lazy(() => import("./pages/admin/NotificationsPage"));
 
 const queryClient = new QueryClient();
 
@@ -140,6 +145,8 @@ const App = () => (
                   <Route path="/owner/login" element={<OwnerLogin />} />
                 </Route>
 
+                <Route path="/owner/verify-phone" element={<VerifyOwnerPhone />} />
+
                 {/* Owner - mot de passe (public) */}
                 <Route path="/owner/forgot-password" element={<OwnerForgotPassword />} />
                 <Route path="/owner/reset-password" element={<OwnerResetPassword />} />
@@ -159,7 +166,8 @@ const App = () => (
                     <Route path="/owner/locataires/ajouter" element={<AddLocataire />} />
                     <Route path="/owner/locataires/:id" element={<LocataireDetail />} />
                     <Route path="/owner/loyers-retard" element={<LoyersEnRetardPage />} />
-                    
+                    <Route path="/owner/notifications" element={<OwnerNotificationsPage />} />
+
                     {/* Etats des Lieux Owner */}
                     <Route path="/owner/bails/:bailId/etats-des-lieux" element={<EtatDesLieuxList />} />
                     <Route path="/owner/bails/:bailId/etats-des-lieux/creer" element={<EtatDesLieuxForm />} />
@@ -188,7 +196,10 @@ const App = () => (
                     <Route path="/locataire/historique" element={<HistoriqueLogement />} />
                     <Route path="/locataire/documents" element={<DocumentsBien />} />
 
+                    <Route path="/locataire/notifications" element={<LocataireNotificationsPage />} />
+
                     {/* Etats des Lieux Locataire */}
+                    <Route path="/locataire/etats-des-lieux" element={<EtatsDesLieuxListLocataire />} />
                     <Route path="/locataire/etats-des-lieux/:id" element={<EtatDesLieuxReview />} />
                     <Route path="/locataire/bails/:bailId/etats-des-lieux/comparaison" element={<EtatDesLieuxComparison role="LOCATAIRE" />} />
                   </Route>
@@ -226,6 +237,7 @@ const App = () => (
                     <Route path="monetisation/config"         element={<ConfigMonetisationPage />} />
                     <Route path="parametres/config-site"      element={<ConfigSitePage />} />
                     <Route path="signalements"         element={<SignalementsAdmin />} />
+                    <Route path="notifications"         element={<AdminNotificationsPage />} />
                   </Route>
                 </Route>
               </Routes>

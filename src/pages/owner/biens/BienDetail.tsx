@@ -1113,10 +1113,7 @@ export default function BienDetail() {
                                     onClick={() =>
                                       envoyerRappel.mutate(
                                         { bienId: id!, bailId: bail.id, echeanceId: ech.id },
-                                        {
-                                          onSuccess: (data) => toast.success(data.message ?? "Relance envoyée"),
-                                          onError: () => toast.error("Erreur lors de l'envoi de la relance"),
-                                        }
+                                        {}
                                       )
                                     }
                                     disabled={envoyerRappel.isPending}

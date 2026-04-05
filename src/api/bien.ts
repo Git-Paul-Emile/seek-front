@@ -34,6 +34,7 @@ export interface Etablissement {
   latitude: number;
   longitude: number;
   distance: number | null;
+  adresse?: string | null;
 }
 
 export interface Bien {

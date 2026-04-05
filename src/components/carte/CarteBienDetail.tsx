@@ -19,23 +19,30 @@ const BIEN_ICON = new L.Icon({
   popupAnchor: [1, -34],
 });
 
-function getEtablissementColor(type: string): string {
-  if (["hopital", "pharmacie"].includes(type)) return "green";
-  if (["ecole_maternelle", "ecole_primaire", "college", "lycee", "universite"].includes(type)) return "orange";
-  if (["supermarche", "marche", "boulangerie"].includes(type)) return "violet";
-  if (["mosquee", "eglise"].includes(type)) return "grey";
-  if (["arret_bus", "station_brt", "route_principale"].includes(type)) return "yellow";
-  return "blue";
-}
+// CAT_COLORS est défini plus bas — on duplique juste les couleurs text ici pour les marqueurs
+const ETAB_MARKER_COLORS: Record<string, string> = {
+  hopital: "#059669", pharmacie: "#059669",
+  ecole_maternelle: "#2563eb", ecole_primaire: "#2563eb", college: "#2563eb", lycee: "#2563eb", universite: "#2563eb",
+  supermarche: "#d97706", marche: "#d97706", boulangerie: "#d97706",
+  mosquee: "#7c3aed", eglise: "#7c3aed",
+  arret_bus: "#0284c7", station_brt: "#0284c7", route_principale: "#0284c7",
+  gendarmerie: "#475569", pompiers: "#475569", mairie: "#475569",
+};
 
 function makeEtablissementIcon(type: string) {
-  const color = getEtablissementColor(type);
-  return new L.Icon({
-    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    iconSize: [20, 33],
-    iconAnchor: [10, 33],
-    popupAnchor: [1, -28],
+  const color = ETAB_MARKER_COLORS[type] ?? "#475569";
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="36" viewBox="0 0 24 36">
+      <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24S24 21 24 12C24 5.4 18.6 0 12 0z"
+        fill="${color}" stroke="white" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="4.5" fill="white" opacity="0.9"/>
+    </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: "",
+    iconSize: [24, 36],
+    iconAnchor: [12, 36],
+    popupAnchor: [0, -36],
   });
 }
 
@@ -131,13 +138,19 @@ async function fetchOverpassEtabs(lat: number, lng: number): Promise<Etablisseme
           const elLon = el.lon ?? el.center?.lon;
           const type = overpassToType(el.tags ?? {});
           if (!type || !Number.isFinite(elLat) || !Number.isFinite(elLon)) return null;
+          const tags = el.tags ?? {};
+          const adresse = tags["addr:full"]
+            ?? (tags["addr:housenumber"] && tags["addr:street"]
+                ? `${tags["addr:housenumber"]} ${tags["addr:street"]}`
+                : tags["addr:street"] ?? null);
           return {
             id: `overpass-${el.id}`,
             type,
-            nom: el.tags?.name ?? null,
+            nom: tags.name ?? null,
             latitude: elLat as number,
             longitude: elLon as number,
             distance: Math.round(haversineDist(lat, lng, elLat as number, elLon as number)),
+            adresse: adresse ?? null,
           } as Etablissement;
         })
         .filter((e): e is Etablissement => e !== null);
@@ -191,16 +204,24 @@ const CAT_SVG_PATH: Record<EtabCat, string> = {
   services:  `<rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/>`,
 };
 
+// Walking ~5 km/h (83 m/min), car ~40 km/h (667 m/min)
+function estimateTime(distanceM: number): { walk: number; car: number } {
+  return {
+    walk: Math.ceil(distanceM / 83),
+    car: Math.ceil(distanceM / 667),
+  };
+}
+
 function makeSvgIcon(cat: EtabCat, color: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${CAT_SVG_PATH[cat]}</svg>`;
 }
 
-function createPopupNode(title: string, subtitle?: string, distance?: number | null, etabType?: string) {
+function createPopupNode(title: string, subtitle?: string, distance?: number | null, etabType?: string, adresse?: string | null) {
   const root = document.createElement("div");
   Object.assign(root.style, {
     fontFamily: "system-ui, sans-serif",
-    minWidth: "160px",
-    maxWidth: "220px",
+    minWidth: "170px",
+    maxWidth: "240px",
     padding: "2px 0",
   });
 
@@ -208,9 +229,11 @@ function createPopupNode(title: string, subtitle?: string, distance?: number | n
     // Établissement popup
     const cat = getEtabCat(etabType);
     const colors = CAT_COLORS[cat];
-    const distText = typeof distance === "number" && Number.isFinite(distance) && distance > 0
-      ? distance < 1000 ? `${distance} m` : `${(distance / 1000).toFixed(1)} km`
+    const hasDistance = typeof distance === "number" && Number.isFinite(distance) && distance > 0;
+    const distText = hasDistance
+      ? (distance! < 1000 ? `${distance} m` : `${(distance! / 1000).toFixed(1)} km`)
       : null;
+    const timeEst = hasDistance ? estimateTime(distance!) : null;
 
     // Icon + title row
     const header = document.createElement("div");
@@ -249,22 +272,61 @@ function createPopupNode(title: string, subtitle?: string, distance?: number | n
       textBlock.appendChild(badge);
     }
 
-    if (distText) {
-      const distRow = document.createElement("div");
-      Object.assign(distRow.style, {
-        display: "flex", alignItems: "center", gap: "4px", marginTop: "5px",
+    // Address
+    if (adresse) {
+      const addrRow = document.createElement("div");
+      Object.assign(addrRow.style, {
+        display: "flex", alignItems: "flex-start", gap: "4px", marginTop: "5px",
       });
-      const arrow = document.createElement("span");
-      Object.assign(arrow.style, { fontSize: "11px", color: colors.text });
-      arrow.textContent = "↗";
-      const distSpan = document.createElement("span");
-      Object.assign(distSpan.style, {
-        fontSize: "12px", fontWeight: "700", color: colors.text,
+      addrRow.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+      const addrSpan = document.createElement("span");
+      Object.assign(addrSpan.style, {
+        fontSize: "11px", color: "#64748b", lineHeight: "1.3",
       });
-      distSpan.textContent = distText;
-      distRow.appendChild(arrow);
-      distRow.appendChild(distSpan);
-      textBlock.appendChild(distRow);
+      addrSpan.textContent = adresse;
+      addrRow.appendChild(addrSpan);
+      textBlock.appendChild(addrRow);
+    }
+
+    // Distance + time
+    if (distText && timeEst) {
+      const separator = document.createElement("div");
+      Object.assign(separator.style, {
+        height: "1px", background: "#f1f5f9", margin: "6px 0 5px",
+      });
+      textBlock.appendChild(separator);
+
+      const metricsRow = document.createElement("div");
+      Object.assign(metricsRow.style, {
+        display: "flex", alignItems: "center", gap: "8px",
+      });
+
+      // Distance badge
+      const distBadge = document.createElement("span");
+      Object.assign(distBadge.style, {
+        fontSize: "11px", fontWeight: "700", color: colors.text,
+        background: colors.bg, padding: "1px 6px", borderRadius: "999px",
+      });
+      distBadge.textContent = `↗ ${distText}`;
+      metricsRow.appendChild(distBadge);
+
+      // Walk time
+      const walkSpan = document.createElement("span");
+      Object.assign(walkSpan.style, {
+        fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "3px",
+      });
+      walkSpan.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><path d="m9 20 3-6 3 6"/><path d="m6 8 6 2 6-2"/><path d="m12 10-2 5"/></svg>${timeEst.walk} min`;
+      metricsRow.appendChild(walkSpan);
+
+      // Car time
+      const carSpan = document.createElement("span");
+      Object.assign(carSpan.style, {
+        fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "3px",
+      });
+      carSpan.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>${timeEst.car} min`;
+      metricsRow.appendChild(carSpan);
+
+      textBlock.appendChild(metricsRow);
     }
 
     header.appendChild(textBlock);
@@ -404,7 +466,7 @@ export default function CarteBienDetail({
       }).addTo(layerRef.current!);
       const subtitle = ETABLISSEMENT_LABELS[e.type] ?? e.type.replace(/_/g, " ");
       const title    = e.nom || ETABLISSEMENT_LABELS[e.type] || e.type;
-      m.bindPopup(createPopupNode(title, subtitle, e.distance, e.type));
+      m.bindPopup(createPopupNode(title, subtitle, e.distance, e.type, e.adresse));
       attachPopupInteractions(m);
     });
   }, [hasCoords, latitude, longitude, titreBien, validEtabs]);

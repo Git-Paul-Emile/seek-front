@@ -32,18 +32,10 @@ const PropertiesSection = () => {
   const [page, setPage] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [limit, setLimit] = useState(typeof window !== "undefined" ? (window.innerWidth < 1024 ? 6 : 12) : 12);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setLimit(window.innerWidth < 1024 ? 6 : 12);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const LIMIT = 30;
 
   const queryParams = useMemo(() => {
-    const params: any = { limit, page };
+    const params: any = { limit: LIMIT, page };
     if (sort === "oldest") {
       params.sortBy = "createdAt";
       params.sortOrder = "asc";
@@ -61,15 +53,6 @@ const PropertiesSection = () => {
   }, [sort, page]);
 
   const { data: searchResult, isLoading } = useRecherchePublique(queryParams);
-  const dernieresAnnonces = useMemo(() => {
-    const rawItems = searchResult?.items ?? [];
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return rawItems.map(item => ({
-      ...item,
-      isNew: new Date(item.createdAt) >= sevenDaysAgo
-    }));
-  }, [searchResult?.items]);
   const total = searchResult?.total ?? 0;
   const totalPages = searchResult?.totalPages ?? 1;
 
@@ -78,6 +61,22 @@ const PropertiesSection = () => {
   // Extraire les annonces mises en avant (max MAX_VISIBLE si ≤ 5, sinon toutes pour la rotation)
   const annoncesMiseEnAvant = miseEnAvantData?.annonces ?? [];
   const hasPremium = annoncesMiseEnAvant.length > 0;
+
+  // Page 1 : les 4 premières annonces sont toujours "à la une"
+  const dernieresAnnonces = useMemo(() => {
+    const rawItems = searchResult?.items ?? [];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const withIsNew = (item: any) => ({ ...item, isNew: new Date(item.createdAt) >= sevenDaysAgo });
+
+    if (page === 1 && annoncesMiseEnAvant.length > 0) {
+      const featured = annoncesMiseEnAvant.slice(0, 4).map(withIsNew);
+      const featuredIds = new Set(featured.map((f: any) => f.id));
+      const regular = rawItems.filter(item => !featuredIds.has(item.id)).map(withIsNew);
+      return [...featured, ...regular].slice(0, LIMIT);
+    }
+    return rawItems.map(withIsNew);
+  }, [searchResult?.items, annoncesMiseEnAvant, page]);
   const needsRotation = annoncesMiseEnAvant.length > MAX_VISIBLE;
 
   // Auto-rotation quand > 5 annonces
@@ -218,7 +217,7 @@ const PropertiesSection = () => {
           </div>
 
           {isLoading ? (
-            <SkPropertyCards count={12} />
+            <SkPropertyCards count={LIMIT} />
           ) : dernieresAnnonces.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <svg className="w-16 h-16 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -246,7 +245,7 @@ const PropertiesSection = () => {
                     totalPages={totalPages}
                     pageWindow={pageWindow}
                     total={total}
-                    pageSize={12}
+                    pageSize={LIMIT}
                     goTo={handlePageChange}
                     goNext={() => handlePageChange(Math.min(totalPages, page + 1))}
                     goPrev={() => handlePageChange(Math.max(1, page - 1))}

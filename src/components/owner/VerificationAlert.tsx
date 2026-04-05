@@ -1,20 +1,14 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
-  CheckCircle,
   Clock,
   Shield,
   Eye,
   Award,
   Phone,
-  Loader2,
   XCircle,
-  X,
 } from "lucide-react";
 import { useVerificationStatus } from "@/hooks/useVerification";
-
-const STORAGE_KEY = "seek_verification_banner_shown";
 
 interface VerificationAlertProps {
   variant?: "banner" | "card";
@@ -23,20 +17,6 @@ interface VerificationAlertProps {
 
 export function VerificationAlert({ variant = "banner", showBenefits = false }: VerificationAlertProps) {
   const { data: status, isLoading } = useVerificationStatus();
-  const [hasShownBanner, setHasShownBanner] = useState(false);
-
-  // Vérifier si on doit afficher la bannière de vérification réussie
-  useEffect(() => {
-    if (status?.statut === "VERIFIED" && status.verifiedAt) {
-      const storedDate = localStorage.getItem(STORAGE_KEY);
-      // Afficher seulement si c'est une nouvelle vérification ou si jamais affiché
-      if (!storedDate || storedDate !== status.verifiedAt) {
-        setHasShownBanner(true);
-        // Stocker la date pour ne plus l'afficher
-        localStorage.setItem(STORAGE_KEY, status.verifiedAt);
-      }
-    }
-  }, [status?.statut, status?.verifiedAt]);
 
   if (isLoading) {
     if (variant === "banner") {
@@ -47,26 +27,9 @@ export function VerificationAlert({ variant = "banner", showBenefits = false }: 
     return null;
   }
 
-  // Si vérifié, afficher le message de succès uniquement si pas encore montré
+  // Si vérifié, ne rien afficher (notification envoyée dans les notifications)
   if (status?.statut === "VERIFIED") {
-    if (!hasShownBanner) {
-      return null; // Ne rien afficher si déjà montré précédemment
-    }
-    return (
-      <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-        <CheckCircle className="w-5 h-5 text-emerald-600" />
-        <span className="text-sm font-medium text-emerald-700">
-          Compte vérifié – Badge confiance activé
-        </span>
-        <button
-          onClick={() => setHasShownBanner(false)}
-          className="ml-auto p-1 text-emerald-600 hover:bg-emerald-100 rounded transition-colors"
-          aria-label="Fermer"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-    );
+    return null;
   }
 
   // En attente de vérification

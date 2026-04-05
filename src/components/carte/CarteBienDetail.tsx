@@ -100,9 +100,9 @@ function haversineDist(lat1: number, lon1: number, lat2: number, lon2: number): 
 }
 
 const OVERPASS_MIRRORS = [
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://lz4.overpass-api.de/api/interpreter",
   "https://overpass-api.de/api/interpreter",
-  "https://overpass.openstreetmap.ru/api/interpreter",
-  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ];
 
 async function fetchOverpassEtabs(lat: number, lng: number): Promise<Etablissement[]> {
@@ -367,7 +367,7 @@ export default function CarteBienDetail({
 
     const map = L.map(containerRef.current, {
       center: [latitude, longitude],
-      zoom: 15,
+      zoom: 14,
       scrollWheelZoom: false,
     });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {

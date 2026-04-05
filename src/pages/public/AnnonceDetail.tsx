@@ -394,7 +394,7 @@ export default function AnnonceDetail() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-slate-100">
+      <div className="hidden bg-white border-b border-slate-100 sm:block">
         <div className="container mx-auto px-8">
           <nav className="flex items-center gap-1.5 py-3 text-sm">
             <Link
@@ -1056,4 +1056,3 @@ export default function AnnonceDetail() {
     </div>
   );
 }
-

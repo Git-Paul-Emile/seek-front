@@ -3,13 +3,15 @@ import { Bell, CheckCircle, AlertCircle, Phone, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/SearchableSelect";
-import { creerAlerte } from "@/api/alerte";
+import { creerAlerte, creerAlerteCompteApi } from "@/api/alerte";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useLieux } from "@/hooks/useRecherche";
 
 const GlobalFloatingActions = () => {
   const { data: typesLogement = [] } = useTypeLogements();
   const { data: lieux } = useLieux();
+  const { compte, isAuthenticated } = useComptePublicAuth();
 
   // Panneau alerte flottant
   const [showAlertPanel, setShowAlertPanel] = useState(false);
@@ -26,6 +28,12 @@ const GlobalFloatingActions = () => {
   const [alertType, setAlertType] = useState("");
   const [alertBudgetMin, setAlertBudgetMin] = useState("");
   const [alertBudgetMax, setAlertBudgetMax] = useState("");
+
+  useEffect(() => {
+    if (isAuthenticated && compte?.telephone) {
+      setTelephone(compte.telephone);
+    }
+  }, [compte?.telephone, isAuthenticated]);
 
   const openAlertPanel = () => {
     setAlertClosing(false);
@@ -59,16 +67,26 @@ const GlobalFloatingActions = () => {
 
     setAlertLoading(true);
     try {
-      await creerAlerte({
-        telephone,
-        typeLogement: alertType || undefined,
-        ville: alertVille || undefined,
-        prixMin: prixMinValue,
-        prixMax: prixMaxValue,
-        canalPrefere: "SMS",
-      });
+      if (isAuthenticated) {
+        await creerAlerteCompteApi({
+          typeLogement: alertType || undefined,
+          ville: alertVille || undefined,
+          prixMin: prixMinValue,
+          prixMax: prixMaxValue,
+          canalPrefere: "SMS",
+        });
+      } else {
+        await creerAlerte({
+          telephone,
+          typeLogement: alertType || undefined,
+          ville: alertVille || undefined,
+          prixMin: prixMinValue,
+          prixMax: prixMaxValue,
+          canalPrefere: "SMS",
+        });
+      }
       setAlertSuccess(true);
-      setTelephone("");
+      setTelephone(isAuthenticated ? compte?.telephone ?? "" : "");
       setAlertType("");
       setAlertVille("");
       setAlertBudgetMin("");
@@ -202,6 +220,7 @@ const GlobalFloatingActions = () => {
                         placeholder="77 xxx xx xx"
                         value={telephone}
                         onChange={(e) => setTelephone(e.target.value)}
+                        readOnly={isAuthenticated}
                         className="pl-9 h-9 text-xs"
                       />
                     </div>

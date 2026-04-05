@@ -2,7 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, Lock, Trash2, ChevronRight, AlertTriangle } from "lucide-react";
+import {
+  User,
+  Lock,
+  Trash2,
+  ChevronRight,
+  AlertTriangle,
+  Bell,
+  Loader2,
+  ToggleLeft,
+  ToggleRight,
+  X,
+} from "lucide-react";
 import {
   updateComptePublicApi,
   changePasswordApi,
@@ -11,9 +22,142 @@ import {
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
+import {
+  useMesAlertes,
+  useActiverAlerte,
+  useDesactiverAlerte,
+  useSupprimerAlerte,
+} from "@/hooks/useAlerte";
+import type { Alerte } from "@/api/alerte";
 
-type Tab = "profil" | "mot-de-passe" | "supprimer";
+const QUOTA_MAX = 2;
 
+type Tab = "profil" | "mot-de-passe" | "alertes" | "supprimer";
+
+// ─── Sous-composant onglet Mes alertes ───────────────────────────────────────
+
+function MesAlertesTab() {
+  const { data: alertes = [], isLoading } = useMesAlertes();
+  const activerMutation = useActiverAlerte();
+  const desactiverMutation = useDesactiverAlerte();
+  const supprimerMutation = useSupprimerAlerte();
+
+  const handleToggle = (alerte: Alerte) => {
+    if (alerte.statut === "ACTIVE") {
+      desactiverMutation.mutate(alerte.id, {
+        onSuccess: () => toast.success("Alerte desactivee"),
+        onError: () => toast.error("Erreur"),
+      });
+    } else {
+      activerMutation.mutate(alerte.id, {
+        onSuccess: () => toast.success("Alerte activee"),
+        onError: () => toast.error("Erreur"),
+      });
+    }
+  };
+
+  const handleSupprimer = (id: string) => {
+    supprimerMutation.mutate(id, {
+      onSuccess: () => toast.success("Alerte supprimee"),
+      onError: () => toast.error("Erreur lors de la suppression"),
+    });
+  };
+
+  const labelAlerte = (a: Alerte) => {
+    const parts: string[] = [];
+    if (a.typeLogement) parts.push(a.typeLogement);
+    if (a.ville) parts.push(a.ville);
+    if (a.prixMax) parts.push(`<= ${a.prixMax.toLocaleString("fr-FR")} FCFA`);
+    return parts.length > 0 ? parts.join(" | ") : "Toutes annonces";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-800">Mes alertes</h2>
+        <span className="text-xs text-slate-400">
+          {alertes.length}/{QUOTA_MAX} alertes
+        </span>
+      </div>
+
+      {alertes.length === 0 && (
+        <div className="text-center py-8 text-slate-400">
+          <Bell className="w-8 h-8 mx-auto mb-2 opacity-40" />
+          <p className="text-sm">Aucune alerte configuree</p>
+          <p className="text-xs mt-1">Utilisez le modal d'alerte disponible sur le site pour en ajouter une.</p>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {alertes.map((alerte) => {
+          const isToggling =
+            (activerMutation.isPending || desactiverMutation.isPending) &&
+            (activerMutation.variables === alerte.id ||
+              desactiverMutation.variables === alerte.id);
+
+          return (
+            <div
+              key={alerte.id}
+              className={`flex items-center gap-3 border rounded-xl px-4 py-3 transition-colors ${
+                alerte.statut === "ACTIVE"
+                  ? "border-slate-200 bg-white"
+                  : "border-slate-100 bg-slate-50 opacity-70"
+              }`}
+            >
+              <Bell
+                className={`w-4 h-4 shrink-0 ${
+                  alerte.statut === "ACTIVE" ? "text-[#D4A843]" : "text-slate-300"
+                }`}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-700 truncate">{labelAlerte(alerte)}</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {alerte.statut === "ACTIVE" ? "Active" : "Desactivee"} | SMS
+                </p>
+              </div>
+              <button
+                onClick={() => handleToggle(alerte)}
+                disabled={isToggling}
+                title={alerte.statut === "ACTIVE" ? "Desactiver" : "Activer"}
+                className="text-slate-400 hover:text-[#0C1A35] transition-colors disabled:opacity-40"
+              >
+                {isToggling ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : alerte.statut === "ACTIVE" ? (
+                  <ToggleRight className="w-5 h-5 text-green-500" />
+                ) : (
+                  <ToggleLeft className="w-5 h-5" />
+                )}
+              </button>
+              <button
+                onClick={() => handleSupprimer(alerte.id)}
+                disabled={
+                  supprimerMutation.isPending && supprimerMutation.variables === alerte.id
+                }
+                title="Supprimer"
+                className="text-slate-300 hover:text-red-500 transition-colors disabled:opacity-40"
+              >
+                {supprimerMutation.isPending && supprimerMutation.variables === alerte.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 export default function MonCompte() {
   const {
     compte,
@@ -36,7 +180,6 @@ export default function MonCompte() {
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
 
-  // Sync les champs quand le compte est chargé (useState n'initialise qu'au 1er render)
   useEffect(() => {
     if (compte) {
       setNom(compte.nom);
@@ -45,7 +188,6 @@ export default function MonCompte() {
     }
   }, [compte]);
 
-  // Tentative unique de récupération de la session publique si session privée active
   useEffect(() => {
     const privateAuthReady = !isOwnerLoading && !isLocataireLoading;
 
@@ -72,7 +214,7 @@ export default function MonCompte() {
       setCompte(updated);
       toast.success("Profil mis à jour");
     },
-    onError: (err: any) => {
+    onError: () => {
       toast.error("Erreur lors de la mise à jour");
     },
   });
@@ -90,7 +232,7 @@ export default function MonCompte() {
       setNewPassword("");
       setConfirmPassword("");
     },
-    onError: (err: any) => {
+    onError: () => {
       toast.error("Erreur lors du changement de mot de passe");
     },
   });
@@ -118,7 +260,7 @@ export default function MonCompte() {
       await logout();
       navigate("/");
     },
-    onError: (err: any) => {
+    onError: () => {
       toast.error("Erreur lors de la suppression");
     },
   });
@@ -132,8 +274,6 @@ export default function MonCompte() {
   }
 
   if (!isAuthenticated || !compte) {
-    // Si une session privée (owner ou locataire) existe mais que la session publique
-    // n'a pas pu être récupérée, proposer de se reconnecter.
     if (hasPrivateSession) {
       const handleRelogin = async () => {
         await logout();
@@ -165,12 +305,13 @@ export default function MonCompte() {
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "profil", label: "Mon profil", icon: <User className="w-4 h-4" /> },
     { key: "mot-de-passe", label: "Mot de passe", icon: <Lock className="w-4 h-4" /> },
+    { key: "alertes", label: "Mes alertes", icon: <Bell className="w-4 h-4" /> },
     { key: "supprimer", label: "Supprimer le compte", icon: <Trash2 className="w-4 h-4" /> },
   ];
 
   return (
     <div className="min-h-screen bg-slate-50 pt-8 pb-16 px-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold text-[#0C1A35] mb-6">Mon compte</h1>
 
         {/* Tabs */}
@@ -188,7 +329,7 @@ export default function MonCompte() {
               }`}
             >
               {t.icon}
-              <span className="hidden sm:inline">{t.label}</span>
+              <span className="hidden whitespace-nowrap sm:inline">{t.label}</span>
             </button>
           ))}
         </div>
@@ -307,6 +448,9 @@ export default function MonCompte() {
               </button>
             </div>
           )}
+
+          {/* ── Mes alertes ── */}
+          {tab === "alertes" && <MesAlertesTab />}
 
           {/* ── Supprimer ── */}
           {tab === "supprimer" && (

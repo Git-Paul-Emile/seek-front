@@ -429,7 +429,7 @@ export default function CarteBienDetail({
 
     const map = L.map(containerRef.current, {
       center: [latitude, longitude],
-      zoom: 14,
+      zoom: 12,
       scrollWheelZoom: false,
     });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {

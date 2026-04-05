@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, Loader2, CheckCircle, AlertCircle, Phone, MapPin, Home, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/SearchableSelect";
-import { creerAlerte } from "@/api/alerte";
+import { creerAlerte, creerAlerteCompteApi } from "@/api/alerte";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useLieux } from "@/hooks/useRecherche";
 
@@ -14,6 +15,7 @@ interface AlertSubscriptionSectionProps {
 const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSectionProps) => {
   const { data: typesLogement = [] } = useTypeLogements();
   const { data: lieux } = useLieux();
+  const { compte, isAuthenticated } = useComptePublicAuth();
 
   const [telephone, setTelephone] = useState("");
   const [typeLogement, setTypeLogement] = useState("");
@@ -22,6 +24,12 @@ const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSection
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isAuthenticated && compte?.telephone) {
+      setTelephone(compte.telephone);
+    }
+  }, [compte?.telephone, isAuthenticated]);
 
   // Options pour les selects
   const typeLogementOptions = typesLogement.map((t) => ({ value: t.slug, label: t.nom }));
@@ -48,15 +56,24 @@ const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSection
 
     setLoading(true);
     try {
-      await creerAlerte({
-        telephone,
-        typeLogement: typeLogement || undefined,
-        ville: ville || undefined,
-        prixMax: prixMaxValue,
-        canalPrefere: "SMS",
-      });
+      if (isAuthenticated) {
+        await creerAlerteCompteApi({
+          typeLogement: typeLogement || undefined,
+          ville: ville || undefined,
+          prixMax: prixMaxValue,
+          canalPrefere: "SMS",
+        });
+      } else {
+        await creerAlerte({
+          telephone,
+          typeLogement: typeLogement || undefined,
+          ville: ville || undefined,
+          prixMax: prixMaxValue,
+          canalPrefere: "SMS",
+        });
+      }
       setSuccess(true);
-      setTelephone("");
+      setTelephone(isAuthenticated ? compte?.telephone ?? "" : "");
       setTypeLogement("");
       setVille("");
       setPrixMax("");
@@ -133,6 +150,7 @@ const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSection
               placeholder="77 xxx xx xx"
               value={telephone}
               onChange={(e) => setTelephone(e.target.value)}
+              readOnly={isAuthenticated}
               className={`pl-10 h-11 ${inputClasses}`}
             />
           </div>

@@ -30,7 +30,7 @@ import { useLocataireNotifications, useMarkLocataireNotificationsRead } from "@/
 const LOCATAIRE_BOTTOM_NAV: BottomNavItem[] = [
   { to: "/locataire/dashboard",         label: "Mon espace",    icon: LayoutDashboard },
   { to: "/locataire/paiements",         label: "Paiements",     icon: TrendingUp },
-  { to: "/locataire/etats-des-lieux",   label: "EDL",           icon: ClipboardList },
+  { to: "/locataire/etats-des-lieux",   label: "États des lieux", icon: ClipboardList },
   { to: "/locataire/documents",         label: "Documents",     icon: FileText },
   { to: "/locataire/profil",            label: "Profil",        icon: User },
 ];
@@ -221,19 +221,18 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
 
 // ─── Hook temps réel locataire ────────────────────────────────────────────────
 
-function useLocataireRealtime() {
+function useLocataireRealtime(locataireId?: string) {
   const qc = useQueryClient();
 
   useEffect(() => {
-    const unsubNotif = socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationPayload) => {
-      toast.info(data.titre);
-      qc.invalidateQueries({ queryKey: ["locataire-messages"] });
-      qc.invalidateQueries({ queryKey: ["locataire-notifications"] });
-    });
+    if (!locataireId) return;
 
-    const unsubPayOk = socketService.on(SOCKET_EVENTS.PAYMENT_CONFIRMED, () => {
-      toast.success("Paiement confirmé par le propriétaire");
-      qc.invalidateQueries({ queryKey: ["locataire-echeancier"] });
+    const unsubNotif = socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationPayload) => {
+      if (data.locataireId && data.locataireId !== locataireId) return;
+      if (data.type !== "CONFIRMATION_PAIEMENT") {
+        toast.info(data.titre);
+      }
+      qc.invalidateQueries({ queryKey: ["locataire-messages"] });
       qc.invalidateQueries({ queryKey: ["locataire-notifications"] });
     });
 
@@ -246,10 +245,9 @@ function useLocataireRealtime() {
 
     return () => {
       unsubNotif();
-      unsubPayOk();
       unsubBailUpdated();
     };
-  }, [qc]);
+  }, [qc, locataireId]);
 }
 
 // ─── Drawer mobile locataire ──────────────────────────────────────────────────
@@ -333,7 +331,8 @@ export default function LocataireLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isMobile = useIsMobile();
-  useLocataireRealtime();
+  const { locataire } = useLocataireAuth();
+  useLocataireRealtime(locataire?.id);
 
   const location = useLocation();
   useEffect(() => { setDrawerOpen(false); }, [location.pathname]);

@@ -7,14 +7,12 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
-import axios from "axios";
 import { loginApi, logoutApi, meApi, refreshApi, type AdminInfo } from "@/api/auth";
 import { useLocation } from "react-router-dom";
 import { socketService } from "@/services/socketService";
+import { broadcastGlobalLogout, subscribeGlobalLogout } from "@/lib/authSync";
 
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AuthState {
   admin: AdminInfo | null;
@@ -27,11 +25,7 @@ interface AuthContextValue extends AuthState {
   logout: () => Promise<void>;
 }
 
-// ─── Contexte ────────────────────────────────────────────────────────────────
-
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<AdminInfo | null>(null);
@@ -58,16 +52,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const clearSession = useCallback(() => {
+    stopRefreshTimer();
+    setAdmin((currentAdmin) => {
+      if (currentAdmin) socketService.leaveAdmin();
+      return null;
+    });
+  }, [stopRefreshTimer]);
+
   const hasInitialized = useRef(false);
 
-  // Tenter de restaurer la session via /me au montage
   useEffect(() => {
     const isFirstRun = !hasInitialized.current;
 
     if (isFirstRun) {
       hasInitialized.current = true;
     } else if (!pathname.startsWith("/admin")) {
-      // Navigations suivantes hors espace admin : ne pas effacer l'état
       return;
     }
 
@@ -77,7 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAdmin(data.data);
         startRefreshTimer();
       } catch {
-        // Pas de session active - tenter un refresh silencieux
         try {
           await refreshApi();
           const { data } = await meApi();
@@ -95,12 +94,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
 
-  // Rejoindre la room admin socket
   useEffect(() => {
-    if (admin) {
+    return subscribeGlobalLogout(() => {
+      clearSession();
+      void logoutApi().catch(() => {
+        // Ignore les erreurs de logout croisées.
+      });
+    });
+  }, [clearSession]);
+
+  useEffect(() => {
+    if (!admin) return;
+
+    if (pathname.startsWith("/admin")) {
       socketService.joinAdmin();
+      return () => socketService.leaveAdmin();
     }
-  }, [admin]);
+
+    socketService.leaveAdmin();
+  }, [admin, pathname]);
 
   const login = useCallback(async (email: string, password: string) => {
     await loginApi({ email, password });
@@ -110,15 +122,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [startRefreshTimer]);
 
   const logout = useCallback(async () => {
-    stopRefreshTimer();
     try {
       await logoutApi();
     } catch {
       // On déconnecte quand même côté client
     } finally {
-      setAdmin(null);
+      clearSession();
+      broadcastGlobalLogout();
     }
-  }, [stopRefreshTimer]);
+  }, [clearSession]);
 
   return (
     <AuthContext.Provider
@@ -134,8 +146,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);

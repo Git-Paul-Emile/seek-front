@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { X, Loader2, Banknote, CheckCircle2, ChevronRight, Building2, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Echeance, BienAvecBailActif } from "@/api/bail";
@@ -31,6 +31,7 @@ function FormStep({
     .sort((a, b) => new Date(a.dateEcheance).getTime() - new Date(b.dateEcheance).getTime());
 
   const [selectedEcheanceId, setSelectedEcheanceId] = useState(unpaid[0]?.id ?? "");
+  const [nombreMois, setNombreMois] = useState(1);
   const [datePaiement, setDatePaiement] = useState(todayIso());
   const [note, setNote] = useState("");
   const [done, setDone] = useState(false);
@@ -38,6 +39,14 @@ function FormStep({
   const { mutate, isPending } = useEnregistrerPaiementEspeces();
 
   const selectedEch = echeancier.find(e => e.id === selectedEcheanceId);
+  const selectedIndex = unpaid.findIndex((e) => e.id === selectedEcheanceId);
+  const maxNombreMois = selectedIndex >= 0 ? unpaid.length - selectedIndex : 0;
+  const effectiveNombreMois = Math.min(nombreMois, Math.max(maxNombreMois, 1));
+  const echeancesSelectionnees = useMemo(
+    () => (selectedIndex >= 0 ? unpaid.slice(selectedIndex, selectedIndex + effectiveNombreMois) : []),
+    [effectiveNombreMois, selectedIndex, unpaid]
+  );
+  const montantTotal = echeancesSelectionnees.reduce((sum, item) => sum + item.montant, 0);
 
   const canSubmit =
     !!selectedEcheanceId &&
@@ -53,6 +62,7 @@ function FormStep({
         echeanceId: selectedEcheanceId,
         payload: {
           datePaiement,
+          nombreMois: effectiveNombreMois,
           note: note || undefined,
         },
       },
@@ -136,7 +146,10 @@ function FormStep({
         ) : (
           <select
             value={selectedEcheanceId}
-            onChange={e => setSelectedEcheanceId(e.target.value)}
+            onChange={e => {
+              setSelectedEcheanceId(e.target.value);
+              setNombreMois(1);
+            }}
             className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-[#0C1A35] focus:outline-none focus:border-[#D4A843]"
           >
             {unpaid.map(e => (
@@ -153,13 +166,30 @@ function FormStep({
         )}
       </div>
 
+      {maxNombreMois > 1 && (
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Nombre de mois</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min={1}
+              max={maxNombreMois}
+              value={effectiveNombreMois}
+              onChange={e => setNombreMois(Number(e.target.value))}
+              className="flex-1 accent-[#D4A843]"
+            />
+            <span className="text-sm font-bold text-[#0C1A35] w-6 text-center">{effectiveNombreMois}</span>
+          </div>
+        </div>
+      )}
+
       {/* Montant (lecture seule) */}
       {selectedEch && (
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Montant (FCFA)</label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Montant total (FCFA)</label>
           <input
             readOnly
-            value={`${fmt(selectedEch.montant)} FCFA`}
+            value={`${fmt(montantTotal || selectedEch.montant)} FCFA`}
             className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 cursor-not-allowed"
           />
         </div>
@@ -171,8 +201,8 @@ function FormStep({
         <input
           type="date"
           value={datePaiement}
-          onChange={e => setDatePaiement(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-[#0C1A35] focus:outline-none focus:border-[#D4A843]"
+          readOnly
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 cursor-not-allowed"
         />
       </div>
 

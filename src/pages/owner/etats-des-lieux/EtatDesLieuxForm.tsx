@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/SearchableSelect";
@@ -13,12 +14,13 @@ import {
   createEtatDesLieux,
   updateEtatDesLieux,
   getEtatDesLieuxOwner,
+  getCreationContextOwner,
   submitEtatDesLieux,
   uploadEtatLieuxImage,
   resoudreContestationsProprietaire
 } from "@/api/etatDesLieux.api";
 import { toast } from "sonner";
-import { PlusCircle, Trash2, ArrowLeft, Send, CheckCircle, AlertTriangle, MessageSquareWarning } from "lucide-react";
+import { PlusCircle, Trash2, ArrowLeft, Send, CheckCircle, AlertTriangle, MessageSquareWarning, Loader2 } from "lucide-react";
 
 const ETATS: { value: EtatElement, label: string }[] = [
   { value: "NEUF", label: "Neuf" },
@@ -95,6 +97,27 @@ const EtatDesLieuxForm = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (id || !bailId || typeParam !== "SORTIE") {
+      return;
+    }
+
+    const guardSortieCreation = async () => {
+      try {
+        const context = await getCreationContextOwner(bailId);
+        if (!context.canCreateSortie) {
+          toast.error(context.sortieBlockReason || "Cet état des lieux de sortie ne peut pas encore être créé.");
+          navigate(`/owner/bails/${bailId}/etats-des-lieux`, { replace: true });
+        }
+      } catch (e) {
+        toast.error("Impossible de vérifier les conditions de sortie.");
+        navigate(`/owner/bails/${bailId}/etats-des-lieux`, { replace: true });
+      }
+    };
+
+    guardSortieCreation();
+  }, [id, bailId, navigate, typeParam]);
+
   const loadEDL = async (edlId: string) => {
     try {
       setLoading(true);
@@ -168,22 +191,26 @@ const EtatDesLieuxForm = () => {
         if (submitAfterSave) {
           await submitEtatDesLieux(id);
           toast.success("Envoyé au locataire pour validation !");
+          navigate(`/owner/bails/${bailId}/etats-des-lieux`);
         } else {
           toast.success("Enregistré en brouillon !");
+          loadEDL(id);
         }
-        loadEDL(id);
       } else {
         const created = await createEtatDesLieux(payload);
         if (submitAfterSave) {
           await submitEtatDesLieux(created.id);
           toast.success("Créé et envoyé pour validation !");
+          navigate(`/owner/bails/${bailId}/etats-des-lieux`);
         } else {
           toast.success("Brouillon créé avec succès !");
+          navigate(`/owner/etats-des-lieux/${created.id}`);
         }
-        navigate(`/owner/etats-des-lieux/${created.id}`);
       }
     } catch (e: any) {
-      toast.error("Erreur lors de l'enregistrement");
+      const message =
+        axios.isAxiosError(e) ? e.response?.data?.message || e.response?.data?.error : null;
+      toast.error(message || "Erreur lors de l'enregistrement");
     } finally {
       setLoading(false);
     }
@@ -489,7 +516,8 @@ const EtatDesLieuxForm = () => {
               Sauvegarder Brouillon
             </Button>
             <Button size="lg" disabled={loading} onClick={() => handleSave(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
-              <Send className="w-4 h-4" /> Envoyer pour Validation
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {loading ? "Validation..." : "Envoyer pour Validation"}
             </Button>
           </>
         ) : (

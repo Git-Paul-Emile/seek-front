@@ -13,6 +13,7 @@ import {
   logoutComptePublicApi,
   type ComptePublic,
 } from "@/api/comptePublicAuth";
+import { broadcastGlobalLogout, subscribeGlobalLogout } from "@/lib/authSync";
 
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
 
@@ -34,6 +35,7 @@ export function ComptePublicAuthProvider({ children }: { children: ReactNode }) 
   const [compte, setCompte] = useState<ComptePublic | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const refreshRequestRef = useRef<Promise<void> | null>(null);
 
   const startRefreshTimer = useCallback(() => {
     if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
@@ -54,17 +56,32 @@ export function ComptePublicAuthProvider({ children }: { children: ReactNode }) 
     }
   }, []);
 
+  const clearSession = useCallback(() => {
+    stopRefreshTimer();
+    setCompte(null);
+  }, [stopRefreshTimer]);
+
   const refreshMe = useCallback(async () => {
-    try {
-      const data = await meComptePublicApi();
-      setCompte(data);
-      startRefreshTimer();
-    } catch {
-      setCompte(null);
-      stopRefreshTimer();
-    } finally {
-      setIsLoading(false);
+    if (refreshRequestRef.current) {
+      return refreshRequestRef.current;
     }
+
+    const request = (async () => {
+      try {
+        const data = await meComptePublicApi();
+        setCompte(data);
+        startRefreshTimer();
+      } catch {
+        setCompte(null);
+        stopRefreshTimer();
+      } finally {
+        setIsLoading(false);
+        refreshRequestRef.current = null;
+      }
+    })();
+
+    refreshRequestRef.current = request;
+    return request;
   }, [startRefreshTimer, stopRefreshTimer]);
 
   useEffect(() => {
@@ -73,16 +90,25 @@ export function ComptePublicAuthProvider({ children }: { children: ReactNode }) 
 
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
 
+  useEffect(() => {
+    return subscribeGlobalLogout(() => {
+      clearSession();
+      void logoutComptePublicApi().catch(() => {
+        // ignore
+      });
+    });
+  }, [clearSession]);
+
   const logout = useCallback(async () => {
-    stopRefreshTimer();
     try {
       await logoutComptePublicApi();
     } catch {
       // ignore
     } finally {
-      setCompte(null);
+      clearSession();
+      broadcastGlobalLogout();
     }
-  }, [stopRefreshTimer]);
+  }, [clearSession]);
 
   return (
     <ComptePublicAuthContext.Provider

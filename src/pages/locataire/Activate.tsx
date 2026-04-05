@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Building2, KeyRound, CheckCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { activerLocataireApi } from "@/api/locataireAuth";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import { toast } from "sonner";
 import type { TypePieceIdentite } from "@/api/locataire";
 
@@ -31,6 +32,7 @@ export default function LocataireActivate() {
   const token = searchParams.get("token") ?? "";
   const navigate = useNavigate();
   const { setLocataire } = useLocataireAuth();
+  const { refreshMe: refreshPublicAccount } = useComptePublicAuth();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -165,6 +167,7 @@ export default function LocataireActivate() {
         situationProfessionnelle: form.situationProfessionnelle || null,
       });
       setLocataire(locataire);
+      await refreshPublicAccount();
       setSuccess(true);
     } catch (err: unknown) {
       toast.error("Erreur lors de l'activation");

@@ -4,6 +4,8 @@ import {
   payerEcheancesLocataireApi,
   getLocataireHistoriqueApi,
   supprimerCompteLocataireApi,
+  getAlerteEdlManquantApi,
+  demanderEtatDesLieuxApi,
   type PayerEcheancesLocatairePayload,
 } from "@/api/locataireAuth";
 
@@ -38,6 +40,26 @@ export const useSupprimerCompteLocataire = () => {
     mutationFn: supprimerCompteLocataireApi,
     onSuccess: () => {
       qc.clear();
+    },
+  });
+};
+
+export const useAlerteEdlManquant = (enabled: boolean) =>
+  useQuery({
+    queryKey: ["locataire-edl-manquant"],
+    queryFn: getAlerteEdlManquantApi,
+    enabled,
+    staleTime: 30 * 1000,
+  });
+
+export const useDemanderEtatDesLieux = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: demanderEtatDesLieuxApi,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["locataire-edl-manquant"] });
+      qc.invalidateQueries({ queryKey: ["messages-bail-owner"] });
+      qc.invalidateQueries({ queryKey: ["owner-notifications"] });
     },
   });
 };

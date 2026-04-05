@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { getEtatsDesLieuxByBailOwner, deleteEtatDesLieux, EtatDesLieux } from "@/api/etatDesLieux.api";
+import {
+  getEtatsDesLieuxByBailOwner,
+  deleteEtatDesLieux,
+  getCreationContextOwner,
+  EtatDesLieux,
+  EtatDesLieuxCreationContext,
+} from "@/api/etatDesLieux.api";
 import { toast } from "sonner";
 import { PlusCircle, Search, Eye, Edit, CheckCircle, Trash2, AlertTriangle } from "lucide-react";
 
 const EtatDesLieuxList = () => {
   const { bailId } = useParams<{ bailId: string }>();
   const [edls, setEdls] = useState<EtatDesLieux[]>([]);
+  const [creationContext, setCreationContext] = useState<EtatDesLieuxCreationContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
@@ -18,8 +25,12 @@ const EtatDesLieuxList = () => {
   const fetchEDLs = async () => {
     try {
       setLoading(true);
-      const data = await getEtatsDesLieuxByBailOwner(bailId!);
+      const [data, context] = await Promise.all([
+        getEtatsDesLieuxByBailOwner(bailId!),
+        getCreationContextOwner(bailId!),
+      ]);
       setEdls(data);
+      setCreationContext(context);
     } catch (e: any) {
       toast.error("Erreur lors du chargement");
     } finally {
@@ -41,6 +52,8 @@ const EtatDesLieuxList = () => {
 
   const hasEntree = edls.some(e => e.type === "ENTREE");
   const hasSortie = edls.some(e => e.type === "SORTIE");
+  const canCreateSortie = creationContext?.canCreateSortie ?? false;
+  const sortieBlockReason = creationContext?.sortieBlockReason;
 
   if (loading) return <div className="p-8 text-center text-gray-500">Chargement...</div>;
 
@@ -60,19 +73,25 @@ const EtatDesLieuxList = () => {
           {!hasEntree && (
             <Link to={`/owner/bails/${bailId}/etats-des-lieux/creer?type=ENTREE`}>
               <Button className="gap-2">
-                <PlusCircle className="h-4 w-4" /> Nouvel EDL (Entrée)
+                <PlusCircle className="h-4 w-4" /> Nouvel état des lieux (Entrée)
               </Button>
             </Link>
           )}
-          {hasEntree && !hasSortie && (
+          {hasEntree && !hasSortie && canCreateSortie && (
             <Link to={`/owner/bails/${bailId}/etats-des-lieux/creer?type=SORTIE`}>
               <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700">
-                <PlusCircle className="h-4 w-4" /> Nouvel EDL (Sortie)
+                <PlusCircle className="h-4 w-4" /> Nouvel état des lieux (Sortie)
               </Button>
             </Link>
           )}
         </div>
       </div>
+
+      {hasEntree && !hasSortie && !canCreateSortie && sortieBlockReason && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {sortieBlockReason}
+        </div>
+      )}
 
       <div className="bg-white shadow rounded-lg overflow-hidden border">
         {edls.length === 0 ? (
@@ -93,7 +112,7 @@ const EtatDesLieuxList = () => {
               {edls.map(edl => (
                 <tr key={edl.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                    EDL - {edl.type}
+                    État des lieux - {edl.type}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${

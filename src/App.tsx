@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -14,6 +14,7 @@ import { LocataireAuthProvider } from "@/context/LocataireAuthContext";
 import { ComptePublicAuthProvider } from "@/context/ComptePublicAuthContext";
 import { FavorisAuthModalProvider } from "@/context/FavorisAuthModalContext";
 import { SocketProvider } from "@/context/SocketContext";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import PageTitle from "@/components/PageTitle";
 import GuestRoute from "@/components/admin/GuestRoute";
@@ -21,9 +22,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import OwnerGuestRoute from "@/components/owner/OwnerGuestRoute";
 import OwnerProtectedRoute from "@/components/owner/OwnerProtectedRoute";
 import OwnerLayout from "@/components/owner/OwnerLayout";
+import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import LocataireGuestRoute from "@/components/locataire/LocataireGuestRoute";
 import LocataireProtectedRoute from "@/components/locataire/LocataireProtectedRoute";
 import LocataireLayout from "@/components/locataire/LocataireLayout";
+import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 // Lazy-loaded pages — chaque page est chargée à la demande
 const Index = React.lazy(() => import("./pages/Index"));
@@ -95,6 +98,42 @@ const AdminNotificationsPage = React.lazy(() => import("./pages/admin/Notificati
 
 const queryClient = new QueryClient();
 
+const AuthSessionBridge = () => {
+  const { isAuthenticated: isOwnerAuth, isLoading: isOwnerLoading } = useOwnerAuth();
+  const { isAuthenticated: isLocataireAuth, isLoading: isLocataireLoading } = useLocataireAuth();
+  const {
+    isAuthenticated: isPublicAuth,
+    isLoading: isPublicLoading,
+    refreshMe: refreshPublicAccount,
+  } = useComptePublicAuth();
+  const isSyncingRef = useRef(false);
+
+  useEffect(() => {
+    const hasPrivateSession = isOwnerAuth || isLocataireAuth;
+    const privateAuthReady = !isOwnerLoading && !isLocataireLoading;
+
+    if (!privateAuthReady || !hasPrivateSession || isPublicAuth || isPublicLoading || isSyncingRef.current) {
+      return;
+    }
+
+    isSyncingRef.current = true;
+
+    void refreshPublicAccount().finally(() => {
+      isSyncingRef.current = false;
+    });
+  }, [
+    isLocataireAuth,
+    isLocataireLoading,
+    isOwnerAuth,
+    isOwnerLoading,
+    isPublicAuth,
+    isPublicLoading,
+    refreshPublicAccount,
+  ]);
+
+  return null;
+};
+
 // Layout pour les pages publiques avec Navbar + Footer
 const PublicLayout = () => {
   const location = useLocation();
@@ -123,6 +162,7 @@ const App = () => (
           <FavorisAuthModalProvider>
           <OwnerAuthProvider>
             <LocataireAuthProvider>
+              <AuthSessionBridge />
               <PageTitle />
               <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
               <Routes>

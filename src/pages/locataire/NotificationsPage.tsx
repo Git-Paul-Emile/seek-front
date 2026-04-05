@@ -16,6 +16,9 @@ const TYPE_LABELS: Record<string, string> = {
   ALERTE:                 "Alerte",
   INVITATION_BAIL:        "Invitation bail",
   PAIEMENT_ESPECES_LOCATAIRE: "Paiement en espèces",
+  ETAT_DES_LIEUX_DISPONIBLE: "État des lieux à valider",
+  ETAT_DES_LIEUX_VALIDE: "État des lieux validé",
+  ETAT_DES_LIEUX_MODIFIE: "État des lieux mis à jour",
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -33,10 +36,18 @@ function typeColor(type: string) {
 function NotifRow({ notif }: { notif: InAppNotification }) {
   const color = typeColor(notif.type);
   const { mutate: markOne } = useMarkLocataireOneNotificationRead();
+  const link =
+    notif.type === "CONTRAT"
+      ? "/locataire/dashboard"
+      : notif.type.startsWith("ETAT_DES_LIEUX_")
+      ? "/locataire/etats-des-lieux"
+      : notif.type.includes("PAIEMENT") || notif.type === "RAPPEL_LOYER" || notif.type === "ALERTE_RETARD"
+      ? "/locataire/paiements"
+      : "/locataire/dashboard";
 
   return (
     <Link
-      to="/locataire/dashboard"
+      to={link}
       onClick={() => { if (!notif.lu) markOne(notif.id); }}
       className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:shadow-sm ${
         notif.lu ? "bg-white border-slate-100 hover:border-slate-200" : "bg-amber-50/30 border-amber-100 hover:border-amber-200"

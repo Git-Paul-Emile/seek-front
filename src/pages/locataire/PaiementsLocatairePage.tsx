@@ -49,7 +49,12 @@ const STATUT_CFG: Record<string, {
 };
 
 const ORDER: Record<string, number> = {
-  EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PAYE: 3, ANNULE: 4,
+  EN_ATTENTE_CONFIRMATION: 0,
+  EN_RETARD: 1,
+  EN_ATTENTE: 2,
+  A_VENIR: 3,
+  PAYE: 4,
+  ANNULE: 5,
 };
 
 const isUnpaid = (s: string) => s !== "PAYE" && s !== "ANNULE" && s !== "EN_ATTENTE_CONFIRMATION";

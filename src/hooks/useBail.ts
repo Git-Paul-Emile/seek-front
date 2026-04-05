@@ -38,6 +38,7 @@ import {
 import {
   getMessagesBailOwnerApi,
   marquerMessagesBailOwnerLusApi,
+  getBiensSansEdlApi,
 } from "@/api/ownerAuth";
 
 const QK = "bail";
@@ -299,7 +300,8 @@ export const useConfirmerPaiementEspeces = () => {
       confirmerPaiementEspecesApi(echeanceId),
     onSuccess: (_data, { bailId }) => {
       qc.invalidateQueries({ queryKey: ["echeancier", bailId] });
-      qc.invalidateQueries({ queryKey: ["locataireEcheancier"] });
+      qc.invalidateQueries({ queryKey: ["locataire-echeancier"] });
+      qc.invalidateQueries({ queryKey: ["quittance", "locataire"] });
     },
   });
 };
@@ -363,6 +365,13 @@ export const useMarquerMessagesBailLocataireLus = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["messages-bail-locataire"] }),
   });
 };
+
+export const useBiensSansEdl = () =>
+  useQuery({
+    queryKey: ["biens-sans-edl"],
+    queryFn: getBiensSansEdlApi,
+    staleTime: 30 * 1000,
+  });
 
 // ─── Biens avec loyers en retard ──────────────────────────────────────────────
 

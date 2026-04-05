@@ -11,6 +11,7 @@ import {
 import axios from "axios";
 import { loginOwnerApi } from "@/api/ownerAuth";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const OWNER_PENDING_OTP_KEY = "ownerPendingOtp";
@@ -82,6 +83,7 @@ const inputCls = (hasError: boolean) =>
 export default function OwnerLogin() {
   const navigate = useNavigate();
   const { setOwner } = useOwnerAuth();
+  const { refreshMe: refreshPublicAccount } = useComptePublicAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -102,6 +104,7 @@ export default function OwnerLogin() {
         password: data.password,
       });
       setOwner(res.data.data);
+      await refreshPublicAccount();
       if (!res.data.data.telephoneVerifie) {
         sessionStorage.setItem(
           OWNER_PENDING_OTP_KEY,

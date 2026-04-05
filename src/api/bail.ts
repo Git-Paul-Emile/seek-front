@@ -41,6 +41,11 @@ export interface Bail {
   createdAt: string;
   updatedAt: string;
   locataire: BailLocataire;
+  etatsDesLieux?: Array<{
+    id: string;
+    type: "ENTREE" | "SORTIE";
+    statut: string;
+  }>;
   bien: {
     id: string;
     titre?: string | null;

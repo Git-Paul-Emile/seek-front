@@ -197,6 +197,32 @@ export const marquerMessagesBailOwnerLusApi = async (): Promise<void> => {
   await ownerAuthApi.post("/messages-bail/lus");
 };
 
+export interface BienSansEdlItem {
+  id: string;
+  bienId: string;
+  locataireId: string;
+  dateDebutBail: string;
+  bien: {
+    titre: string | null;
+    ville: string | null;
+    region: string | null;
+  };
+  locataire: {
+    prenom: string;
+    nom: string;
+  };
+}
+
+export interface BiensSansEdlData {
+  count: number;
+  items: BienSansEdlItem[];
+}
+
+export const getBiensSansEdlApi = async (): Promise<BiensSansEdlData> => {
+  const { data } = await ownerAuthApi.get<{ data: BiensSansEdlData }>("/edl-manquants");
+  return data.data;
+};
+
 // Upload d'une image de vérification vers Cloudinary
 export const uploadVerificationImageApi = async (file: File) => {
   const formData = new FormData();

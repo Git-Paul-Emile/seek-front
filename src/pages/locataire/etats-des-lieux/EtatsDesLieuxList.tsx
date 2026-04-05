@@ -94,9 +94,10 @@ function EdlCard({ edl }: { edl: EtatDesLieux }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function EtatsDesLieuxList() {
-  const { data: edls = [], isLoading } = useQuery({
+  const { data: edls = [], isLoading, isError, error } = useQuery({
     queryKey: ["locataire-etats-des-lieux"],
     queryFn: getAllEtatsDesLieuxLocataire,
+    retry: false,
   });
 
   const actionables = edls.filter(
@@ -121,6 +122,17 @@ export default function EtatsDesLieuxList() {
           Tous vos états des lieux d'entrée et de sortie
         </p>
       </div>
+
+      {isError && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+          <p className="text-sm font-semibold text-red-700 mb-1">Erreur de chargement</p>
+          <p className="text-xs text-red-500 font-mono break-all">
+            {(error as any)?.response?.status
+              ? `HTTP ${(error as any).response.status} — ${(error as any).response.data?.message ?? "Erreur inconnue"}`
+              : String(error)}
+          </p>
+        </div>
+      )}
 
       {isLoading && (
         <div className="space-y-3">

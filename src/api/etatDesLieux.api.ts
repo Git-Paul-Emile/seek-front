@@ -1,11 +1,14 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3003";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 const api = axios.create({
   baseURL: `${API_URL}/api/etats-des-lieux`,
   withCredentials: true,
 });
+
+const isNotFoundError = (error: unknown): boolean =>
+  axios.isAxiosError(error) && error.response?.status === 404;
 
 export type TypeEtatDesLieux = "ENTREE" | "SORTIE";
 export type StatutEtatDesLieux = "BROUILLON" | "EN_ATTENTE_VALIDATION" | "VALIDE" | "CONTESTE" | "EN_LITIGE";
@@ -56,6 +59,14 @@ export interface EtatDesLieuxCreateInput {
   pieces: Omit<PieceEtatDesLieux, "id">[];
 }
 
+export interface EtatDesLieuxCreationContext {
+  bailId: string;
+  statut: string;
+  dateFinBail?: string | null;
+  canCreateSortie: boolean;
+  sortieBlockReason: string | null;
+}
+
 // ─── API Propriétaire ───────────────────────────────────────────────────────
 
 export const createEtatDesLieux = (payload: EtatDesLieuxCreateInput): Promise<EtatDesLieux> =>
@@ -96,6 +107,9 @@ export const getEtatsDesLieuxByBailOwner = (bailId: string): Promise<EtatDesLieu
 export const getComparisonOwner = (bailId: string): Promise<{ entree: EtatDesLieux | null; sortie: EtatDesLieux | null }> =>
   api.get<{ data: { entree: EtatDesLieux | null; sortie: EtatDesLieux | null } }>(`/owner/bail/${bailId}/comparison`).then((r) => r.data.data);
 
+export const getCreationContextOwner = (bailId: string): Promise<EtatDesLieuxCreationContext> =>
+  api.get<{ data: EtatDesLieuxCreationContext }>(`/owner/bail/${bailId}/context`).then((r) => r.data.data);
+
 
 // ─── API Locataire ──────────────────────────────────────────────────────────
 
@@ -108,16 +122,27 @@ export const uploadEtatLieuxImageLocataire = (file: File): Promise<string> => {
 };
 
 export const contesterElementsLocataire = (id: string, elements: { elementId: string; motifContestation: string; photoContestation: string }[]): Promise<EtatDesLieux> =>
-  api.post<{ data: EtatDesLieux }>(`/${id}/contester`, { elements }).then((r) => r.data.data);
+  api.post<{ data: EtatDesLieux }>(`/locataire/${id}/contester`, { elements }).then((r) => r.data.data);
 
 export const validateEtatDesLieux = (id: string, documentPdf?: string): Promise<EtatDesLieux> =>
-  api.post<{ data: EtatDesLieux }>(`/${id}/validate`, { documentPdf }).then((r) => r.data.data);
+  api.post<{ data: EtatDesLieux }>(`/locataire/${id}/validate`, { documentPdf }).then((r) => r.data.data);
 
 export const getEtatDesLieuxLocataire = (id: string): Promise<EtatDesLieux> =>
   api.get<{ data: EtatDesLieux }>(`/locataire/${id}`).then((r) => r.data.data);
 
 export const getAllEtatsDesLieuxLocataire = (): Promise<EtatDesLieux[]> =>
-  api.get<{ data: EtatDesLieux[] }>("/locataire/mes-edl").then((r) => r.data.data);
+  api
+    .get<{ data: EtatDesLieux[] }>("/locataire/mes-edl")
+    .then((r) => r.data.data)
+    .catch((error) => {
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
+
+      return api
+        .get<{ data: EtatDesLieux[] }>("/mes-edl")
+        .then((r) => r.data.data);
+    });
 
 export const getEtatsDesLieuxByBailLocataire = (bailId: string): Promise<EtatDesLieux[]> =>
   api.get<{ data: EtatDesLieux[] }>(`/locataire/bail/${bailId}`).then((r) => r.data.data);

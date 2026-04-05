@@ -14,12 +14,17 @@ const PAYMENT_TYPES = new Set([
 const BAIL_TYPES = new Set([
   "INVITATION_BAIL", "CONTRAT", "RESILIATION", "FIN_BAIL", "PREAVIS",
 ]);
+const EDL_TYPES = new Set([
+  "ETAT_DES_LIEUX_DISPONIBLE", "ETAT_DES_LIEUX_VALIDE", "ETAT_DES_LIEUX_MODIFIE",
+]);
 
 function getOwnerNotifLink(notif: InAppNotification): string {
   if (PAYMENT_TYPES.has(notif.type) && notif.bienId)
     return `/owner/biens/${notif.bienId}/paiements`;
   if (BAIL_TYPES.has(notif.type) && notif.bienId)
     return `/owner/biens/${notif.bienId}`;
+  if (EDL_TYPES.has(notif.type) && notif.bailId)
+    return `/owner/bails/${notif.bailId}/etats-des-lieux`;
   if (notif.type === "VERIFICATION_LOCATAIRE")
     return notif.locataireId ? `/owner/locataires/${notif.locataireId}` : "/owner/locataires";
   if (notif.bienId)
@@ -42,16 +47,23 @@ const TYPE_LABELS: Record<string, string> = {
   INVITATION_BAIL:                   "Invitation bail",
   PAIEMENT_ESPECES_LOCATAIRE:        "Paiement en espèces",
   CONFIRMATION_ESPECES_PROPRIETAIRE: "Espèces confirmées",
+  ETAT_DES_LIEUX_DISPONIBLE:         "État des lieux à valider",
+  ETAT_DES_LIEUX_VALIDE:             "État des lieux validé",
+  ETAT_DES_LIEUX_MODIFIE:            "État des lieux mis à jour",
+  ANNONCE_VALIDEE:                   "Annonce validée",
+  ANNONCE_REJETEE:                   "Annonce rejetée",
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  ALERTE_RETARD: "text-red-500 bg-red-50",
-  RESILIATION:   "text-red-500 bg-red-50",
-  FIN_BAIL:      "text-red-500 bg-red-50",
-  ALERTE:        "text-red-500 bg-red-50",
+  ALERTE_RETARD:  "text-red-500 bg-red-50",
+  RESILIATION:    "text-red-500 bg-red-50",
+  FIN_BAIL:       "text-red-500 bg-red-50",
+  ALERTE:         "text-red-500 bg-red-50",
+  ANNONCE_REJETEE: "text-red-500 bg-red-50",
   CONFIRMATION_PAIEMENT:             "text-green-600 bg-green-50",
   CONFIRMATION_ESPECES_PROPRIETAIRE: "text-green-600 bg-green-50",
   PAIEMENT_LOCATAIRE:                "text-green-600 bg-green-50",
+  ANNONCE_VALIDEE: "text-green-600 bg-green-50",
 };
 
 function typeColor(type: string) {

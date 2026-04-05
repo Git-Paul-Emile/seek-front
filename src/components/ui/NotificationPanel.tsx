@@ -24,6 +24,9 @@ function typeLabel(type: string): string {
     INVITATION_BAIL:                 "Invitation bail",
     PAIEMENT_ESPECES_LOCATAIRE:      "Paiement en espèces",
     CONFIRMATION_ESPECES_PROPRIETAIRE: "Espèces confirmées",
+    ETAT_DES_LIEUX_DISPONIBLE:       "État des lieux à valider",
+    ETAT_DES_LIEUX_VALIDE:           "État des lieux validé",
+    ETAT_DES_LIEUX_MODIFIE:          "État des lieux mis à jour",
   };
   return map[type] ?? type;
 }
@@ -52,13 +55,22 @@ const PAYMENT_TYPES = new Set([
 const BAIL_TYPES = new Set([
   "INVITATION_BAIL", "CONTRAT", "RESILIATION", "FIN_BAIL", "PREAVIS",
 ]);
+const EDL_TYPES = new Set([
+  "ETAT_DES_LIEUX_DISPONIBLE", "ETAT_DES_LIEUX_VALIDE", "ETAT_DES_LIEUX_MODIFIE",
+]);
 
 function getNotifLink(notif: InAppNotification, role: "owner" | "locataire"): string {
-  if (role === "locataire") return "/locataire/dashboard";
+  if (role === "locataire") {
+    if (EDL_TYPES.has(notif.type)) return "/locataire/etats-des-lieux";
+    if (PAYMENT_TYPES.has(notif.type)) return "/locataire/paiements";
+    return "/locataire/dashboard";
+  }
   if (PAYMENT_TYPES.has(notif.type) && notif.bienId)
     return `/owner/biens/${notif.bienId}/paiements`;
   if (BAIL_TYPES.has(notif.type) && notif.bienId)
     return `/owner/biens/${notif.bienId}`;
+  if (EDL_TYPES.has(notif.type) && notif.bailId)
+    return `/owner/bails/${notif.bailId}/etats-des-lieux`;
   if (notif.type === "VERIFICATION_LOCATAIRE")
     return notif.locataireId ? `/owner/locataires/${notif.locataireId}` : "/owner/locataires";
   if (notif.bienId) return `/owner/biens/${notif.bienId}`;

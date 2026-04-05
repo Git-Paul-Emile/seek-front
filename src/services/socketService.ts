@@ -32,7 +32,8 @@ export const SOCKET_EVENTS = {
 
 export interface NotificationPayload {
   id: string;
-  proprietaireId: string;
+  proprietaireId?: string;
+  locataireId?: string;
   type: string;
   titre: string;
   message: string;
@@ -142,12 +143,24 @@ class SocketService {
     this.socket?.emit("join:owner", proprietaireId);
   }
 
+  leaveOwner(proprietaireId: string): void {
+    this.socket?.emit("leave:owner", proprietaireId);
+  }
+
   joinLocataire(locataireId: string): void {
     this.socket?.emit("join:locataire", locataireId);
   }
 
+  leaveLocataire(locataireId: string): void {
+    this.socket?.emit("leave:locataire", locataireId);
+  }
+
   joinAdmin(): void {
     this.socket?.emit("join:admin");
+  }
+
+  leaveAdmin(): void {
+    this.socket?.emit("leave:admin");
   }
 
   joinAlerts(telephone: string): void {

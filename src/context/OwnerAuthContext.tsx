@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import {
   createContext,
   useContext,
@@ -14,11 +15,10 @@ import {
   type OwnerInfo,
 } from "@/api/ownerAuth";
 import { socketService } from "@/services/socketService";
+import { broadcastGlobalLogout, subscribeGlobalLogout } from "@/lib/authSync";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 
-// Rafraîchir le token 1 minute avant son expiry (15 min - 1 min = 14 min)
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface OwnerAuthState {
   owner: OwnerInfo | null;
@@ -31,16 +31,14 @@ interface OwnerAuthContextValue extends OwnerAuthState {
   logout: () => Promise<void>;
 }
 
-// ─── Contexte ─────────────────────────────────────────────────────────────────
-
 const OwnerAuthContext = createContext<OwnerAuthContextValue | null>(null);
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function OwnerAuthProvider({ children }: { children: ReactNode }) {
   const [owner, setOwner] = useState<OwnerInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { pathname } = useLocation();
+  const { refreshMe: refreshPublicAccount } = useComptePublicAuth();
 
   const startRefreshTimer = useCallback(() => {
     if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
@@ -48,7 +46,6 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
       try {
         await refreshOwnerApi();
       } catch {
-        // Si le refresh échoue (refresh token expiré), déconnecter silencieusement
         setOwner(null);
         if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
       }
@@ -62,18 +59,27 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Restaurer la session au montage uniquement
+  const clearSession = useCallback(() => {
+    stopRefreshTimer();
+    setOwner((currentOwner) => {
+      if (currentOwner) socketService.leaveOwner(currentOwner.id);
+      return null;
+    });
+  }, [stopRefreshTimer]);
+
   useEffect(() => {
     (async () => {
       try {
         const { data } = await meOwnerApi();
         setOwner(data.data);
+        await refreshPublicAccount();
         startRefreshTimer();
       } catch {
         try {
           await refreshOwnerApi();
           const { data } = await meOwnerApi();
           setOwner(data.data);
+          await refreshPublicAccount();
           startRefreshTimer();
         } catch {
           setOwner(null);
@@ -83,28 +89,40 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshPublicAccount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Nettoyer le timer au démontage
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
 
-  // Rejoindre / quitter la room socket selon l'état d'auth
   useEffect(() => {
-    if (owner) {
+    return subscribeGlobalLogout(() => {
+      clearSession();
+      void logoutOwnerApi().catch(() => {
+        // Ignore les erreurs de logout croisées.
+      });
+    });
+  }, [clearSession]);
+
+  useEffect(() => {
+    if (!owner) return;
+
+    if (pathname.startsWith("/owner")) {
       socketService.joinOwner(owner.id);
+      return () => socketService.leaveOwner(owner.id);
     }
-  }, [owner]);
+
+    socketService.leaveOwner(owner.id);
+  }, [owner, pathname]);
 
   const logout = useCallback(async () => {
-    stopRefreshTimer();
     try {
       await logoutOwnerApi();
     } catch {
       // Déconnexion côté client quoi qu'il arrive
     } finally {
-      setOwner(null);
+      clearSession();
+      broadcastGlobalLogout();
     }
-  }, [stopRefreshTimer]);
+  }, [clearSession]);
 
   return (
     <OwnerAuthContext.Provider
@@ -121,11 +139,10 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
 export function useOwnerAuth(): OwnerAuthContextValue {
   const ctx = useContext(OwnerAuthContext);
-  if (!ctx)
+  if (!ctx) {
     throw new Error("useOwnerAuth doit être utilisé dans un <OwnerAuthProvider>");
+  }
   return ctx;
 }

@@ -80,6 +80,7 @@ export interface Bien {
   estMisEnAvant?: boolean;
   dateDebutPromotion?: string | null;
   dateFinPromotion?: string | null;
+  publishedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   typeLogement?: { id: string; nom: string; slug: string } | null;

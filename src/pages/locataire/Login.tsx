@@ -17,6 +17,7 @@ import {
 import axios from "axios";
 import { loginLocataireApi } from "@/api/locataireAuth";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const schema = z.object({
@@ -77,6 +78,7 @@ const inputCls = (hasError: boolean) =>
 export default function LocataireLogin() {
   const navigate = useNavigate();
   const { setLocataire } = useLocataireAuth();
+  const { refreshMe: refreshPublicAccount } = useComptePublicAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -97,6 +99,7 @@ export default function LocataireLogin() {
         password: data.password,
       });
       setLocataire(locataire);
+      await refreshPublicAccount();
       navigate("/locataire/dashboard", { replace: true });
     } catch (err) {
       setServerError(resolveServerError(err));

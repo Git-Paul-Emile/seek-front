@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -9,13 +9,27 @@ import {
   deleteComptePublicApi,
 } from "@/api/comptePublicAuth";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
+import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useLocataireAuth } from "@/context/LocataireAuthContext";
 
 type Tab = "profil" | "mot-de-passe" | "supprimer";
 
 export default function MonCompte() {
-  const { compte, setCompte, logout, isAuthenticated, isLoading } = useComptePublicAuth();
+  const {
+    compte,
+    setCompte,
+    logout,
+    isAuthenticated,
+    isLoading,
+    refreshMe: refreshPublicAccount,
+  } = useComptePublicAuth();
+  const { isAuthenticated: isOwnerAuth, isLoading: isOwnerLoading } = useOwnerAuth();
+  const { isAuthenticated: isLocataireAuth, isLoading: isLocataireLoading } = useLocataireAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("profil");
+  const [isRecoveringPublicSession, setIsRecoveringPublicSession] = useState(false);
+  const recoveryAttempted = useRef(false);
+  const hasPrivateSession = isOwnerAuth || isLocataireAuth;
 
   // ─── Profil ───────────────────────────────────────────────────────────────
   const [nom, setNom] = useState("");
@@ -30,6 +44,22 @@ export default function MonCompte() {
       setEmail(compte.email ?? "");
     }
   }, [compte]);
+
+  // Tentative unique de récupération de la session publique si session privée active
+  useEffect(() => {
+    const privateAuthReady = !isOwnerLoading && !isLocataireLoading;
+
+    if (!privateAuthReady || !hasPrivateSession || isAuthenticated || recoveryAttempted.current) {
+      return;
+    }
+
+    recoveryAttempted.current = true;
+    setIsRecoveringPublicSession(true);
+
+    void refreshPublicAccount().finally(() => {
+      setIsRecoveringPublicSession(false);
+    });
+  }, [hasPrivateSession, isAuthenticated, isLocataireLoading, isOwnerLoading, refreshPublicAccount]);
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -93,7 +123,7 @@ export default function MonCompte() {
     },
   });
 
-  if (isLoading) {
+  if (isLoading || isRecoveringPublicSession) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-[#0C1A35] border-t-transparent rounded-full animate-spin" />
@@ -102,6 +132,29 @@ export default function MonCompte() {
   }
 
   if (!isAuthenticated || !compte) {
+    // Si une session privée (owner ou locataire) existe mais que la session publique
+    // n'a pas pu être récupérée, proposer de se reconnecter.
+    if (hasPrivateSession) {
+      const handleRelogin = async () => {
+        await logout();
+        navigate(isLocataireAuth ? "/locataire/login" : "/proprietaires");
+      };
+      return (
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="text-center max-w-sm">
+            <p className="text-slate-600 mb-4">
+              Votre session publique a expiré. Déconnectez-vous puis reconnectez-vous pour la rétablir.
+            </p>
+            <button
+              onClick={handleRelogin}
+              className="px-6 py-2 rounded-xl bg-[#0C1A35] text-white text-sm font-medium hover:bg-[#0C1A35]/80 transition-colors"
+            >
+              Se déconnecter et se reconnecter
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-500">
         Vous devez être connecté pour accéder à cette page.

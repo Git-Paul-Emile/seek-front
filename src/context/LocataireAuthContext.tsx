@@ -15,10 +15,10 @@ import {
 } from "@/api/locataireAuth";
 import type { Locataire } from "@/api/locataire";
 import { socketService } from "@/services/socketService";
+import { broadcastGlobalLogout, subscribeGlobalLogout } from "@/lib/authSync";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 
 const REFRESH_INTERVAL_MS = 14 * 60 * 1000;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface LocataireAuthState {
   locataire: Locataire | null;
@@ -31,24 +31,18 @@ interface LocataireAuthContextValue extends LocataireAuthState {
   logout: () => Promise<void>;
 }
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
-
-// Pages publiques : pas d'appel /me (évite l'interférence avec le flow login)
 const PUBLIC_LOCATAIRE_PATHS = ["/locataire/login", "/locataire/activer"];
 
 const isPublicLocatairePage = (pathname: string) =>
   PUBLIC_LOCATAIRE_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
-// ─── Contexte ─────────────────────────────────────────────────────────────────
-
 const LocataireAuthContext = createContext<LocataireAuthContextValue | null>(null);
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function LocataireAuthProvider({ children }: { children: ReactNode }) {
   const [locataire, setLocataire] = useState<Locataire | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { pathname } = useLocation();
+  const { refreshMe: refreshPublicAccount } = useComptePublicAuth();
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startRefreshTimer = useCallback(() => {
@@ -70,9 +64,16 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const clearSession = useCallback(() => {
+    stopRefreshTimer();
+    setLocataire((currentLocataire) => {
+      if (currentLocataire) socketService.leaveLocataire(currentLocataire.id);
+      return null;
+    });
+  }, [stopRefreshTimer]);
+
   const hasInitialized = useRef(false);
 
-  // Restaurer la session au montage / changement de route
   useEffect(() => {
     const isFirstRun = !hasInitialized.current;
 
@@ -86,12 +87,14 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
       try {
         const data = await meLocataireApi();
         setLocataire(data);
+        await refreshPublicAccount();
         startRefreshTimer();
       } catch {
         try {
           await refreshLocataireApi();
           const data = await meLocataireApi();
           setLocataire(data);
+          await refreshPublicAccount();
           startRefreshTimer();
         } catch {
           setLocataire(null);
@@ -101,27 +104,40 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     })();
-  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pathname, refreshPublicAccount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => () => stopRefreshTimer(), [stopRefreshTimer]);
 
-  // Rejoindre la room socket du locataire
   useEffect(() => {
-    if (locataire) {
+    return subscribeGlobalLogout(() => {
+      clearSession();
+      void logoutLocataireApi().catch(() => {
+        // Ignore les erreurs de logout croisées.
+      });
+    });
+  }, [clearSession]);
+
+  useEffect(() => {
+    if (!locataire) return;
+
+    if (pathname.startsWith("/locataire")) {
       socketService.joinLocataire(locataire.id);
+      return () => socketService.leaveLocataire(locataire.id);
     }
-  }, [locataire]);
+
+    socketService.leaveLocataire(locataire.id);
+  }, [locataire, pathname]);
 
   const logout = useCallback(async () => {
-    stopRefreshTimer();
     try {
       await logoutLocataireApi();
     } catch {
       // Déconnexion côté client quoi qu'il arrive
     } finally {
-      setLocataire(null);
+      clearSession();
+      broadcastGlobalLogout();
     }
-  }, [stopRefreshTimer]);
+  }, [clearSession]);
 
   return (
     <LocataireAuthContext.Provider
@@ -138,13 +154,10 @@ export function LocataireAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
 export function useLocataireAuth(): LocataireAuthContextValue {
   const ctx = useContext(LocataireAuthContext);
-  if (!ctx)
-    throw new Error(
-      "useLocataireAuth doit être utilisé dans un <LocataireAuthProvider>"
-    );
+  if (!ctx) {
+    throw new Error("useLocataireAuth doit être utilisé dans un <LocataireAuthProvider>");
+  }
   return ctx;
 }

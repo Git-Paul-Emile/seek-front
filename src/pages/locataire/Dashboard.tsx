@@ -34,7 +34,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
-import { useLocataireEcheancier, useLocataireHistorique, useSupprimerCompteLocataire } from "@/hooks/useLocataireEcheancier";
+import { useLocataireEcheancier, useLocataireHistorique, useSupprimerCompteLocataire, useAlerteEdlManquant, useDemanderEtatDesLieux } from "@/hooks/useLocataireEcheancier";
 import { useQuittancesLocataire } from "@/hooks/useQuittance";
 import type { StatutPaiement } from "@/api/bail";
 import { getLocataireContratApi, type ContratLocataireData } from "@/api/locataireAuth";
@@ -55,7 +55,7 @@ const fmt = (d?: string | null) =>
     : "";
 
 const fmtMontant = (n?: number | null) =>
-  n != null ? `${n.toLocaleString("fr-FR")} FCFA` : "";
+  n != null ? `${Math.round(n).toLocaleString("fr-FR")} FCFA` : "";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -67,6 +67,8 @@ export default function LocataireDashboard() {
   const [echeancierExpanded, setEcheancierExpanded] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const { data: echeancier = [] } = useLocataireEcheancier(hasBailActif);
+  const { data: alerteEdlManquant } = useAlerteEdlManquant(hasBailActif);
+  const demanderEdl = useDemanderEtatDesLieux();
 
   // Quittances
   const { data: quittances = [], isLoading: quittancesLoading } = useQuittancesLocataire(hasBailActif);
@@ -166,7 +168,9 @@ export default function LocataireDashboard() {
 
   const { data: messagesBail = [] } = useMessagesBailLocataire();
   const marquerLus = useMarquerMessagesBailLocataireLus();
-  const messagesNonLus = messagesBail.filter((m) => !m.lu);
+  const messagesNonLus = messagesBail.filter(
+    (m) => !m.lu && m.type !== "PAIEMENT_ESPECES"
+  );
 
   // Fenêtre de préavis locataire : 1 à 3 mois avant dateFinBail si définie, sinon pas de restriction
   const preavisLocataireCheck = (() => {
@@ -234,6 +238,35 @@ export default function LocataireDashboard() {
         </div>
       )}
 
+      {alerteEdlManquant && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-amber-800">
+              État des lieux d'entrée à planifier pour {alerteEdlManquant.bien.titre || alerteEdlManquant.bien.region || alerteEdlManquant.bien.ville || "votre logement"}
+            </p>
+            <p className="text-xs text-amber-700 mt-1">
+              Vous pouvez demander à votre propriétaire de lancer l'état des lieux d'entrée.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={demanderEdl.isPending}
+            onClick={() =>
+              demanderEdl.mutate(undefined, {
+                onSuccess: (data) => {
+                  toast.success(data.sent ? "Demande d'état des lieux envoyée" : "Une demande d'état des lieux a déjà été envoyée récemment");
+                },
+                onError: () => toast.error("Impossible d'envoyer la demande d'état des lieux"),
+              })
+            }
+            className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#D4A843] text-white text-sm font-semibold hover:bg-[#c49a38] transition-colors disabled:opacity-60"
+          >
+            {demanderEdl.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            Demander l'état des lieux
+          </button>
+        </div>
+      )}
+
       {/* Invitations en attente */}
       {invitations.length > 0 && (
         <div className="space-y-3">
@@ -259,8 +292,8 @@ export default function LocataireDashboard() {
                       Propriétaire : {inv.proprietaire?.prenom} {inv.proprietaire?.nom}
                     </p>
                     <div className="flex gap-4 mt-1 text-xs text-slate-500">
-                      <span>Loyer : <strong className="text-slate-700">{inv.montantLoyer.toLocaleString("fr-FR")} FCFA</strong></span>
-                      {inv.montantCaution && <span>Caution : {inv.montantCaution.toLocaleString("fr-FR")} FCFA</span>}
+                      <span>Loyer : <strong className="text-slate-700">{Math.round(inv.montantLoyer).toLocaleString("fr-FR")} FCFA</strong></span>
+                      {inv.montantCaution && <span>Caution : {Math.round(inv.montantCaution).toLocaleString("fr-FR")} FCFA</span>}
                       <span>Début : {new Date(inv.dateDebutBail).toLocaleDateString("fr-FR")}</span>
                     </div>
                     <div className="flex gap-2 mt-3">
@@ -466,7 +499,7 @@ export default function LocataireDashboard() {
                               {bail.dateFinBail && ` → ${new Date(bail.dateFinBail).toLocaleDateString("fr-FR", { month: "short", year: "numeric" })}`}
                             </span>
                             <span className="text-[10px] text-slate-500 font-medium">
-                              {bail.montantLoyer.toLocaleString("fr-FR")} FCFA/mois
+                              {Math.round(bail.montantLoyer).toLocaleString("fr-FR")} FCFA/mois
                             </span>
                             {bail.stats && (
                               <span className="text-[10px] text-slate-400">

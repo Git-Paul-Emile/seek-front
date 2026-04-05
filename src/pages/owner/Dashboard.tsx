@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -27,6 +28,7 @@ import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useOwnerStats } from "@/hooks/useBien";
 import { VerificationAlert } from "@/components/owner/VerificationAlert";
 import { SkKpiCards, SkChartBlock, SkListItems } from "@/components/ui/Skeleton";
+import { useBiensSansEdl } from "@/hooks/useBail";
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -95,6 +97,8 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { name
 export default function OwnerDashboard() {
   const { owner } = useOwnerAuth();
   const { data: stats, isLoading } = useOwnerStats();
+  const { data: biensSansEdl } = useBiensSansEdl();
+  const [showEdlList, setShowEdlList] = useState(false);
 
   const pieData = (stats?.byStatut ?? [])
     .filter((s) => s.count > 0)
@@ -113,6 +117,49 @@ export default function OwnerDashboard() {
     <div className="space-y-6">
       {/* Alerte de vérification */}
       <VerificationAlert variant="banner" />
+      {(biensSansEdl?.count ?? 0) > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                {biensSansEdl?.count} bien{(biensSansEdl?.count ?? 0) > 1 ? "s" : ""} sans état des lieux d'entrée
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                Un état des lieux d'entrée doit être créé pour chaque bail concerné.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowEdlList((v) => !v)}
+              className="shrink-0 px-4 py-2 rounded-xl bg-white border border-amber-200 text-amber-800 text-sm font-semibold hover:bg-amber-100/40 transition-colors"
+            >
+              {showEdlList ? "Masquer" : "Afficher"}
+            </button>
+          </div>
+          {showEdlList && (
+            <div className="mt-4 space-y-2">
+              {biensSansEdl?.items.map((item) => (
+                <div key={item.id} className="bg-white rounded-xl border border-amber-100 p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-[#0C1A35]">
+                      {item.bien.titre || item.bien.region || item.bien.ville || "Bien loué"}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Locataire : {item.locataire.prenom} {item.locataire.nom}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/owner/bails/${item.id}/etats-des-lieux/creer?type=ENTREE`}
+                    className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#D4A843] text-white text-sm font-semibold hover:bg-[#c49a38] transition-colors"
+                  >
+                    Créer l'état des lieux
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* En-tête */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">

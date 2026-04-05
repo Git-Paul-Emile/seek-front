@@ -20,18 +20,21 @@ export function useOwnerRealtimeSync(proprietaireId?: string) {
 
     const unsubs = [
       // Nouvelle notification → badge + liste notifs
-      socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, () => {
+      socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data) => {
+        if (data.proprietaireId !== proprietaireId) return;
         qc.invalidateQueries({ queryKey: ["owner-notifications"] });
         qc.invalidateQueries({ queryKey: ["badge-count"] });
       }),
 
       // Mise à jour badge
-      socketService.on(SOCKET_EVENTS.BADGE_UPDATE, () => {
+      socketService.on(SOCKET_EVENTS.BADGE_UPDATE, (data) => {
+        if (data.proprietaireId !== proprietaireId) return;
         qc.invalidateQueries({ queryKey: ["badge-count"] });
       }),
 
       // Bail mis à jour (créer, terminer, résilier, archiver, paiement)
       socketService.on(SOCKET_EVENTS.BAIL_UPDATED, (data) => {
+        if (data.proprietaireId !== proprietaireId) return;
         qc.invalidateQueries({ queryKey: ["bail", data.bienId] });
         qc.invalidateQueries({ queryKey: ["bail_historique", data.bienId] });
         qc.invalidateQueries({ queryKey: ["bail_a_archiver", data.bienId] });
@@ -43,6 +46,7 @@ export function useOwnerRealtimeSync(proprietaireId?: string) {
 
       // Bien mis à jour (statut changé)
       socketService.on(SOCKET_EVENTS.BIEN_UPDATED, (data) => {
+        if (data.proprietaireId !== proprietaireId) return;
         qc.invalidateQueries({ queryKey: ["biens"] });
         qc.invalidateQueries({ queryKey: ["biens", data.bienId] });
       }),
@@ -54,7 +58,8 @@ export function useOwnerRealtimeSync(proprietaireId?: string) {
       }),
 
       // Statut transaction mis à jour
-      socketService.on(SOCKET_EVENTS.TRANSACTION_STATUS, () => {
+      socketService.on(SOCKET_EVENTS.TRANSACTION_STATUS, (data) => {
+        if (data.proprietaireId !== proprietaireId) return;
         qc.invalidateQueries({ queryKey: ["transactions"] });
         qc.invalidateQueries({ queryKey: ["badge-count"] });
       }),
@@ -126,7 +131,8 @@ export function useLocataireRealtimeSync(locataireId?: string) {
       }),
 
       // Nouvelle notification
-      socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, () => {
+      socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data) => {
+        if (data.locataireId && data.locataireId !== locataireId) return;
         qc.invalidateQueries({ queryKey: ["locataire-notifications"] });
       }),
     ];

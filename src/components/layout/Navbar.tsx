@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogOut, User, ChevronDown, Home, Search, Users, Heart, Key, MapPin, Tag, Building2 } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown, Home, Search, Users, Heart, MapPin, Tag, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useFavoris } from "@/hooks/useFavoris";
@@ -31,12 +31,13 @@ const Navbar = () => {
   const { openModal } = useFavorisAuthModal();
   const { isAuthenticated: isOwnerAuth } = useOwnerAuth();
   const { isAuthenticated: isLocataireAuth } = useLocataireAuth();
+  const hasPrivateSession = isOwnerAuth || isLocataireAuth;
 
 
   // Visibilité des espaces selon le rôle connecté
-  const showAdminLink = !isOwnerAuth && !isLocataireAuth && !isPublicAuth;
-  const showLocataireLink = !isAuthenticated && !isOwnerAuth && !isPublicAuth;
-  const showProprietaireLink = !isAuthenticated && !isLocataireAuth && !isPublicAuth;
+  const showAdminLink = !isOwnerAuth && !isLocataireAuth;
+  const showLocataireLink = !isAuthenticated && !isOwnerAuth;
+  const showProprietaireLink = !isAuthenticated && !isLocataireAuth;
 
   const navLinks = [...STATIC_NAV_LINKS];
 
@@ -172,7 +173,26 @@ const Navbar = () => {
                 <span className="mr-2 flex items-center justify-center w-7 h-7 bg-slate-50 border border-slate-100 rounded-full group-hover:border-slate-300 group-hover:bg-slate-100 transition-colors">
                   <User className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0C1A35]" />
                 </span>
-                {comptePublic.prenom}
+                Mon compte
+              </Link>
+              <button
+                onClick={() => logoutPublic()}
+                title="Se déconnecter"
+                className="text-sm transition-colors text-slate-400 hover:text-red-500"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : hasPrivateSession ? (
+            <div className="flex items-center gap-2">
+              <Link
+                to="/mon-compte"
+                className="group flex items-center text-sm font-medium text-slate-500 hover:text-[#0C1A35] transition-colors"
+              >
+                <span className="mr-2 flex items-center justify-center w-7 h-7 bg-slate-50 border border-slate-100 rounded-full group-hover:border-slate-300 group-hover:bg-slate-100 transition-colors">
+                  <User className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0C1A35]" />
+                </span>
+                Mon compte
               </Link>
               <button
                 onClick={() => logoutPublic()}
@@ -289,22 +309,30 @@ const Navbar = () => {
                   Espace locataire
                 </Link>
               )}
-              {isPublicAuth && comptePublic && (
-                <Link
-                  to="/mon-compte"
-                  onClick={() => setOpen(false)}
-                  className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors flex items-center gap-2 ${
-                    location.pathname === "/mon-compte"
-                      ? "text-[#D4A843] bg-white/5"
-                      : "text-white/65 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <User className="w-4 h-4" />
-                  Mon compte
-                </Link>
-              )}
-              {/* Mon compte mobile if not logged in */}
-              {!isPublicAuth && (
+              {(isPublicAuth && comptePublic) || hasPrivateSession ? (
+                <>
+                  <Link
+                    to="/mon-compte"
+                    onClick={() => setOpen(false)}
+                    className={`text-sm font-medium py-2.5 px-3 rounded-xl transition-colors flex items-center gap-2 ${
+                      location.pathname === "/mon-compte"
+                        ? "text-[#D4A843] bg-white/5"
+                        : "text-white/65 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <User className="w-4 h-4" />
+                    Mon compte
+                  </Link>
+                  <button
+                    onClick={() => { logoutPublic(); setOpen(false); }}
+                    className="flex items-center text-sm font-medium py-2.5 px-3 rounded-xl transition-colors text-red-400 hover:text-red-300 hover:bg-white/5 w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Se déconnecter
+                  </button>
+                </>
+              ) : null}
+              {!isPublicAuth && !hasPrivateSession && (
                 <button
                   onClick={() => { openModal(); setOpen(false); }}
                   className="flex items-center text-sm font-medium py-2.5 px-3 rounded-xl transition-colors text-white/65 hover:text-white hover:bg-white/5 w-full text-left"

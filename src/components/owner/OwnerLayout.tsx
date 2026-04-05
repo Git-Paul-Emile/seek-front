@@ -335,17 +335,21 @@ function Topbar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
 
 // ─── Hook temps réel owner ────────────────────────────────────────────────────
 
-function useOwnerRealtime() {
+function useOwnerRealtime(ownerId?: string) {
   const qc = useQueryClient();
 
   useEffect(() => {
+    if (!ownerId) return;
+
     const unsubNotif = socketService.on(SOCKET_EVENTS.NOTIFICATION_NEW, (data: NotificationPayload) => {
+      if (data.proprietaireId !== ownerId) return;
       toast.info(data.titre);
       qc.invalidateQueries({ queryKey: ["owner-messages"] });
       qc.invalidateQueries({ queryKey: ["owner-notifications"] });
     });
 
-    const unsubBadge = socketService.on(SOCKET_EVENTS.BADGE_UPDATE, () => {
+    const unsubBadge = socketService.on(SOCKET_EVENTS.BADGE_UPDATE, (data) => {
+      if (data.proprietaireId !== ownerId) return;
       qc.invalidateQueries({ queryKey: ["owner-stats"] });
       qc.invalidateQueries({ queryKey: ["biens-retard"] });
       qc.invalidateQueries({ queryKey: ["owner-notifications"] });
@@ -355,18 +359,21 @@ function useOwnerRealtime() {
       toast.success("Paiement confirmé", {
         description: `${data.montant.toLocaleString("fr-FR")} FCFA reçu`,
       });
+      if (data.proprietaireId !== ownerId) return;
       qc.invalidateQueries({ queryKey: ["bail"] });
       qc.invalidateQueries({ queryKey: ["echeancier"] });
       qc.invalidateQueries({ queryKey: ["owner-notifications"] });
     });
 
     const unsubPayFail = socketService.on(SOCKET_EVENTS.PAYMENT_FAILED, (data: TransactionStatusPayload) => {
+      if (data.proprietaireId !== ownerId) return;
       toast.error("Paiement échoué", {
         description: `Transaction ${data.transactionId} — montant ${data.montant.toLocaleString("fr-FR")} FCFA`,
       });
     });
 
     const unsubBailUpdated = socketService.on(SOCKET_EVENTS.BAIL_UPDATED, (data) => {
+      if (data.proprietaireId !== ownerId) return;
       qc.invalidateQueries({ queryKey: ["bail", data.bienId] });
       qc.invalidateQueries({ queryKey: ["bail_historique", data.bienId] });
       qc.invalidateQueries({ queryKey: ["bail_a_archiver", data.bienId] });
@@ -377,6 +384,7 @@ function useOwnerRealtime() {
     });
 
     const unsubBienUpdated = socketService.on(SOCKET_EVENTS.BIEN_UPDATED, (data) => {
+      if (data.proprietaireId !== ownerId) return;
       qc.invalidateQueries({ queryKey: ["biens"] });
       qc.invalidateQueries({ queryKey: ["biens", data.bienId] });
     });
@@ -395,7 +403,7 @@ function useOwnerRealtime() {
       unsubBienUpdated();
       unsubSignalementUpdated();
     };
-  }, [qc]);
+  }, [ownerId, qc]);
 }
 
 // ─── Drawer mobile owner ──────────────────────────────────────────────────────
@@ -508,7 +516,8 @@ export default function OwnerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isMobile = useIsMobile();
-  useOwnerRealtime();
+  const { owner } = useOwnerAuth();
+  useOwnerRealtime(owner?.id);
 
   const location = useLocation();
   useEffect(() => { setDrawerOpen(false); }, [location.pathname]);

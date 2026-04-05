@@ -31,6 +31,7 @@ import {
   useEcheancier,
   useSolde,
   useMobileMoney,
+  useHistoriqueBails,
   useProlongerEcheancesAnnee,
   useConfirmerReception,
 } from "@/hooks/useBail";
@@ -62,7 +63,12 @@ const STATUT_CFG: Record<string, {
 };
 
 const ORDER: Record<string, number> = {
-  EN_RETARD: 0, EN_ATTENTE: 1, A_VENIR: 2, PAYE: 3, ANNULE: 4,
+  EN_ATTENTE_CONFIRMATION: 0,
+  EN_RETARD: 1,
+  EN_ATTENTE: 2,
+  A_VENIR: 3,
+  PAYE: 4,
+  ANNULE: 5,
 };
 
 const canDownload = (s: string) => s === "PAYE";
@@ -216,11 +222,13 @@ export default function PaiementsPage() {
 
   const { data: bien, isLoading: bienLoading } = useBienById(id ?? "");
   const { data: bail, isLoading: bailLoading } = useBailActif(id ?? "");
+  const { data: historiqueBails = [], isLoading: historiqueLoading } = useHistoriqueBails(id ?? "");
+  const effectiveBail = bail ?? historiqueBails[0] ?? null;
   const { data: echeancier = [], isLoading: echLoading } = useEcheancier(
     id ?? "",
-    bail?.id ?? ""
+    effectiveBail?.id ?? ""
   );
-  const { data: solde } = useSolde(id ?? "", bail?.id ?? "");
+  const { data: solde } = useSolde(id ?? "", effectiveBail?.id ?? "");
   const { data: mobileMoney } = useMobileMoney(id ?? "");
 
   const { mutate: prolongerAnnee, isPending: isProlonging } = useProlongerEcheancesAnnee();
@@ -247,14 +255,14 @@ export default function PaiementsPage() {
       )
     : null;
   const showRenewalBanner =
-    !!bail &&
-    ["ACTIF", "EN_PREAVIS", "EN_RENOUVELLEMENT"].includes(bail.statut) &&
+    !!effectiveBail &&
+    ["ACTIF", "EN_PREAVIS", "EN_RENOUVELLEMENT"].includes(effectiveBail.statut) &&
     !!lastVisible &&
     new Date(lastVisible.dateEcheance).getFullYear() === displayYear &&
     new Date(lastVisible.dateEcheance).getMonth() === 11 &&
-    (!bail.dateFinBail || new Date(bail.dateFinBail).getFullYear() > displayYear);
+    (!effectiveBail.dateFinBail || new Date(effectiveBail.dateFinBail).getFullYear() > displayYear);
 
-  const isLoading = bienLoading || bailLoading || echLoading;
+  const isLoading = bienLoading || bailLoading || historiqueLoading || echLoading;
 
   // Filtrage + tri sur les échéances visibles
   const filtered = visibleEcheancier.filter(
@@ -267,11 +275,11 @@ export default function PaiementsPage() {
   );
 
   const buildQuittanceData = async (ech: Echeance) => {
-    if (!bail || !bien || !owner) return null;
+    if (!effectiveBail || !bien || !owner) return null;
     let quittanceNumero = ech.id.slice(0, 8).toUpperCase();
     let dateGeneration = new Date().toLocaleDateString("fr-FR");
     try {
-      const q = await genererQuittanceApi(id!, bail.id, ech.id);
+      const q = await genererQuittanceApi(id!, effectiveBail.id, ech.id);
       quittanceNumero = q.numero;
       dateGeneration = new Date(q.dateGeneration).toLocaleDateString("fr-FR");
     } catch { /* fallback */ }
@@ -291,8 +299,8 @@ export default function PaiementsPage() {
       bienPays: bien.pays ?? undefined,
       proprietaireNom: `${owner.prenom} ${owner.nom}`,
       proprietaireTelephone: owner.telephone,
-      locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
-      locataireTelephone: bail.locataire.telephone,
+      locataireNom: `${effectiveBail.locataire.prenom} ${effectiveBail.locataire.nom}`,
+      locataireTelephone: effectiveBail.locataire.telephone,
     };
   };
 
@@ -302,11 +310,11 @@ export default function PaiementsPage() {
   };
 
   const handleDownload = async (ech: Echeance) => {
-    if (!bail || !bien || !owner) return;
+    if (!effectiveBail || !bien || !owner) return;
     let quittanceNumero = ech.id.slice(0, 8).toUpperCase();
     let dateGeneration = new Date().toLocaleDateString("fr-FR");
     try {
-      const q = await genererQuittanceApi(id!, bail.id, ech.id);
+      const q = await genererQuittanceApi(id!, effectiveBail.id, ech.id);
       quittanceNumero = q.numero;
       dateGeneration = new Date(q.dateGeneration).toLocaleDateString("fr-FR");
     } catch {
@@ -329,13 +337,13 @@ export default function PaiementsPage() {
       bienPays: bien.pays ?? undefined,
       proprietaireNom: `${owner.prenom} ${owner.nom}`,
       proprietaireTelephone: owner.telephone,
-      locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
-      locataireTelephone: bail.locataire.telephone,
+      locataireNom: `${effectiveBail.locataire.prenom} ${effectiveBail.locataire.nom}`,
+      locataireTelephone: effectiveBail.locataire.telephone,
     });
   };
 
   const handleDownloadAll = async () => {
-    if (!bail || !bien || !owner) return;
+    if (!effectiveBail || !bien || !owner) return;
     const payees = visibleEcheancier.filter(e => canDownload(e.statut) && e.datePaiement);
     if (payees.length === 0) { toast.error("Aucune quittance disponible"); return; }
     setIsZipping(true);
@@ -345,7 +353,7 @@ export default function PaiementsPage() {
           let numero = ech.id.slice(0, 8).toUpperCase();
           let dateGeneration = new Date().toLocaleDateString("fr-FR");
           try {
-            const q = await import("@/api/quittance").then(m => m.genererQuittanceApi(id!, bail.id, ech.id));
+            const q = await import("@/api/quittance").then(m => m.genererQuittanceApi(id!, effectiveBail.id, ech.id));
             numero = q.numero;
             dateGeneration = new Date(q.dateGeneration).toLocaleDateString("fr-FR");
           } catch { /* fallback */ }
@@ -365,8 +373,8 @@ export default function PaiementsPage() {
             bienPays: bien.pays ?? undefined,
             proprietaireNom: `${owner.prenom} ${owner.nom}`,
             proprietaireTelephone: owner.telephone,
-            locataireNom: `${bail.locataire.prenom} ${bail.locataire.nom}`,
-            locataireTelephone: bail.locataire.telephone,
+            locataireNom: `${effectiveBail.locataire.prenom} ${effectiveBail.locataire.nom}`,
+            locataireTelephone: effectiveBail.locataire.telephone,
           };
         })
       );
@@ -410,10 +418,10 @@ export default function PaiementsPage() {
     );
   }
 
-  if (!bail) {
+  if (!effectiveBail) {
     return (
       <div className="text-center py-20">
-        <p className="text-slate-400">Aucun bail actif pour ce bien.</p>
+        <p className="text-slate-400">Aucun bail trouvé pour ce bien.</p>
         <Link
           to={`/owner/biens/${id}`}
           className="text-[#D4A843] text-sm font-medium mt-2 inline-block"
@@ -446,8 +454,8 @@ export default function PaiementsPage() {
               {bien.titre || "Logement"}
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              {bail.locataire.prenom} {bail.locataire.nom} - bail depuis{" "}
-              {new Date(bail.dateDebutBail).toLocaleDateString("fr-FR", {
+              {effectiveBail.locataire.prenom} {effectiveBail.locataire.nom} - bail depuis{" "}
+              {new Date(effectiveBail.dateDebutBail).toLocaleDateString("fr-FR", {
                 month: "long",
                 year: "numeric",
               })}
@@ -608,7 +616,7 @@ export default function PaiementsPage() {
           <button
             onClick={() =>
               prolongerAnnee(
-                { bienId: id!, bailId: bail!.id, anneeActuelle: displayYear },
+                { bienId: id!, bailId: effectiveBail!.id, anneeActuelle: displayYear },
                 {
                   onSuccess: (res) => {
                     setDisplayYear(res.annee);
@@ -772,10 +780,10 @@ export default function PaiementsPage() {
                       {/* Conteneur des boutons */}
                       <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         {/* Relance SMS + Email sur EN_RETARD / EN_ATTENTE */}
-                        {showRappelActions && bail && (
+                        {showRappelActions && effectiveBail && (
                           <RelanceButton
                             bienId={id!}
-                            bailId={bail.id}
+                            bailId={effectiveBail.id}
                             echeanceId={ech.id}
                           />
                         )}
@@ -792,16 +800,16 @@ export default function PaiementsPage() {
                           </button>
                         )}
                         {/* Confirmer réception — paiement LOCATAIRE en attente ou déjà PAYE non confirmé */}
-                        {(ech.statut === "EN_ATTENTE_CONFIRMATION" || canDownload(ech.statut)) &&
-                          ech.sourceEnregistrement === "LOCATAIRE" &&
-                          !ech.confirmeParProprietaire &&
-                          bail && (
-                            <ConfirmerButton
-                              bienId={id!}
-                              bailId={bail.id}
-                              echeanceId={ech.id}
-                            />
-                          )}
+                          {(ech.statut === "EN_ATTENTE_CONFIRMATION" || canDownload(ech.statut)) &&
+                            ech.sourceEnregistrement === "LOCATAIRE" &&
+                            !ech.confirmeParProprietaire &&
+                            effectiveBail && (
+                              <ConfirmerButton
+                                bienId={id!}
+                                bailId={effectiveBail.id}
+                                echeanceId={ech.id}
+                              />
+                            )}
                         {canDownload(ech.statut) && ech.datePaiement && (
                           <>
                             <button
@@ -829,10 +837,10 @@ export default function PaiementsPage() {
                   </div>
 
                   {/* ── Historique des relances ── */}
-                  {isExpanded && bail && (
+                  {isExpanded && effectiveBail && (
                     <RelanceHistoriquePanel
                       bienId={id!}
-                      bailId={bail.id}
+                      bailId={effectiveBail.id}
                       echeanceId={ech.id}
                     />
                   )}
@@ -844,13 +852,13 @@ export default function PaiementsPage() {
       </div>
 
       {/* Modal paiement espèces */}
-      {showEspecesModal && bail && (
+      {showEspecesModal && effectiveBail && (
         <EnregistrerEspecesModal
           bienId={id!}
-          bailId={bail.id}
+          bailId={effectiveBail.id}
           echeancier={echeancier}
           bienTitre={bien?.titre ?? undefined}
-          locataireNom={`${bail.locataire.prenom} ${bail.locataire.nom}`}
+          locataireNom={`${effectiveBail.locataire.prenom} ${effectiveBail.locataire.nom}`}
           onClose={() => setShowEspecesModal(false)}
         />
       )}

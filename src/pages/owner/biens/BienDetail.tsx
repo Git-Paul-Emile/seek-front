@@ -236,7 +236,9 @@ export default function BienDetail() {
   );
   const { data: messagesBail = [] } = useMessagesBailOwner();
   const marquerLus = useMarquerMessagesBailOwnerLus();
-  const messagesBailBien = messagesBail.filter((m) => m.bienId === bien?.id && !m.lu);
+  const messagesBailBien = messagesBail.filter(
+    (m) => m.bienId === bien?.id && !m.lu && m.type !== "CONFIRMATION_ESPECES"
+  );
 
   const terminer = useTerminerBail();
   const resilier = useResilierBail();
@@ -313,6 +315,15 @@ export default function BienDetail() {
 
   const photos = bien.photos ?? [];
   const statut = bien.statutAnnonce;
+  const etatsDesLieux = bail?.etatsDesLieux ?? [];
+  const hasEdlEntreeValide = etatsDesLieux.some((edl) => edl.type === "ENTREE" && edl.statut === "VALIDE");
+  const hasEdlSortieValide = etatsDesLieux.some((edl) => edl.type === "SORTIE" && edl.statut === "VALIDE");
+  const canRestituerCaution = hasEdlEntreeValide && hasEdlSortieValide;
+  const etatsDesLieuxHref = bail
+    ? etatsDesLieux.length
+      ? `/owner/bails/${bail.id}/etats-des-lieux`
+      : `/owner/bails/${bail.id}/etats-des-lieux/creer?type=ENTREE`
+    : "#";
 
   const options = [
     { label: "Meublé",    value: bien.meuble,    icon: Sofa },
@@ -765,11 +776,11 @@ export default function BienDetail() {
 
                       {/* Gérer les états des lieux */}
                       <Link
-                        to={`/owner/bails/${bail.id}/etats-des-lieux`}
+                        to={bail.etatsDesLieux?.length ? `/owner/bails/${bail.id}/etats-des-lieux` : `/owner/bails/${bail.id}/etats-des-lieux/creer?type=ENTREE`}
                         className="flex items-center justify-center gap-2 px-3 py-2 border border-[#D4A843] text-[#D4A843] rounded-lg text-xs font-medium hover:bg-[#D4A843]/10 transition-colors"
                       >
                         <CheckCircle className="w-3.5 h-3.5" />
-                        États des Lieux
+                        {bail.etatsDesLieux?.length ? "États des Lieux" : "Nouvel État des Lieux"}
                       </Link>
 
                       {/* Prolonger - disponible si ACTIF ou EN_RENOUVELLEMENT */}
@@ -1489,20 +1500,33 @@ export default function BienDetail() {
             <div className="flex gap-3 mt-4">
               <button onClick={() => setRestituerOpen(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50">Annuler</button>
-              <button
-                disabled={!restituerMontant || restituerCaution.isPending}
-                onClick={() => {
-                  if (!bail) return;
-                  restituerCaution.mutate(
-                    { bienId: id!, bailId: bail.id, payload: { montantRestitue: parseFloat(restituerMontant), motifRetenue: restituerMotif || undefined } },
-                    { onSuccess: () => { toast.success("Caution mise à jour"); setRestituerOpen(false); },
-                      onError: () => toast.error("Erreur") }
-                  );
-                }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
-                {restituerCaution.isPending ? "Enregistrement..." : "Confirmer"}
-              </button>
+              {canRestituerCaution ? (
+                <button
+                  disabled={!restituerMontant || restituerCaution.isPending}
+                  onClick={() => {
+                    if (!bail) return;
+                    restituerCaution.mutate(
+                      { bienId: id!, bailId: bail.id, payload: { montantRestitue: parseFloat(restituerMontant), motifRetenue: restituerMotif || undefined } },
+                      { onSuccess: () => { toast.success("Caution mise à jour"); setRestituerOpen(false); },
+                        onError: () => toast.error("Erreur") }
+                    );
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
+                  {restituerCaution.isPending ? "Enregistrement..." : "Confirmer"}
+                </button>
+              ) : (
+                <Link
+                  to={etatsDesLieuxHref}
+                  onClick={() => setRestituerOpen(false)}
+                  className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 text-center"
+                >
+                  Faire l'état des lieux
+                </Link>
+              )}
             </div>
+            <p className="mt-3 text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+              La caution ne peut être restituée qu'après des états des lieux d'entrée et de sortie validés.
+            </p>
           </div>
         </div>
       )}

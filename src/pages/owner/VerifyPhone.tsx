@@ -10,6 +10,7 @@ import {
   verifyOwnerPhonePublicApi,
 } from "@/api/ownerAuth";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
+import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 
 const OWNER_PENDING_OTP_KEY = "ownerPendingOtp";
 
@@ -38,6 +39,7 @@ function maskPhone(phone?: string) {
 export default function VerifyOwnerPhone() {
   const navigate = useNavigate();
   const { owner, setOwner, isLoading, isAuthenticated } = useOwnerAuth();
+  const { refreshMe: refreshPublicAccount } = useComptePublicAuth();
   const [otp, setOtp] = useState("");
   const [pending, setPending] = useState<PendingOtpData | null>(() => readPendingOtp());
   const [submitting, setSubmitting] = useState(false);
@@ -79,6 +81,7 @@ export default function VerifyOwnerPhone() {
 
       sessionStorage.removeItem(OWNER_PENDING_OTP_KEY);
       setOwner(response.data.data);
+      await refreshPublicAccount();
       toast.success("Numéro vérifié avec succès.");
       navigate("/owner/dashboard", { replace: true });
     } catch (error: any) {

@@ -408,6 +408,34 @@ export const marquerMessagesBailLocataireLusApi = async (): Promise<void> => {
   await api.post("/messages-bail/lus");
 };
 
+export interface AlerteEdlManquant {
+  id: string;
+  bienId: string;
+  proprietaireId: string;
+  dateDebutBail: string;
+  bien: {
+    titre: string | null;
+    ville: string | null;
+    region: string | null;
+  };
+  proprietaire: {
+    prenom: string;
+    nom: string;
+    telephone: string;
+    email: string | null;
+  };
+}
+
+export const getAlerteEdlManquantApi = async (): Promise<AlerteEdlManquant | null> => {
+  const { data } = await api.get<{ data: AlerteEdlManquant | null }>("/edl-manquant");
+  return data.data;
+};
+
+export const demanderEtatDesLieuxApi = async (): Promise<{ sent: boolean }> => {
+  const { data } = await api.post<{ data: { sent: boolean } }>("/edl-manquant/demande");
+  return data.data;
+};
+
 // ─── Suppression du compte ────────────────────────────────────────────────────
 
 export const supprimerCompteLocataireApi = async (): Promise<void> => {

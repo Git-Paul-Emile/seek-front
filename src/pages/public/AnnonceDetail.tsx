@@ -42,7 +42,6 @@ import {
   School,
   ShoppingBag,
   Hospital,
-  Cross,
   Bus,
   University,
   Building2,
@@ -63,6 +62,8 @@ import {
   Eye,
   Flame,
   AlertTriangle,
+  Navigation,
+  Pill,
 } from "lucide-react";
 import SignalementModal from "@/components/SignalementModal";
 
@@ -154,10 +155,30 @@ const ETABLISSEMENT_LABELS: Record<string, string> = {
   route_principale: "Route principale",
 };
 
-function EtablissementIcon({ type }: { type: string }) {
+type EtabCategory = "sante" | "education" | "commerce" | "culte" | "transport" | "services";
+
+function getEtabCategory(type: string): EtabCategory {
+  if (["hopital", "pharmacie"].includes(type)) return "sante";
+  if (["ecole_maternelle", "ecole_primaire", "college", "lycee", "universite"].includes(type)) return "education";
+  if (["supermarche", "marche", "boulangerie"].includes(type)) return "commerce";
+  if (["mosquee", "eglise"].includes(type)) return "culte";
+  if (["arret_bus", "station_brt", "route_principale"].includes(type)) return "transport";
+  return "services";
+}
+
+const CATEGORY_STYLES: Record<EtabCategory, { bg: string; text: string; badge: string; dist: string; border: string }> = {
+  sante:     { bg: "bg-emerald-50",  text: "text-emerald-600",  badge: "bg-emerald-100 text-emerald-700",  dist: "text-emerald-600", border: "border-l-emerald-400" },
+  education: { bg: "bg-blue-50",     text: "text-blue-600",     badge: "bg-blue-100 text-blue-700",        dist: "text-blue-600",    border: "border-l-blue-400" },
+  commerce:  { bg: "bg-amber-50",    text: "text-amber-600",    badge: "bg-amber-100 text-amber-700",      dist: "text-amber-600",   border: "border-l-amber-400" },
+  culte:     { bg: "bg-purple-50",   text: "text-purple-600",   badge: "bg-purple-100 text-purple-700",    dist: "text-purple-600",  border: "border-l-purple-400" },
+  transport: { bg: "bg-sky-50",      text: "text-sky-600",      badge: "bg-sky-100 text-sky-700",          dist: "text-sky-600",     border: "border-l-sky-400" },
+  services:  { bg: "bg-slate-100",   text: "text-slate-600",    badge: "bg-slate-200 text-slate-700",      dist: "text-slate-500",   border: "border-l-slate-400" },
+};
+
+function EtablissementIcon({ type, className }: { type: string; className?: string }) {
   const iconMap: Record<string, React.ElementType> = {
     hopital: Hospital,
-    pharmacie: Cross,
+    pharmacie: Pill,
     ecole_maternelle: Baby,
     ecole_primaire: School,
     college: School,
@@ -176,7 +197,7 @@ function EtablissementIcon({ type }: { type: string }) {
     route_principale: MapPin,
   };
   const Icon = iconMap[type] || Building2;
-  return <Icon className="w-4 h-4" />;
+  return <Icon className={className ?? "w-4 h-4"} />;
 }
 
 // ─── Modal Demande de visite ──────────────────────────────────────────────────
@@ -301,6 +322,7 @@ export default function AnnonceDetail() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showVisiteModal, setShowVisiteModal] = useState(false);
   const [showSignalementModal, setShowSignalementModal] = useState(false);
+  const [overpassEtabs, setOverpassEtabs] = useState<import("@/api/bien").Etablissement[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { isFavori, toggleFavori, isAuthenticated } = useFavoris();
   const { openModal } = useFavorisAuthModal();
@@ -573,10 +595,10 @@ export default function AnnonceDetail() {
               </div>
               {/* Date de publication + vues */}
               <div className="flex flex-wrap items-center gap-3 mt-2">
-                {bien.createdAt && (
+                {(bien.publishedAt ?? bien.createdAt) && (
                   <div className="flex items-center gap-1.5 text-slate-400 text-xs">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>Publiée {getTimeAgo(bien.createdAt)}</span>
+                    <span>Publiée {getTimeAgo(bien.publishedAt ?? bien.createdAt)}</span>
                   </div>
                 )}
                 {(bien.nbVues ?? 0) > 0 && (
@@ -591,7 +613,7 @@ export default function AnnonceDetail() {
             {/* Description */}
             {bien.description && (
               <Section title="Description">
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap text-justify">
                   {bien.description}
                 </p>
               </Section>
@@ -740,42 +762,62 @@ export default function AnnonceDetail() {
                         longitude={bien.longitude}
                         titreBien={bien.titre}
                         etablissements={bien.etablissements ?? []}
+                        onOverpassLoaded={setOverpassEtabs}
                       />
                     </div>
                   )}
-                  {bien.etablissements && bien.etablissements.length > 0 ? (
+                  {(() => {
+                    const etabs = (bien.etablissements && bien.etablissements.length > 0) ? bien.etablissements : overpassEtabs;
+                    const sorted = [...etabs].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+                    return sorted.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {bien.etablissements.map((e) => (
-                        <div
-                          key={e.id}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-slate-50"
-                        >
-                          <div className="w-9 h-9 rounded-lg bg-[#D4A843]/10 flex items-center justify-center shrink-0">
-                            <EtablissementIcon type={e.type} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-[#D4A843] uppercase tracking-wide">
-                              {ETABLISSEMENT_LABELS[e.type] ?? e.type.replace(/_/g, ' ')}
-                            </p>
-                            <p className="text-sm font-medium text-[#0C1A35] truncate">
-                              {e.nom || ""}
-                            </p>
-                            {e.distance && (
-                              <p className="text-xs text-slate-400 mt-0.5">
-                                {e.distance < 1000
-                                  ? `${e.distance} m`
-                                  : `${(e.distance / 1000).toFixed(1)} km`}
+                      {sorted.map((e) => {
+                        const cat = getEtabCategory(e.type);
+                        const styles = CATEGORY_STYLES[cat];
+                        const label = ETABLISSEMENT_LABELS[e.type] ?? e.type.replace(/_/g, ' ');
+                        const hasName = !!e.nom && e.nom !== label;
+                        const nom = e.nom || label;
+                        const distText = e.distance
+                          ? e.distance < 1000
+                            ? `${e.distance} m`
+                            : `${(e.distance / 1000).toFixed(1)} km`
+                          : null;
+                        return (
+                          <div
+                            key={e.id}
+                            className="flex items-start gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default"
+                          >
+                            {/* Icon badge */}
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${styles.bg}`}>
+                              <EtablissementIcon type={e.type} className={`w-5 h-5 ${styles.text}`} />
+                            </div>
+
+                            {/* Content */}
+                            <div className="min-w-0 flex-1 pt-0.5">
+                              <p className="text-sm font-semibold text-[#0C1A35] truncate leading-tight">
+                                {nom}
                               </p>
-                            )}
+                              {hasName && (
+                                <span className={`inline-block mt-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${styles.badge}`}>
+                                  {label}
+                                </span>
+                              )}
+                              {distText && (
+                                <div className="flex items-center gap-1 mt-1.5">
+                                  <Navigation className={`w-3 h-3 shrink-0 ${styles.dist}`} />
+                                  <span className={`text-xs font-semibold ${styles.dist}`}>{distText}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="text-sm text-slate-400 text-center py-4">
                       Aucun établissement à proximité n'a été ajouté pour ce bien
                     </p>
-                  )}
+                  ); })()}
                 </TabsContent>
               </Tabs>
             </Section>

@@ -22,6 +22,7 @@ export interface ConfigSite {
   contactPhone: string;
   contactAddress: string;
   serviceClientHours: ServiceHoursDay[];
+  logoFiligrane?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +45,38 @@ export const useUpdateConfigSite = () => {
     mutationFn: async (payload: Partial<ConfigSite>) => {
       const { data } = await api.put("/config-site", payload);
       return data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["config-site"], data);
+    },
+  });
+};
+
+export const useUploadLogoFiligrane = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("logo", file);
+      const { data } = await api.post("/config-site/logo", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return data as ConfigSite;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["config-site"], data);
+    },
+  });
+};
+
+export const useDeleteLogoFiligrane = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.delete("/config-site/logo");
+      return data as ConfigSite;
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["config-site"], data);

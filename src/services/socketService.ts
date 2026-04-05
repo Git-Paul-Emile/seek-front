@@ -167,6 +167,10 @@ class SocketService {
     this.socket?.emit("join:alerts", telephone);
   }
 
+  leaveAlerts(telephone: string): void {
+    this.socket?.emit("leave:alerts", telephone);
+  }
+
   // ─── Abonnements typés ────────────────────────────────────────────────────
 
   on<E extends keyof EventMap>(event: E, cb: (data: EventMap[E]) => void): Unsubscribe {

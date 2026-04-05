@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogOut, User, ChevronDown, Home, Search, Users, Heart, MapPin, Tag, Building2 } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown, Home, Users, Heart, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/context/AuthContext";
 import { useFavoris } from "@/hooks/useFavoris";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
@@ -25,7 +24,6 @@ const Navbar = () => {
   const [annoncesOpen, setAnnoncesOpen] = useState(false);
   const [mobileAnnoncesOpen, setMobileAnnoncesOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
   const { count: favCount } = useFavoris();
   const { compte: comptePublic, isAuthenticated: isPublicAuth, logout: logoutPublic } = useComptePublicAuth();
   const { openModal } = useFavorisAuthModal();
@@ -35,9 +33,8 @@ const Navbar = () => {
 
 
   // Visibilité des espaces selon le rôle connecté
-  const showAdminLink = !isOwnerAuth && !isLocataireAuth;
-  const showLocataireLink = !isAuthenticated && !isOwnerAuth;
-  const showProprietaireLink = !isAuthenticated && !isLocataireAuth;
+  const showLocataireLink = !isOwnerAuth;
+  const showProprietaireLink = !isLocataireAuth;
 
   const navLinks = [...STATIC_NAV_LINKS];
 

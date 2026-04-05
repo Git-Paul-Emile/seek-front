@@ -1,8 +1,8 @@
 import axios from "axios";
+import { ownerApiClient } from "./ownerApiClient";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
-const ownerApi = axios.create({ baseURL: `${API_URL}/api/owner`, withCredentials: true });
 const locataireApi = axios.create({ baseURL: `${API_URL}/api/locataire`, withCredentials: true });
 const adminApi = axios.create({ baseURL: `${API_URL}/api/admin`, withCredentials: true });
 
@@ -53,16 +53,16 @@ export interface AdminNotificationsData {
 // ─── Owner ────────────────────────────────────────────────────────────────────
 
 export const getOwnerNotificationsApi = async (): Promise<NotificationsData> => {
-  const { data } = await ownerApi.get("/notifications");
+  const { data } = await ownerApiClient.get("/api/owner/notifications");
   return data.data;
 };
 
 export const markOwnerNotificationsReadApi = async (): Promise<void> => {
-  await ownerApi.patch("/notifications/mark-all-read");
+  await ownerApiClient.patch("/api/owner/notifications/mark-all-read");
 };
 
 export const markOwnerOneNotificationReadApi = async (id: string): Promise<void> => {
-  await ownerApi.patch(`/notifications/${id}/read`);
+  await ownerApiClient.patch(`/api/owner/notifications/${id}/read`);
 };
 
 // ─── Locataire ────────────────────────────────────────────────────────────────

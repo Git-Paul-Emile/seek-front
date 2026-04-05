@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  loginOwnerApi,
   meOwnerApi,
   refreshOwnerApi,
   logoutOwnerApi,
@@ -27,6 +28,7 @@ interface OwnerAuthState {
 }
 
 interface OwnerAuthContextValue extends OwnerAuthState {
+  login: (identifiant: string, password: string) => Promise<OwnerInfo>;
   setOwner: (owner: OwnerInfo | null) => void;
   logout: () => Promise<void>;
 }
@@ -113,6 +115,17 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
     socketService.leaveOwner(owner.id);
   }, [owner, pathname]);
 
+  const login = useCallback(async (identifiant: string, password: string) => {
+    const response = await loginOwnerApi({ identifiant, password });
+    const authenticatedOwner = response.data.data;
+
+    setOwner(authenticatedOwner);
+    await refreshPublicAccount();
+    startRefreshTimer();
+
+    return authenticatedOwner;
+  }, [refreshPublicAccount, startRefreshTimer]);
+
   const logout = useCallback(async () => {
     try {
       await logoutOwnerApi();
@@ -130,6 +143,7 @@ export function OwnerAuthProvider({ children }: { children: ReactNode }) {
         owner,
         isLoading,
         isAuthenticated: owner !== null,
+        login,
         setOwner,
         logout,
       }}

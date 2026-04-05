@@ -9,7 +9,6 @@ import {
   AlertCircle, Loader2, Eye, EyeOff,
 } from "lucide-react";
 import axios from "axios";
-import { loginOwnerApi } from "@/api/ownerAuth";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -82,8 +81,7 @@ const inputCls = (hasError: boolean) =>
 
 export default function OwnerLogin() {
   const navigate = useNavigate();
-  const { setOwner } = useOwnerAuth();
-  const { refreshMe: refreshPublicAccount } = useComptePublicAuth();
+  const { login } = useOwnerAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -99,19 +97,14 @@ export default function OwnerLogin() {
   const onSubmit = async (data: FormData) => {
     setServerError(null);
     try {
-      const res = await loginOwnerApi({
-        identifiant: data.identifiant,
-        password: data.password,
-      });
-      setOwner(res.data.data);
-      await refreshPublicAccount();
-      if (!res.data.data.telephoneVerifie) {
+      const owner = await login(data.identifiant, data.password);
+      if (!owner.telephoneVerifie) {
         sessionStorage.setItem(
           OWNER_PENDING_OTP_KEY,
           JSON.stringify({
-            proprietaireId: res.data.data.id,
-            prenom: res.data.data.prenom,
-            telephone: res.data.data.telephone,
+            proprietaireId: owner.id,
+            prenom: owner.prenom,
+            telephone: owner.telephone,
           })
         );
         navigate("/owner/verify-phone", { replace: true });

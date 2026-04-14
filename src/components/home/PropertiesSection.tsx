@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 import PropertyCard from "@/components/PropertyCard";
+import CTACarouselCard from "@/components/home/CTACarouselCard";
 import { SORT_OPTIONS } from "@/data/home";
 import { useRecherchePublique } from "@/hooks/useRecherche";
 import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
@@ -62,6 +63,22 @@ const PropertiesSection = () => {
   const annoncesMiseEnAvant = miseEnAvantData?.annonces ?? [];
   const hasPremium = annoncesMiseEnAvant.length > 0;
 
+  // Position de la carte CTA dans le carousel :
+  // - 0 annonces : en premier (index 0)
+  // - N < MAX_VISIBLE : après les annonces existantes (index N)
+  // - N >= MAX_VISIBLE : au centre (index Math.floor(MAX_VISIBLE / 2) = 2)
+  const ctaIndex =
+    annoncesMiseEnAvant.length >= MAX_VISIBLE
+      ? Math.floor(MAX_VISIBLE / 2)
+      : annoncesMiseEnAvant.length;
+
+  // Tableau des slides : annonces + carte CTA insérée à ctaIndex
+  type CarouselSlide = { type: "property"; data: (typeof annoncesMiseEnAvant)[0] } | { type: "cta" };
+  const carouselSlides: CarouselSlide[] = [
+    ...annoncesMiseEnAvant.map((a) => ({ type: "property" as const, data: a })),
+  ];
+  carouselSlides.splice(ctaIndex, 0, { type: "cta" });
+
   // Page 1 : les 4 premières annonces sont toujours "à la une"
   const dernieresAnnonces = useMemo(() => {
     const rawItems = searchResult?.items ?? [];
@@ -77,7 +94,7 @@ const PropertiesSection = () => {
     }
     return rawItems.map(withIsNew);
   }, [searchResult?.items, annoncesMiseEnAvant, page]);
-  const needsRotation = annoncesMiseEnAvant.length > MAX_VISIBLE;
+  const needsRotation = carouselSlides.length > MAX_VISIBLE;
 
   // Auto-rotation quand > 5 annonces
   useEffect(() => {
@@ -114,67 +131,76 @@ const PropertiesSection = () => {
     <section className="pt-10 pb-16 md:py-16 bg-white">
       <div className="container mx-auto px-8">
         {/* ───────────────────────────────────────────────────────────────────── */}
-        {/* SECTION 1: À LA UNE (Annonces Premium en slider horizontal)         */}
+        {/* SECTION 1: À LA UNE (Annonces Premium + carte CTA en slider)        */}
         {/* ───────────────────────────────────────────────────────────────────── */}
-        {hasPremium && (
-          <div className="mb-10 md:mb-16">
-            {/* En-tête de section */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 gap-4">
-              <div>
-                <p className="text-amber-600 font-bold text-sm uppercase tracking-wider">
-                  Exclusivité
-                </p>
-                <h2 className="font-bold text-[#1A2942]" style={{ fontSize: '1.8rem' }}>
-                  À la une
-                </h2>
-              </div>
-              <div className="flex items-center gap-3 self-start md:self-auto" />
+        <div className="mb-10 md:mb-16">
+          {/* En-tête de section */}
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-5 gap-4">
+            <div>
+              <p className="text-amber-600 font-bold text-sm uppercase tracking-wider">
+                Exclusivité
+              </p>
+              <h2 className="font-bold text-[#1A2942]" style={{ fontSize: '1.8rem' }}>
+                À la une
+              </h2>
             </div>
+            <div className="flex items-center gap-3 self-start md:self-auto" />
+          </div>
 
-            {/* Slider horizontal des annonces premium */}
-            {isLoadingPremium ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <SkPropertyCards count={4} />
-              </div>
-            ) : (
-              <div
-                className="relative px-2"
-                onMouseEnter={() => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); }}
-                onMouseLeave={() => {
-                  if (!needsRotation || !carouselApi) return;
-                  autoPlayRef.current = setInterval(() => {
-                    if (carouselApi.canScrollNext()) carouselApi.scrollNext();
-                    else carouselApi.scrollTo(0);
-                  }, ROTATION_INTERVAL);
-                }}
+          {/* Slider horizontal des annonces premium + CTA */}
+          {isLoadingPremium ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <SkPropertyCards count={4} />
+            </div>
+          ) : (
+            <div
+              className="relative pl-2"
+              onMouseEnter={() => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); }}
+              onMouseLeave={() => {
+                if (!needsRotation || !carouselApi) return;
+                autoPlayRef.current = setInterval(() => {
+                  if (carouselApi.canScrollNext()) carouselApi.scrollNext();
+                  else carouselApi.scrollTo(0);
+                }, ROTATION_INTERVAL);
+              }}
+            >
+              <Carousel
+                setApi={setCarouselApi}
+                opts={{ align: "start", loop: carouselSlides.length > MAX_VISIBLE, slidesToScroll: "auto" }}
+                className="w-full"
               >
-                <Carousel
-                  setApi={setCarouselApi}
-                  opts={{ align: "start", loop: true, slidesToScroll: "auto" }}
-                  className="w-full"
-                >
-                  <CarouselContent className="-ml-4" wrapperClassName="pt-0 lg:pt-8 pb-8 -my-6">
-                    {annoncesMiseEnAvant.map((property) => (
+                <CarouselContent className="-ml-4">
+                  {carouselSlides.map((slide) =>
+                    slide.type === "cta" ? (
                       <CarouselItem
-                        key={property.id}
+                        key="cta-card"
                         className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                       >
-                        <div className="relative group h-full my-6">
-                          <PropertyCard
-                            property={property as any}
-                            isApiData={true}
-                          />
-                        </div>
+                        <CTACarouselCard />
                       </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-2 bg-white/70 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
-                  <CarouselNext className="right-2 bg-white/70 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
-                </Carousel>
-              </div>
-            )}
-          </div>
-        )}
+                    ) : (
+                      <CarouselItem
+                        key={slide.data.id}
+                        className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                      >
+                        <PropertyCard
+                          property={slide.data as any}
+                          isApiData={true}
+                        />
+                      </CarouselItem>
+                    )
+                  )}
+                </CarouselContent>
+                {carouselSlides.length > MAX_VISIBLE && (
+                  <>
+                    <CarouselPrevious className="left-2 bg-white/70 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
+                    <CarouselNext className="right-2 bg-white/70 hover:bg-white shadow-lg border-2 border-amber-400/30 hover:border-amber-400" />
+                  </>
+                )}
+              </Carousel>
+            </div>
+          )}
+        </div>
 
         {/* ── BANNEmarketing ── */}
         <div className="mb-10 md:mb-16">

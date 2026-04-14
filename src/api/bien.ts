@@ -308,6 +308,8 @@ export interface RechercheParams {
   fumeurs?: "1";
   animaux?: "1";
   equipementIds?: string; // IDs séparés par virgule
+  misEnAvant?: "1";
+  featuredFirst?: "1";
   sortBy?: "prix" | "createdAt";
   sortOrder?: "asc" | "desc";
   page?: number;

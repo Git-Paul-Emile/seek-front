@@ -3,8 +3,9 @@ import { useSearchParams, Link } from "react-router-dom";
 import {
   Search, MapPin, X, Loader2, Building2,
   BedDouble, Maximize2, ShowerHead,
-  ArrowRight, Car, Armchair, ChevronDown, SlidersHorizontal, ArrowUpDown,
-  PawPrint, Cigarette, Check,
+  ArrowRight, Car, Armchair, ChevronDown, ChevronLeft, ChevronRight,
+  SlidersHorizontal, ArrowUpDown,
+  PawPrint, Cigarette, Check, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SearchableSelect from "@/components/ui/SearchableSelect";
@@ -170,11 +171,13 @@ const RecherchePage = () => {
   // Filtres avancés
   const [showAvanced,      setShowAdvanced]      = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed]   = useState(false);
   const [prixMin,      setPrixMin]      = useState(searchParams.get("prixMin") ?? "");
   const [prixMax,      setPrixMax]      = useState(searchParams.get("prixMax") ?? "");
   const [chambres,     setChambres]     = useState(searchParams.get("chambres") ?? "");
   const [surfaceMin,   setSurfaceMin]   = useState(searchParams.get("surfaceMin") ?? "");
   const [surfaceMax,   setSurfaceMax]   = useState(searchParams.get("surfaceMax") ?? "");
+  const [misEnAvant,   setMisEnAvant]   = useState(searchParams.get("misEnAvant") === "1");
   const [meuble,       setMeuble]       = useState(searchParams.get("meuble") === "1");
   const [parking,      setParking]      = useState(searchParams.get("parking") === "1");
   const [ascenseur,    setAscenseur]    = useState(searchParams.get("ascenseur") === "1");
@@ -210,7 +213,7 @@ const RecherchePage = () => {
   // selectedEquipements.join() évite la comparaison de référence sur le tableau
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prixMin, prixMax, chambres, surfaceMin, surfaceMax,
-      meuble, parking, ascenseur, fumeurs, animaux,
+      misEnAvant, meuble, parking, ascenseur, fumeurs, animaux,
       // eslint-disable-next-line react-hooks/exhaustive-deps
       selectedEquipements.join(",")]);
 
@@ -234,16 +237,18 @@ const RecherchePage = () => {
     chambres:   sp.get("chambres")   ? Number(sp.get("chambres"))   : undefined,
     surfaceMin: sp.get("surfaceMin") ? Number(sp.get("surfaceMin")) : undefined,
     surfaceMax: sp.get("surfaceMax") ? Number(sp.get("surfaceMax")) : undefined,
+    misEnAvant: sp.get("misEnAvant") === "1" ? "1" as const : undefined,
     meuble:     sp.get("meuble")    === "1" ? "1" as const : undefined,
     parking:    sp.get("parking")   === "1" ? "1" as const : undefined,
     ascenseur:  sp.get("ascenseur") === "1" ? "1" as const : undefined,
     fumeurs:    sp.get("fumeurs")   === "1" ? "1" as const : undefined,
     animaux:    sp.get("animaux")   === "1" ? "1" as const : undefined,
     equipementIds: sp.get("equipementIds") || undefined,
+    featuredFirst: "1" as const,
     sortBy:    isProximityMode ? undefined : sortParams.sortBy,
     sortOrder: isProximityMode ? undefined : sortParams.sortOrder,
     page:  parseInt(sp.get("page") ?? "1"),
-    limit: 10, // Pagination à 10 annonces par page
+    limit: 30,
     lat:    proximityLat,
     lng:    proximityLng,
     radius: isProximityMode ? proximityRadius : undefined,
@@ -270,6 +275,7 @@ const RecherchePage = () => {
     setChambres(searchParams.get("chambres") ?? "");
     setSurfaceMin(searchParams.get("surfaceMin") ?? "");
     setSurfaceMax(searchParams.get("surfaceMax") ?? "");
+    setMisEnAvant(searchParams.get("misEnAvant") === "1");
     setMeuble(searchParams.get("meuble") === "1");
     setParking(searchParams.get("parking") === "1");
     setAscenseur(searchParams.get("ascenseur") === "1");
@@ -298,6 +304,7 @@ const RecherchePage = () => {
     if (chambres)       next.set("chambres",        chambres);
     if (surfaceMin)     next.set("surfaceMin",      surfaceMin);
     if (surfaceMax)     next.set("surfaceMax",      surfaceMax);
+    if (misEnAvant)                      next.set("misEnAvant",     "1");
     if (meuble)                         next.set("meuble",         "1");
     if (parking)                        next.set("parking",        "1");
     if (ascenseur)                      next.set("ascenseur",      "1");
@@ -326,7 +333,7 @@ const RecherchePage = () => {
   const clearFilters = () => {
     setVille(""); setQuartier(""); setTypeLogement(""); setTypeTransaction(""); setSort("recent");
     setPrixMin(""); setPrixMax(""); setChambres(""); setSurfaceMin(""); setSurfaceMax("");
-    setMeuble(false); setParking(false); setAscenseur(false); setFumeurs(false); setAnimaux(false);
+    setMisEnAvant(false); setMeuble(false); setParking(false); setAscenseur(false); setFumeurs(false); setAnimaux(false);
     setSelectedEquipements([]);
     setSearchParams({ page: "1" }); // supprime aussi lat/lng/pointLabel
   };
@@ -401,6 +408,7 @@ const RecherchePage = () => {
     const label = min && max ? `${min}–${max} m²` : min ? `≥ ${min} m²` : `≤ ${max} m²`;
     chips.push({ label, onRemove: () => { removeFilter("surfaceMin"); removeFilter("surfaceMax"); } });
   }
+  if (sp.get("misEnAvant") === "1") chips.push({ label: "À la une", onRemove: () => removeFilter("misEnAvant") });
   if (sp.get("meuble")    === "1") chips.push({ label: "Meublé",    onRemove: () => removeFilter("meuble") });
   if (sp.get("parking")   === "1") chips.push({ label: "Parking",   onRemove: () => removeFilter("parking") });
   if (sp.get("ascenseur") === "1") chips.push({ label: "Ascenseur", onRemove: () => removeFilter("ascenseur") });
@@ -425,7 +433,7 @@ const RecherchePage = () => {
   const nbAdvancedActive = [
     sp.get("prixMin"), sp.get("prixMax"), sp.get("chambres"),
     sp.get("surfaceMin"), sp.get("surfaceMax"),
-    sp.get("meuble"), sp.get("parking"), sp.get("ascenseur"),
+    sp.get("misEnAvant"), sp.get("meuble"), sp.get("parking"), sp.get("ascenseur"),
     sp.get("fumeurs"), sp.get("animaux"),
   ].filter(Boolean).length + activeEqIds.length;
 
@@ -560,6 +568,20 @@ const RecherchePage = () => {
                 </div>
               </div>
             )}
+
+            {/* Options rapides mobile */}
+            <div className="border-t border-white/10 pt-4 flex gap-2 flex-wrap">
+              <label className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer border text-sm transition-all ${misEnAvant ? "bg-[#D4A843]/15 border-[#D4A843]/40 text-white" : "bg-white/5 border-white/10 text-white/70"}`}>
+                <input type="checkbox" checked={misEnAvant} onChange={e => setMisEnAvant(e.target.checked)} className="sr-only" />
+                <Star className={`w-3.5 h-3.5 ${misEnAvant ? "text-[#D4A843]" : "text-white/40"}`} />
+                À la une
+              </label>
+              <label className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer border text-sm transition-all ${meuble ? "bg-[#D4A843]/15 border-[#D4A843]/40 text-white" : "bg-white/5 border-white/10 text-white/70"}`}>
+                <input type="checkbox" checked={meuble} onChange={e => setMeuble(e.target.checked)} className="sr-only" />
+                <Armchair className={`w-3.5 h-3.5 ${meuble ? "text-[#D4A843]" : "text-white/40"}`} />
+                Meublé
+              </label>
+            </div>
 
             {/* Filtres avancés dans le panneau mobile */}
             <div className="border-t border-white/10 pt-4 grid grid-cols-2 gap-3">
@@ -736,295 +758,317 @@ const RecherchePage = () => {
         </div>
       )}
 
-      {/* Desktop : barre sticky classique */}
-      <div className="hidden lg:block bg-[#0C1A35] sticky top-0 z-40 shadow-lg">
-        <div className="container mx-auto py-4 px-4">
-          <div className="flex flex-wrap gap-2.5 items-center">
+      {/* ── Layout desktop : sidebar gauche + contenu ── */}
+      <div className="lg:flex">
 
-            <div className="flex-1 min-w-36">
+        {/* ── Sidebar filtres (desktop uniquement) ── */}
+        <aside className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] bg-white border-r border-slate-100 z-30 transition-all duration-300 ${sidebarCollapsed ? "w-14" : "w-72"}`}>
+
+          {/* Header sidebar */}
+          <div className={`flex items-center border-b border-slate-100 flex-shrink-0 ${sidebarCollapsed ? "justify-center px-0 py-4" : "justify-between px-4 py-4"}`}>
+            {!sidebarCollapsed && (
+              <span className="text-slate-700 font-semibold text-sm flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-[#D4A843]" />
+                Filtres
+                {nbAdvancedActive > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-[#D4A843] text-white text-xs flex items-center justify-center font-bold">
+                    {nbAdvancedActive}
+                  </span>
+                )}
+              </span>
+            )}
+            <button
+              onClick={() => setSidebarCollapsed(p => !p)}
+              title={sidebarCollapsed ? "Afficher les filtres" : "Réduire les filtres"}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors flex-shrink-0"
+            >
+              {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Collapsed : icône filtres + badge */}
+          {sidebarCollapsed && (
+            <div className="flex flex-col items-center gap-3 pt-4">
+              <div className="relative">
+                <SlidersHorizontal className="w-5 h-5 text-slate-400" />
+                {nbAdvancedActive > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#D4A843] text-white text-[9px] flex items-center justify-center font-bold">
+                    {nbAdvancedActive}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Corps scrollable (masqué quand réduit) */}
+          {!sidebarCollapsed && (
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">Ville / Région</label>
               <SearchableSelect
                 value={ville}
-                onChange={(val) => {
-                  setVille(val);
-                  setSearchParams(buildParams(1, undefined, { ville: val }));
-                }}
+                onChange={(val) => { setVille(val); setSearchParams(buildParams(1, undefined, { ville: val })); }}
                 options={villeOptions}
                 placeholder="Ville / Région…"
                 searchPlaceholder="Rechercher une ville…"
-                dark
               />
             </div>
 
-            <div className="flex-1 min-w-36">
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">Quartier</label>
               <SearchableSelect
                 value={quartier}
-                onChange={(val) => {
-                  setQuartier(val);
-                  setSearchParams(buildParams(1, undefined, { quartier: val }));
-                }}
+                onChange={(val) => { setQuartier(val); setSearchParams(buildParams(1, undefined, { quartier: val })); }}
                 options={quartierOptions}
                 placeholder="Quartier…"
                 searchPlaceholder="Rechercher un quartier…"
-                dark
               />
             </div>
 
-            <div className="w-48">
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">Type de logement</label>
               <SearchableSelect
                 value={typeLogement}
-                onChange={(val) => {
-                  setTypeLogement(val);
-                  setSearchParams(buildParams(1, undefined, { typeLogement: val }));
-                }}
+                onChange={(val) => { setTypeLogement(val); setSearchParams(buildParams(1, undefined, { typeLogement: val })); }}
                 options={typeLogementOptions}
                 placeholder="Tous les types"
                 searchPlaceholder="Rechercher un type…"
-                dark
               />
             </div>
 
-            <div className="w-40">
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">Type de transaction</label>
               <SearchableSelect
                 value={typeTransaction}
-                onChange={(val) => {
-                  setTypeTransaction(val);
-                  setSearchParams(buildParams(1, undefined, { typeTransaction: val }));
-                }}
+                onChange={(val) => { setTypeTransaction(val); setSearchParams(buildParams(1, undefined, { typeTransaction: val })); }}
                 options={typeTransactionOptions}
                 placeholder="Vente & Location"
                 searchPlaceholder="Rechercher…"
-                dark
               />
             </div>
 
             {!isProximityMode && (
-              <div className="relative w-44">
-                <select
-                  value={sort}
-                  onChange={(e) => applySort(e.target.value as SortKey)}
-                  className="w-full h-11 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-8 focus:outline-none focus:border-white/40 cursor-pointer"
-                >
-                  {SORT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value} className="bg-[#0C1A35] text-white">
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
-              </div>
-            )}
-            {isProximityMode && (
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span className="text-xs text-white/50">Rayon :</span>
-                {[1, 3, 5, 10].map((km) => (
-                  <button
-                    key={km}
-                    type="button"
-                    onClick={() => {
-                      const next = new URLSearchParams(searchParams);
-                      next.set("radius", String(km));
-                      next.set("page", "1");
-                      setSearchParams(next);
-                    }}
-                    className={`h-9 px-2.5 rounded-lg text-xs font-medium border transition-colors flex-shrink-0 ${
-                      proximityRadius === km
-                        ? "bg-[#D4A843] border-[#D4A843] text-white"
-                        : "bg-white/10 border-white/20 text-white/70 hover:bg-white/20 hover:text-white"
-                    }`}
-                  >
-                    {km} km
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <button
-              onClick={() => setShowAdvanced(prev => !prev)}
-              className={`h-11 flex items-center gap-2 px-4 rounded-lg border text-sm font-medium transition-colors flex-shrink-0 ${
-                showAvanced || nbAdvancedActive > 0
-                  ? "border-[#D4A843] bg-[#D4A843]/20 text-[#D4A843]"
-                  : "border-white/20 bg-white/10 text-white hover:bg-white/20"
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filtres
-              {nbAdvancedActive > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#D4A843] text-white text-xs flex items-center justify-center font-bold">
-                  {nbAdvancedActive}
-                </span>
-              )}
-            </button>
-
-            <Button
-              onClick={() => applyFilters()}
-              className="h-11 bg-[#D4A843] hover:bg-[#C09535] text-white font-semibold flex-shrink-0"
-            >
-              <Search className="w-4 h-4 mr-2" />
-              Rechercher
-            </Button>
-          </div>
-
-          {/* Panneau filtres avancés desktop */}
-          {showAvanced && (
-            <div className="border-t border-white/10 pt-4 mt-1 grid grid-cols-6 gap-3">
               <div>
-                <label className="block text-xs text-white/60 mb-1">Prix min (FCFA)</label>
-                <input type="number" value={prixMin} onChange={e => setPrixMin(e.target.value)} placeholder="0" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
-              </div>
-              <div>
-                <label className="block text-xs text-white/60 mb-1">Prix max (FCFA)</label>
-                <input type="number" value={prixMax} onChange={e => setPrixMax(e.target.value)} placeholder="Illimité" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
-              </div>
-              <div>
-                <label className="block text-xs text-white/60 mb-1">Chambres min</label>
+                <label className="block text-xs text-slate-500 mb-1">Trier par</label>
                 <div className="relative">
-                  <select value={chambres} onChange={e => setChambres(e.target.value)} className="w-full h-9 appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 pr-7 focus:outline-none focus:border-white/40">
-                    <option value="" className="bg-[#0C1A35]">Toutes</option>
-                    {[1,2,3,4,5].map(n => (<option key={n} value={n} className="bg-[#0C1A35]">{n}+</option>))}
+                  <select
+                    value={sort}
+                    onChange={(e) => applySort(e.target.value as SortKey)}
+                    className="w-full h-9 appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-3 pr-8 focus:outline-none focus:border-slate-400 cursor-pointer"
+                  >
+                    {SORT_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value} className="bg-white text-slate-700">{o.label}</option>
+                    ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs text-white/60 mb-1">Surface min (m²)</label>
-                <input type="number" value={surfaceMin} onChange={e => setSurfaceMin(e.target.value)} placeholder="0" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
-              </div>
-              <div>
-                <label className="block text-xs text-white/60 mb-1">Surface max (m²)</label>
-                <input type="number" value={surfaceMax} onChange={e => setSurfaceMax(e.target.value)} placeholder="Illimitée" className="w-full h-9 bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 focus:outline-none focus:border-white/40 placeholder:text-white/30 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
-              </div>
-              {/* Caractéristiques multi-select */}
-              {(() => {
-                const BOOL_OPTIONS = [
-                  { key: "meuble",    label: "Meublé",           Icon: Armchair,    state: meuble,    set: setMeuble    },
-                  { key: "parking",   label: "Parking",          Icon: Car,         state: parking,   set: setParking   },
-                  { key: "ascenseur", label: "Ascenseur",        Icon: ArrowUpDown, state: ascenseur, set: setAscenseur },
-                  { key: "fumeurs",   label: "Fumeurs acceptés", Icon: Cigarette,   state: fumeurs,   set: setFumeurs   },
-                  { key: "animaux",   label: "Animaux acceptés", Icon: PawPrint,    state: animaux,   set: setAnimaux   },
-                ];
-                const nbBoolSelected = BOOL_OPTIONS.filter(o => o.state).length;
-                const totalSelected  = nbBoolSelected + selectedEquipements.length;
-                const btnLabel = totalSelected === 0 ? "Caractéristiques"
-                  : totalSelected === 1
-                    ? (BOOL_OPTIONS.find(o => o.state)?.label
-                        ?? equipements.find(e => e.id === selectedEquipements[0])?.nom
-                        ?? "1 sélectionné")
-                  : `${totalSelected} sélectionnés`;
+            )}
 
-                const lowerSearch = caracSearch.toLowerCase();
-                const filteredGroups = equipementsGroupes.map(g => ({
-                  ...g,
-                  items: g.items.filter(e => e.nom.toLowerCase().includes(lowerSearch)),
-                })).filter(g => g.items.length > 0);
-
-                return (
-                  <div ref={caracRef} className="relative">
-                    <label className="block text-xs text-white/60 mb-1">Caractéristiques</label>
+            {isProximityMode && (
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Rayon</label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {[1, 3, 5, 10].map((km) => (
                     <button
+                      key={km}
                       type="button"
-                      onClick={() => setCaracOpen(p => !p)}
-                      className={`w-full h-9 flex items-center justify-between gap-2 px-3 rounded-lg border text-sm transition-colors ${
-                        totalSelected > 0
-                          ? "bg-[#D4A843]/15 border-[#D4A843]/50 text-[#D4A843]"
-                          : "bg-white/10 border-white/20 text-white/70 hover:bg-white/20 hover:text-white"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams);
+                        next.set("radius", String(km));
+                        next.set("page", "1");
+                        setSearchParams(next);
+                      }}
+                      className={`h-9 px-3 rounded-lg text-xs font-medium border transition-colors ${
+                        proximityRadius === km
+                          ? "bg-[#D4A843] border-[#D4A843] text-white"
+                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                       }`}
                     >
-                      <span className="truncate text-left">{btnLabel}</span>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {totalSelected > 0 && (
-                          <span className="w-4 h-4 rounded-full bg-[#D4A843] text-white text-[10px] flex items-center justify-center font-bold">
-                            {totalSelected}
-                          </span>
-                        )}
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${caracOpen ? "rotate-180" : ""}`} />
-                      </div>
+                      {km} km
                     </button>
-                    {caracOpen && (
-                      <div className="absolute top-full right-0 mt-1 z-50 w-72 bg-[#0C1A35] border border-white/20 rounded-xl shadow-2xl overflow-hidden">
-                        <div className="p-2 border-b border-white/10">
-                          <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
-                            <input
-                              type="text"
-                              value={caracSearch}
-                              onChange={e => setCaracSearch(e.target.value)}
-                              placeholder="Filtrer…"
-                              className="w-full h-8 bg-white/10 border border-white/15 text-white text-xs rounded-lg pl-8 pr-3 focus:outline-none focus:border-white/30 placeholder:text-white/25"
-                            />
-                          </div>
-                        </div>
-                        <div className="overflow-y-auto max-h-72">
-                          {BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).length > 0 && (
-                            <div>
-                              <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">Options</div>
-                              {BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).map(({ key, label, Icon, state: val, set }) => (
-                                <label
-                                  key={key}
-                                  className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${
-                                    val ? "bg-[#D4A843]/10" : "hover:bg-white/6"
-                                  }`}
-                                >
-                                  <input type="checkbox" checked={val} onChange={e => set(e.target.checked)} className="sr-only" />
-                                  <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${
-                                    val ? "bg-[#D4A843] border-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,0.4)]" : "bg-transparent border-white/20"
-                                  }`}>
-                                    {val && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-                                  </span>
-                                  <Icon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${val ? "text-[#D4A843]/80" : "text-white/35"}`} />
-                                  <span className={`text-sm transition-colors ${val ? "text-white font-medium" : "text-white/70"}`}>{label}</span>
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                          {filteredGroups.map(group => (
-                            <div key={group.categorie}>
-                              <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-white/25 font-semibold">{group.categorie}</div>
-                              {group.items.map(eq => {
-                                const isChecked = selectedEquipements.includes(eq.id);
-                                return (
-                                  <label
-                                    key={eq.id}
-                                    className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${
-                                      isChecked ? "bg-[#D4A843]/10" : "hover:bg-white/6"
-                                    }`}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={e => {
-                                        setSelectedEquipements(prev =>
-                                          e.target.checked ? [...prev, eq.id] : prev.filter(id => id !== eq.id)
-                                        );
-                                      }}
-                                      className="sr-only"
-                                    />
-                                    <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${
-                                      isChecked ? "bg-[#D4A843] border-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,0.4)]" : "bg-transparent border-white/20"
-                                    }`}>
-                                      {isChecked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-                                    </span>
-                                    <span className={`text-sm transition-colors ${isChecked ? "text-white font-medium" : "text-white/70"}`}>{eq.nom}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          ))}
-                          {filteredGroups.length === 0 && BOOL_OPTIONS.filter(o => o.label.toLowerCase().includes(lowerSearch)).length === 0 && (
-                            <p className="text-xs text-white/30 text-center py-4">Aucun résultat</p>
-                          )}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quick toggles : À la une + Meublé */}
+            <div className="border-t border-slate-100 pt-3">
+              <label className="block text-xs text-slate-500 mb-2">Options rapides</label>
+              <div className="flex flex-col gap-2">
+                <label className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer border transition-all ${misEnAvant ? "bg-[#D4A843]/10 border-[#D4A843]/40" : "bg-slate-50 border-slate-100 hover:bg-slate-100"}`}>
+                  <input type="checkbox" checked={misEnAvant} onChange={e => setMisEnAvant(e.target.checked)} className="sr-only" />
+                  <span className={`w-4 h-4 rounded flex items-center justify-center border-2 flex-shrink-0 transition-all ${misEnAvant ? "bg-[#D4A843] border-[#D4A843]" : "bg-transparent border-slate-300"}`}>
+                    {misEnAvant && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                  </span>
+                  <Star className={`w-3.5 h-3.5 flex-shrink-0 ${misEnAvant ? "text-[#D4A843]" : "text-slate-300"}`} />
+                  <span className={`text-sm ${misEnAvant ? "text-[#D4A843] font-medium" : "text-slate-500"}`}>À la une</span>
+                </label>
+                <label className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer border transition-all ${meuble ? "bg-[#D4A843]/10 border-[#D4A843]/40" : "bg-slate-50 border-slate-100 hover:bg-slate-100"}`}>
+                  <input type="checkbox" checked={meuble} onChange={e => setMeuble(e.target.checked)} className="sr-only" />
+                  <span className={`w-4 h-4 rounded flex items-center justify-center border-2 flex-shrink-0 transition-all ${meuble ? "bg-[#D4A843] border-[#D4A843]" : "bg-transparent border-slate-300"}`}>
+                    {meuble && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                  </span>
+                  <Armchair className={`w-3.5 h-3.5 flex-shrink-0 ${meuble ? "text-[#D4A843]" : "text-slate-300"}`} />
+                  <span className={`text-sm ${meuble ? "text-[#D4A843] font-medium" : "text-slate-500"}`}>Meublé</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Prix + Surface + Chambres */}
+            <div className="border-t border-slate-100 pt-3 space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-slate-500">Prix max (FCFA)</label>
+                  <span className="text-xs font-semibold text-[#D4A843]">
+                    {prixMax && Number(prixMax) < 5000000
+                      ? Number(prixMax).toLocaleString("fr-FR")
+                      : "Illimité"}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={5000000}
+                  step={50000}
+                  value={prixMax && Number(prixMax) <= 5000000 ? Number(prixMax) : 5000000}
+                  onChange={e => {
+                    const v = Number(e.target.value);
+                    setPrixMax(v >= 5000000 ? "" : String(v));
+                  }}
+                  className="w-full h-2 rounded-full appearance-none cursor-pointer accent-[#D4A843] bg-slate-200"
+                />
+                <div className="flex justify-between text-[10px] text-slate-300 mt-0.5">
+                  <span>0</span><span>Illimité</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Chambres min</label>
+                  <div className="relative">
+                    <select value={chambres} onChange={e => setChambres(e.target.value)} className="w-full h-9 appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-3 pr-7 focus:outline-none focus:border-slate-400">
+                      <option value="" className="bg-white">Toutes</option>
+                      {[1,2,3,4,5].map(n => (<option key={n} value={n} className="bg-white">{n}+</option>))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Surface min (m²)</label>
+                  <input type="number" value={surfaceMin} onChange={e => setSurfaceMin(e.target.value)} placeholder="0" className="w-full h-9 bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-3 focus:outline-none focus:border-slate-400 placeholder:text-slate-300 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs text-slate-500 mb-1">Surface max (m²)</label>
+                  <input type="number" value={surfaceMax} onChange={e => setSurfaceMax(e.target.value)} placeholder="Illimitée" className="w-full h-9 bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-3 focus:outline-none focus:border-slate-400 placeholder:text-slate-300 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]" />
+                </div>
+              </div>
+            </div>
+
+            {/* Caractéristiques multi-select sidebar */}
+            {(() => {
+              const BOOL_OPTIONS_SIDEBAR = [
+                { key: "parking",   label: "Parking",          Icon: Car,         state: parking,   set: setParking   },
+                { key: "ascenseur", label: "Ascenseur",        Icon: ArrowUpDown, state: ascenseur, set: setAscenseur },
+                { key: "fumeurs",   label: "Fumeurs acceptés", Icon: Cigarette,   state: fumeurs,   set: setFumeurs   },
+                { key: "animaux",   label: "Animaux acceptés", Icon: PawPrint,    state: animaux,   set: setAnimaux   },
+              ];
+              const nbBoolSelected = BOOL_OPTIONS_SIDEBAR.filter(o => o.state).length;
+              const totalSelected  = nbBoolSelected + selectedEquipements.length;
+              const btnLabel = totalSelected === 0 ? "Caractéristiques"
+                : totalSelected === 1
+                  ? (BOOL_OPTIONS_SIDEBAR.find(o => o.state)?.label
+                      ?? equipements.find(e => e.id === selectedEquipements[0])?.nom
+                      ?? "1 sélectionné")
+                : `${totalSelected} sélectionnés`;
+
+              const lowerSearch = caracSearch.toLowerCase();
+              const filteredGroups = equipementsGroupes.map(g => ({
+                ...g,
+                items: g.items.filter(e => e.nom.toLowerCase().includes(lowerSearch)),
+              })).filter(g => g.items.length > 0);
+
+              return (
+                <div ref={caracRef} className="relative border-t border-slate-100 pt-3">
+                  <label className="block text-xs text-slate-500 mb-1">Caractéristiques</label>
+                  <button
+                    type="button"
+                    onClick={() => setCaracOpen(p => !p)}
+                    className={`w-full h-9 flex items-center justify-between gap-2 px-3 rounded-lg border text-sm transition-colors ${
+                      totalSelected > 0
+                        ? "bg-[#D4A843]/10 border-[#D4A843]/50 text-[#D4A843]"
+                        : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+                    }`}
+                  >
+                    <span className="truncate text-left">{btnLabel}</span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {totalSelected > 0 && (
+                        <span className="w-4 h-4 rounded-full bg-[#D4A843] text-white text-[10px] flex items-center justify-center font-bold">
+                          {totalSelected}
+                        </span>
+                      )}
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${caracOpen ? "rotate-180" : ""}`} />
+                    </div>
+                  </button>
+                  {caracOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                      <div className="p-2 border-b border-slate-100">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
+                          <input type="text" value={caracSearch} onChange={e => setCaracSearch(e.target.value)} placeholder="Filtrer…" className="w-full h-8 bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-lg pl-8 pr-3 focus:outline-none focus:border-slate-400 placeholder:text-slate-300" />
                         </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-      </div>
+                      <div className="overflow-y-auto max-h-60">
+                        {BOOL_OPTIONS_SIDEBAR.filter(o => o.label.toLowerCase().includes(lowerSearch)).length > 0 && (
+                          <div>
+                            <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Options</div>
+                            {BOOL_OPTIONS_SIDEBAR.filter(o => o.label.toLowerCase().includes(lowerSearch)).map(({ key, label, Icon, state: val, set }) => (
+                              <label key={key} className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${val ? "bg-[#D4A843]/8" : "hover:bg-slate-50"}`}>
+                                <input type="checkbox" checked={val} onChange={e => set(e.target.checked)} className="sr-only" />
+                                <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${val ? "bg-[#D4A843] border-[#D4A843]" : "bg-transparent border-slate-300"}`}>
+                                  {val && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                                </span>
+                                <Icon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${val ? "text-[#D4A843]/80" : "text-slate-300"}`} />
+                                <span className={`text-sm transition-colors ${val ? "text-slate-800 font-medium" : "text-slate-500"}`}>{label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        {filteredGroups.map(group => (
+                          <div key={group.categorie}>
+                            <div className="px-3 pt-2.5 pb-1 text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{group.categorie}</div>
+                            {group.items.map(eq => {
+                              const isChecked = selectedEquipements.includes(eq.id);
+                              return (
+                                <label key={eq.id} className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-all duration-100 ${isChecked ? "bg-[#D4A843]/8" : "hover:bg-slate-50"}`}>
+                                  <input type="checkbox" checked={isChecked} onChange={e => { setSelectedEquipements(prev => e.target.checked ? [...prev, eq.id] : prev.filter(id => id !== eq.id)); }} className="sr-only" />
+                                  <span className={`w-4 h-4 rounded flex items-center justify-center border-2 transition-all duration-150 flex-shrink-0 ${isChecked ? "bg-[#D4A843] border-[#D4A843]" : "bg-transparent border-slate-300"}`}>
+                                    {isChecked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                                  </span>
+                                  <span className={`text-sm transition-colors ${isChecked ? "text-slate-800 font-medium" : "text-slate-500"}`}>{eq.nom}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        ))}
+                        {filteredGroups.length === 0 && BOOL_OPTIONS_SIDEBAR.filter(o => o.label.toLowerCase().includes(lowerSearch)).length === 0 && (
+                          <p className="text-xs text-slate-400 text-center py-4">Aucun résultat</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
-      {/* ── Contenu ── */}
-      <div className="container mx-auto px-8 py-7">
+          </div>
+          )}
+        </aside>
+
+        {/* ── Contenu principal ── */}
+        <div className="flex-1 min-w-0">
+          <div className="px-4 lg:px-8 py-7">
+
 
         {/* En-tête résultats */}
         <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
@@ -1083,7 +1127,7 @@ const RecherchePage = () => {
 
         {/* ── Résultats ── */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
             {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : items.length === 0 ? (
@@ -1107,7 +1151,7 @@ const RecherchePage = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
             {items.map((bien) => (
               <div key={bien.id} className="relative h-full">
                 {isProximityMode && bien.distance !== undefined && (
@@ -1146,6 +1190,8 @@ const RecherchePage = () => {
             </div>
           );
         })()}
+          </div>
+        </div>
       </div>
       {!showMobileFilters && <ScrollToTop />}
     </div>

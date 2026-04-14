@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { fetchAnnoncePublique, fetchAnnoncesSimilaires, type Bien } from "@/api/bien";
 import { useFavoris } from "@/hooks/useFavoris";
 import { useFavorisAuthModal } from "@/context/FavorisAuthModalContext";
+import { useComparison } from "@/context/ComparisonContext";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
@@ -16,6 +17,7 @@ import TrustScoreCompact, { TrustScoreFull } from "@/components/ui/TrustScoreBad
 import { SkDetailSections } from "@/components/ui/Skeleton";
 import {
   ArrowLeft,
+  GitCompareArrows,
   Loader2,
   MapPin,
   Ruler,
@@ -326,6 +328,7 @@ export default function AnnonceDetail() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const { isFavori, toggleFavori, isAuthenticated } = useFavoris();
   const { openModal } = useFavorisAuthModal();
+  const { isSelected, toggle: toggleComparison, isFull } = useComparison();
 
   // Smooth scroll vers le haut au montage
   useEffect(() => {
@@ -438,6 +441,31 @@ export default function AnnonceDetail() {
               {bien.titre || "Détail de l'annonce"}
             </p>
             <div className="flex items-center gap-2">
+
+              {/* Comparer */}
+              <button
+                onClick={() => toggleComparison(bien)}
+                disabled={!isSelected(bien.id) && isFull}
+                title={
+                  isSelected(bien.id)
+                    ? "Retirer de la comparaison"
+                    : isFull
+                    ? "Maximum 3 biens"
+                    : "Ajouter à la comparaison"
+                }
+                className={`flex items-center gap-1.5 text-xs h-9 px-3 rounded-xl border transition-colors flex-shrink-0 ${
+                  isSelected(bien.id)
+                    ? "bg-[#0C1A35] border-[#0C1A35] text-white"
+                    : isFull
+                    ? "border-slate-100 text-slate-300 cursor-not-allowed"
+                    : "border-slate-100 text-slate-500 hover:border-[#0C1A35] hover:text-[#0C1A35]"
+                }`}
+              >
+                <GitCompareArrows className="w-4 h-4" />
+                <span className="hidden sm:inline">
+                  {isSelected(bien.id) ? "Sélectionné" : "Comparer"}
+                </span>
+              </button>
 
               {/* Favori */}
               <button
@@ -770,48 +798,75 @@ export default function AnnonceDetail() {
                     const etabs = (bien.etablissements && bien.etablissements.length > 0) ? bien.etablissements : overpassEtabs;
                     const sorted = [...etabs].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
                     return sorted.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {sorted.map((e) => {
-                        const cat = getEtabCategory(e.type);
-                        const styles = CATEGORY_STYLES[cat];
-                        const label = ETABLISSEMENT_LABELS[e.type] ?? e.type.replace(/_/g, ' ');
-                        const hasName = !!e.nom && e.nom !== label;
-                        const nom = e.nom || label;
-                        const distText = e.distance
-                          ? e.distance < 1000
-                            ? `${e.distance} m`
-                            : `${(e.distance / 1000).toFixed(1)} km`
-                          : null;
-                        return (
-                          <div
-                            key={e.id}
-                            className="flex items-start gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default"
-                          >
-                            {/* Icon badge */}
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${styles.bg}`}>
-                              <EtablissementIcon type={e.type} className={`w-5 h-5 ${styles.text}`} />
-                            </div>
+                    <div className="relative">
+                      {/* Flèches de navigation */}
+                      <button
+                        onClick={() => {
+                          const container = document.getElementById('etabs-scroll');
+                          if (container) container.scrollBy({ left: -280, behavior: 'smooth' });
+                        }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 !w-8 !h-8 !min-h-0 !p-0 flex-shrink-0 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const container = document.getElementById('etabs-scroll');
+                          if (container) container.scrollBy({ left: 280, behavior: 'smooth' });
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 !w-8 !h-8 !min-h-0 !p-0 flex-shrink-0 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-600 hover:text-[#0C1A35] hover:bg-slate-50 transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
 
-                            {/* Content */}
-                            <div className="min-w-0 flex-1 pt-0.5">
-                              <p className="text-sm font-semibold text-[#0C1A35] truncate leading-tight">
-                                {nom}
-                              </p>
-                              {hasName && (
-                                <span className={`inline-block mt-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${styles.badge}`}>
-                                  {label}
-                                </span>
-                              )}
-                              {distText && (
-                                <div className="flex items-center gap-1 mt-1.5">
-                                  <Navigation className={`w-3 h-3 shrink-0 ${styles.dist}`} />
-                                  <span className={`text-xs font-semibold ${styles.dist}`}>{distText}</span>
-                                </div>
-                              )}
+                      {/* Scrollable container */}
+                      <div
+                        id="etabs-scroll"
+                        className="flex gap-3 overflow-x-auto px-8 py-1 -my-1"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+                      >
+                        <style>{`#etabs-scroll::-webkit-scrollbar { display: none; }`}</style>
+                        {sorted.map((e) => {
+                          const cat = getEtabCategory(e.type);
+                          const styles = CATEGORY_STYLES[cat];
+                          const label = ETABLISSEMENT_LABELS[e.type] ?? e.type.replace(/_/g, ' ');
+                          const hasName = !!e.nom && e.nom !== label;
+                          const nom = e.nom || label;
+                          const distText = e.distance
+                            ? e.distance < 1000
+                              ? `${e.distance} m`
+                              : `${(e.distance / 1000).toFixed(1)} km`
+                            : null;
+                          return (
+                            <div
+                              key={e.id}
+                              className="flex items-start gap-3 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default shrink-0 w-52"
+                            >
+                              {/* Icon badge */}
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${styles.bg}`}>
+                                <EtablissementIcon type={e.type} className={`w-5 h-5 ${styles.text}`} />
+                              </div>
+                              {/* Content */}
+                              <div className="min-w-0 flex-1 pt-0.5">
+                                <p className="text-sm font-semibold text-[#0C1A35] truncate leading-tight">
+                                  {nom}
+                                </p>
+                                {hasName && (
+                                  <span className={`inline-block mt-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${styles.badge}`}>
+                                    {label}
+                                  </span>
+                                )}
+                                {distText && (
+                                  <div className="flex items-center gap-1 mt-1.5">
+                                    <Navigation className={`w-3 h-3 shrink-0 ${styles.dist}`} />
+                                    <span className={`text-xs font-semibold ${styles.dist}`}>{distText}</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
                     <p className="text-sm text-slate-400 text-center py-4">

@@ -13,6 +13,8 @@ import { OwnerAuthProvider } from "@/context/OwnerAuthContext";
 import { LocataireAuthProvider } from "@/context/LocataireAuthContext";
 import { ComptePublicAuthProvider } from "@/context/ComptePublicAuthContext";
 import { FavorisAuthModalProvider } from "@/context/FavorisAuthModalContext";
+import { ComparisonProvider } from "@/context/ComparisonContext";
+import ComparisonBar from "@/components/comparison/ComparisonBar";
 import { SocketProvider } from "@/context/SocketContext";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
@@ -82,6 +84,7 @@ const AdminLocataireDocuments = React.lazy(() => import("./pages/admin/Locataire
 const AdminStatsRevenus = React.lazy(() => import("./pages/admin/StatsRevenus"));
 const ModelesContratPage = React.lazy(() => import("./pages/admin/contrats/ModelesContratPage"));
 const FavorisPage = React.lazy(() => import("./pages/public/Favoris"));
+const ComparaisonPage = React.lazy(() => import("./pages/public/ComparaisonPage"));
 const MonComptePage = React.lazy(() => import("./pages/public/MonCompte"));
 const ConfigMonetisationPage = React.lazy(() => import("./pages/admin/monetisation/ConfigMonetisationPage"));
 const ConfigSitePage = React.lazy(() => import("./pages/admin/parametres/ConfigSitePage"));
@@ -146,6 +149,7 @@ const PublicLayout = () => {
       </main>
       <Footer />
       <GlobalFloatingActions />
+      <ComparisonBar />
     </div>
   );
 };
@@ -160,6 +164,7 @@ const App = () => (
         <AuthProvider>
           <ComptePublicAuthProvider>
           <FavorisAuthModalProvider>
+          <ComparisonProvider>
           <OwnerAuthProvider>
             <LocataireAuthProvider>
               <AuthSessionBridge />
@@ -174,6 +179,7 @@ const App = () => (
                   <Route path="/annonce/:id" element={<PublicAnnonceDetail />} />
                   <Route path="/favoris" element={<FavorisPage />} />
                   <Route path="/mon-compte" element={<MonComptePage />} />
+                  <Route path="/comparaison" element={<ComparaisonPage />} />
                 </Route>
 
                 {/* Espace propriétaires - landing */}
@@ -284,6 +290,7 @@ const App = () => (
               </Suspense>
             </LocataireAuthProvider>
           </OwnerAuthProvider>
+          </ComparisonProvider>
           </FavorisAuthModalProvider>
           </ComptePublicAuthProvider>
         </AuthProvider>

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
-import heroBg from "@/assets/hero-bg.jpg";
+import bgAdmin from "@/assets/bg-admin.png";
 
 // ─── Validation Zod (100 % front, aucune validation HTML) ────────────────────
 
@@ -89,7 +89,7 @@ export default function AdminLogin() {
 
       {/* ── Fond hero ────────────────────────────────────────────────────────── */}
       <img
-        src={heroBg}
+        src={bgAdmin}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover"

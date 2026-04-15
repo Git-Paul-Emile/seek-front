@@ -927,7 +927,7 @@ export default function AnnonceDetail() {
                     className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-[#0C1A35] text-white font-medium hover:bg-[#1A2942] transition-colors mb-3"
                   >
                     <Phone className="w-4 h-4" />
-                    {bien.proprietaire.telephone}
+                    Appeler
                   </a>
                 )}
 

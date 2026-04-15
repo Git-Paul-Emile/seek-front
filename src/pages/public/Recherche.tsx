@@ -1156,8 +1156,10 @@ const RecherchePage = () => {
 
         {/* ── Résultats ── */}
         {isLoading ? (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
-            {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+          <div className="px-4 sm:px-0">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
+              {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+            </div>
           </div>
         ) : displayItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center">
@@ -1180,20 +1182,22 @@ const RecherchePage = () => {
             )}
           </div>
         ) : (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
-            {displayItems.map((bien) => (
-              <div key={bien.id} className="relative h-full">
-                {isProximityMode && bien.distance !== undefined && (
-                  <div className="absolute top-2 left-2 z-10 bg-[#0C1A35]/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow">
-                    <MapPin className="w-3 h-3 text-[#D4A843]" />
-                    {bien.distance < 1
-                      ? `${Math.round(bien.distance * 1000)} m`
-                      : `${bien.distance.toFixed(1)} km`}
-                  </div>
-                )}
-                <PropertyCard property={bien} isApiData />
-              </div>
-            ))}
+          <div className="px-4 sm:px-0">
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
+              {displayItems.map((bien) => (
+                <div key={bien.id} className="relative h-full">
+                  {isProximityMode && bien.distance !== undefined && (
+                    <div className="absolute top-2 left-2 z-10 bg-[#0C1A35]/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow">
+                      <MapPin className="w-3 h-3 text-[#D4A843]" />
+                      {bien.distance < 1
+                        ? `${Math.round(bien.distance * 1000)} m`
+                        : `${bien.distance.toFixed(1)} km`}
+                    </div>
+                  )}
+                  <PropertyCard property={bien} isApiData />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

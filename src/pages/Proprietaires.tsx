@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
@@ -9,7 +9,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/herosectionowner.png";
 import Footer from "@/components/layout/Footer";
 
 // ─── Navbar propriétaires ──────────────────────────────────────────────────
@@ -22,16 +22,8 @@ const NAV_ANCHORS = [
 
 const ProprietairesNavbar = () => {
   const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, owner, logout } = useOwnerAuth();
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const transparent = !scrolled;
+  const transparent = false;
 
   const scrollTo = (href: string) => {
     setOpen(false);
@@ -69,7 +61,7 @@ const ProprietairesNavbar = () => {
         </Link>
 
         {/* Desktop anchor links */}
-        <div className="hidden md:flex items-center gap-7">
+        <div className="hidden lg:flex items-center gap-7">
           {NAV_ANCHORS.map((link) => (
             <button
               key={link.href}
@@ -86,7 +78,7 @@ const ProprietairesNavbar = () => {
         </div>
 
         {/* Auth buttons */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <Link to="/">
             <Button
               variant="ghost"
@@ -153,7 +145,7 @@ const ProprietairesNavbar = () => {
 
         {/* Mobile toggle */}
         <button
-          className={`md:hidden p-1 rounded-md ${
+          className={`lg:hidden p-1 rounded-md ${
             transparent ? "text-white" : "text-[#0C1A35]"
           }`}
           onClick={() => setOpen(!open)}
@@ -171,7 +163,7 @@ const ProprietairesNavbar = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden bg-[#0C1A35] overflow-hidden"
+            className="lg:hidden bg-[#0C1A35] overflow-hidden"
           >
             <div className="px-4 py-5 flex flex-col gap-1">
               {NAV_ANCHORS.map((link) => (
@@ -247,22 +239,23 @@ const Hero = () => {
       alt="Gestion locative SEEK"
       className="absolute inset-0 w-full h-full object-cover"
     />
-    <div className="absolute inset-0 bg-gradient-to-br from-[#0C1A35]/92 via-[#0C1A35]/78 to-[#1E3A6E]/55" />
+    <div className="absolute inset-0 bg-gradient-to-br from-[#0C1A35]/94 via-[#0C1A35]/84 to-[#1E3A6E]/62" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_left_center,rgba(12,26,53,0.45),transparent_42%),linear-gradient(to_top,rgba(12,26,53,0.42),transparent_38%)]" />
 
     <div className="relative z-10 container mx-auto px-4 pt-20">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        className="max-w-2xl"
+        className="max-w-2xl rounded-[2rem] border border-white/10 bg-[#0C1A35]/32 px-6 py-8 shadow-[0_30px_80px_rgba(0,0,0,0.32)] backdrop-blur-[3px] md:px-8 md:py-10"
       >
-        <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[1.1]">
+        <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[1.1] [text-shadow:0_8px_30px_rgba(0,0,0,0.45)]">
           Gérez vos biens<br />
           <span className="text-[#D4A843]">simplement</span><br />
           avec SEEK
         </h1>
 
-        <p className="text-white/60 text-xl mb-10 max-w-lg leading-relaxed">
+        <p className="text-white/60 text-xl mb-10 max-w-lg leading-relaxed [text-shadow:0_4px_18px_rgba(0,0,0,0.35)]">
           La plateforme qui vous accompagne dans toute votre gestion locative :
           annonces, candidatures, documents et bien plus encore.
         </p>
@@ -296,7 +289,7 @@ const Hero = () => {
                 .querySelector("#comment-ca-marche")
                 ?.scrollIntoView({ behavior: "smooth" })
             }
-            className="flex items-center justify-center gap-2 text-white/70 hover:text-white border border-white/20 hover:border-white/40 rounded-lg px-8 py-3.5 text-base font-medium transition-all"
+            className="flex items-center justify-center gap-2 text-white/70 hover:text-white border border-white/20 hover:border-white/40 bg-black/10 rounded-lg px-8 py-3.5 text-base font-medium transition-all backdrop-blur-[2px] [text-shadow:0_4px_18px_rgba(0,0,0,0.3)]"
           >
             Comment ça marche ?
           </button>

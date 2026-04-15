@@ -9,10 +9,10 @@ import {
   XCircle,
   MapPin,
   Loader2,
-  LayoutGrid,
+  Info,
   Trophy,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -208,19 +208,6 @@ export default function ComparaisonPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [diffOnly, setDiffOnly] = useState(false);
-  const [showRecoInfo, setShowRecoInfo] = useState(false);
-  const [showDiffInfo, setShowDiffInfo] = useState(false);
-
-  // Ferme les popups si clic en dehors des zones marquées
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      const target = e.target as HTMLElement;
-      if (!target.closest("[data-reco-popup]")) setShowRecoInfo(false);
-      if (!target.closest("[data-diff-popup]")) setShowDiffInfo(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
 
   const rawIds = searchParams.get("ids") ?? "";
   const ids = rawIds.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 3);
@@ -283,110 +270,43 @@ export default function ComparaisonPage() {
               </h1>
             </div>
             {/* Contrôles sur desktop uniquement dans la ligne titre */}
-            <div className="hidden sm:flex items-center gap-3">
-              {/* Info recommandation */}
-              <div data-reco-popup className="relative">
-                <button
-                  onClick={() => { setShowRecoInfo((v) => !v); setShowDiffInfo(false); }}
-                  className={`flex items-center gap-1 text-xs transition-colors px-2 py-1 rounded-lg ${showRecoInfo ? "bg-[#0C1A35] text-white" : "text-slate-400 hover:text-[#0C1A35]"}`}
-                >
-                  <Trophy className="w-3.5 h-3.5 text-[#D4A843] flex-shrink-0" />
-                  <span>Recommandation</span>
-                </button>
-                {showRecoInfo && (
-                  <div className="absolute right-0 top-full mt-2 w-72 bg-[#0C1A35] text-white text-xs rounded-xl p-4 shadow-xl z-[100] leading-relaxed">
-                    <p className="font-semibold text-[#D4A843] mb-1.5">Comment est choisi le bien recommandé ?</p>
-                    <p className="text-white/70 mb-2">Chaque annonce est notée sur 6 critères. Celui avec le meilleur total est recommandé :</p>
-                    <ul className="space-y-1 text-white/60">
-                      <li>· <span className="text-white/80">Prix le plus bas</span></li>
-                      <li>· <span className="text-white/80">Surface la plus grande</span></li>
-                      <li>· <span className="text-white/80">Nombre de pièces</span> (chambres + salons + sdb)</li>
-                      <li>· <span className="text-white/80">Équipements</span> (meublé, parking, ascenseur, animaux, fumeurs)</li>
-                      <li>· <span className="text-white/80">Score propriétaire</span> le plus élevé</li>
-                      <li>· <span className="text-white/80">Nombre de vues</span> le plus élevé</li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-
+            <div className="hidden sm:flex items-center gap-2">
               {/* Toggle différences */}
-              <div data-diff-popup className="relative flex items-center gap-2">
-                <button
-                  onClick={() => { setShowDiffInfo((v) => !v); setShowRecoInfo(false); }}
-                  className={`text-xs transition-colors px-1 py-1 rounded-lg ${showDiffInfo ? "text-[#D4A843]" : "text-slate-300 hover:text-slate-500"}`}
-                  title="À quoi sert ce filtre ?"
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                </button>
-                {showDiffInfo && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-[#0C1A35] text-white text-xs rounded-xl p-4 shadow-xl z-[100] leading-relaxed">
-                    <p className="font-semibold text-[#D4A843] mb-1">Différences uniquement</p>
-                    <p className="text-white/70">Masque les lignes où tous les biens ont la même valeur. Seules les caractéristiques qui distinguent les annonces restent visibles.</p>
-                  </div>
-                )}
+              <div data-diff-popup className="relative flex items-center gap-1.5">
                 <button onClick={() => setDiffOnly((v) => !v)} className="flex items-center gap-1.5 select-none">
                   <span className="text-xs text-slate-500">Différences uniquement</span>
                   <div className={`relative w-9 h-5 rounded-full transition-colors ${diffOnly ? "bg-[#D4A843]" : "bg-slate-200"}`}>
                     <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${diffOnly ? "translate-x-4" : "translate-x-0"}`} />
                   </div>
                 </button>
+                <div className="relative group/diff-info">
+                  <Info className="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 cursor-default transition-colors" />
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-[#0C1A35] border border-white/10 text-white/80 text-xs px-3 py-2.5 rounded-xl leading-relaxed opacity-0 group-hover/diff-info:opacity-100 transition-opacity pointer-events-none z-[100]">
+                    <p className="font-semibold text-[#D4A843] mb-1">Différences uniquement</p>
+                    Masque les lignes où tous les biens ont la même valeur. Seules les caractéristiques qui distinguent les annonces restent visibles.
+                    <span className="absolute bottom-full right-3 border-4 border-transparent border-b-[#0C1A35]" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Ligne 2 : contrôles sur mobile uniquement */}
-          <div className="sm:hidden flex items-center justify-between pb-2 border-t border-slate-50 pt-2 gap-3">
-            {/* Info recommandation mobile */}
-            <div data-reco-popup className="relative">
-              <button
-                onClick={() => { setShowRecoInfo((v) => !v); setShowDiffInfo(false); }}
-                className={`flex items-center gap-1.5 text-xs transition-colors px-2 py-1 rounded-lg ${showRecoInfo ? "bg-[#0C1A35] text-white" : "text-slate-400"}`}
-              >
-                <Trophy className="w-3.5 h-3.5 text-[#D4A843] flex-shrink-0" />
-                <span>Recommandation</span>
-              </button>
-              {showRecoInfo && (
-                <>
-                  <div className="fixed inset-0 bg-black/40 z-[99]" onClick={() => setShowRecoInfo(false)} />
-                  <div className="fixed left-4 right-4 top-1/2 -translate-y-1/2 bg-[#0C1A35] text-white text-xs rounded-xl p-4 shadow-xl z-[100] leading-relaxed">
-                    <p className="font-semibold text-[#D4A843] mb-1.5">Comment est choisi le bien recommandé ?</p>
-                    <p className="text-white/70 mb-2">Chaque annonce est notée sur 6 critères. Celui avec le meilleur total est recommandé :</p>
-                    <ul className="space-y-1 text-white/60">
-                      <li>· <span className="text-white/80">Prix le plus bas</span></li>
-                      <li>· <span className="text-white/80">Surface la plus grande</span></li>
-                      <li>· <span className="text-white/80">Nombre de pièces</span> (chambres + salons + sdb)</li>
-                      <li>· <span className="text-white/80">Équipements</span> (meublé, parking, ascenseur, animaux, fumeurs)</li>
-                      <li>· <span className="text-white/80">Score propriétaire</span> le plus élevé</li>
-                      <li>· <span className="text-white/80">Nombre de vues</span> le plus élevé</li>
-                    </ul>
-                  </div>
-                </>
-              )}
-            </div>
-
+          <div className="sm:hidden flex items-center justify-end pb-2 border-t border-slate-50 pt-2 gap-2">
             {/* Toggle différences mobile */}
-            <div data-diff-popup className="relative flex items-center gap-1.5">
-              <button
-                onClick={() => { setShowDiffInfo((v) => !v); setShowRecoInfo(false); }}
-                className={`text-xs transition-colors px-1 py-1 rounded-lg ${showDiffInfo ? "text-[#D4A843]" : "text-slate-300"}`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              {showDiffInfo && (
-                <>
-                  <div className="fixed inset-0 bg-black/40 z-[99]" onClick={() => setShowDiffInfo(false)} />
-                  <div className="fixed left-4 right-4 top-1/2 -translate-y-1/2 bg-[#0C1A35] text-white text-xs rounded-xl p-4 shadow-xl z-[100] leading-relaxed">
-                    <p className="font-semibold text-[#D4A843] mb-1">Différences uniquement</p>
-                    <p className="text-white/70">Masque les lignes où tous les biens ont la même valeur. Seules les caractéristiques qui distinguent les annonces restent visibles.</p>
-                  </div>
-                </>
-              )}
-              <button onClick={() => setDiffOnly((v) => !v)} className="flex items-center gap-1.5 select-none">
-                <span className="text-xs text-slate-500">Diff. seulement</span>
-                <div className={`relative w-9 h-5 rounded-full transition-colors ${diffOnly ? "bg-[#D4A843]" : "bg-slate-200"}`}>
-                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${diffOnly ? "translate-x-4" : "translate-x-0"}`} />
-                </div>
-              </button>
+            <button onClick={() => setDiffOnly((v) => !v)} className="flex items-center gap-1.5 select-none">
+              <span className="text-xs text-slate-500">Diff. seulement</span>
+              <div className={`relative w-9 h-5 rounded-full transition-colors ${diffOnly ? "bg-[#D4A843]" : "bg-slate-200"}`}>
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${diffOnly ? "translate-x-4" : "translate-x-0"}`} />
+              </div>
+            </button>
+            <div data-diff-popup className="relative group/diff-info-m">
+              <Info className="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 cursor-default transition-colors" />
+              <div className="absolute right-0 top-full mt-2 w-60 bg-[#0C1A35] border border-white/10 text-white/80 text-xs px-3 py-2.5 rounded-xl leading-relaxed opacity-0 group-hover/diff-info-m:opacity-100 transition-opacity pointer-events-none z-[100]">
+                <p className="font-semibold text-[#D4A843] mb-1">Différences uniquement</p>
+                Masque les lignes où tous les biens ont la même valeur. Seules les caractéristiques qui distinguent les annonces restent visibles.
+                <span className="absolute bottom-full right-3 border-4 border-transparent border-b-[#0C1A35]" />
+              </div>
             </div>
           </div>
         </div>
@@ -423,9 +343,25 @@ export default function ComparaisonPage() {
                           <div className="p-3 flex justify-center">
                           <div className="w-[200px]">
                             {isRecommended && (
-                              <div className="flex items-center justify-center gap-1 mb-2 bg-[#D4A843]/15 rounded-lg py-1">
+                              <div className="flex items-center justify-center gap-1 mb-2 bg-[#D4A843]/15 rounded-lg py-1 px-2">
                                 <Trophy className="w-3 h-3 text-[#D4A843]" />
                                 <span className="text-[10px] font-bold text-[#D4A843] uppercase tracking-wide">Recommandé</span>
+                                <div className="relative group/reco-info ml-0.5 flex-shrink-0">
+                                  <Info className="w-3 h-3 text-[#D4A843]/60 hover:text-[#D4A843] cursor-default transition-colors" />
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-[#0C1A35] border border-white/10 text-white/80 text-xs px-3 py-2.5 rounded-xl leading-relaxed opacity-0 group-hover/reco-info:opacity-100 transition-opacity pointer-events-none z-[100]">
+                                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-[#0C1A35]" />
+                                    <p className="font-semibold text-[#D4A843] mb-1.5">Comment est choisi le bien recommandé ?</p>
+                                    <p className="mb-1.5 text-white/70">Chaque annonce est notée sur 6 critères :</p>
+                                    <ul className="space-y-0.5 text-white/60">
+                                      <li>· <span className="text-white/80">Prix le plus bas</span></li>
+                                      <li>· <span className="text-white/80">Surface la plus grande</span></li>
+                                      <li>· <span className="text-white/80">Nombre de pièces</span> (chambres + salons + sdb)</li>
+                                      <li>· <span className="text-white/80">Équipements</span> (meublé, parking…)</li>
+                                      <li>· <span className="text-white/80">Score propriétaire</span></li>
+                                      <li>· <span className="text-white/80">Nombre de vues</span></li>
+                                    </ul>
+                                  </div>
+                                </div>
                               </div>
                             )}
                             {/* Photo fixe */}

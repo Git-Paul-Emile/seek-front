@@ -25,7 +25,7 @@ import { SkPropertyCards } from "@/components/ui/Skeleton";
 import Pagination from "@/components/ui/Pagination";
 import MarketingBanner from "@/components/home/MarketingBanner";
 
-const ROTATION_INTERVAL = 4000; // ms entre chaque glissement auto
+const ROTATION_INTERVAL = 30000; // 30s entre chaque glissement auto
 const MAX_VISIBLE = 4;
 
 const PropertiesSection = () => {
@@ -33,6 +33,8 @@ const PropertiesSection = () => {
   const [page, setPage] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [featuredOffset, setFeaturedOffset] = useState(0);
+  const featuredAutoRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const LIMIT = 30;
 
   const queryParams = useMemo(() => {
@@ -57,7 +59,7 @@ const PropertiesSection = () => {
   const total = searchResult?.total ?? 0;
   const totalPages = searchResult?.totalPages ?? 1;
 
-  const { data: miseEnAvantData, isLoading: isLoadingPremium } = useAnnoncesMiseEnAvant(20);
+  const { data: miseEnAvantData, isLoading: isLoadingPremium } = useAnnoncesMiseEnAvant(100);
 
   // Extraire les annonces mises en avant (max MAX_VISIBLE si ≤ 5, sinon toutes pour la rotation)
   const annoncesMiseEnAvant = miseEnAvantData?.annonces ?? [];
@@ -79,7 +81,20 @@ const PropertiesSection = () => {
   ];
   carouselSlides.splice(ctaIndex, 0, { type: "cta" });
 
-  // Page 1 : les 4 premières annonces sont toujours "à la une"
+  // Rotation des 4 cartes "à la une" en tête de grille toutes les 30s
+  useEffect(() => {
+    if (annoncesMiseEnAvant.length <= 4) {
+      setFeaturedOffset(0);
+      if (featuredAutoRef.current) clearInterval(featuredAutoRef.current);
+      return;
+    }
+    featuredAutoRef.current = setInterval(() => {
+      setFeaturedOffset(prev => (prev + 4) % annoncesMiseEnAvant.length);
+    }, ROTATION_INTERVAL);
+    return () => { if (featuredAutoRef.current) clearInterval(featuredAutoRef.current); };
+  }, [annoncesMiseEnAvant.length]);
+
+  // Page 1 : les 4 premières positions tournent parmi toutes les annonces premium
   const dernieresAnnonces = useMemo(() => {
     const rawItems = searchResult?.items ?? [];
     const sevenDaysAgo = new Date();
@@ -87,13 +102,16 @@ const PropertiesSection = () => {
     const withIsNew = (item: any) => ({ ...item, isNew: new Date(item.createdAt) >= sevenDaysAgo });
 
     if (page === 1 && annoncesMiseEnAvant.length > 0) {
-      const featured = annoncesMiseEnAvant.slice(0, 4).map(withIsNew);
+      const n = annoncesMiseEnAvant.length;
+      const featured = Array.from({ length: Math.min(MAX_VISIBLE, n) }, (_, i) =>
+        withIsNew(annoncesMiseEnAvant[(featuredOffset + i) % n])
+      );
       const featuredIds = new Set(featured.map((f: any) => f.id));
       const regular = rawItems.filter(item => !featuredIds.has(item.id)).map(withIsNew);
       return [...featured, ...regular].slice(0, LIMIT);
     }
     return rawItems.map(withIsNew);
-  }, [searchResult?.items, annoncesMiseEnAvant, page]);
+  }, [searchResult?.items, annoncesMiseEnAvant, page, featuredOffset]);
   const needsRotation = carouselSlides.length > MAX_VISIBLE;
 
   // Auto-rotation quand > 5 annonces

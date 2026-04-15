@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { registerOwnerApi } from "@/api/ownerAuth";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/herosectionowner.png";
 
 const OWNER_PENDING_OTP_KEY = "ownerPendingOtp";
 

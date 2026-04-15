@@ -18,7 +18,7 @@ import axios from "axios";
 import { loginLocataireApi } from "@/api/locataireAuth";
 import { useLocataireAuth } from "@/context/LocataireAuthContext";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/bg-locataire.png";
 
 const schema = z.object({
   identifiant: z.string().min(1, "L'identifiant est requis"),

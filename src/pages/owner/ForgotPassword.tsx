@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Phone, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import axios from "axios";
 import { forgotPasswordApi } from "@/api/ownerAuth";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/herosectionowner.png";
 
 export default function ForgotPassword() {
   const [identifiant, setIdentifiant] = useState("");

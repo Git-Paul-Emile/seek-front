@@ -11,7 +11,7 @@ import {
 import axios from "axios";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 import { useComptePublicAuth } from "@/context/ComptePublicAuthContext";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/herosectionowner.png";
 
 const OWNER_PENDING_OTP_KEY = "ownerPendingOtp";
 

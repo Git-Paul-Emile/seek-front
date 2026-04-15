@@ -15,6 +15,7 @@ import { useRecherchePublique, useLieux } from "@/hooks/useRecherche";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import { useEquipements } from "@/hooks/useEquipements";
+import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import type { Bien } from "@/api/bien";
 
@@ -188,8 +189,10 @@ const RecherchePage = () => {
   );
   const [caracOpen,    setCaracOpen]    = useState(false);
   const [caracSearch,  setCaracSearch]  = useState("");
-  const caracRef        = useRef<HTMLDivElement>(null);
-  const autoFilterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [featuredOffset,  setFeaturedOffset]  = useState(0);
+  const caracRef           = useRef<HTMLDivElement>(null);
+  const autoFilterTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const featuredAutoRef    = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fermer le dropdown caractéristiques au clic extérieur
   useEffect(() => {
@@ -259,10 +262,37 @@ const RecherchePage = () => {
   const { data: typesTransaction = [] } = useTypeTransactions();
   const { data: lieux }                 = useLieux();
   const { data: equipements = [] }      = useEquipements();
+  const { data: miseEnAvantData }       = useAnnoncesMiseEnAvant(100);
 
-  const items      = data?.items      ?? [];
-  const total      = data?.total      ?? 0;
-  const totalPages = data?.totalPages ?? 1;
+  const items              = data?.items      ?? [];
+  const total              = data?.total      ?? 0;
+  const totalPages         = data?.totalPages ?? 1;
+  const annoncesMiseEnAvant = miseEnAvantData?.annonces ?? [];
+
+  // Rotation des 4 premières positions de grille toutes les 30s
+  const MAX_FEATURED = 4;
+  useEffect(() => {
+    if (annoncesMiseEnAvant.length <= MAX_FEATURED) {
+      setFeaturedOffset(0);
+      if (featuredAutoRef.current) clearInterval(featuredAutoRef.current);
+      return;
+    }
+    featuredAutoRef.current = setInterval(() => {
+      setFeaturedOffset(prev => (prev + MAX_FEATURED) % annoncesMiseEnAvant.length);
+    }, 30000);
+    return () => { if (featuredAutoRef.current) clearInterval(featuredAutoRef.current); };
+  }, [annoncesMiseEnAvant.length]);
+
+  // Items à afficher : annonces premium en tête (rotation 30s) + résultats sans doublons
+  const displayItems = useMemo(() => {
+    if (annoncesMiseEnAvant.length === 0) return items;
+    const n = annoncesMiseEnAvant.length;
+    const featured = Array.from({ length: Math.min(MAX_FEATURED, n) }, (_, i) =>
+      annoncesMiseEnAvant[(featuredOffset + i) % n]
+    ) as unknown as typeof items;
+    const featuredIds = new Set(featured.map(f => f.id));
+    return [...featured, ...items.filter(item => !featuredIds.has(item.id))];
+  }, [items, annoncesMiseEnAvant, featuredOffset]);
 
   useEffect(() => {
     setVille(searchParams.get("ville") ?? "");
@@ -1069,7 +1099,6 @@ const RecherchePage = () => {
         <div className="flex-1 min-w-0">
           <div className="px-4 lg:px-8 py-7">
 
-
         {/* En-tête résultats */}
         <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
           <div>
@@ -1130,7 +1159,7 @@ const RecherchePage = () => {
           <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
             {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
-        ) : items.length === 0 ? (
+        ) : displayItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-28 text-center">
             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
               <Building2 className="w-10 h-10 text-slate-300" />
@@ -1152,7 +1181,7 @@ const RecherchePage = () => {
           </div>
         ) : (
           <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
-            {items.map((bien) => (
+            {displayItems.map((bien) => (
               <div key={bien.id} className="relative h-full">
                 {isProximityMode && bien.distance !== undefined && (
                   <div className="absolute top-2 left-2 z-10 bg-[#0C1A35]/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow">

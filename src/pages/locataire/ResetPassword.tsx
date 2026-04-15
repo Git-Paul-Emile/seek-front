@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Building2, Lock, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { resetPasswordLocataireApi } from "@/api/locataireAuth";
+import heroBg from "@/assets/bg-locataire.png";
 
 const inputCls = (hasError: boolean) =>
   `w-full h-11 rounded-xl text-sm bg-white/10 border text-white
@@ -54,6 +55,13 @@ export default function LocataireResetPassword() {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden bg-[#0C1A35]">
+      <img
+        src={heroBg}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0C1A35] via-[#0C1A35]/82 to-[#0C1A35]/45" />
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between h-16 px-6">

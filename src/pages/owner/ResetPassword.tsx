@@ -3,7 +3,7 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Lock, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { resetPasswordApi } from "@/api/ownerAuth";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/herosectionowner.png";
 
 export default function ResetPassword() {
   const [params] = useSearchParams();

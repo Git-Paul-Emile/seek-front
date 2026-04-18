@@ -38,6 +38,7 @@ const HeroSection = () => {
   // Point de recherche précise (Nominatim)
   const [selectedPoint, setSelectedPoint] = useState<NominatimPoint | null>(null);
   const [radius,        setRadius]        = useState<number>(5);
+  const [formError,     setFormError]     = useState<string | null>(null);
 
   const formatBudget = (value: string) => {
     const num = value.replace(/\D/g, "");
@@ -45,6 +46,19 @@ const HeroSection = () => {
   };
 
   const handleSearch = () => {
+    setFormError(null);
+
+    // Validation : lieu précis exige un type de logement
+    if (selectedPoint && !propertyType) {
+      setFormError("Veuillez sélectionner un type de logement pour la recherche par point précis.");
+      return;
+    }
+    // Validation : au moins un champ renseigné
+    if (!selectedPoint && !searchVille && !searchQuartier && !propertyType) {
+      setFormError("Veuillez renseigner au moins un critère (ville, quartier ou type de logement).");
+      return;
+    }
+
     const params = new URLSearchParams();
 
     if (selectedPoint) {
@@ -246,6 +260,15 @@ const HeroSection = () => {
                         Rechercher
                       </Button>
                     </div>
+
+                    {/* Message d'erreur validation */}
+                    {formError && (
+                      <div className="col-span-full">
+                        <p className="text-xs text-red-300 bg-red-500/15 border border-red-400/30 rounded-lg px-3 py-2 leading-relaxed">
+                          {formError}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Recherche par point précis */}

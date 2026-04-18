@@ -248,26 +248,24 @@ export default function LocataireDetail() {
 
       {/* Lien d'activation - uniquement si contrat validé ET locataire pas encore actif */}
       {peutAfficherLien && (
-        <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-5">
+        <div className="bg-blue-50 border border-blue-200/60 rounded-2xl p-5">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-              <Link2 className="w-4 h-4 text-amber-600" />
+            <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+              <Link2 className="w-4 h-4 text-blue-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-amber-900 text-sm">
-                {locataire.statut === 'INVITE' 
-                  ? 'Contrat validé - le lien d\'activation doit être envoyé uniquement par SMS'
-                  : 'Le locataire peut désormais se connecter à son espace'}
+              <p className="font-semibold text-blue-900 text-sm">
+                Un lien d'activation a été envoyé au locataire par SMS
               </p>
-              <p className="mt-2 text-xs text-amber-700">
-                Le contenu du SMS n'est pas affiché à l'écran. Vous pouvez seulement déclencher l'envoi au numéro du locataire.
+              <p className="mt-1 text-xs text-blue-700">
+                Si le locataire n'a pas reçu le lien ou l'a perdu, vous pouvez en générer un nouveau et le renvoyer.
               </p>
               <button
                 onClick={handleSendActivation}
                 disabled={getLien.isPending}
-                className="mt-3 px-4 py-1.5 bg-[#D4A843] text-white rounded-lg text-xs font-medium hover:bg-[#c49a3a] disabled:opacity-60 transition-colors"
+                className="mt-3 px-4 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
               >
-                {getLien.isPending ? "Envoi..." : "Envoyer le lien par SMS"}
+                {getLien.isPending ? "Envoi en cours..." : "Renvoyer le lien"}
               </button>
             </div>
           </div>

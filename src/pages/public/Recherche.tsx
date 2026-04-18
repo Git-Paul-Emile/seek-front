@@ -15,7 +15,6 @@ import { useRecherchePublique, useLieux } from "@/hooks/useRecherche";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import { useEquipements } from "@/hooks/useEquipements";
-import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import type { Bien } from "@/api/bien";
 
@@ -189,10 +188,8 @@ const RecherchePage = () => {
   );
   const [caracOpen,    setCaracOpen]    = useState(false);
   const [caracSearch,  setCaracSearch]  = useState("");
-  const [featuredOffset,  setFeaturedOffset]  = useState(0);
   const caracRef           = useRef<HTMLDivElement>(null);
   const autoFilterTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const featuredAutoRef    = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fermer le dropdown caractéristiques au clic extérieur
   useEffect(() => {
@@ -262,37 +259,10 @@ const RecherchePage = () => {
   const { data: typesTransaction = [] } = useTypeTransactions();
   const { data: lieux }                 = useLieux();
   const { data: equipements = [] }      = useEquipements();
-  const { data: miseEnAvantData }       = useAnnoncesMiseEnAvant(100);
-
-  const items              = data?.items      ?? [];
-  const total              = data?.total      ?? 0;
-  const totalPages         = data?.totalPages ?? 1;
-  const annoncesMiseEnAvant = miseEnAvantData?.annonces ?? [];
-
-  // Rotation des 4 premières positions de grille toutes les 30s
-  const MAX_FEATURED = 4;
-  useEffect(() => {
-    if (annoncesMiseEnAvant.length <= MAX_FEATURED) {
-      setFeaturedOffset(0);
-      if (featuredAutoRef.current) clearInterval(featuredAutoRef.current);
-      return;
-    }
-    featuredAutoRef.current = setInterval(() => {
-      setFeaturedOffset(prev => (prev + MAX_FEATURED) % annoncesMiseEnAvant.length);
-    }, 30000);
-    return () => { if (featuredAutoRef.current) clearInterval(featuredAutoRef.current); };
-  }, [annoncesMiseEnAvant.length]);
-
-  // Items à afficher : annonces premium en tête (rotation 30s) + résultats sans doublons
-  const displayItems = useMemo(() => {
-    if (annoncesMiseEnAvant.length === 0) return items;
-    const n = annoncesMiseEnAvant.length;
-    const featured = Array.from({ length: Math.min(MAX_FEATURED, n) }, (_, i) =>
-      annoncesMiseEnAvant[(featuredOffset + i) % n]
-    ) as unknown as typeof items;
-    const featuredIds = new Set(featured.map(f => f.id));
-    return [...featured, ...items.filter(item => !featuredIds.has(item.id))];
-  }, [items, annoncesMiseEnAvant, featuredOffset]);
+  const items        = data?.items      ?? [];
+  const total        = data?.total      ?? 0;
+  const totalPages   = data?.totalPages ?? 1;
+  const displayItems = items;
 
   useEffect(() => {
     setVille(searchParams.get("ville") ?? "");
@@ -920,6 +890,28 @@ const RecherchePage = () => {
                     </button>
                   ))}
                 </div>
+                {!isLoading && total === 0 && (
+                  <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-700 font-medium mb-1.5">Aucun bien dans ce rayon</p>
+                    <div className="flex gap-1 flex-wrap">
+                      {[1, 3, 5, 10].filter(km => km > proximityRadius).map((km) => (
+                        <button
+                          key={km}
+                          type="button"
+                          onClick={() => {
+                            const next = new URLSearchParams(searchParams);
+                            next.set("radius", String(km));
+                            next.set("page", "1");
+                            setSearchParams(next);
+                          }}
+                          className="px-2.5 py-1 rounded-md text-xs font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+                        >
+                          {km} km
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1167,9 +1159,35 @@ const RecherchePage = () => {
               <Building2 className="w-10 h-10 text-slate-300" />
             </div>
             <p className="text-[#1A2942] font-semibold text-lg mb-1">Aucune annonce trouvée</p>
-            <p className="text-slate-400 text-sm mb-6 max-w-xs">
-              Aucun bien ne correspond à vos critères. Essayez d'élargir votre recherche.
-            </p>
+            {isProximityMode ? (
+              <>
+                <p className="text-slate-400 text-sm mb-4 max-w-xs">
+                  Aucun bien dans un rayon de <span className="font-semibold text-[#1A2942]">{proximityRadius} km</span>.
+                  Essayez d'augmenter le rayon.
+                </p>
+                <div className="flex gap-2 flex-wrap justify-center mb-6">
+                  {[1, 3, 5, 10].filter(km => km > proximityRadius).map((km) => (
+                    <button
+                      key={km}
+                      type="button"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams);
+                        next.set("radius", String(km));
+                        next.set("page", "1");
+                        setSearchParams(next);
+                      }}
+                      className="px-4 py-2 rounded-lg text-sm font-medium bg-[#0C1A35] text-white hover:bg-[#1A2942] transition-colors"
+                    >
+                      Élargir à {km} km
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-slate-400 text-sm mb-6 max-w-xs">
+                Aucun bien ne correspond à vos critères. Essayez d'élargir votre recherche.
+              </p>
+            )}
             {hasFilters && (
               <Button
                 variant="outline"

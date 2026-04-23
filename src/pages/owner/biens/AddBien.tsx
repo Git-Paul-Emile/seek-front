@@ -6,8 +6,9 @@ import {
   Briefcase, Layers, Ruler, Zap, DollarSign, ImageIcon,
   Plus, X, ChevronRight, Info, Upload, Loader2, AlertCircle,
   ArrowLeftRight, CircleDot, Check, ChevronLeft, ChevronDown,
-  PawPrint, Cigarette, WifiIcon, Search, Star, ArrowLeft, Lock,
+  PawPrint, Cigarette, WifiIcon, Search, Star, ArrowLeft, Lock, Video,
 } from "lucide-react";
+import MapPicker, { type MapPickerValue, type GeocodingData } from "@/components/form/MapPicker";
 import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import { useStatutsBien } from "@/hooks/useStatutsBien";
@@ -185,6 +186,9 @@ export default function AddBien() {
   const [selectedQuartier, setSelectedQuartier] = useState<Quartier | null>(null);
   const [latitude,         setLatitude]         = useState<number | null>(null);
   const [longitude,        setLongitude]        = useState<number | null>(null);
+  const [adresse,          setAdresse]          = useState<string>("");
+  const [pointRepere,      setPointRepere]      = useState<string>("");
+  const [pendingGeoMatch,  setPendingGeoMatch]  = useState<GeocodingData | null>(null);
   const [description,      setDescription]      = useState("");
 
   // ── Onglet 2 : Caractéristiques ──
@@ -221,7 +225,11 @@ export default function AddBien() {
   const [existingPhotoUrls, setExistingPhotoUrls] = useState<string[]>([]);
   const [photoErr,          setPhotoErr]          = useState<string>("");
   const [mainPhotoIndex,    setMainPhotoIndex]     = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef    = useRef<HTMLInputElement>(null);
+  const videoInputRef   = useRef<HTMLInputElement>(null);
+  const [video,             setVideo]             = useState<{ file: File; preview: string } | null>(null);
+  const [existingVideoUrl,  setExistingVideoUrl]  = useState<string | null>(null);
+  const [videoErr,          setVideoErr]          = useState<string>("");
 
   // ── Errors par tab ──
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -254,6 +262,9 @@ export default function AddBien() {
     if (bienToEdit.description)      setDescription(bienToEdit.description);
     if (bienToEdit.latitude)         setLatitude(bienToEdit.latitude);
     if (bienToEdit.longitude)        setLongitude(bienToEdit.longitude);
+    if (bienToEdit.adresse)          setAdresse(bienToEdit.adresse);
+    if (bienToEdit.pointRepere)      setPointRepere(bienToEdit.pointRepere);
+
     if (bienToEdit.surface)          setSurface(String(bienToEdit.surface));
     if (bienToEdit.etage != null)    setEtage(String(bienToEdit.etage));
     if (bienToEdit.nbChambres)       setNbChambres(bienToEdit.nbChambres);
@@ -274,6 +285,7 @@ export default function AddBien() {
     if (bienToEdit.equipements) setSelectedEqs(new Set(bienToEdit.equipements.map(e => e.equipementId)));
     if (bienToEdit.meubles)     setSelectedMeubles(new Set(bienToEdit.meubles.map(m => m.meubleId)));
     if (bienToEdit.photos?.length) setExistingPhotoUrls(bienToEdit.photos);
+    if (bienToEdit.videoUrl)       setExistingVideoUrl(bienToEdit.videoUrl);
 
     // Champs lookup
     const type = types.find(t => t.id === bienToEdit.typeLogementId);
@@ -308,6 +320,43 @@ export default function AddBien() {
     }
   }, [bienToEdit, quartiersList, quartiersLoading, selectedQuartier]);
 
+  // ── Auto-remplissage depuis la carte (cascade pays → ville → quartier) ──
+  useEffect(() => {
+    if (!pendingGeoMatch || !paysList.length) return;
+    const match = paysList.find((p) =>
+      (pendingGeoMatch.countryCode && p.code?.toUpperCase() === pendingGeoMatch.countryCode) ||
+      (pendingGeoMatch.country && p.nom.toLowerCase() === pendingGeoMatch.country.toLowerCase())
+    );
+    if (match && match.id !== selectedPays?.id) {
+      setSelectedPays(match);
+      setSelectedVille(null);
+      setSelectedQuartier(null);
+    }
+  }, [pendingGeoMatch, paysList]);
+
+  useEffect(() => {
+    if (!pendingGeoMatch?.city || !villesList.length || !selectedPays) return;
+    const needle = pendingGeoMatch.city.toLowerCase();
+    const match = villesList.find((v) =>
+      v.nom.toLowerCase().includes(needle) || needle.includes(v.nom.toLowerCase())
+    );
+    if (match && match.id !== selectedVille?.id) {
+      setSelectedVille(match);
+      setSelectedQuartier(null);
+    }
+  }, [pendingGeoMatch, villesList, selectedPays]);
+
+  useEffect(() => {
+    if (!pendingGeoMatch?.suburb || !quartiersList.length || !selectedVille) return;
+    const needle = pendingGeoMatch.suburb.toLowerCase();
+    const match = quartiersList.find((q) =>
+      q.nom.toLowerCase().includes(needle) || needle.includes(q.nom.toLowerCase())
+    );
+    if (match && match.id !== selectedQuartier?.id) {
+      setSelectedQuartier(match);
+    }
+  }, [pendingGeoMatch, quartiersList, selectedVille]);
+
   const currentComparable = JSON.stringify({
     titre: titre.trim() || null,
     description: description.trim() || null,
@@ -320,6 +369,8 @@ export default function AddBien() {
     quartierId: selectedQuartier?.id ?? null,
     latitude: latitude ?? null,
     longitude: longitude ?? null,
+    adresse: adresse.trim() || null,
+    pointRepere: pointRepere.trim() || null,
     surface: parseOptionalNumber(surface),
     etage: parseOptionalNumber(etage),
     nbChambres,
@@ -500,6 +551,7 @@ export default function AddBien() {
     const orderedNewPhotos = photos.length > 0
       ? [photos[mainPhotoIndex].file, ...photos.filter((_, i) => i !== mainPhotoIndex).map((p) => p.file)]
       : [];
+    const newVideo = video?.file ?? null;
     const payload = {
       id: editId || undefined,
       titre: titre.trim(),
@@ -511,6 +563,8 @@ export default function AddBien() {
       region: selectedVille?.nom ?? "",
       quartier: selectedQuartier?.nom || undefined,
       quartierId: selectedQuartier?.id || undefined,
+      adresse: adresse.trim() || undefined,
+      pointRepere: pointRepere.trim() || undefined,
       latitude: selectedQuartier?.latitude ?? latitude,
       longitude: selectedQuartier?.longitude ?? longitude,
       surface: surface ? parseFloat(surface) : undefined,
@@ -533,8 +587,9 @@ export default function AddBien() {
       equipementIds: Array.from(selectedEqs),
       meubles: Array.from(selectedMeubles).map((meubleId) => ({ meubleId, quantite: 1 })),
       existingPhotos: existingPhotoUrls,
+      existingVideoUrl: existingVideoUrl ?? undefined,
     };
-    return { payload, orderedNewPhotos };
+    return { payload, orderedNewPhotos, newVideo };
   };
 
   // ── Submit ──
@@ -547,10 +602,11 @@ export default function AddBien() {
 
     setPendingAction(brouillon ? "draft" : "publish");
     try {
-      const { payload, orderedNewPhotos } = buildPayload();
+      const { payload, orderedNewPhotos, newVideo } = buildPayload();
       await createBien({
         payload: { ...payload, brouillon },
         photos: orderedNewPhotos,
+        video: newVideo,
       });
       toast.success(brouillon ? "Bien enregistré comme brouillon" : "Bien soumis pour publication !");
       navigate("/owner/biens");
@@ -750,6 +806,7 @@ export default function AddBien() {
                         <select
                           value={selectedPays?.id ?? ""}
                           onChange={(e) => {
+                            setPendingGeoMatch(null);
                             const found = paysList.find((p) => p.id === e.target.value) ?? null;
                             setSelectedPays(found);
                             setSelectedVille(null);
@@ -779,6 +836,7 @@ export default function AddBien() {
                         <select
                           value={selectedVille?.id ?? ""}
                           onChange={(e) => {
+                            setPendingGeoMatch(null);
                             const found = villesList.find((v) => v.id === e.target.value) ?? null;
                             setSelectedVille(found);
                             setSelectedQuartier(null);
@@ -814,6 +872,7 @@ export default function AddBien() {
                       <select
                         value={selectedQuartier?.id ?? ""}
                         onChange={(e) => {
+                          setPendingGeoMatch(null);
                           const q = quartiersList.find((q) => q.id === e.target.value) ?? null;
                           setSelectedQuartier(q);
                           setLatitude(q?.latitude ?? null);
@@ -836,7 +895,60 @@ export default function AddBien() {
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                     </div>
                   )}
+                </div>
 
+                {/* Adresse précise */}
+                <div>
+                  <label className={labelCls}>Adresse précise</label>
+                  <input
+                    type="text"
+                    value={adresse}
+                    onChange={(e) => setAdresse(e.target.value)}
+                    placeholder="Ex : 12 Rue de Thiong, Plateau"
+                    className={inputCls}
+                  />
+                </div>
+
+                {/* Point de repère */}
+                <div>
+                  <label className={labelCls}>Point de repère</label>
+                  <input
+                    type="text"
+                    value={pointRepere}
+                    onChange={(e) => setPointRepere(e.target.value)}
+                    placeholder="Ex : En face de la pharmacie centrale"
+                    className={inputCls}
+                  />
+                </div>
+
+                {/* Carte interactive */}
+                <div>
+                  <label className={labelCls}>
+                    Position sur la carte
+                    <span className="ml-1 text-slate-400 font-normal">(optionnel — cliquez ou faites glisser le marqueur)</span>
+                  </label>
+                  <MapPicker
+                    value={latitude !== null && longitude !== null ? { lat: latitude, lng: longitude } : null}
+                    onChange={(v: MapPickerValue) => {
+                      setLatitude(v.lat);
+                      setLongitude(v.lng);
+                      if (v.geocoding?.adresse) setAdresse(v.geocoding.adresse);
+                      if (v.geocoding) setPendingGeoMatch(v.geocoding);
+                    }}
+                  />
+                  {latitude !== null && longitude !== null && (
+                    <p className="mt-1.5 text-xs text-slate-400 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                      <button
+                        type="button"
+                        onClick={() => { setLatitude(null); setLongitude(null); }}
+                        className="ml-2 text-red-400 hover:text-red-600 underline"
+                      >
+                        Effacer
+                      </button>
+                    </p>
+                  )}
                 </div>
 
               </div>
@@ -1268,6 +1380,7 @@ export default function AddBien() {
             Tab 5 - Médias
         ═══════════════════════════════════════════════════════════ */}
         {tab === "medias" && (
+          <>
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -1393,6 +1506,121 @@ export default function AddBien() {
               />
             </div>
           </div>
+
+          {/* ── Vidéo ── */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mt-4">
+            <div className="px-6 py-4 border-b border-slate-50 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[#D4A843]/10 flex items-center justify-center">
+                <Video className="w-3.5 h-3.5 text-[#D4A843]" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-[#0C1A35]">Vidéo de présentation</h2>
+                <p className="text-xs text-slate-400">Optionnelle · MP4, MOV, AVI, WEBM · max 100 Mo</p>
+              </div>
+            </div>
+            <div className="p-6">
+              {videoErr && (
+                <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-xs text-red-500">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> {videoErr}
+                </div>
+              )}
+
+              {/* Vidéo existante (mode édition) */}
+              {existingVideoUrl && !video && (
+                <div className="mb-4 relative rounded-xl overflow-hidden border border-slate-100 bg-black">
+                  <video
+                    src={existingVideoUrl}
+                    controls
+                    className="w-full max-h-64 object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setExistingVideoUrl(null)}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                    title="Supprimer la vidéo"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Aperçu nouvelle vidéo */}
+              {video && (
+                <div className="mb-4 relative rounded-xl overflow-hidden border border-slate-100 bg-black">
+                  <video
+                    src={video.preview}
+                    controls
+                    className="w-full max-h-64 object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      URL.revokeObjectURL(video.preview);
+                      setVideo(null);
+                    }}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                    title="Supprimer la vidéo"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-3 py-1 text-xs text-white truncate">
+                    {video.file.name} · {(video.file.size / 1024 / 1024).toFixed(1)} Mo
+                  </div>
+                </div>
+              )}
+
+              {/* Zone d'upload */}
+              {!video && !existingVideoUrl && (
+                <button
+                  type="button"
+                  onClick={() => videoInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-slate-200 rounded-2xl p-10 flex flex-col items-center gap-3 text-slate-400 hover:border-[#D4A843]/40 hover:text-[#D4A843]/70 hover:bg-[#D4A843]/5 transition-all cursor-pointer"
+                >
+                  <Video className="w-8 h-8" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Cliquez pour ajouter une vidéo</p>
+                    <p className="text-xs mt-0.5">MP4, MOV, AVI, WEBM · max 100 Mo</p>
+                  </div>
+                </button>
+              )}
+
+              {(video || existingVideoUrl) && (
+                <button
+                  type="button"
+                  onClick={() => videoInputRef.current?.click()}
+                  className="mt-2 text-xs text-[#D4A843] hover:underline"
+                >
+                  Remplacer la vidéo
+                </button>
+              )}
+
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/mp4,video/quicktime,video/avi,video/x-msvideo,video/webm,video/x-matroska"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (videoInputRef.current) videoInputRef.current.value = "";
+                  if (!f) return;
+                  const ALLOWED = ["video/mp4","video/quicktime","video/avi","video/x-msvideo","video/webm","video/x-matroska"];
+                  if (!ALLOWED.includes(f.type)) {
+                    setVideoErr("Format non supporté. Utilisez MP4, MOV, AVI ou WEBM.");
+                    return;
+                  }
+                  if (f.size > 100 * 1024 * 1024) {
+                    setVideoErr("Vidéo trop volumineuse. Maximum 100 Mo.");
+                    return;
+                  }
+                  setVideoErr("");
+                  if (video) URL.revokeObjectURL(video.preview);
+                  setVideo({ file: f, preview: URL.createObjectURL(f) });
+                  setExistingVideoUrl(null);
+                }}
+              />
+            </div>
+          </div>
+          </>
         )}
 
         </div>{/* end pointer-events wrapper */}

@@ -39,10 +39,12 @@ export const useCreateBien = () => {
     mutationFn: ({
       payload,
       photos,
+      video,
     }: {
       payload: CreateBienPayload;
       photos: File[];
-    }) => createBien(payload, photos),
+      video?: File | null;
+    }) => createBien(payload, photos, video),
     onSuccess: () => qc.invalidateQueries({ queryKey: [QK] }),
   });
 };

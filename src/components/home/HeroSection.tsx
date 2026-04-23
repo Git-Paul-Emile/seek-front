@@ -37,7 +37,7 @@ const HeroSection = () => {
 
   // Point de recherche précise (Nominatim)
   const [selectedPoint, setSelectedPoint] = useState<NominatimPoint | null>(null);
-  const [radius,        setRadius]        = useState<number>(5);
+  const [radius,        setRadius]        = useState<number>(3);
   const [formError,     setFormError]     = useState<string | null>(null);
 
   const formatBudget = (value: string) => {
@@ -304,27 +304,72 @@ const HeroSection = () => {
                           dark
                         />
 
-                        {/* Sélecteur de rayon */}
-                        <div className="mt-3">
-                          <label className="text-white/50 text-xs font-medium block mb-1.5 ml-0.5">
-                            Rayon de recherche
-                          </label>
-                          <div className="flex gap-2">
-                            {[1, 3, 5, 10].map((km) => (
-                              <button
-                                key={km}
-                                type="button"
-                                onClick={() => setRadius(km)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                                  radius === km
-                                    ? "bg-[#D4A843] border-[#D4A843] text-white"
-                                    : "bg-white/10 border-white/20 text-white/60 hover:bg-white/20 hover:text-white"
-                                }`}
-                              >
-                                {km} km
-                              </button>
-                            ))}
-                          </div>
+                        {/* Sélecteur de rayon — slider */}
+                        <div className="mt-4">
+                          {(() => {
+                            const disabled = !propertyType;
+                            const zone = disabled
+                              ? { label: "Sélectionnez un type de logement", sub: "pour activer le rayon", color: "#ffffff40" }
+                              : radius <= 2
+                              ? { label: "À proximité immédiate", sub: "Accessible à pied",       color: "#4ade80" }
+                              : radius <= 5
+                              ? { label: "Zone proche",           sub: "5–10 min en voiture",     color: "#D4A843" }
+                              : radius <= 9
+                              ? { label: "Zone intermédiaire",    sub: "15–20 min en voiture",    color: "#fb923c" }
+                              :   { label: "Zone élargie",        sub: "Au-delà de 10 km",        color: "#f87171" };
+                            const pct = ((radius - 1) / 19) * 100;
+                            const trackColor = disabled ? "rgba(255,255,255,0.1)" : zone.color;
+                            return (
+                              <div className={disabled ? "opacity-50" : ""}>
+                                {/* En-tête : label zone + valeur km */}
+                                <div className="flex items-center justify-between mb-2">
+                                  <div>
+                                    <span className="text-xs font-semibold" style={{ color: zone.color }}>
+                                      {zone.label}
+                                    </span>
+                                    <span className="text-white/35 text-xs ml-1.5">· {zone.sub}</span>
+                                  </div>
+                                  {!disabled && (
+                                    <span className="text-sm font-bold text-white tabular-nums">{radius} km</span>
+                                  )}
+                                </div>
+
+                                {/* Slider */}
+                                <div className="relative h-6 flex items-center">
+                                  <div className="absolute inset-x-0 h-1.5 rounded-full bg-white/15" />
+                                  <div
+                                    className="absolute left-0 h-1.5 rounded-full transition-all duration-150"
+                                    style={{ width: `${pct}%`, background: trackColor }}
+                                  />
+                                  <input
+                                    type="range"
+                                    min={1} max={20} step={1}
+                                    value={radius}
+                                    disabled={disabled}
+                                    onChange={(e) => setRadius(Number(e.target.value))}
+                                    className={`relative w-full appearance-none bg-transparent transition-opacity
+                                      ${disabled ? "cursor-not-allowed" : "cursor-pointer"}
+                                      [&::-webkit-slider-thumb]:appearance-none
+                                      [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+                                      [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white
+                                      [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2
+                                      [&:not(:disabled)]::[&::-webkit-slider-thumb]:hover:scale-125
+                                      [&::-webkit-slider-thumb]:transition-transform
+                                      [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4
+                                      [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white
+                                      [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-transparent`}
+                                  />
+                                </div>
+
+                                {/* Graduations */}
+                                <div className="flex justify-between mt-1 px-0.5">
+                                  {["1", "5", "10", "15", "20+"].map((t) => (
+                                    <span key={t} className="text-[10px] text-white/25">{t}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     )}

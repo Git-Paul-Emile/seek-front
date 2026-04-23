@@ -219,7 +219,7 @@ const Navbar = () => {
                   : "border-[#0C1A35]/20 text-[#0C1A35] hover:border-[#D4A843] hover:text-[#D4A843]"
               }`}
             >
-              Espace propriétaire
+              Publier une annonce
             </Link>
           )}
         </div>

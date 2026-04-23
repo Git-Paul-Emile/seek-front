@@ -50,6 +50,7 @@ export interface Bien {
   ville: string | null;
   quartier: string | null;
   adresse: string | null;
+  pointRepere: string | null;
   latitude: number | null;
   longitude: number | null;
   surface: number | null;
@@ -73,6 +74,7 @@ export interface Bien {
   caution: number | null;
   disponibleLe: string | null;
   photos: string[];
+  videoUrl: string | null;
   actif: boolean;
   statutAnnonce: StatutAnnonce;
   noteAdmin: string | null;
@@ -144,6 +146,7 @@ export interface SaveDraftPayload {
   equipementIds?: string[];
   meubles?: { meubleId: string; quantite: number }[];
   existingPhotos?: string[];
+  existingVideoUrl?: string | null;
   brouillon?: boolean;
 }
 
@@ -188,11 +191,13 @@ export const fetchDraft = (): Promise<Bien | null> =>
 
 export const saveDraft = (
   payload: SaveDraftPayload,
-  newPhotos: File[]
+  newPhotos: File[],
+  newVideo?: File | null
 ): Promise<Bien> => {
   const formData = new FormData();
   formData.append("data", JSON.stringify(payload));
   newPhotos.forEach((f) => formData.append("photos", f));
+  if (newVideo) formData.append("video", newVideo);
   return api
     .post<{ data: Bien }>("/draft", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -204,10 +209,11 @@ export const saveDraft = (
 // save as draft, then optionally submit for publication.
 export const createBien = async (
   payload: CreateBienPayload,
-  newPhotos: File[]
+  newPhotos: File[],
+  newVideo?: File | null
 ): Promise<Bien> => {
   const { brouillon = true, ...draftPayload } = payload;
-  const draft = await saveDraft(draftPayload, newPhotos);
+  const draft = await saveDraft(draftPayload, newPhotos, newVideo);
   if (brouillon) return draft;
   return soumettreAnnonce(draft.id);
 };

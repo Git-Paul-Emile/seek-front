@@ -81,7 +81,6 @@ const AdminTransactions = React.lazy(() => import("./pages/admin/TransactionsAdm
 const AdminPromotions = React.lazy(() => import("./pages/admin/PromotionsAdmin"));
 const AdminFormulesPremium = React.lazy(() => import("./pages/admin/FormulesPremium"));
 const AdminLocataireDocuments = React.lazy(() => import("./pages/admin/LocataireDocuments"));
-const AdminStatsRevenus = React.lazy(() => import("./pages/admin/StatsRevenus"));
 const ModelesContratPage = React.lazy(() => import("./pages/admin/contrats/ModelesContratPage"));
 const FavorisPage = React.lazy(() => import("./pages/public/Favoris"));
 const ComparaisonPage = React.lazy(() => import("./pages/public/ComparaisonPage"));
@@ -98,6 +97,10 @@ const EtatsDesLieuxListLocataire = React.lazy(() => import("./pages/locataire/et
 const OwnerNotificationsPage = React.lazy(() => import("./pages/owner/NotificationsPage"));
 const LocataireNotificationsPage = React.lazy(() => import("./pages/locataire/NotificationsPage"));
 const AdminNotificationsPage = React.lazy(() => import("./pages/admin/NotificationsPage"));
+const TemoignagesAdminPage = React.lazy(() => import("./pages/admin/TemoignagesAdmin"));
+const PagesLegalesAdminPage = React.lazy(() => import("./pages/admin/parametres/PagesLegalesAdmin"));
+const PageLegalePage = React.lazy(() => import("./pages/public/PageLegale"));
+const AProposPage = React.lazy(() => import("./pages/public/APropos"));
 
 const queryClient = new QueryClient();
 
@@ -180,6 +183,10 @@ const App = () => (
                   <Route path="/favoris" element={<FavorisPage />} />
                   <Route path="/mon-compte" element={<MonComptePage />} />
                   <Route path="/comparaison" element={<ComparaisonPage />} />
+                  <Route path="/politique-confidentialite" element={<PageLegalePage />} />
+                  <Route path="/conditions-utilisation" element={<PageLegalePage />} />
+                  <Route path="/conformite-donnees" element={<PageLegalePage />} />
+                  <Route path="/a-propos" element={<AProposPage />} />
                 </Route>
 
                 {/* Espace propriétaires - landing */}
@@ -278,12 +285,13 @@ const App = () => (
                     <Route path="premium/historique"      element={<AdminPromotions />} />
                     <Route path="premium/formules"        element={<AdminFormulesPremium />} />
                     <Route path="locataires/:id/documents" element={<AdminLocataireDocuments />} />
-                    <Route path="stats/revenus"            element={<AdminStatsRevenus />} />
                     <Route path="contrats/modeles"         element={<ModelesContratPage />} />
                     <Route path="monetisation/config"         element={<ConfigMonetisationPage />} />
                     <Route path="parametres/config-site"      element={<ConfigSitePage />} />
                     <Route path="signalements"         element={<SignalementsAdmin />} />
                     <Route path="notifications"         element={<AdminNotificationsPage />} />
+                    <Route path="temoignages"           element={<TemoignagesAdminPage />} />
+                    <Route path="parametres/pages-legales" element={<PagesLegalesAdminPage />} />
                   </Route>
                 </Route>
               </Routes>

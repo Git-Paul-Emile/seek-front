@@ -18,6 +18,7 @@ export interface Transaction {
   devise: string;
   modePaiement: string;
   provider?: string;
+  reference?: string;
   transactionId?: string;
   dateInitiation: string;
   dateConfirmation?: string;
@@ -25,6 +26,7 @@ export interface Transaction {
   bailId?: string;
   echeanceId?: string;
   locataireId?: string;
+  note?: string;
   metadata?: {
     formuleId?: string;
     formuleNom?: string;
@@ -39,6 +41,12 @@ export interface Transaction {
     id: string;
     nom: string;
     prenom: string;
+    telephone: string;
+  };
+  proprietaire?: {
+    id: string;
+    prenom: string;
+    nom: string;
     telephone: string;
   };
 }
@@ -84,7 +92,8 @@ export interface AdminTransactionStats {
   montantTotal: number;
   montantMois: number;
   montantAnnee: number;
-  parType: { type: string; count: number; montant: number }[];
+  parType: { type: string; nombre: number; montant: number }[];
+  par12Mois: { mois: string; label: string; count: number; montant: number }[];
 }
 
 export const getAdminHistoriqueTransactions = (params?: {
@@ -95,6 +104,7 @@ export const getAdminHistoriqueTransactions = (params?: {
   proprietaireId?: string;
   dateDebut?: string;
   dateFin?: string;
+  search?: string;
 }): Promise<{ data: Transaction[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> =>
   api
     .get<{ data: { data: Transaction[]; pagination: { page: number; limit: number; total: number; totalPages: number } } }>("/admin", { params })

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Star, Loader2, TrendingUp } from "lucide-react";
+import { Star, TrendingUp, StopCircle, RefreshCw } from "lucide-react";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import { useAdminHistoriquePromotions, useAdminStatsPromotions } from "@/hooks/usePremium";
+import { useAdminHistoriquePromotions, useAdminStatsPromotions, useAdminArreterPromotion, useAdminTraiterExpires } from "@/hooks/usePremium";
 import { SkTableRows } from "@/components/ui/Skeleton";
 
 const STATUT_COLORS: Record<string, string> = {
@@ -25,16 +25,33 @@ export default function PromotionsAdmin() {
     statut: statutFilter || undefined,
   });
   const { data: stats } = useAdminStatsPromotions();
+  const arreterMutation = useAdminArreterPromotion();
+  const traiterExpiresMutation = useAdminTraiterExpires();
 
   const promotions = data?.data ?? [];
   const pagination = data?.pagination;
 
+  const handleArreter = (id: string, titre?: string) => {
+    if (!confirm(`Arrêter la promotion pour "${titre ?? "ce bien"}" et notifier le propriétaire ?`)) return;
+    arreterMutation.mutate({ id });
+  };
+
   return (
     <div className="space-y-6">
       <Breadcrumb items={[{ label: "Dashboard", to: "/admin/dashboard" }, { label: "Promotions" }]} />
-      <div>
-        <h1 className="text-2xl font-bold text-[#0C1A35]">Mises en avant premium</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Historique des promotions payantes</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0C1A35]">Mises en avant premium</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Historique des promotions payantes</p>
+        </div>
+        <button
+          onClick={() => traiterExpiresMutation.mutate()}
+          disabled={traiterExpiresMutation.isPending}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${traiterExpiresMutation.isPending ? "animate-spin" : ""}`} />
+          Traiter expirées
+        </button>
       </div>
 
       {/* Stats */}
@@ -101,11 +118,13 @@ export default function PromotionsAdmin() {
             <thead className="border-b border-slate-100">
               <tr>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Bien</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Propriétaire</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Formule</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Montant</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Statut</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Début</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Fin</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -113,6 +132,9 @@ export default function PromotionsAdmin() {
                 <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-5 py-3.5 text-slate-700 font-medium max-w-[150px] truncate">
                     {p.bien?.titre ?? ""}
+                  </td>
+                  <td className="px-5 py-3.5 text-slate-500 text-xs">
+                    {p.proprietaire ? `${p.proprietaire.prenom} ${p.proprietaire.nom}` : "-"}
                   </td>
                   <td className="px-5 py-3.5 text-slate-600 text-xs">{p.formuleNom}</td>
                   <td className="px-5 py-3.5 font-semibold text-[#D4A843]">{fmtMontant(p.montant)}</td>
@@ -123,6 +145,18 @@ export default function PromotionsAdmin() {
                   </td>
                   <td className="px-5 py-3.5 text-slate-400 text-xs">{new Date(p.dateDebut).toLocaleDateString("fr-FR")}</td>
                   <td className="px-5 py-3.5 text-slate-400 text-xs">{new Date(p.dateFin).toLocaleDateString("fr-FR")}</td>
+                  <td className="px-5 py-3.5">
+                    {p.statut === "ACTIVE" && (
+                      <button
+                        onClick={() => handleArreter(p.id, p.bien?.titre)}
+                        disabled={arreterMutation.isPending}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
+                      >
+                        <StopCircle className="w-3.5 h-3.5" />
+                        Arrêter
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

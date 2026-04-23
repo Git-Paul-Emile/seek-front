@@ -134,11 +134,14 @@ const Footer = () => {
         <div className="border-t border-white/8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/25">
           <span>© {new Date().getFullYear()} SEEK. Tous droits réservés.</span>
           <div className="flex gap-5">
-            <Link to="/confidentialite" className="hover:text-white/55 transition-colors">
+            <Link to="/politique-confidentialite" className="hover:text-white/55 transition-colors">
               Confidentialité
             </Link>
-            <Link to="/cgu" className="hover:text-white/55 transition-colors">
+            <Link to="/conditions-utilisation" className="hover:text-white/55 transition-colors">
               CGU
+            </Link>
+            <Link to="/conformite-donnees" className="hover:text-white/55 transition-colors">
+              Conformité
             </Link>
           </div>
         </div>

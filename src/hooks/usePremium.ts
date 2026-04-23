@@ -9,6 +9,8 @@ import {
   adminDeleteFormule,
   adminGetHistoriquePromotions,
   adminGetStatsPromotions,
+  adminArreterPromotion,
+  adminTraiterExpires,
   type FormulePremium,
   type FormulePremiumFull,
   type MoyenPaiement
@@ -139,6 +141,7 @@ export const useAdminHistoriqueTransactions = (params?: {
   proprietaireId?: string;
   dateDebut?: string;
   dateFin?: string;
+  search?: string;
 }) =>
   useQuery({
     queryKey: ["admin-historique-transactions", params],
@@ -147,6 +150,33 @@ export const useAdminHistoriqueTransactions = (params?: {
 
 export const useAdminStatsTransactions = () =>
   useQuery({ queryKey: ["admin-stats-transactions"], queryFn: getAdminStatsTransactions });
+
+// ─── Admin Arrêt Promotion ────────────────────────────────────────────────────
+
+export const useAdminArreterPromotion = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, motif }: { id: string; motif?: string }) => adminArreterPromotion(id, motif),
+    onSuccess: () => {
+      toast.success("Promotion arrêtée, propriétaire notifié");
+      qc.invalidateQueries({ queryKey: ["admin-historique-promotions"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats-promotions"] });
+    },
+    onError: () => toast.error("Erreur lors de l'arrêt de la promotion"),
+  });
+};
+
+export const useAdminTraiterExpires = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: adminTraiterExpires,
+    onSuccess: (data) => {
+      toast.success(`${data.traite} promotion(s) expirée(s) traitée(s)`);
+      qc.invalidateQueries({ queryKey: ["admin-historique-promotions"] });
+    },
+    onError: () => toast.error("Erreur lors du traitement des expirations"),
+  });
+};
 
 // Type pour l'affichage
 export type { FormulePremium, FormulePremiumFull, MoyenPaiement, Transaction };

@@ -6,11 +6,6 @@ import { useConfigMonetisation, useUpdateConfigMonetisation } from "@/hooks/useM
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const inputCls =
-  "w-full h-10 px-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm " +
-  "text-slate-700 outline-none focus:border-[#D4A843]/60 focus:bg-white transition-all";
-
-const labelCls = "block text-xs font-medium text-slate-500 mb-1.5";
 
 // ─── Toggle ───────────────────────────────────────────────────────────────────
 
@@ -58,16 +53,12 @@ export default function ConfigMonetisationPage() {
 
   const [form, setForm] = useState({
     miseEnAvantActive: false,
-    commissionActive: false,
-    tauxCommission: 0,
   });
 
   useEffect(() => {
     if (config) {
       setForm({
         miseEnAvantActive: config.miseEnAvantActive,
-        commissionActive: config.commissionActive,
-        tauxCommission: config.tauxCommission,
       });
     }
   }, [config]);
@@ -109,44 +100,12 @@ export default function ConfigMonetisationPage() {
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-2">
         <h2 className="text-sm font-semibold text-slate-700 mb-2">Modules actifs</h2>
         <Toggle
-          checked={form.commissionActive}
-          onChange={(v) => setForm((f) => ({ ...f, commissionActive: v }))}
-          label="Commission sur loyers"
-          description="Prélève un pourcentage sur chaque paiement de loyer enregistré."
-        />
-        <Toggle
           checked={form.miseEnAvantActive}
           onChange={(v) => setForm((f) => ({ ...f, miseEnAvantActive: v }))}
           label="Mises en avant payantes"
           description="Permet aux propriétaires de booster leurs annonces via une formule premium."
         />
       </div>
-
-      {form.commissionActive && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-slate-700 mb-4">Taux de commission</h2>
-          <div className="max-w-xs">
-            <label className={labelCls}>Taux (%) appliqué sur chaque loyer payé</label>
-            <div className="relative">
-              <input
-                type="number"
-                step={0.5}
-                value={form.tauxCommission}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, tauxCommission: parseFloat(e.target.value) || 0 }))
-                }
-                className={`${inputCls} pr-8`}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">
-                %
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Exemple : 5% sur un loyer de 100 000 FCFA = 5 000 FCFA de commission
-            </p>
-          </div>
-        </div>
-      )}
 
       <div className="flex justify-end">
         <button

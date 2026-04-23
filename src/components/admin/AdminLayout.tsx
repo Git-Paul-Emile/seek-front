@@ -29,6 +29,7 @@ import {
   Settings2,
   PanelLeft,
   PanelLeftClose,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -85,7 +86,6 @@ const NAV_GROUPS = [
       { to: "/admin/premium/formules",    label: "Formules premium",  icon: Star },
       { to: "/admin/premium/historique",  label: "Mises en avant",    icon: TrendingUp },
       { to: "/admin/transactions",        label: "Transactions",      icon: CreditCard },
-      { to: "/admin/stats/revenus",       label: "Stats revenus",     icon: DollarSign },
     ],
   },
   {
@@ -95,6 +95,7 @@ const NAV_GROUPS = [
     children: [
       { to: "/admin/monetisation/config", label: "Monétisation", icon: DollarSign },
       { to: "/admin/parametres/config-site", label: "Configuration globale", icon: Settings2 },
+      { to: "/admin/parametres/pages-legales", label: "Pages légales", icon: Shield },
     ],
   },
   {
@@ -354,6 +355,23 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
                   {isOpen && <span className="flex-1">Signalements</span>}
                 </>
               )}
+            </NavLink>
+          </li>
+
+          {/* Témoignages */}
+          <li>
+            <NavLink
+              to="/admin/temoignages"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                transition-colors duration-150 ${
+                  isActive
+                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                }`}
+            >
+              <MessageSquare className="w-4 h-4 flex-shrink-0" />
+              {isOpen && <span className="flex-1">Témoignages</span>}
             </NavLink>
           </li>
 

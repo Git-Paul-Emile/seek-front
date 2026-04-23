@@ -84,6 +84,12 @@ export interface PromotionHistory {
     ville: string | null;
     quartier: string | null;
   };
+  proprietaire?: {
+    id: string;
+    prenom: string;
+    nom: string;
+    telephone: string;
+  };
 }
 
 export interface HistoriqueResponse {
@@ -210,3 +216,9 @@ export const adminGetHistoriquePromotions = (params?: {
 
 export const adminGetStatsPromotions = (): Promise<AdminPromotionStats> =>
   api.get<{ data: AdminPromotionStats }>("/admin/stats").then((r) => r.data.data);
+
+export const adminArreterPromotion = (id: string, motif?: string): Promise<{ success: boolean; message: string }> =>
+  api.post<{ data: { success: boolean; message: string } }>(`/admin/${id}/arreter`, { motif }).then((r) => r.data.data);
+
+export const adminTraiterExpires = (): Promise<{ traite: number }> =>
+  api.post<{ data: { traite: number } }>("/admin/traiter-expires", {}).then((r) => r.data.data);

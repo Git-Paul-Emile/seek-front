@@ -4,9 +4,9 @@ const OwnerStepsSection = () => (
   <section className="py-20 bg-white">
     <div className="container mx-auto px-8">
       <div className="text-center mb-14">
-        <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">Propriétaires</p>
-        <h2 className="text-3xl md:text-4xl font-bold text-[#1A2942] mb-2">Publiez en quelques étapes</h2>
-        <p className="text-slate-400 text-sm">Simple, rapide et gratuit</p>
+        <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">Comment ça marche</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-[#1A2942] mb-2">De l'inscription à la première visite : 5 étapes simples</h2>
+        <p className="text-slate-400 text-sm">Aucun technicien requis · Zéro commission · 100 % en ligne</p>
       </div>
 
       <div className="max-w-6xl mx-auto flex flex-wrap justify-center gap-8">

@@ -1,5 +1,16 @@
   import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import {
+  WhatsappShareButton,
+  TwitterShareButton,
+  FacebookShareButton,
+  LinkedinShareButton,
+  WhatsappIcon,
+  XIcon,
+  FacebookIcon,
+  LinkedinIcon,
+} from "react-share";
+import { Helmet } from "react-helmet-async";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fetchAnnoncePublique, fetchAnnoncesSimilaires, type Bien } from "@/api/bien";
@@ -317,6 +328,85 @@ function DemandeVisiteModal({
   );
 }
 
+// ─── Share Card ──────────────────────────────────────────────────────────────
+
+function ShareCard({ titre, description, prix }: { titre?: string | null; description?: string | null; prix?: number | null }) {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = window.location.href;
+  const shareTitle = titre ?? "Annonce immobilière sur Seek";
+
+  const shortDesc = description
+    ? description.slice(0, 100) + (description.length > 100 ? "…" : "")
+    : null;
+
+  const prixStr = prix
+    ? new Intl.NumberFormat("fr-SN", { style: "currency", currency: "XOF" }).format(prix)
+    : null;
+
+  const shareMessage = [
+    `Je partage avec toi cette annonce sur Seek`,
+    ``,
+    `*${shareTitle}*`,
+    shortDesc ? shortDesc : null,
+    prixStr ? `Prix : ${prixStr}` : null,
+    ``,
+    `Voir l'annonce :`,
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+
+  const tweetText = `Je partage avec toi cette annonce : ${shareTitle}${prixStr ? ` : ${prixStr}` : ""}`;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 p-5">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-4">
+        Partager
+      </h3>
+      <div className="flex items-center gap-2 flex-wrap">
+        <WhatsappShareButton url={shareUrl} title={shareMessage} separator="">
+          <WhatsappIcon size={38} round />
+        </WhatsappShareButton>
+
+        <FacebookShareButton url={shareUrl} hashtag="#immobilier">
+          <FacebookIcon size={38} round />
+        </FacebookShareButton>
+
+        <TwitterShareButton url={shareUrl} title={tweetText}>
+          <XIcon size={38} round />
+        </TwitterShareButton>
+
+        <LinkedinShareButton url={shareUrl} title={shareTitle} summary={shortDesc ?? shareTitle}>
+          <LinkedinIcon size={38} round />
+        </LinkedinShareButton>
+
+        <button
+          onClick={handleCopy}
+          title="Copier le lien"
+          className="w-[38px] h-[38px] rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors shrink-0"
+        >
+          {copied ? (
+            <BadgeCheck className="w-4 h-4 text-emerald-500" />
+          ) : (
+            <svg viewBox="0 0 24 24" className="w-4 h-4 text-slate-500 fill-none stroke-current stroke-2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          )}
+        </button>
+      </div>
+      {copied && (
+        <p className="mt-2 text-xs text-emerald-600 font-medium">Lien copié !</p>
+      )}
+    </div>
+  );
+}
+
 // ─── Page principale ─────────────────────────────────────────────────────────
 
 export default function AnnonceDetail() {
@@ -394,7 +484,29 @@ export default function AnnonceDetail() {
     { label: "Ascenseur", value: bien.ascenseur, icon: ArrowUpDown },
   ].filter((o) => o.value);
 
+  const ogTitle = bien.titre ?? "Annonce immobilière";
+  const ogImage = photos[0] ?? "";
+  const ogDescription = bien.description
+    ? bien.description.slice(0, 160)
+    : `${bien.typeLogement?.nom ?? "Bien"} à ${bien.ville ?? "vendre/louer"} — ${bien.prix ? formatPrice(bien.prix) : ""}`;
+  const ogUrl = window.location.href;
+
   return (
+    <>
+    <Helmet>
+      <title>{ogTitle} — Seek Immobilier</title>
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content={ogUrl} />
+      <meta property="og:title" content={ogTitle} />
+      <meta property="og:description" content={ogDescription} />
+      {ogImage && <meta property="og:image" content={ogImage} />}
+      {ogImage && <meta property="og:image:width" content="1200" />}
+      {ogImage && <meta property="og:image:height" content="630" />}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={ogTitle} />
+      <meta name="twitter:description" content={ogDescription} />
+      {ogImage && <meta name="twitter:image" content={ogImage} />}
+    </Helmet>
     <div className="min-h-screen bg-slate-50">
       {/* Breadcrumb */}
       <div className="hidden bg-white border-b border-slate-100 sm:block">
@@ -1017,6 +1129,9 @@ export default function AnnonceDetail() {
                 </div>
               </div>
 
+              {/* Partager */}
+              <ShareCard titre={bien.titre} description={bien.description} prix={bien.prix} />
+
             </div>
           </div>
         </div>
@@ -1109,5 +1224,6 @@ export default function AnnonceDetail() {
         </div>
       )}
     </div>
+    </>
   );
 }

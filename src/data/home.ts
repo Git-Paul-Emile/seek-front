@@ -111,11 +111,11 @@ export type OwnerStep = {
 };
 
 export const OWNER_STEPS: OwnerStep[] = [
-  { number: 1, title: "Créer un compte", desc: "Inscription rapide et sécurisée", icon: UserPlus },
-  { number: 2, title: "Ajouter ses biens", desc: "Enregistrer et gérer vos propriétés", icon: Building2 },
-  { number: 3, title: "Gérer les locataires", desc: "Ajouter locataires ou colocataires, les associer à un bien ou une chambre", icon: Users },
-  { number: 4, title: "Gestion documents", desc: "Génération automatique de documents", icon: FolderOpen },
-  { number: 5, title: "Tableau de bord", desc: "Suivi complet de votre patrimoine en temps réel", icon: LayoutDashboard },
+  { number: 1, title: "Inscrivez-vous gratuitement", desc: "En moins de 2 minutes, votre espace propriétaire est prêt", icon: UserPlus },
+  { number: 2, title: "Publiez votre annonce", desc: "Photos, description, prix — votre bien est en ligne en quelques clics", icon: Building2 },
+  { number: 3, title: "Gérez vos locataires", desc: "Associez facilement un locataire à votre bien et suivez la relation", icon: Users },
+  { number: 4, title: "Documents automatiques", desc: "Baux, quittances et contrats générés en un clic, prêts à signer", icon: FolderOpen },
+  { number: 5, title: "Pilotez votre patrimoine", desc: "Loyers, baux, vues, alertes — tout centralisé en temps réel", icon: LayoutDashboard },
 ];
 
 export const SORT_OPTIONS = [

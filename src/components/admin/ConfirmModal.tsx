@@ -23,9 +23,9 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-[#0C1A35]/60 backdrop-blur-sm" onClick={!isLoading ? onCancel : undefined} />
+      <div className="absolute inset-0 bg-[#0C1A35]/60 backdrop-blur-sm animate-overlay-in" onClick={!isLoading ? onCancel : undefined} />
 
-      <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+      <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-modal-in">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">

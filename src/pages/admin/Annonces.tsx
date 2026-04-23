@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { FileSearch, Building2, CheckCircle, XCircle, Clock, Loader2, ChevronLeft, ChevronRight, Phone, User, Eye } from "lucide-react";
 import { SkTableRows } from "@/components/ui/Skeleton";
+import FadeContainer from "@/components/ui/FadeContainer";
 import { toast } from "sonner";
 import { useAnnoncesAdmin, useValiderAnnonce, useAnnoncesStatusCounts } from "@/hooks/useAnnonces";
 import type { Bien, StatutAnnonce } from "@/api/bien";
@@ -36,10 +37,10 @@ function RejetModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div
-        className="absolute inset-0 bg-[#0C1A35]/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-[#0C1A35]/60 backdrop-blur-sm animate-overlay-in"
         onClick={!isPending ? onCancel : undefined}
       />
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4 animate-modal-in">
         <h2 className="font-display text-base font-bold text-[#0C1A35]">
           Rejeter l'annonce
         </h2>
@@ -85,11 +86,13 @@ function RejetModal({
 
 function AnnonceRow({
   bien,
+  idx,
   onApprouver,
   onRejeter,
   actionId,
 }: {
   bien: Bien;
+  idx: number;
   onApprouver: (id: string) => void;
   onRejeter: (bien: Bien) => void;
   actionId: string | null;
@@ -97,7 +100,10 @@ function AnnonceRow({
   const isActing = actionId === bien.id;
 
   return (
-    <tr className="hover:bg-slate-50/50 transition-colors">
+    <tr
+      className="hover:bg-slate-50/50 transition-colors stagger-item"
+      style={{ "--stagger": idx } as React.CSSProperties}
+    >
       {/* Photo + titre */}
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
@@ -331,6 +337,7 @@ export default function Annonces() {
       </div>
 
       {/* Table */}
+      <FadeContainer watchKey={`${statutFilter}-${page}`}>
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {isLoading ? (
           <SkTableRows rows={10} />
@@ -368,10 +375,11 @@ export default function Annonces() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {items.map((bien) => (
+                  {items.map((bien, idx) => (
                     <AnnonceRow
                       key={bien.id}
                       bien={bien}
+                      idx={idx}
                       onApprouver={handleApprouver}
                       onRejeter={setRejetTarget}
                       actionId={actionId}
@@ -410,6 +418,7 @@ export default function Annonces() {
           </>
         )}
       </div>
+      </FadeContainer>
 
       {/* Modal rejet */}
       {rejetTarget && (

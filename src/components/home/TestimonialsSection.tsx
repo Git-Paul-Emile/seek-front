@@ -86,17 +86,17 @@ const TestimonialsSection = () => {
       <div className="container mx-auto px-8">
         <div className="text-center mb-12">
           <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">
-            Témoignages
+            Ils nous font confiance
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-white">
-            Ce que disent nos utilisateurs
+            Ils ont trouvé leur logement grâce à SEEK
           </h2>
         </div>
 
         {isEmpty ? (
           <div className="text-center py-10">
             <p className="text-slate-400 text-sm mb-6">
-              Soyez le premier à partager votre expérience avec Seek !
+              Vous avez trouvé votre bien grâce à SEEK ? Racontez-nous votre expérience !
             </p>
           </div>
         ) : (
@@ -143,7 +143,7 @@ const TestimonialsSection = () => {
             className="bg-[#D4A843] hover:bg-[#B8943A] text-[#0C1A35] font-semibold"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Partager votre expérience
+            Laisser un avis
           </Button>
         </div>
 
@@ -173,7 +173,7 @@ const TestimonialsSection = () => {
               {/* Body */}
               <div className="px-6 py-5">
                 <p className="text-slate-500 text-sm mb-5">
-                  Racontez-nous comment Seek vous a aidé. Votre témoignage sera publié après validation.
+                  En quelques mots, dites-nous comment SEEK a changé votre recherche. Publié après vérification par notre équipe.
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>

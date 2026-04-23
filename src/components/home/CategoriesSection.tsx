@@ -15,9 +15,9 @@ const CategoriesSection = () => {
     <section className="py-8 bg-[#F8F5EE]">
       <div className="container mx-auto px-8">
         <div className="mb-4">
-          <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">Explorer</p>
-          <h2 className="font-bold text-[#1A2942] mb-1" style={{ fontSize: '1.8rem' }}>Parcourir par catégorie</h2>
-          <p className="text-slate-400 text-sm">Trouvez le type de bien qui vous correspond</p>
+          <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">Découvrir</p>
+          <h2 className="font-bold text-[#1A2942] mb-1" style={{ fontSize: '1.8rem' }}>Quel logement cherchez-vous ?</h2>
+          <p className="text-slate-400 text-sm">Appartement, villa, studio… parcourez par type de bien</p>
         </div>
 
         {isLoading ? (

@@ -119,6 +119,17 @@
   .font-body {
     font-family: var(--font-body);
   }
+
+  /* Stagger animation for list rows — set --stagger: N via inline style */
+  .stagger-item {
+    animation: slide-up 0.25s ease-out both;
+    animation-delay: calc(var(--stagger, 0) * 35ms);
+  }
+
+  /* Data refresh fade — wrap table/list with key={page} + this class */
+  .data-container {
+    animation: page-data 0.2s ease-out both;
+  }
 }
 
 /* ─── Mobile fixes (<768px) ─────────────────────────────────────────────────── */

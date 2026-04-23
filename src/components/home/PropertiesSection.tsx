@@ -156,10 +156,10 @@ const PropertiesSection = () => {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-5 gap-4">
             <div>
               <p className="text-amber-600 font-bold text-sm uppercase tracking-wider">
-                Exclusivité
+                Sélection
               </p>
               <h2 className="font-bold text-[#1A2942]" style={{ fontSize: '1.8rem' }}>
-                À la une
+                Coups de cœur
               </h2>
             </div>
             <div className="flex items-center gap-3 self-start md:self-auto" />
@@ -232,13 +232,13 @@ const PropertiesSection = () => {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
             <div>
               <p className="text-[#D4A843] font-semibold text-xs uppercase tracking-widest mb-1">
-                {hasPremium ? "Suite" : "À découvrir"}
+                {hasPremium ? "À explorer" : "Les dernières"}
               </p>
               <h2 className="font-bold text-[#1A2942]" style={{ fontSize: '1.8rem' }}>
-                Dernières annonces
+                Nouvelles annonces
               </h2>
               <p className="text-slate-400 mt-1.5 text-sm">
-                Découvrez les biens immobiliers les plus récents au Sénégal
+                Fraîchement publiées — à ne pas manquer
               </p>
             </div>
             <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
@@ -254,7 +254,7 @@ const PropertiesSection = () => {
               </Select>
               <Link to="/annonces">
                 <Button variant="outline" className="h-9 px-6 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm bg-white">
-                  Toutes les annonces
+                  Voir toutes les annonces
                 </Button>
               </Link>
             </div>
@@ -267,8 +267,8 @@ const PropertiesSection = () => {
               <svg className="w-16 h-16 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H15v-6H9v6H3.75A.75.75 0 013 21V9.75z" />
               </svg>
-              <p className="text-[#1A2942] font-semibold text-lg">Aucune annonce disponible</p>
-              <p className="text-slate-400 text-sm mt-1">Revenez bientôt, de nouvelles annonces arrivent régulièrement.</p>
+              <p className="text-[#1A2942] font-semibold text-lg">Aucun bien disponible pour le moment</p>
+              <p className="text-slate-400 text-sm mt-1">Nos propriétaires publient chaque jour — revenez très vite !</p>
             </div>
           ) : (
             <div>

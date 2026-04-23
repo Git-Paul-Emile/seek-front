@@ -18,16 +18,16 @@ const CTACarouselCard = () => (
     {/* Texte centré verticalement dans l'espace restant */}
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-4 text-center">
       <p className="text-[#D4A843] font-bold text-xs uppercase tracking-wider mb-1">
-        Boostez votre visibilité
+        Attirez plus de clients
       </p>
       <h3 className="font-bold text-[#1A2942] text-sm sm:text-base leading-snug mb-2">
-        Passez à la une
+        Mettez votre bien en avant
       </h3>
       <p className="text-xs text-slate-400 leading-relaxed mb-3">
-        Touchez plus d'acheteurs et de locataires au Sénégal.
+        Soyez vu en premier et louez ou vendez bien plus vite.
       </p>
       <span className="inline-flex items-center text-xs font-bold px-4 py-1.5 rounded-lg bg-[#D4A843] text-[#0C1A35] group-hover:bg-[#c49a35] transition-colors">
-        Plus de visibilité
+        Je veux plus de visibilité
       </span>
     </div>
   </Link>

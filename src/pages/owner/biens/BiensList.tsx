@@ -289,9 +289,12 @@ export default function BiensList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredBiens.map((bien) => (
+                {filteredBiens.map((bien, idx) => (
                   <Fragment key={bien.id}>
-                    <tr className="hover:bg-slate-50 transition-colors">
+                    <tr
+                      className="hover:bg-slate-50 transition-colors stagger-item"
+                      style={{ "--stagger": idx } as React.CSSProperties}
+                    >
                       {/* Bien */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
@@ -450,8 +453,12 @@ export default function BiensList() {
 
         {/* --- VUE MOBILE : Liste de cartes (<768px) --- */}
         <div className="block md:hidden space-y-4">
-          {filteredBiens.map((bien) => (
-            <div key={bien.id} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm relative overflow-hidden">
+          {filteredBiens.map((bien, idx) => (
+            <div
+              key={bien.id}
+              className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm relative overflow-hidden stagger-item"
+              style={{ "--stagger": idx } as React.CSSProperties}
+            >
               {bien.estMisEnAvant && (
                 <div className="absolute top-0 right-0 bg-amber-50 text-amber-600 text-[10px] uppercase font-bold px-2 py-0.5 rounded-bl-lg z-10">
                   En avant

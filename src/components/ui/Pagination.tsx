@@ -12,7 +12,7 @@ export default function Pagination({ page, totalPages, pageWindow, total, pageSi
   const from = (page - 1) * pageSize + 1;
   const to   = Math.min(page * pageSize, total);
 
-  const btnBase = "!w-7 !h-7 !min-h-0 !p-0 flex-shrink-0 flex items-center justify-center rounded-full text-xs font-semibold transition-all";
+  const btnBase = "!w-7 !h-7 !min-h-0 !p-0 flex-shrink-0 flex items-center justify-center rounded-full text-xs font-semibold transition-all duration-150";
 
   return (
     <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/40">
@@ -25,7 +25,7 @@ export default function Pagination({ page, totalPages, pageWindow, total, pageSi
         <button
           onClick={goPrev}
           disabled={page === 1}
-          className={`${btnBase} text-slate-400 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed`}
+          className={`${btnBase} text-slate-400 hover:bg-slate-100 hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed`}
           title="Page précédente"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -38,8 +38,8 @@ export default function Pagination({ page, totalPages, pageWindow, total, pageSi
             onClick={() => goTo(p)}
             className={`${btnBase} ${
               p === page
-                ? "bg-[#0C1A35] text-white shadow-sm"
-                : "text-slate-500 hover:bg-slate-100"
+                ? "bg-[#0C1A35] text-white shadow-md scale-110 animate-pop-in"
+                : "text-slate-500 hover:bg-slate-100 hover:scale-105 active:scale-95"
             }`}
           >
             {p}
@@ -50,7 +50,7 @@ export default function Pagination({ page, totalPages, pageWindow, total, pageSi
         <button
           onClick={goNext}
           disabled={page === totalPages}
-          className={`${btnBase} text-slate-400 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed`}
+          className={`${btnBase} text-slate-400 hover:bg-slate-100 hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed`}
           title="Page suivante"
         >
           <ChevronRight className="w-4 h-4" />

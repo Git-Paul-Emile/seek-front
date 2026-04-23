@@ -91,8 +91,8 @@ const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSection
         <div className="flex items-center gap-3 text-green-400">
           <CheckCircle className="w-6 h-6" />
           <div>
-            <p className="font-semibold text-white">Alerte créée avec succès !</p>
-            <p className="text-sm text-white/60">Vous recevrez nos nouvelles annonces par SMS</p>
+            <p className="font-semibold text-white">C'est noté ! Votre alerte est active.</p>
+            <p className="text-sm text-white/60">Vous serez averti dès qu'un bien correspond à votre recherche</p>
           </div>
         </div>
         <Button
@@ -131,12 +131,12 @@ const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSection
       <div className="flex items-center gap-2 mb-3">
         <Bell className="w-5 h-5 text-[#D4A843]" />
         <h3 className={titleClasses}>
-          Recevez les nouvelles annonces
+          Ne ratez plus aucune opportunité
         </h3>
       </div>
-      
+
       <p className={textClasses}>
-        Créez une alerte pour être notifié des nouvelles annonces correspondant à vos critères.
+        Soyez alerté par SMS dès qu'un bien correspond à vos critères. Gratuit et sans engagement.
       </p>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-3">
@@ -223,13 +223,13 @@ const AlertSubscriptionSection = ({ variant = "hero" }: AlertSubscriptionSection
           ) : (
             <>
               <Bell className="w-4 h-4 mr-2" />
-              Créer une alerte
+              M'alerter par SMS
             </>
           )}
         </Button>
 
         <p className={`text-xs text-center ${variant === "hero" ? "text-white/35" : "text-gray-400"}`}>
-          Gratuit. Désinscription possible à tout moment.
+          Gratuit · Sans engagement · Désinscription en 1 clic
         </p>
       </form>
     </div>

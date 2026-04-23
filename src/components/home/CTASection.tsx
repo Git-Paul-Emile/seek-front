@@ -9,15 +9,15 @@ const CTASection = () => (
 
     <div className="relative container mx-auto px-8 text-center">
       <div className="inline-flex items-center gap-2 bg-[#D4A843]/12 border border-[#D4A843]/25 text-[#D4A843] rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-        Gratuit pour les propriétaires
+        100 % gratuit · Inscription en 2 min
       </div>
 
       <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-5 max-w-2xl mx-auto leading-tight">
-        Vous êtes propriétaire ?
+        Votre bien mérite d'être vu.
       </h2>
 
       <p className="text-white/50 text-xl max-w-xl mx-auto mb-10 leading-relaxed">
-        Publiez votre bien sur SEEK et atteignez des milliers de locataires potentiels au Sénégal.
+        Rejoignez des centaines de propriétaires qui font confiance à SEEK pour louer et vendre plus vite, sans commission cachée.
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -26,7 +26,7 @@ const CTASection = () => (
             size="lg"
             className="bg-[#D4A843] hover:bg-[#C09535] text-[#0C1A35] font-bold px-10 py-6 text-base shadow-2xl shadow-[#D4A843]/15 transition-all hover:scale-[1.03]"
           >
-            Publier mon bien
+            Publier gratuitement
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </Link>
@@ -36,7 +36,7 @@ const CTASection = () => (
             variant="outline"
             className="border-white/20 text-base hover:bg-white/8 hover:border-white/40 px-10 py-6 text-base transition-all"
           >
-            Déjà propriétaire ? Se connecter
+            J'ai déjà un compte
           </Button>
         </Link>
       </div>

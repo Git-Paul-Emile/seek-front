@@ -43,7 +43,7 @@ const VALEURS = [
 
 const CHIFFRES = [
   { valeur: "100 %", label: "Propriétaires vérifiés", icon: Shield },
-  { valeur: "3 villes", label: "Couverture au Sénégal", icon: MapPin },
+  { valeur: "225 villes", label: "Couverture au Sénégal", icon: MapPin },
   { valeur: "24 / 7", label: "Accès à votre espace", icon: TrendingUp },
   { valeur: "0 papier", label: "Gestion 100 % numérique", icon: CheckCircle2 },
 ];
@@ -103,7 +103,7 @@ export default function APropos() {
             </h1>
             <p className="text-white/60 text-lg leading-relaxed mb-8">
               Seek connecte propriétaires et locataires dans un environnement sécurisé,
-              transparent et 100 % numérique — conçu spécifiquement pour le marché sénégalais.
+              transparent et 100 % numérique, conçu spécifiquement pour le marché sénégalais.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to="/annonces">
@@ -190,7 +190,7 @@ export default function APropos() {
             </div>
             <div className="bg-[#D4A843] rounded-2xl p-6">
               <Star className="w-7 h-7 text-[#0C1A35] mb-4" />
-              <div className="text-2xl font-bold text-[#0C1A35] mb-1">2024</div>
+              <div className="text-2xl font-bold text-[#0C1A35] mb-1">2026</div>
               <div className="text-xs text-[#0C1A35]/60">Fondée au Sénégal</div>
             </div>
           </div>

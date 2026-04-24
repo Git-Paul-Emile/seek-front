@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import GlobalFloatingActions from "@/components/layout/GlobalFloatingActions";
+import FeedbackWidget from "@/components/layout/FeedbackWidget";
 import { AuthProvider } from "@/context/AuthContext";
 import { OwnerAuthProvider } from "@/context/OwnerAuthContext";
 import { LocataireAuthProvider } from "@/context/LocataireAuthContext";
@@ -99,6 +100,7 @@ const OwnerNotificationsPage = React.lazy(() => import("./pages/owner/Notificati
 const LocataireNotificationsPage = React.lazy(() => import("./pages/locataire/NotificationsPage"));
 const AdminNotificationsPage = React.lazy(() => import("./pages/admin/NotificationsPage"));
 const TemoignagesAdminPage = React.lazy(() => import("./pages/admin/TemoignagesAdmin"));
+const FeedbacksAdminPage = React.lazy(() => import("./pages/admin/FeedbacksAdmin"));
 const PagesLegalesAdminPage = React.lazy(() => import("./pages/admin/parametres/PagesLegalesAdmin"));
 const PageLegalePage = React.lazy(() => import("./pages/public/PageLegale"));
 const AProposPage = React.lazy(() => import("./pages/public/APropos"));
@@ -153,6 +155,7 @@ const PublicLayout = () => {
       </main>
       <Footer />
       <GlobalFloatingActions />
+      <FeedbackWidget />
       <ComparisonBar />
     </div>
   );
@@ -293,6 +296,7 @@ const App = () => (
                     <Route path="signalements"         element={<SignalementsAdmin />} />
                     <Route path="notifications"         element={<AdminNotificationsPage />} />
                     <Route path="temoignages"           element={<TemoignagesAdminPage />} />
+                    <Route path="feedbacks"             element={<FeedbacksAdminPage />} />
                     <Route path="parametres/pages-legales" element={<PagesLegalesAdminPage />} />
                   </Route>
                 </Route>

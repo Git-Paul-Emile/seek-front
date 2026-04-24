@@ -303,6 +303,8 @@ export interface RechercheParams {
   quartier?: string;
   typeLogement?: string;
   typeTransaction?: string;
+  statutBien?: string;
+  proprietaireVerification?: "VERIFIED" | "NON_VERIFIED";
   prixMin?: number;
   prixMax?: number;
   chambres?: number;

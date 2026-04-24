@@ -174,7 +174,8 @@ const HeroSection = () => {
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-white font-semibold flex items-center gap-2 text-lg">
                       <Search className="w-5 h-5 text-[#D4A843]" />
-                      Que recherchez-vous ?
+                      Trouvez rapidement le bien qui vous correspond.
+
                     </h3>
                     {!isDesktop && (
                       <button 
@@ -290,7 +291,7 @@ const HeroSection = () => {
                           <div className="relative group/info">
                             <Info className="w-3.5 h-3.5 text-white/30 hover:text-white/60 cursor-default transition-colors" />
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 bg-[#0C1A35] border border-white/10 text-white/80 text-xs px-3 py-2 rounded-xl leading-relaxed opacity-0 group-hover/info:opacity-100 transition-opacity pointer-events-none z-30">
-                              Saisissez un lieu précis et sélectionnez une suggestion. Le système trouvera les biens les plus proches, triés par distance.
+                              Saisissez un lieu précis et sélectionnez une suggestion. Le système trouvera les biens les plus proches de ce lieu, triés par distance.
                               <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0C1A35]" />
                             </div>
                           </div>

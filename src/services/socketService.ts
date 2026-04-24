@@ -26,6 +26,10 @@ export const SOCKET_EVENTS = {
   // Signalements
   SIGNALEMENT_NEW:     "signalement:new",
   SIGNALEMENT_UPDATED: "signalement:updated",
+
+  // Retour Client
+  FEEDBACK_SUBMITTED:   "feedback:submitted",
+  TEMOIGNAGE_SUBMITTED: "temoignage:submitted",
 } as const;
 
 // ─── Payloads ─────────────────────────────────────────────────────────────────

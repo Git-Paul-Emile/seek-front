@@ -2,13 +2,6 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -18,7 +11,6 @@ import {
 import type { CarouselApi } from "@/components/ui/carousel";
 import PropertyCard from "@/components/PropertyCard";
 import CTACarouselCard from "@/components/home/CTACarouselCard";
-import { SORT_OPTIONS } from "@/data/home";
 import { useRecherchePublique } from "@/hooks/useRecherche";
 import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import { SkPropertyCards } from "@/components/ui/Skeleton";
@@ -29,7 +21,6 @@ const ROTATION_INTERVAL = 30000; // 30s entre chaque glissement auto
 const MAX_VISIBLE = 4;
 
 const PropertiesSection = () => {
-  const [sort, setSort] = useState("recent");
   const [page, setPage] = useState(1);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -38,22 +29,8 @@ const PropertiesSection = () => {
   const LIMIT = 30;
 
   const queryParams = useMemo(() => {
-    const params: any = { limit: LIMIT, page };
-    if (sort === "oldest") {
-      params.sortBy = "createdAt";
-      params.sortOrder = "asc";
-    } else if (sort === "price-asc") {
-      params.sortBy = "prix";
-      params.sortOrder = "asc";
-    } else if (sort === "price-desc") {
-      params.sortBy = "prix";
-      params.sortOrder = "desc";
-    } else {
-      params.sortBy = "createdAt";
-      params.sortOrder = "desc";
-    }
-    return params;
-  }, [sort, page]);
+    return { limit: LIMIT, page };
+  }, [page]);
 
   const { data: searchResult, isLoading } = useRecherchePublique(queryParams);
   const total = searchResult?.total ?? 0;
@@ -238,23 +215,13 @@ const PropertiesSection = () => {
                 Nouvelles annonces
               </h2>
               <p className="text-slate-400 mt-1.5 text-sm">
-                Fraîchement publiées — à ne pas manquer
+                Découvrez nos nouvelles annonces, sélectionnés avec soin pour vous offrir le meilleur choix.
               </p>
             </div>
-            <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
-              <Select value={sort} onValueChange={(val) => { setSort(val); setPage(1); }}>
-                <SelectTrigger className="w-44 h-9 text-sm border-slate-200 text-[#1A2942] focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-3 self-start md:self-auto">
               <Link to="/annonces">
-                <Button variant="outline" className="h-9 px-6 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm bg-white">
-                  Voir toutes les annonces
+                <Button variant="outline" className="h-9 px-6 border-slate-200 text-[#1A2942] hover:border-[#0C1A35] text-sm bg-white whitespace-nowrap">
+                  Voir toutes les annonces →
                 </Button>
               </Link>
             </div>
@@ -268,7 +235,7 @@ const PropertiesSection = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H15v-6H9v6H3.75A.75.75 0 013 21V9.75z" />
               </svg>
               <p className="text-[#1A2942] font-semibold text-lg">Aucun bien disponible pour le moment</p>
-              <p className="text-slate-400 text-sm mt-1">Nos propriétaires publient chaque jour — revenez très vite !</p>
+              <p className="text-slate-400 text-sm mt-1">Nos propriétaires publient chaque jour,  revenez très vite !</p>
             </div>
           ) : (
             <div>

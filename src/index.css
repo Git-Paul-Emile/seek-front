@@ -120,6 +120,15 @@
     font-family: var(--font-body);
   }
 
+  /* Hide scrollbar utility */
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+
   /* Stagger animation for list rows — set --stagger: N via inline style */
   .stagger-item {
     animation: slide-up 0.25s ease-out both;

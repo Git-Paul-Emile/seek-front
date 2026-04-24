@@ -178,6 +178,9 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
   const [usersOpen, setUsersOpen] = useState(
     location.pathname.startsWith("/admin/utilisateurs")
   );
+  const [customerFeedbackOpen, setCustomerFeedbackOpen] = useState(
+    location.pathname.startsWith("/admin/temoignages") || location.pathname.startsWith("/admin/feedbacks")
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -358,21 +361,61 @@ function Sidebar({ isOpen }: { isOpen: boolean }) {
             </NavLink>
           </li>
 
-          {/* Témoignages */}
+          {/* Retour Client avec dropdown */}
           <li>
-            <NavLink
-              to="/admin/temoignages"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+            <button
+              onClick={() => setCustomerFeedbackOpen((v) => !v)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                 transition-colors duration-150 ${
-                  isActive
-                    ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                  location.pathname.startsWith("/admin/temoignages") || location.pathname.startsWith("/admin/feedbacks")
+                    ? "text-[#D4A843] bg-[#D4A843]/8"
                     : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
                 }`}
             >
               <MessageSquare className="w-4 h-4 flex-shrink-0" />
-              {isOpen && <span className="flex-1">Témoignages</span>}
-            </NavLink>
+              {isOpen && (
+                <>
+                  <span className="flex-1 text-left">Retour Client</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${customerFeedbackOpen ? "rotate-180" : ""}`}
+                  />
+                </>
+              )}
+            </button>
+            {customerFeedbackOpen && isOpen && (
+              <ul className="mt-0.5 ml-3 pl-4 border-l border-slate-100 space-y-0.5">
+                <li>
+                  <NavLink
+                    to="/admin/temoignages"
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium
+                      transition-colors duration-150 ${
+                        isActive
+                          ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                      }`}
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    Témoignages
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/admin/feedbacks"
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium
+                      transition-colors duration-150 ${
+                        isActive
+                          ? "bg-[#D4A843] text-white shadow-sm shadow-[#D4A843]/30"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-[#0C1A35]"
+                      }`}
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+                    Feedbacks
+                  </NavLink>
+                </li>
+              </ul>
+            )}
           </li>
 
           {/* Séparateur */}
@@ -523,6 +566,22 @@ function useAdminRealtime() {
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
     });
 
+    const unsubFeedbackNew = socketService.on(SOCKET_EVENTS.FEEDBACK_SUBMITTED, () => {
+      toast.info("Nouveau feedback reçu", {
+        description: "Un utilisateur a partagé son retour sur l'expérience.",
+      });
+      qc.invalidateQueries({ queryKey: ["admin-feedbacks"] });
+      qc.invalidateQueries({ queryKey: ["admin-notifications"] });
+    });
+
+    const unsubTemoignageNew = socketService.on(SOCKET_EVENTS.TEMOIGNAGE_SUBMITTED, () => {
+      toast.info("Nouveau témoignage reçu", {
+        description: "Un utilisateur a partagé son témoignage.",
+      });
+      qc.invalidateQueries({ queryKey: ["admin-temoignages"] });
+      qc.invalidateQueries({ queryKey: ["admin-notifications"] });
+    });
+
     return () => {
       unsubVerifCount();
       unsubVerifNew();
@@ -530,6 +589,8 @@ function useAdminRealtime() {
       unsubSignalementNew();
       unsubSignalementUpdated();
       unsubBienUpdated();
+      unsubFeedbackNew();
+      unsubTemoignageNew();
     };
   }, [qc]);
 }

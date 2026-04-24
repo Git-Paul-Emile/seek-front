@@ -10,15 +10,14 @@ import {
   Clock,
   AlertCircle,
 } from "lucide-react";
-import Breadcrumb from "@/components/ui/Breadcrumb";
-import { useVerificationStatus } from "@/hooks/useVerification";
-import { useCreateOwnerDiditSession } from "@/hooks/useDidit";
+import { useLocataireVerificationStatus } from "@/hooks/useLocataireVerification";
+import { useCreateLocataireDiditSession } from "@/hooks/useDidit";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export default function OwnerVerification() {
-  const { data: status, isLoading } = useVerificationStatus();
-  const createSession = useCreateOwnerDiditSession();
+export default function LocataireVerification() {
+  const { data: verification, isLoading } = useLocataireVerificationStatus();
+  const createSession = useCreateLocataireDiditSession();
   const queryClient = useQueryClient();
 
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
@@ -34,10 +33,11 @@ export default function OwnerVerification() {
 
   const handleCloseModal = () => {
     setVerificationUrl(null);
-    // Refresh status — webhook may have already arrived
-    queryClient.invalidateQueries({ queryKey: ["ownerVerification"] });
+    queryClient.invalidateQueries({ queryKey: ["locataireVerification"] });
     toast.info("Vérification en cours de traitement. Le statut sera mis à jour sous peu.");
   };
+
+  const statut = verification?.statut ?? "NOT_VERIFIED";
 
   if (isLoading) {
     return (
@@ -48,50 +48,33 @@ export default function OwnerVerification() {
   }
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", to: "/owner/dashboard" },
-          { label: "Vérification d'identité" },
-        ]}
-      />
-
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">
-          <Shield className="w-3.5 h-3.5" />
-          Vérification d'identité
-        </div>
-        <h1 className="font-display text-2xl font-bold text-[#0C1A35]">
-          Vérifiez votre identité
-        </h1>
-        <p className="text-slate-400 text-sm mt-0.5">
-          La vérification est assurée par Didit, un service de KYC certifié.
-        </p>
+    <div className="space-y-6 max-w-xl mx-auto">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#D4A843] mb-2">
+        <Shield className="w-3.5 h-3.5" />
+        Vérification d'identité
       </div>
+      <h1 className="font-display text-2xl font-bold text-[#0C1A35]">
+        Vérifiez votre identité
+      </h1>
+      <p className="text-slate-400 text-sm">
+        La vérification est assurée par Didit, un service de KYC certifié.
+      </p>
 
-      {/* Status cards */}
-      {status?.statut === "VERIFIED" && (
+      {statut === "VERIFIED" && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex items-center gap-4">
           <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-7 h-7 text-emerald-600" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-emerald-800">Compte vérifié</h2>
+            <h2 className="text-lg font-bold text-emerald-800">Identité vérifiée</h2>
             <p className="text-sm text-emerald-700 mt-0.5">
-              Votre identité a été vérifiée avec succès. Votre badge de confiance est actif.
+              Votre identité a été vérifiée avec succès.
             </p>
-            {status.verifiedAt && (
-              <p className="text-xs text-emerald-600 mt-1">
-                Vérifié le{" "}
-                {new Date(status.verifiedAt).toLocaleDateString("fr-FR")}
-              </p>
-            )}
           </div>
         </div>
       )}
 
-      {status?.statut === "PENDING" && (
+      {statut === "PENDING" && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-center gap-4">
           <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
             <Clock className="w-7 h-7 text-amber-600" />
@@ -99,14 +82,13 @@ export default function OwnerVerification() {
           <div>
             <h2 className="text-lg font-bold text-amber-800">Vérification en cours</h2>
             <p className="text-sm text-amber-700 mt-0.5">
-              Votre vérification est en cours d'analyse. Le résultat vous sera communiqué
-              rapidement.
+              Votre dossier est en cours d'analyse. Vous serez notifié du résultat.
             </p>
           </div>
         </div>
       )}
 
-      {status?.statut === "REJECTED" && (
+      {statut === "REJECTED" && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 flex items-center gap-4">
           <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center shrink-0">
             <XCircle className="w-7 h-7 text-red-600" />
@@ -114,35 +96,32 @@ export default function OwnerVerification() {
           <div>
             <h2 className="text-lg font-bold text-red-800">Vérification refusée</h2>
             <p className="text-sm text-red-700 mt-0.5">
-              Votre vérification n'a pas abouti. Vous pouvez recommencer le processus.
+              Votre vérification n'a pas abouti. Vous pouvez recommencer.
             </p>
           </div>
         </div>
       )}
 
-      {/* Main action card */}
-      {status?.statut !== "VERIFIED" && (
+      {statut !== "VERIFIED" && (
         <div className="bg-white rounded-2xl border border-slate-100 p-8">
-          <div className="max-w-md mx-auto text-center space-y-6">
+          <div className="text-center space-y-6">
             <div className="w-20 h-20 bg-[#D4A843]/10 rounded-full flex items-center justify-center mx-auto">
               <Shield className="w-10 h-10 text-[#D4A843]" />
             </div>
 
             <div>
               <h2 className="text-xl font-bold text-[#0C1A35] mb-2">
-                {status?.statut === "REJECTED"
-                  ? "Recommencer la vérification"
-                  : "Démarrer la vérification"}
+                {statut === "REJECTED" ? "Recommencer" : "Démarrer la vérification"}
               </h2>
               <p className="text-slate-500 text-sm">
-                Le processus prend 2 à 3 minutes. Munissez-vous de votre pièce d'identité
-                (CNI ou passeport) et d'une bonne luminosité.
+                Munissez-vous de votre pièce d'identité et d'une bonne luminosité. Le
+                processus prend 2 à 3 minutes.
               </p>
             </div>
 
             <ul className="text-left space-y-2 text-sm text-slate-600">
               {[
-                "Photo de votre pièce d'identité (recto/verso)",
+                "Photo de votre pièce d'identité",
                 "Selfie en temps réel (détection de vivacité)",
                 "Résultat immédiat dans la plupart des cas",
               ].map((step) => (
@@ -155,9 +134,8 @@ export default function OwnerVerification() {
 
             <div className="flex items-center gap-2 text-xs text-slate-400 justify-center">
               <AlertCircle className="w-3.5 h-3.5" />
-              Powered by{" "}
-              <span className="font-semibold text-slate-500">Didit</span> — vérification
-              KYC certifiée
+              Powered by <span className="font-semibold text-slate-500">Didit</span> —
+              vérification KYC certifiée
             </div>
 
             <button
@@ -173,9 +151,7 @@ export default function OwnerVerification() {
               ) : (
                 <>
                   <ExternalLink className="w-4 h-4" />
-                  {status?.statut === "REJECTED"
-                    ? "Recommencer la vérification"
-                    : "Démarrer la vérification"}
+                  {statut === "REJECTED" ? "Recommencer la vérification" : "Démarrer la vérification"}
                 </>
               )}
             </button>
@@ -185,18 +161,17 @@ export default function OwnerVerification() {
 
       <div className="flex justify-end">
         <Link
-          to="/owner/dashboard"
+          to="/locataire/dashboard"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-700 transition-colors"
         >
           Retour au dashboard
         </Link>
       </div>
 
-      {/* Didit verification modal (iframe) */}
+      {/* Didit verification modal */}
       {verificationUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-lg h-[680px] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-            {/* Modal header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 shrink-0">
               <div className="flex items-center gap-2 text-sm font-semibold text-[#0C1A35]">
                 <Shield className="w-4 h-4 text-[#D4A843]" />
@@ -210,8 +185,6 @@ export default function OwnerVerification() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-
-            {/* iframe */}
             <iframe
               src={verificationUrl}
               title="Vérification d'identité Didit"

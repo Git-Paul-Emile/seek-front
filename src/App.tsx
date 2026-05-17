@@ -105,6 +105,9 @@ const FeedbacksAdminPage = React.lazy(() => import("./pages/admin/FeedbacksAdmin
 const PagesLegalesAdminPage = React.lazy(() => import("./pages/admin/parametres/PagesLegalesAdmin"));
 const PageLegalePage = React.lazy(() => import("./pages/public/PageLegale"));
 const AProposPage = React.lazy(() => import("./pages/public/APropos"));
+const CategoriesChampPage = React.lazy(() => import("./pages/admin/champs/CategoriesChampPage"));
+const ChampsPage = React.lazy(() => import("./pages/admin/champs/ChampsPage"));
+const TypeLogementChampsPage = React.lazy(() => import("./pages/admin/categories/TypeLogementChampsPage"));
 
 const queryClient = new QueryClient();
 
@@ -300,6 +303,9 @@ const App = () => (
                     <Route path="temoignages"           element={<TemoignagesAdminPage />} />
                     <Route path="feedbacks"             element={<FeedbacksAdminPage />} />
                     <Route path="parametres/pages-legales" element={<PagesLegalesAdminPage />} />
+                    <Route path="champs/categories"        element={<CategoriesChampPage />} />
+                    <Route path="champs"                   element={<ChampsPage />} />
+                    <Route path="biens/types/:id/champs"   element={<TypeLogementChampsPage />} />
                   </Route>
                 </Route>
               </Routes>

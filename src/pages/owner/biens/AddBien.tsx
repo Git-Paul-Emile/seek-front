@@ -17,6 +17,8 @@ import { useMeubles } from "@/hooks/useMeubles";
 import { useCreateBien, useBienById } from "@/hooks/useBien";
 import { useBailActif } from "@/hooks/useBail";
 import { usePays, useVilles, useQuartiers } from "@/hooks/useGeo";
+import { useChampsForTypeLogement } from "@/hooks/useTypeLogementChamp";
+import DynamicForm, { validateDynamicValues } from "@/components/form/DynamicForm";
 import { VerificationBanner } from "@/components/owner/VerificationAlert";
 import type { TypeLogement } from "@/api/typeLogement";
 import type { TypeTransaction } from "@/api/typeTransaction";
@@ -47,6 +49,7 @@ const FREQUENCES = [
 const TABS = [
   { id: "general",     label: "Infos générales",        icon: Info },
   { id: "caract",      label: "Caractéristiques",       icon: Ruler },
+  { id: "specifiques", label: "Champs spécifiques",     icon: Zap },
   { id: "transaction", label: "Statut & Prix",           icon: DollarSign },
   { id: "options",     label: "Options & Équipements",  icon: Zap },
   { id: "medias",      label: "Médias",                 icon: ImageIcon },
@@ -220,6 +223,11 @@ export default function AddBien() {
   const [eqSearch,       setEqSearch]       = useState("");
   const [mblSearch,      setMblSearch]      = useState("");
 
+  // ── Onglet spécifiques : champs dynamiques ──
+  const [champsValeurs,     setChampsValeurs]     = useState<Record<string, string>>({});
+  const [champsErrors,      setChampsErrors]      = useState<Record<string, string>>({});
+  const { data: typeLogementChamps = [], isLoading: champsLoading } = useChampsForTypeLogement(selectedType?.id ?? "");
+
   // ── Onglet 5 : Médias ──
   const [photos,            setPhotos]            = useState<PhotoFile[]>([]);
   const [existingPhotoUrls, setExistingPhotoUrls] = useState<string[]>([]);
@@ -286,6 +294,11 @@ export default function AddBien() {
     if (bienToEdit.meubles)     setSelectedMeubles(new Set(bienToEdit.meubles.map(m => m.meubleId)));
     if (bienToEdit.photos?.length) setExistingPhotoUrls(bienToEdit.photos);
     if (bienToEdit.videoUrl)       setExistingVideoUrl(bienToEdit.videoUrl);
+    if (bienToEdit.champsValeurs?.length) {
+      const vals: Record<string, string> = {};
+      for (const cv of bienToEdit.champsValeurs) vals[cv.champId] = cv.valeur;
+      setChampsValeurs(vals);
+    }
 
     // Champs lookup
     const type = types.find(t => t.id === bienToEdit.typeLogementId);
@@ -523,6 +536,14 @@ export default function AddBien() {
       if (!selectedPays)  errs.pays   = "Choisissez un pays";
       if (!selectedVille) errs.region = "Choisissez une région";
     }
+    if (tabId === "specifiques") {
+      const dynErrs = validateDynamicValues(typeLogementChamps, champsValeurs);
+      if (Object.keys(dynErrs).length > 0) {
+        setChampsErrors(dynErrs);
+        return false;
+      }
+      setChampsErrors({});
+    }
     if (tabId === "transaction") {
       if (!selectedTransaction) errs.transaction = "Choisissez un type de transaction";
       if (!selectedStatut) errs.statut = "Choisissez un statut";
@@ -586,6 +607,9 @@ export default function AddBien() {
       disponibleLe: disponibleLe || undefined,
       equipementIds: Array.from(selectedEqs),
       meubles: Array.from(selectedMeubles).map((meubleId) => ({ meubleId, quantite: 1 })),
+      champsValeurs: Object.entries(champsValeurs)
+        .filter(([, v]) => v.trim() !== "")
+        .map(([champId, valeur]) => ({ champId, valeur })),
       existingPhotos: existingPhotoUrls,
       existingVideoUrl: existingVideoUrl ?? undefined,
     };
@@ -1009,6 +1033,45 @@ export default function AddBien() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════
+            Tab spécifiques - Champs dynamiques
+        ═══════════════════════════════════════════════════════════ */}
+        {tab === "specifiques" && (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-50 flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[#D4A843]/10 flex items-center justify-center">
+                <Zap className="w-3.5 h-3.5 text-[#D4A843]" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-[#0C1A35]">Caractéristiques spécifiques</h2>
+                {selectedType && (
+                  <p className="text-xs text-slate-400 mt-0.5">Champs configurés pour : {selectedType.nom}</p>
+                )}
+              </div>
+            </div>
+            <div className="p-6">
+              {!selectedType ? (
+                <p className="text-sm text-slate-400">
+                  Sélectionnez d'abord un type de bien dans l'onglet "Infos générales".
+                </p>
+              ) : (
+                <DynamicForm
+                  champs={typeLogementChamps}
+                  values={champsValeurs}
+                  errors={champsErrors}
+                  onChange={(champId, value) => {
+                    setChampsValeurs((prev) => ({ ...prev, [champId]: value }));
+                    if (champsErrors[champId]) {
+                      setChampsErrors((prev) => { const n = { ...prev }; delete n[champId]; return n; });
+                    }
+                  }}
+                  loading={champsLoading}
+                />
+              )}
             </div>
           </div>
         )}

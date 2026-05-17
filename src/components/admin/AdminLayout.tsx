@@ -30,6 +30,7 @@ import {
   PanelLeft,
   PanelLeftClose,
   MessageSquare,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -66,6 +67,15 @@ const NAV_GROUPS = [
       { to: "/admin/biens/transactions",      label: "Transactions",        icon: ArrowLeftRight },
       { to: "/admin/biens/statuts",           label: "Statuts",             icon: CircleDot },
       { to: "/admin/biens/meuble-equipement", label: "Meuble & Équipement", icon: Sofa },
+    ],
+  },
+  {
+    label: "Champs dynamiques",
+    icon: SlidersHorizontal,
+    basePath: "/admin/champs",
+    children: [
+      { to: "/admin/champs/categories", label: "Catégories de champs", icon: Tag },
+      { to: "/admin/champs",            label: "Champs de formulaire",  icon: SlidersHorizontal },
     ],
   },
   {

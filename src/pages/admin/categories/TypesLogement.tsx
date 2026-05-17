@@ -3,7 +3,8 @@ import Breadcrumb from "@/components/ui/Breadcrumb";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Pencil, Trash2, X, AlertCircle, Loader2, Building2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Pencil, Trash2, X, AlertCircle, Loader2, Building2, ToggleLeft, ToggleRight, SlidersHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
   useTypeLogementsAdmin,
@@ -353,6 +354,15 @@ export default function TypesLogement() {
                     {/* Actions */}
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        <Link
+                          to={`/admin/biens/types/${type.id}/champs`}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400
+                            hover:bg-indigo-50 hover:text-indigo-500 transition-colors"
+                          title="Configurer les champs"
+                        >
+                          <SlidersHorizontal className="w-3.5 h-3.5" />
+                        </Link>
+
                         <button
                           onClick={() => openEdit(type)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400

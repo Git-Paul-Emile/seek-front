@@ -17,6 +17,7 @@ import { useTypeLogements } from "@/hooks/useTypeLogements";
 import { useTypeTransactions } from "@/hooks/useTypeTransactions";
 import { useEquipements } from "@/hooks/useEquipements";
 import ScrollToTop from "@/components/ui/ScrollToTop";
+import AnimatedPropertyGrid from "@/components/ui/AnimatedPropertyGrid";
 import type { Bien } from "@/api/bien";
 
 // ─── Tri ──────────────────────────────────────────────────────────────────────
@@ -1256,9 +1257,12 @@ const RecherchePage = () => {
           </div>
         ) : isProximityMode && mapView ? null : (
           <div className="px-4 sm:px-0">
-            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}>
-              {displayItems.map((bien) => (
-                <div key={bien.id} className="relative h-full">
+            <AnimatedPropertyGrid
+              items={displayItems}
+              pageKey={sp.toString()}
+              gridClassName={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${sidebarCollapsed ? "lg:grid-cols-3 xl:grid-cols-4" : "lg:grid-cols-3"}`}
+              renderItem={(bien) => (
+                <div className="relative h-full">
                   {isProximityMode && bien.distance !== undefined && (
                     <div className="absolute top-2 right-2 z-10 bg-[#0C1A35]/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow">
                       <MapPin className="w-3 h-3 text-[#D4A843]" />
@@ -1269,8 +1273,8 @@ const RecherchePage = () => {
                   )}
                   <PropertyCard property={bien} isApiData />
                 </div>
-              ))}
-            </div>
+              )}
+            />
           </div>
         )}
 

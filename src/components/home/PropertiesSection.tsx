@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -16,8 +17,9 @@ import { useAnnoncesMiseEnAvant } from "@/hooks/useAnnoncesMiseEnAvant";
 import { SkPropertyCards } from "@/components/ui/Skeleton";
 import Pagination from "@/components/ui/Pagination";
 import MarketingBanner from "@/components/home/MarketingBanner";
+import AnimatedPropertyGrid from "@/components/ui/AnimatedPropertyGrid";
 
-const ROTATION_INTERVAL = 30000; // 30s entre chaque glissement auto
+const ROTATION_INTERVAL = 30000;
 const MAX_VISIBLE = 4;
 
 const PropertiesSection = () => {
@@ -26,6 +28,8 @@ const PropertiesSection = () => {
   const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [featuredOffset, setFeaturedOffset] = useState(0);
   const featuredAutoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [currentSnap, setCurrentSnap] = useState(0);
+  const [totalSnaps, setTotalSnaps] = useState(0);
   const LIMIT = 30;
 
   const queryParams = useMemo(() => {
@@ -90,6 +94,22 @@ const PropertiesSection = () => {
     return rawItems.map(withIsNew);
   }, [searchResult?.items, annoncesMiseEnAvant, page, featuredOffset]);
   const needsRotation = carouselSlides.length > MAX_VISIBLE;
+
+  // Sync dots avec l'état du carousel Embla
+  useEffect(() => {
+    if (!carouselApi) return;
+    const update = () => {
+      setTotalSnaps(carouselApi.scrollSnapList().length);
+      setCurrentSnap(carouselApi.selectedScrollSnap());
+    };
+    update();
+    carouselApi.on("select", update);
+    carouselApi.on("reInit", update);
+    return () => {
+      carouselApi.off("select", update);
+      carouselApi.off("reInit", update);
+    };
+  }, [carouselApi]);
 
   // Auto-rotation quand > 5 annonces
   useEffect(() => {
@@ -193,6 +213,50 @@ const PropertiesSection = () => {
                   </>
                 )}
               </Carousel>
+
+              {/* Dots de pagination + barre de progression */}
+              {needsRotation && totalSnaps > 1 && (
+                <div className="flex flex-col items-center gap-2.5 mt-5">
+                  {/* Barre de progression auto-advance */}
+                  <div className="w-32 h-0.5 bg-amber-100 rounded-full overflow-hidden">
+                    <motion.div
+                      key={currentSnap}
+                      className="h-full bg-amber-400 rounded-full"
+                      initial={{ scaleX: 0, originX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: ROTATION_INTERVAL / 1000, ease: "linear" }}
+                      style={{ transformOrigin: "left center" }}
+                    />
+                  </div>
+
+                  {/* Dots */}
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: totalSnaps }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => carouselApi?.scrollTo(i)}
+                        aria-label={`Aller au slide ${i + 1}`}
+                        className="relative flex items-center justify-center h-3 focus:outline-none"
+                      >
+                        <motion.span
+                          layout
+                          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                          className="block rounded-full bg-amber-400"
+                          style={{
+                            width: i === currentSnap ? 20 : 6,
+                            height: 6,
+                            opacity: i === currentSnap ? 1 : 0.3,
+                          }}
+                          animate={{
+                            width: i === currentSnap ? 20 : 6,
+                            opacity: i === currentSnap ? 1 : 0.3,
+                          }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -235,23 +299,22 @@ const PropertiesSection = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H15v-6H9v6H3.75A.75.75 0 013 21V9.75z" />
               </svg>
               <p className="text-[#1A2942] font-semibold text-lg">Aucun bien disponible pour le moment</p>
-              <p className="text-slate-400 text-sm mt-1">Nos propriétaires publient chaque jour,  revenez très vite !</p>
+              <p className="text-slate-400 text-sm mt-1">Nos propriétaires publient chaque jour, revenez très vite !</p>
             </div>
           ) : (
             <div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-                {dernieresAnnonces.map((property) => (
-                  <PropertyCard
-                    key={property.id}
-                    property={property as any}
-                    isApiData={true}
-                  />
-                ))}
-              </div>
-              
+              <AnimatedPropertyGrid
+                items={dernieresAnnonces as Array<{ id: string } & Record<string, unknown>>}
+                pageKey={`${page}-${featuredOffset}`}
+                gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8"
+                renderItem={(property) => (
+                  <PropertyCard property={property as any} isApiData={true} />
+                )}
+              />
+
               {totalPages > 1 && (
                 <div className="mt-8">
-                  <Pagination 
+                  <Pagination
                     page={page}
                     totalPages={totalPages}
                     pageWindow={pageWindow}

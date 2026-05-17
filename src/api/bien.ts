@@ -91,6 +91,7 @@ export interface Bien {
   statutBien?: { id: string; nom: string; slug: string } | null;
   equipements?: BienEquipement[];
   meubles?: BienMeuble[];
+  champsValeurs?: { champId: string; valeur: string; champ?: { id: string; nom: string; type: string; unite: string | null } }[];
   etablissements?: Etablissement[];
   proprietaire?: { id: string; prenom: string; nom: string; telephone: string; email: string | null; statutVerification?: "NOT_VERIFIED" | "PENDING" | "VERIFIED" | "REJECTED" };
   // Nombre d'annonces du propriétaire (pour affichage public)
@@ -147,6 +148,7 @@ export interface SaveDraftPayload {
   meubles?: { meubleId: string; quantite: number }[];
   existingPhotos?: string[];
   existingVideoUrl?: string | null;
+  champsValeurs?: { champId: string; valeur: string }[];
   brouillon?: boolean;
 }
 

@@ -45,6 +45,7 @@ interface Proprietaire {
   estSuspendu: boolean;
   motifSuspension: string | null;
   dateSuspension: string | null;
+  dateFinSuspension: string | null;
   suspenduPar: string | null;
   createdAt: string;
 }
@@ -714,6 +715,16 @@ export default function SuspensionsPage() {
                                 "fr-FR"
                               )
                             : ""}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500">Réactivation</p>
+                        <p className="font-medium text-[#0C1A35]">
+                          {selectedProprietaire.dateFinSuspension
+                            ? `Automatique le ${new Date(
+                                selectedProprietaire.dateFinSuspension
+                              ).toLocaleDateString("fr-FR")}`
+                            : "Indéfinie — nécessite une réactivation manuelle"}
                         </p>
                       </div>
                     </>

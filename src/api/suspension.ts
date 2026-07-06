@@ -15,6 +15,7 @@ export interface SuspensionInfo {
   estSuspendu: boolean;
   motifSuspension: string | null;
   dateSuspension: string | null;
+  dateFinSuspension?: string | null;
   suspenduPar: string | null;
 }
 
@@ -34,6 +35,7 @@ export interface ProprietaireListItem {
   estSuspendu: boolean;
   motifSuspension: string | null;
   dateSuspension: string | null;
+  dateFinSuspension: string | null;
   suspenduPar: string | null;
   createdAt: string;
 }

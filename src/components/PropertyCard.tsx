@@ -201,7 +201,7 @@ const PropertyCard = ({
           </div>
           {/* Badge Baisse de prix - à côté du prix */}
           {isApiData && afficherBaisseDePrix && pourcentageBaisse !== null && (
-            <div className="text-red-500 text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-white/90">
+            <div className="text-green-600 text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1 bg-white/90">
               🔻 -{pourcentageBaisse}%
             </div>
           )}

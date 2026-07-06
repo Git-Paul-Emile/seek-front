@@ -1091,7 +1091,7 @@ export default function AnnonceDetail() {
                   if (!afficherBaisse) return null;
                   
                   return (
-                    <div className="mb-4 flex items-center gap-2 text-red-600 font-bold">
+                    <div className="mb-4 flex items-center gap-2 text-green-600 font-bold">
                       🔻 -{pourcentageBaisse}%
                     </div>
                   );

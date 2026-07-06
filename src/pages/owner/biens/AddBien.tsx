@@ -618,8 +618,11 @@ export default function AddBien() {
 
   // ── Submit ──
   const handleSubmit = async (brouillon: boolean) => {
-    const allValid = ["general", "transaction", "medias"].every(validateTab);
-    if (!allValid) {
+    const firstInvalidTab = ["general", "specifiques", "transaction", "medias"].find(
+      (tabId) => !validateTab(tabId)
+    );
+    if (firstInvalidTab) {
+      setTab(firstInvalidTab);
       toast.error("Veuillez corriger les erreurs avant de continuer");
       return;
     }

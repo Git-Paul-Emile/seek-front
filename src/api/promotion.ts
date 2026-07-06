@@ -14,8 +14,6 @@ export interface PromotionStatus {
   estMisEnAvant: boolean;
   dateDebutPromotion: string | null;
   dateFinPromotion: string | null;
-  positionRotation: number;
-  dernierAffichage: string | null;
   joursRestants: number;
 }
 
@@ -24,8 +22,7 @@ export interface PromotionStats {
   annoncesActualmenteMiseEnAvant: number;
   historiquePromotions: number;
   configuration: {
-    nbAnnoncesParPage: number;
-    intervalleRotationMinutes: number;
+    placesMax: number;
   };
 }
 
@@ -38,8 +35,14 @@ export interface PromotionResult {
     estMisEnAvant: boolean;
     dateDebutPromotion: string | null;
     dateFinPromotion: string | null;
-    positionRotation: number;
   };
+}
+
+export interface PlacesDisponibles {
+  placesMax: number;
+  placesUtilisees: number;
+  placesDisponibles: number;
+  prochaineLiberation: string | null;
 }
 
 export interface DesactivateResult {
@@ -129,13 +132,19 @@ export interface AnnonceMiseEnAvant {
 export interface MiseEnAvantResponse {
   annonces: AnnonceMiseEnAvant[];
   total: number;
-  rotation: { intervalleMinutes: number; prochaineRotationPossible: boolean } | boolean | null;
+  placesDisponibles: number;
 }
 
 /**
  * Récupère les annonces mises en avant pour la page d'accueil (public)
  */
-export const fetchAnnoncesMiseEnAvant = (limit: number = 6): Promise<MiseEnAvantResponse> =>
+export const fetchAnnoncesMiseEnAvant = (limit: number = 5): Promise<MiseEnAvantResponse> =>
   api
     .get<{ data: MiseEnAvantResponse }>("/accueil", { params: { limit } })
     .then((r) => r.data.data);
+
+/**
+ * Récupère l'état des places de mise en avant disponibles (public)
+ */
+export const getPlacesDisponibles = (): Promise<PlacesDisponibles> =>
+  api.get<{ data: PlacesDisponibles }>("/places").then((r) => r.data.data);

@@ -10,6 +10,7 @@ import { TrustScoreFull } from "@/components/ui/TrustScoreBadge";
 import { toast } from "sonner";
 import { Loader2, Save, Trash2, User, Mail, Phone, Lock, ChevronDown, Shield, Check, AlertCircle, Clock, Eye, CreditCard, X } from "lucide-react";
 import { SkForm } from "@/components/ui/Skeleton";
+import NotificationChannelsSettings from "@/components/owner/NotificationChannelsSettings";
 
 interface ProfileFormData {
   prenom: string;
@@ -500,6 +501,8 @@ export default function Profile() {
           </div>
         </div>
       </form>
+
+      <NotificationChannelsSettings />
 
       {/* Zone dangereuse */}
       <div className="bg-white rounded-2xl border border-red-200 p-6">

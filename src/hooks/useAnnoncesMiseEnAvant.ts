@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchAnnoncesMiseEnAvant, type AnnonceMiseEnAvant, type MiseEnAvantResponse } from "@/api/promotion";
 
-// Rotation backend toutes les 30 min - on refetch toutes les 10 min
+// Places plafonnées (5), pas de rotation - refetch périodique pour rester à jour
 const REFETCH_INTERVAL_MS = 10 * 60 * 1000;
 
-export const useAnnoncesMiseEnAvant = (limit: number = 6) =>
+export const useAnnoncesMiseEnAvant = (limit: number = 5) =>
   useQuery<MiseEnAvantResponse>({
     queryKey: ["annonces-mise-en-avant", limit],
     queryFn: () => fetchAnnoncesMiseEnAvant(limit),

@@ -48,9 +48,10 @@ export const usePayerPremium = () => {
       queryClient.invalidateQueries({ queryKey: ["promotion-status"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["places-mise-en-avant"] });
     },
-    onError: (error: Error) => {
-      toast.error("Erreur lors du paiement");
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message ?? "Erreur lors du paiement");
     },
   });
 };
@@ -69,6 +70,7 @@ export const useArreterPremium = () => {
       queryClient.invalidateQueries({ queryKey: ["promotion-status"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["places-mise-en-avant"] });
     },
     onError: (error: Error) => {
       toast.error("Erreur lors de l'arrêt de la mise en avant");

@@ -37,7 +37,7 @@ const HeroSection = () => {
 
   // Point de recherche précise (Nominatim)
   const [selectedPoint, setSelectedPoint] = useState<NominatimPoint | null>(null);
-  const [radius,        setRadius]        = useState<number>(3);
+  const [radius,        setRadius]        = useState<number>(5);
   const [formError,     setFormError]     = useState<string | null>(null);
 
   const formatBudget = (value: string) => {
@@ -66,6 +66,8 @@ const HeroSection = () => {
       params.set("lng",        String(selectedPoint.lng));
       params.set("pointLabel", selectedPoint.label);
       params.set("radius",     String(radius));
+      // Le quartier peut restreindre une recherche par point précis à sa zone
+      if (searchQuartier) params.set("quartier", searchQuartier);
     } else {
       if (searchVille)    params.set("ville",    searchVille);
       if (searchQuartier) params.set("quartier", searchQuartier);
@@ -299,7 +301,8 @@ const HeroSection = () => {
                         <NominatimAutocomplete
                           onSelect={(point) => {
                             setSelectedPoint(point);
-                            if (point) { setSearchVille(""); setSearchQuartier(""); }
+                            // Le quartier reste utilisable pour restreindre la zone du point précis
+                            if (point) { setSearchVille(""); }
                           }}
                           placeholder="Université Cheikh Anta Diop"
                           dark
@@ -311,14 +314,14 @@ const HeroSection = () => {
                             const disabled = !propertyType;
                             const zone = disabled
                               ? { label: "Sélectionnez un type de logement", sub: "pour activer le rayon", color: "#ffffff40" }
-                              : radius <= 2
-                              ? { label: "À proximité immédiate", sub: "Accessible à pied",       color: "#4ade80" }
                               : radius <= 5
-                              ? { label: "Zone proche",           sub: "5–10 min en voiture",     color: "#D4A843" }
-                              : radius <= 9
-                              ? { label: "Zone intermédiaire",    sub: "15–20 min en voiture",    color: "#fb923c" }
-                              :   { label: "Zone élargie",        sub: "Au-delà de 10 km",        color: "#f87171" };
-                            const pct = ((radius - 1) / 19) * 100;
+                              ? { label: "Zone proche",           sub: "Autour du point sélectionné", color: "#4ade80" }
+                              : radius <= 15
+                              ? { label: "Zone intermédiaire",    sub: "10–15 min en voiture",        color: "#D4A843" }
+                              : radius <= 20
+                              ? { label: "Zone élargie",          sub: "15–20 min en voiture",        color: "#fb923c" }
+                              :   { label: "Zone très élargie",   sub: "Au-delà de 20 km",            color: "#f87171" };
+                            const pct = ((radius - 5) / 25) * 100;
                             const trackColor = disabled ? "rgba(255,255,255,0.1)" : zone.color;
                             return (
                               <div className={disabled ? "opacity-50" : ""}>
@@ -344,7 +347,7 @@ const HeroSection = () => {
                                   />
                                   <input
                                     type="range"
-                                    min={1} max={20} step={1}
+                                    min={5} max={30} step={5}
                                     value={radius}
                                     disabled={disabled}
                                     onChange={(e) => setRadius(Number(e.target.value))}
@@ -364,7 +367,7 @@ const HeroSection = () => {
 
                                 {/* Graduations */}
                                 <div className="flex justify-between mt-1 px-0.5">
-                                  {["1", "5", "10", "15", "20+"].map((t) => (
+                                  {["5", "10", "15", "20", "25", "30"].map((t) => (
                                     <span key={t} className="text-[10px] text-white/25">{t}</span>
                                   ))}
                                 </div>

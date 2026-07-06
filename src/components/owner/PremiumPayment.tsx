@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Star, Clock, AlertCircle, CheckCircle, XCircle, Sparkles, X, Smartphone, AlertTriangle } from "lucide-react";
-import { usePromotionStatus } from "@/hooks/usePromotion";
+import { usePromotionStatus, usePlacesDisponibles } from "@/hooks/usePromotion";
 import { useFormulesPremium, usePayerPremium, useArreterPremium, type FormulePremium, type MoyenPaiement } from "@/hooks/usePremium";
 import { useOwnerAuth } from "@/context/OwnerAuthContext";
 
@@ -175,9 +175,11 @@ export default function PremiumPayment({ bienId, bienTitre, onSuccess }: Premium
   const [selectedFormule, setSelectedFormule] = useState<FormulePremium | null>(null);
   const [selectedPaiement, setSelectedPaiement] = useState<string | null>(null);
   const [paiementResult, setPaiementResult] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data: formulesData, isLoading: loadingFormules } = useFormulesPremium();
   const { data: status, isLoading: loadingStatus } = usePromotionStatus(bienId);
+  const { data: places } = usePlacesDisponibles();
   const payerMutation = usePayerPremium();
   const arreterMutation = useArreterPremium();
   const { owner } = useOwnerAuth();
@@ -194,6 +196,7 @@ export default function PremiumPayment({ bienId, bienTitre, onSuccess }: Premium
     if (modalType === "select-formule") {
       setSelectedFormule(null);
       setSelectedPaiement(null);
+      setErrorMessage(null);
     }
   }, [modalType]);
 
@@ -209,13 +212,12 @@ export default function PremiumPayment({ bienId, bienTitre, onSuccess }: Premium
       { bienId, formuleId: selectedFormule.id, modePaiement: selectedPaiement },
       {
         onSuccess: (data) => {
-          console.log('Paiement réussi:', data);
           setPaiementResult(data);
           setModalType("success");
           onSuccess?.();
         },
         onError: (error: any) => {
-          console.error('Erreur paiement:', error);
+          setErrorMessage(error?.response?.data?.message ?? null);
           setModalType("error");
         },
       }
@@ -287,6 +289,19 @@ export default function PremiumPayment({ bienId, bienTitre, onSuccess }: Premium
               </span>
             )}
           </div>
+
+          {/* Places disponibles */}
+          {places && !isPromoted && (
+            <p className="text-xs text-slate-500">
+              {places.placesDisponibles > 0
+                ? `${places.placesUtilisees}/${places.placesMax} places de mise en avant utilisées`
+                : `Toutes les places sont occupées (${places.placesMax}/${places.placesMax})${
+                    places.prochaineLiberation
+                      ? ` — prochaine place le ${new Date(places.prochaineLiberation).toLocaleDateString("fr-FR")}`
+                      : ""
+                  }`}
+            </p>
+          )}
 
           {/* Expiration info */}
           {isPromoted && status?.dateFinPromotion && (
@@ -465,7 +480,7 @@ export default function PremiumPayment({ bienId, bienTitre, onSuccess }: Premium
             <XCircle className="w-8 h-8 text-red-600" />
           </div>
           <p className="text-slate-600">
-            Une erreur s'est produite lors du paiement. Veuillez réessayer.
+            {errorMessage ?? "Une erreur s'est produite lors du paiement. Veuillez réessayer."}
           </p>
         </div>
       </Modal>

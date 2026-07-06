@@ -327,7 +327,7 @@ export interface RechercheParams {
   // Recherche par proximité
   lat?: number;
   lng?: number;
-  radius?: number; // km (1 | 3 | 5 | 10)
+  radius?: number; // km (5 à 30, par pas de 5)
 }
 
 export interface RechercheResult {

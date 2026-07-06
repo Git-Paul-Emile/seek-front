@@ -5,8 +5,19 @@ import {
   extendPromotion,
   getPromotionStats,
   getPromotionStatus,
+  getPlacesDisponibles,
 } from "@/api/promotion";
 import { toast } from "sonner";
+
+/**
+ * Hook pour récupérer l'état des places de mise en avant disponibles
+ */
+export const usePlacesDisponibles = () => {
+  return useQuery({
+    queryKey: ["places-mise-en-avant"],
+    queryFn: getPlacesDisponibles,
+  });
+};
 
 /**
  * Hook pour récupérer le statut de promotion d'un bien
@@ -42,9 +53,10 @@ export const useActivatePromotion = () => {
       toast.success("Annonce mise en avant avec succès !");
       queryClient.invalidateQueries({ queryKey: ["biens"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["places-mise-en-avant"] });
     },
-    onError: (error: Error) => {
-      toast.error("Erreur lors de l'activation de la promotion");
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message ?? "Erreur lors de l'activation de la promotion");
     },
   });
 };
@@ -61,6 +73,7 @@ export const useDeactivatePromotion = () => {
       toast.success("Promotion désactivée");
       queryClient.invalidateQueries({ queryKey: ["biens"] });
       queryClient.invalidateQueries({ queryKey: ["promotion-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["places-mise-en-avant"] });
     },
     onError: (error: Error) => {
       toast.error("Erreur lors de la désactivation de la promotion");

@@ -549,11 +549,11 @@ const RecherchePage = () => {
             )}
             {isProximityMode && (() => {
               const r = proximityRadius;
-              const zone = r <= 2 ? { label: "À proximité immédiate", sub: "À pied",          color: "#4ade80" }
-                         : r <= 5 ? { label: "Zone proche",           sub: "5–10 min en voiture", color: "#D4A843" }
-                         : r <= 9 ? { label: "Zone intermédiaire",    sub: "15–20 min",       color: "#fb923c" }
-                         :          { label: "Zone élargie",          sub: "Au-delà de 10 km", color: "#f87171" };
-              const pct = ((r - 1) / 19) * 100;
+              const zone = r <= 5  ? { label: "Zone proche",         sub: "Autour du point sélectionné", color: "#4ade80" }
+                         : r <= 15 ? { label: "Zone intermédiaire",  sub: "10–15 min en voiture",        color: "#D4A843" }
+                         : r <= 20 ? { label: "Zone élargie",        sub: "15–20 min en voiture",        color: "#fb923c" }
+                         :          { label: "Zone très élargie",    sub: "Au-delà de 20 km",            color: "#f87171" };
+              const pct = ((r - 5) / 25) * 100;
               return (
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -567,7 +567,7 @@ const RecherchePage = () => {
                     <div className="absolute inset-x-0 h-1.5 rounded-full bg-white/15" />
                     <div className="absolute left-0 h-1.5 rounded-full transition-all duration-150" style={{ width: `${pct}%`, background: zone.color }} />
                     <input
-                      type="range" min={1} max={20} step={1} value={r}
+                      type="range" min={5} max={30} step={5} value={r}
                       onChange={(e) => {
                         const next = new URLSearchParams(searchParams);
                         next.set("radius", e.target.value);
@@ -582,7 +582,7 @@ const RecherchePage = () => {
                     />
                   </div>
                   <div className="flex justify-between mt-1">
-                    {["1", "5", "10", "15", "20+"].map((t) => (
+                    {["5", "10", "15", "20", "25", "30"].map((t) => (
                       <span key={t} className="text-[10px] text-white/25">{t}</span>
                     ))}
                   </div>
@@ -889,11 +889,11 @@ const RecherchePage = () => {
 
             {isProximityMode && (() => {
               const r = proximityRadius;
-              const zone = r <= 2 ? { label: "À proximité immédiate", sub: "À pied",               color: "#16a34a", track: "#bbf7d0" }
-                         : r <= 5 ? { label: "Zone proche",           sub: "5–10 min en voiture",  color: "#D4A843", track: "#fde68a" }
-                         : r <= 9 ? { label: "Zone intermédiaire",    sub: "15–20 min en voiture", color: "#ea580c", track: "#fed7aa" }
-                         :          { label: "Zone élargie",          sub: "Au-delà de 10 km",     color: "#dc2626", track: "#fecaca" };
-              const pct = ((r - 1) / 19) * 100;
+              const zone = r <= 5  ? { label: "Zone proche",        sub: "Autour du point sélectionné", color: "#16a34a", track: "#bbf7d0" }
+                         : r <= 15 ? { label: "Zone intermédiaire", sub: "10–15 min en voiture",        color: "#D4A843", track: "#fde68a" }
+                         : r <= 20 ? { label: "Zone élargie",       sub: "15–20 min en voiture",        color: "#ea580c", track: "#fed7aa" }
+                         :          { label: "Zone très élargie",   sub: "Au-delà de 20 km",            color: "#dc2626", track: "#fecaca" };
+              const pct = ((r - 5) / 25) * 100;
               return (
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -907,7 +907,7 @@ const RecherchePage = () => {
                     <div className="absolute inset-x-0 h-1.5 rounded-full bg-slate-200" />
                     <div className="absolute left-0 h-1.5 rounded-full transition-all duration-150" style={{ width: `${pct}%`, background: zone.color }} />
                     <input
-                      type="range" min={1} max={20} step={1} value={r}
+                      type="range" min={5} max={30} step={5} value={r}
                       onChange={(e) => {
                         const next = new URLSearchParams(searchParams);
                         next.set("radius", e.target.value);
@@ -924,7 +924,7 @@ const RecherchePage = () => {
                     />
                   </div>
                   <div className="flex justify-between mt-1">
-                    {["1", "5", "10", "15", "20+"].map((t) => (
+                    {["5", "10", "15", "20", "25", "30"].map((t) => (
                       <span key={t} className="text-[10px] text-slate-300">{t}</span>
                     ))}
                   </div>
@@ -1222,7 +1222,7 @@ const RecherchePage = () => {
                   Utilisez le curseur dans les filtres pour élargir la zone.
                 </p>
                 <div className="flex gap-2 flex-wrap justify-center mb-6">
-                  {[5, 10, 15, 20].filter(km => km > proximityRadius).slice(0, 3).map((km) => (
+                  {[10, 15, 20, 25, 30].filter(km => km > proximityRadius).slice(0, 3).map((km) => (
                     <button
                       key={km}
                       type="button"

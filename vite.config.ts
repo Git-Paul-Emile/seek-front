@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-ui": ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-select", "@radix-ui/react-tabs", "@radix-ui/react-toast", "@radix-ui/react-tooltip", "@radix-ui/react-popover"],
           "vendor-charts": ["recharts"],
-          "vendor-map": ["react-map-gl", "mapbox-gl"],
+          "vendor-map": ["react-map-gl/mapbox", "mapbox-gl"],
           "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
           "vendor-editor": ["@tiptap/react", "@tiptap/starter-kit"],
           "vendor-utils": ["date-fns", "axios", "socket.io-client", "framer-motion"],

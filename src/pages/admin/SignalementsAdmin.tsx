@@ -112,9 +112,9 @@ export default function SignalementsAdmin() {
             <Building2 className="w-5 h-5 text-slate-500" />
           </div>
           <div>
-            <a 
-              href={`/annonces/${s.bienId}`} 
-              target="_blank" 
+            <a
+              href={`/admin/annonces/${s.bienId}`}
+              target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-[#D4A843] hover:underline"
             >
@@ -326,7 +326,7 @@ export default function SignalementsAdmin() {
                   <div className="bg-slate-50 rounded-xl p-4 space-y-3">
                     <div>
                       <span className="text-sm font-medium text-[#0C1A35]">{selectedSignalement.bien.titre}</span>
-                      <a href={`/annonces/${selectedSignalement.bien.id}`} target="_blank" className="text-xs text-[#D4A843] block mt-1 hover:underline">Voir l'annonce ↗</a>
+                      <a href={`/admin/annonces/${selectedSignalement.bien.id}`} target="_blank" className="text-xs text-[#D4A843] block mt-1 hover:underline">Voir l'annonce ↗</a>
                     </div>
                     {selectedSignalement.bien.proprietaire && (
                       <div className="pt-3 border-t border-slate-200">
